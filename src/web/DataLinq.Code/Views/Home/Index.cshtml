@@ -1,0 +1,35 @@
+﻿@model IEnumerable<E.DataLinq.Code.Services.DataLinqCodeOptions.DataLinqInstance>
+@{
+    ViewData["Title"] = "Home Page";
+}
+<div class="text-center">
+    <h1 class="display-4">Select a DataLinq CodeApi</h1>
+
+    @if(Model != null)
+    {
+        foreach(var datalinqInstance in Model)
+        {
+            <div class="datalinq-instance-panel" 
+                 data-login="@(datalinqInstance.LoginUrl)">
+                <h3>@datalinqInstance.Name</h3>
+                <p>@datalinqInstance.Description</p>
+            </div>
+        }
+    }
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        $(function () {
+
+            $(".datalinq-instance-panel")
+                .click(function(e) {
+                    e.stopPropagation();
+
+                    var loginUrl = $(this).attr('data-login');
+                    document.location = loginUrl;
+                });
+            
+        });
+    </script>
+}

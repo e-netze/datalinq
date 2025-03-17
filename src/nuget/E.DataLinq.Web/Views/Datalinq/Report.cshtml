@@ -1,0 +1,103 @@
+﻿@using E.DataLinq.Core
+@using E.DataLinq.Web
+@using E.DataLinq.Web.Extensions
+
+@model E.DataLinq.Web.Models.ReportModel
+@inject Microsoft.Extensions.Options.IOptionsMonitor<E.DataLinq.Web.Services.DataLinqOptions> OptionsMonitor 
+@{
+    Layout = "~/Views/Shared/_Layout_empty-datalinq-report.cshtml";
+
+    var Options = OptionsMonitor.CurrentValue;
+}
+
+@foreach(var cssUrl in Options.CustomReportCssUrls)
+{
+    <link href="@(cssUrl.Replace("~", ViewData["appRootUrl"].ToString()))" rel="stylesheet" />
+}
+
+<link href="@(ViewData["contentRootUrl"])/lib/select2/css/select2.min.css" rel="stylesheet" />
+<link href="@(ViewData["contentRootUrl"])/css/datalinq/datalinq.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+
+<link href="@(ViewData["appRootUrl"])/datalinq/cssproxy/@(Model.EndpointId)?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+
+<link href="@(ViewData["contentRootUrl"])/lib/flatpickr/flatpickr.min.css" rel="stylesheet" />
+
+<script src="@(ViewData["contentRootUrl"])/js/datalinq.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
+<script src="@(ViewData["contentRootUrl"])/js/datalinq.events.js?@(DataLinqVersion.JsVersion)"></script>
+<script src="@(ViewData["contentRootUrl"])/js/datalinq.ui.js?@(DataLinqVersion.JsVersion)"></script>
+<script src="@(ViewData["contentRootUrl"])/lib/select2/js/select2.min.js"></script>
+
+<script src="@(ViewData["contentRootUrl"])/lib/momentjs/moment.min.js"></script>
+<script src="@(ViewData["contentRootUrl"])/lib/momentjs/locale/de-at.js"></script>
+
+<script src="@(ViewData["contentRootUrl"])/lib/flatpickr/flatpickr.min.js"></script>
+<script src="@(ViewData["contentRootUrl"])/lib/flatpickr/l10n/de.js"></script>
+
+@if (Model.IncludedJsLibraries.Contains(JsLibNames.Legacy_ChartJs))
+{
+    <script src="@(ViewData["contentRootUrl"])/js-legacy/chartjs/Chart.min.js"></script>
+
+    @if (Model.IncludedJsLibraries.Contains(JsLibNames.Legacy_ChartJs_Plugin_DataLabels))
+    {
+        <script src="@(ViewData["contentRootUrl"])/js-legacy/chartjs/plugins/chartjs-plugin-datalabels.min.js"></script>
+    }
+    @if (Model.IncludedJsLibraries.Contains(JsLibNames.Legacy_ChartJs_Plugin_ColorSchemes))
+    {
+        <script src="@(ViewData["contentRootUrl"])/js-legacy/chartjs/plugins/chartjs-plugin-colorschemes.min.js"></script>
+    }
+}
+@if (Model.IncludedJsLibraries.Contains(JsLibNames.ChartJs_3x))
+{
+    <script src="@(ViewData["contentRootUrl"])/lib/chartjs-3x/chart.min.js"></script>
+    @if (Model.IncludedJsLibraries.Contains(JsLibNames.ChartJs_3x_Plugin_DataLabels))
+    {
+        <script src="@(ViewData["contentRootUrl"])/lib/chartjs-3x/plugins/chartjs-plugin-datalabels.min.js"></script>
+    }
+}
+
+@if (Model.IncludedJsLibraries.Contains(JsLibNames.D3_7x))
+{
+    <script src="@(ViewData["contentRootUrl"])/lib/d3-7x/d3.min.js"></script>
+
+}
+
+@foreach(var jsUrl in Options.CustomReportJavascriptUrls)
+{   
+    var keyValues = jsUrl.ToKeyValues("src");
+
+    if (!String.IsNullOrEmpty(keyValues["id"]))
+    {
+        <script src="@(keyValues["src"].Replace("~", ViewData["appRootUrl"].ToString()))" id="@keyValues["id"]"></script>
+    }
+    else
+    {
+        <script src="@(keyValues["src"].Replace("~", ViewData["appRootUrl"].ToString()))"></script>
+    }
+}
+
+<script src="@(ViewData["appRootUrl"])/datalinq/jsproxy/@(Model.EndpointId)?@(DataLinqVersion.CssVersion)"></script>
+
+<script type="text/javascript">
+
+    dataLinq.__authObject=@Html.Raw(Model.ClientSideAuthObjectString);
+
+    $(document).ready(function () {
+        dataLinq.showSplashSreen('(c) '+(new Date()).getFullYear()+' Energienetze Steiermark GmbH', 2000);
+
+        dataLinq.init();
+    });
+</script>
+
+<div id="datalinq-body">
+    @*
+        @Html.Raw(Model.Html)
+    *@
+
+    <div style="position:absolute;top:0px;left:0px;width:100%;height:20px;text-align:right;font-size:12px;color:#808080;pointer-events:none;" id="datalinq-header">@Model.AuthIntialText</div>
+    <div class="datalinq-include" data-source="@Model.Id" data-filter="@Model.QueryString" data-orderby="@Model.OrderBy">
+
+    </div>
+    <div class="legend">
+
+    </div>
+</div>

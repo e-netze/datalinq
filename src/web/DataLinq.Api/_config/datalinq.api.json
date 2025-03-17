@@ -1,0 +1,40 @@
+{
+  "DataLinq.Api": {
+    "StoragePath": "./../../../../datalinq-storage",
+    "Razor": {
+      "Engine": "default" // default, legacy, core
+    },
+    "Crypto": {
+      "SecureStringEncryptionLevel": "",
+      // Change me, if you use this properties!
+      "DefaultPasswort____": "f4vGGp{W26BS#@%zpNG5Rg!eeRp)XW@%",
+      "SaltBytes____": "5CPAOaj8UnLd7GsQnZpC8w=="
+    },
+    "SelectEngines": {
+      "TextFileEngine_": {
+        "AllowedExtensions": [
+          ".txt",
+          ".csv",
+          ".log"
+        ],
+        "AllowedPaths": [
+          "C:\\DataLinq\\Data\\",
+          "C:\\temp\\"
+        ]
+      }
+    }
+  },
+  "DataLinq.CodeApi": {
+    "ClientEndpoints_": [
+      "http://localhost"
+    ],
+    "Clients": [
+      {
+        "Id": "1",
+        "Name": "datalinq",
+        "Password": "datalinq",
+        "EndPointParameters": "*,_*"
+      }
+    ]
+  }
+}

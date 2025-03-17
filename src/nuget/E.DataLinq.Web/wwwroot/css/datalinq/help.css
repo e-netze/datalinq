@@ -1,0 +1,40 @@
+html {
+    font-size: 14px;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+}
+
+.method-def {
+    font-family: Consolas,Courier,monospace;
+    border: 3px solid #ccc;
+    padding: 15px;
+    border-radius: 3px;
+}
+
+    .method-def .keyword {
+        color: blue;
+    }
+
+    .method-def .literal {
+        color: #A31515;
+    }
+
+.descr-code {
+    font-family: Consolas,Courier,monospace;
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 3px;
+    background: #cfefef;
+}
+
+button.copy-button {
+    float: right;
+}
+
+input.content-search {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    border:1px solid #aaa;
+    outline: none;
+}

@@ -1,0 +1,160 @@
+﻿@using E.DataLinq.Code.Extensions
+@using E.DataLinq.Core.Models
+@model E.DataLinq.Core.Models.DataLinqEndPoint
+
+@{
+    Layout = "~/Views/Shared/_Layout_empty-datalinq-code-frame.cshtml";
+    ViewBag.Title = "DataLinq Code";
+}
+
+@*
+<div id="datalinq-code-editor-frame">
+    
+</div>
+*@
+
+<div class="datalinq-code-editor-settings switch-to settings">
+    @using (Html.BeginForm("EditEndPoint", "DataLinqCode", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.HiddenFor(m => m.Subscriber)
+        @Html.HiddenFor(m => m.SubscriberId)
+
+        <h3>General</h3>
+        <div class="hr" ></div>
+
+        <div class="datalinq-form-section">
+            @Html.LabelFor(m => m.Id)
+            @Html.DescriptionFor(m => m.Id)
+            @Html.TextBoxFor(m => m.Id, htmlAttributes: new { @readonly = "readonly" })
+
+            @Html.LabelFor(m => m.Name)
+            @Html.DescriptionFor(m => m.Name)
+            @Html.TextBoxFor(m => m.Name)
+
+            @Html.LabelFor(m => m.Description)
+            @Html.DescriptionFor(m => m.Description)
+            @Html.TextAreaFor(m => m.Description)
+        </div>
+
+        <h3>Connection</h3>
+        <div class="hr" ></div>
+
+        <div class = "datalinq-form-section">
+            @Html.LabelFor(m => m.TypeValue)
+            @Html.DescriptionFor(m => m.TypeValue)
+            @Html.DropDownListFor(m => m.TypeValue, ((IDictionary<int,string>)ViewData["EndPointTypes"]).DictToSelectList<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
+   
+            @Html.LabelFor(m => m.ConnectionString)
+            @Html.DescriptionFor(m => m.ConnectionString)
+            @Html.TextAreaFor(m => m.ConnectionString)
+
+            @Html.LabelFor(m => m.ConnectionString_DevTest)
+            @Html.DescriptionFor(m => m.ConnectionString_DevTest)
+            @Html.TextAreaFor(m => m.ConnectionString_DevTest)
+        </div>
+       
+        <h3>Security</h3>
+        <div class="hr" ></div>
+
+        <div class = "datalinq-form-section">
+            @if(ViewData["AccessTree"]!=null)
+            {
+                <span>Access Tree</span>
+                <div class="datalinq-access-tree"></div>
+            }
+            <div style="@(ViewData["AccessTree"] == null ? "" : "display:none")">
+                <span>Authorized Users/Roles:</span>
+                @Html.DescriptionFor(m => m.Access)
+                <div class="datalinq-access-control" data-value="@String.Join(',', Model.Access ?? new string[0])"></div>
+            </div>
+            <br />
+            @Html.LabelFor(m => m.AccessTokens)
+            @Html.DescriptionFor(m => m.AccessTokens)
+            <div>
+                <button type="button" onclick='dataLinqCodeEditor.refreshToken(0)'>Refresh</button>
+                <button type="button" onclick="dataLinqCodeEditor.clearToken(0)">Clear</button>
+                <br/>
+                <input type="text" readonly="readonly" name="datalinq_token0" value="@(Model.AccessTokens!=null && Model.AccessTokens.Length>0 ? Model.AccessTokens[0] : String.Empty)">
+            </div>
+            <div>
+                <button type="button" onclick='dataLinqCodeEditor.refreshToken(1)'>Refresh</button>
+                <button type="button" onclick="dataLinqCodeEditor.clearToken(1)">Clear</button>
+                <br/>
+                <input type="text" readonly="readonly" name="datalinq_token1" value="@(Model.AccessTokens!=null && Model.AccessTokens.Length>1 ? Model.AccessTokens[1] : String.Empty)">
+            </div>
+        </div>
+
+        <h3>Info</h3>
+        <div class="hr" ></div>
+
+        <div class = "datalinq-form-section">
+            @Html.LabelFor(m => m.Created)
+            @Html.DescriptionFor(m => m.Created)
+            @Html.TextBoxFor(m => m.Created, htmlAttributes: new { @readonly = "readonly" })
+        </div>
+
+        <button class="submit" style="display:none">Submit</button>
+    }
+
+    <h3>Styling</h3>
+    <div class="hr" ></div>
+
+    <div class = "datalinq-form-section">
+        <p class='description'>
+            Here you can edit a global EndPoint CSS File, that is loaded in all (view) reports under this EndPoint. 
+        </p>
+        <button onclick="dataLinqCode.events.fire('open-endpoint-css', { id:'@(Model.Id)' });return false;">Open EndPoint CSS...</button>
+    </div>
+
+    <h3>Scripting</h3>
+    <div class="hr"></div>
+
+    <div class="datalinq-form-section">
+        <p class='description'>
+            Here you can edit a global EndPoint Javascript File, that is loaded in all (view) reports under this EndPoint.
+        </p>
+        <button onclick="dataLinqCode.events.fire('open-endpoint-js', { id:'@(Model.Id)' });return false;">Open EndPoint Javascript...</button>
+    </div>
+
+    <div class="privileges-delete">
+        <h3>Delete</h3>
+        <div class="hr" ></div>
+
+        <div class = "datalinq-form-section">
+            <p class='description'>
+                Delete this endpoint (included queries and views) permanently
+            </p>
+            <button onclick='dataLinqCodeEditor.delete();return false;'>Delete</button>
+        </div>
+    </div>
+</div>
+
+@*
+<div class="datalinq-code-editor-switcher">
+
+</div>
+*@
+
+@section scripts {
+    <script type="text/javascript">
+        $(function () {
+
+            window._datalinqCodeAccessToken = new URLSearchParams(window.location.search).get('dl_token');
+            //console.log('_datalinqCodeSession', window._datalinqCodeAccessToken);
+
+            var url = new URL(document.location);
+            var id = url.searchParams.get("endpoint") || '@Model.Id';
+
+            $(".datalinq-access-tree")
+                .data('tree', @Html.Raw(ViewData["AccessTree"] == null ? null : System.Text.Json.JsonSerializer.Serialize(ViewData["AccessTree"], new System.Text.Json.JsonSerializerOptions(){})));
+            
+            //console.log($(".datalinq-access-tree").data('tree'));
+
+            dataLinqCodeEditor.init(id);
+
+            if(!dataLinqCode.privileges.deleteEndpoints()) {
+                $('.privileges-delete').remove();
+            }
+        });
+    </script>
+}

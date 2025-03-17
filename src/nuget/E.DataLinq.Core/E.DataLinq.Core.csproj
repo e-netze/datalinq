@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyVersion>
+    </AssemblyVersion>
+    <FileVersion>
+    </FileVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<Version>7.25.1110</Version>
+		<Copyright>2025, Energienetze Steiermark</Copyright>
+		<PackageProjectUrl>https://github.com/e-netze/datalinq</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/e-netze/datalinq</RepositoryUrl>
+		<Authors>Jürgen Gstaltmaier</Authors>
+		<Company />
+		<Product />
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
+	
+  <ItemGroup>
+    <PackageReference Include="E.Standard.Vault" Version="1.25.1102" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>

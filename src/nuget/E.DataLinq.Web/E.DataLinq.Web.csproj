@@ -1,0 +1,73 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <FileVersion>
+    </FileVersion>
+    <AssemblyVersion>
+    </AssemblyVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<Version>7.25.1110</Version>
+		<Copyright>2025, Energienetze Steiermark</Copyright>
+		<PackageProjectUrl>https://github.com/e-netze/datalinq</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/e-netze/datalinq</RepositoryUrl>
+		<Authors>Jürgen Gstaltmaier</Authors>
+		<Company />
+		<Product />
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Exceptions\**" />
+    <Compile Remove="wwwroot\lib\chartjs-4x\**" />
+    <Content Remove="Exceptions\**" />
+    <Content Remove="wwwroot\lib\chartjs-4x\**" />
+    <EmbeddedResource Remove="Exceptions\**" />
+    <EmbeddedResource Remove="wwwroot\lib\chartjs-4x\**" />
+    <None Remove="Exceptions\**" />
+    <None Remove="wwwroot\lib\chartjs-4x\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
+    <PackageReference Include="RazorEngine.NetCore" Version="3.1.0" />
+  </ItemGroup>
+	<ItemGroup>
+		<Content Update="libman.json">
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+  <ItemGroup>
+    <Content Update="libman.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\css\datalinq\datalinq.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\css\datalinq\help.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\css\site.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\lib\jquery\jquery.min.js">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\lib\flatpickr\esm\plugins\" />
+    <Folder Include="wwwroot\lib\flatpickr\plugins\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\E.Datalinq.Core\E.DataLinq.Core.csproj" />
+    <ProjectReference Include="..\E.DataLinq.LanguageEngine.Razor\E.DataLinq.LanguageEngine.Razor.csproj" />
+  </ItemGroup>
+</Project>

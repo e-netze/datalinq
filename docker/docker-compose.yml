@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+    datalinq-api:
+        image: datalinq-api:latest
+        ports:
+            - "8081:8080"
+        networks:
+            - datalinq-network
+        volumes:
+            - datalinq-storage:/etc/datalinq/storage
+        env_file:
+            - datalinq-api.env
+    datalinq-code:
+        image: datalinq-code:latest
+        ports:
+            - "8080:8080"
+        networks:
+            - datalinq-network
+        env_file:
+            - datalinq-code.env
+
+volumes:
+    datalinq-storage:
+
+networks:
+    datalinq-network:

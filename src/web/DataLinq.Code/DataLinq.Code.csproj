@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>ae62c7b6-127e-49d2-aa28-dca29f1c7a49</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="9.0.2" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.7.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\aspire\DataLinq.ServiceDefaults\DataLinq.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\nuget\E.DataLinq.Code\E.DataLinq.Code.csproj" />
+  </ItemGroup>
+</Project>

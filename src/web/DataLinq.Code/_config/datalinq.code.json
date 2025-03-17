@@ -1,0 +1,18 @@
+{
+  "DataLinq.Code": {
+    "Crypto": {  // optional
+      // change me, if you use this properties!
+      "DefaultPasswort____": "g4vGGp{W26BS#@%zpNG5Rg!eeRp)XW@%",
+      "SaltBytes____": "5CPAOaj8UnLd7GsQnZpC8w=="
+    },
+    "Instances_": [  // is set in apire program.cs
+      {
+        "Name": "Local",
+        "Description": "A local datalinq instance for testing and development",
+        "LoginUrl": "~",
+        "LogoutUrl": "~",
+        "CodeApiClientUrl": "~"
+      }
+    ]
+  }
+}

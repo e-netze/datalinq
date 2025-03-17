@@ -1,0 +1,77 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <FileVersion>
+    </FileVersion>
+    <AssemblyVersion>
+    </AssemblyVersion>
+    
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<Version>7.25.1110</Version>  
+		<Copyright>2025, Energienetze Steiermark</Copyright>
+		<PackageProjectUrl>https://github.com/e-netze/datalinq</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/e-netze/datalinq</RepositoryUrl>
+		<Authors>Jürgen Gstaltmaier</Authors>
+		<Company />
+		<Product />
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+		<UserSecretsId>a4232b0d-bfb2-46f0-88e4-934fb94df536</UserSecretsId>
+	</PropertyGroup>
+	
+   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+	<ItemGroup>
+		<Content Update="libman.json">
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+  <ItemGroup>
+    <Content Update="libman.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\css\datalinq-code-typeahead.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\css\datalinq-code.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\js\datalinq-code.ui.editor.dlh.intellisense.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\js\datalinq-code.ui.toolbar.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\js\datalinq-code.ui.blockframe.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\js\datalinq-code.ui.editor.frame.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\js\datalinq-code.ui.editor.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\js\datalinq-code.ui.tree.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\js\datalinq-code.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\lib\monaco-editor\min-maps\vs\base\" />
+    <Folder Include="wwwroot\lib\monaco-editor\min\vs\language\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\E.DataLinq.Web.Api.Client\E.DataLinq.Web.Api.Client.csproj" />
+  </ItemGroup>
+</Project>

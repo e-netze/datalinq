@@ -1,0 +1,65 @@
+﻿@model E.DataLinq.Code.Models.DataLinqCode.IndexModel
+@{
+    Layout = "~/Views/Shared/_Layout_empty-datalinq-code.cshtml";
+    ViewBag.Title = $"DataLinq.Code::{Model.InstanceName}";
+}
+
+<div class="datalinq-code-body">
+    <div class="datalinq-code-ide">
+
+    @{
+          Html.RenderPartial("_Toolbar");     
+          Html.RenderPartial("_Sidebar");   
+          Html.RenderPartial("_Content");   
+    }
+
+    </div>
+    <div class="datalinq-code-help">
+        <iframe id='help-frame' src='' allow='clipboard-read; clipboard-write'>
+
+        </iframe>
+    </div>
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        function removeURLParameter(parameter) {
+            var url = window.location.href;
+
+            var urlparts = url.split('?');
+            if (urlparts.length >= 2) {
+                var prefix = encodeURIComponent(parameter) + '=';
+                var params = urlparts[1].split(/[&;]/g);
+
+                for (var i = params.length; i-- > 0;) {
+                    if (params[i].lastIndexOf(prefix, 0) !== -1) {
+                        params.splice(i, 1);
+                    }
+                }
+
+                url = urlparts[0] + (params.length > 0 ? '?' + params.join('&') : '');
+            }
+
+            window.history.replaceState({}, document.title, url);
+        }
+
+        $(function() {
+            window._datalinqCodeAccessToken = new URLSearchParams(window.location.search).get('dl_token');
+            //console.log('_datalinqCodeSession', window._datalinqCodeAccessToken);
+
+            removeURLParameter('dl_token');
+
+            dataLinqCode.start('@Model.CurrentUrl',
+                               '@Model.DataLinqEngineUrl',
+                               '@Model.CurrentUsername', {
+                                   createEndpoints: @Model.AllowCreateAndDeleteEndpoints.ToString().ToLower(),
+                                   createQueries: @Model.ALlowCreateAndDeleteQueries.ToString().ToLower(),
+                                   createViews: @Model.AllowCreateAndDeleteViews.ToString().ToLower(),
+                                   deleteEndpoints: @Model.AllowCreateAndDeleteEndpoints.ToString().ToLower(),
+                                   deleteQueries: @Model.ALlowCreateAndDeleteQueries.ToString().ToLower(),
+                                   deleteViews: @Model.AllowCreateAndDeleteViews.ToString().ToLower(),
+                                   useAppPrefixFilters: @Model.UseAppPrefixFilters.ToString().ToLower()
+                               });
+        });
+    </script>
+}

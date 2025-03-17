@@ -1,0 +1,93 @@
+﻿@using E.DataLinq.Code.Extensions
+@using E.DataLinq.Code.Services
+@using E.DataLinq.Core.Models
+@using E.DataLinq.Core
+@using Microsoft.Extensions.Options
+@inject IOptions<DataLinqCodeOptions> DataLinqOptions
+
+@{
+    var Options = DataLinqOptions.Value;
+    var version = typeof(DataLinqCodeOptions).Assembly.GetName().Version;
+
+    Layout = "~/Views/Shared/_Layout_empty-datalinq-code-nocode-frame.cshtml";
+    ViewBag.Title = "DataLinq Code";
+}
+
+<script src="~/_content/E.DataLinq.Code/js/datalinq-code-compile.js?@(DataLinqVersion.JsVersion)"></script>
+
+<div class="datalinq-code-tiles">
+    @if (!String.IsNullOrEmpty(Options.ProjectWebSite))
+    {
+        <div class="datalinq-code-tile" >
+            <div onclick="window.open('@Options.ProjectWebSite');return false;">
+                <h1>Welcome to DataLinq.Code</h1>
+                <p>
+                    The DataLinq Code Editor
+                </p>
+            </div>
+            <div onclick="onVersionClick();return false;">
+                <p>
+                    Version: @version
+                </p>
+            </div>
+        </div>
+    }
+
+    <div class="datalinq-code-tile" onclick="compileAllViews();return false;">
+        <h1>Verify All Views</h1>
+        <p>
+            Compile all views to check for errors.
+        </p>
+        <div id="compiler-progress">
+
+        </div>
+    </div>
+
+    <div class="datalinq-code-tile" >
+        <div onclick ="loadAllViews();return false;">
+            <h1>Try Load All Documents</h1>
+            <p>
+                Verifiy, if all documents are valid and loadable without compiling views
+            </p>
+            <div id="load-progress">
+            </div>
+        </div>
+        <div class="datalinq-code-hidden-developer-content">
+            <input type="checkbox" id="load_all_views_rewrite" />
+            <label for="load_all_views_rewrite">Override after successful reading</label>
+        </div>
+    </div>
+</div>
+
+<div class="datalinq-code-output">
+
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        $(function () {
+
+        });
+
+        function compileAllViews() {
+            var compiler = new datalinqCodeCompiler();
+            $("#compiler-progress").dataLinqCode_compile_progress({ transmitter: compiler.transmitter });
+            compiler.run($('.datalinq-code-output'));
+        };
+
+        function loadAllViews() {
+            var compiler = new datalinqEntityLoader($("#load_all_views_rewrite").is(":checked"));
+            $("#load-progress").dataLinqCode_compile_progress({ transmitter: compiler.transmitter });
+            compiler.run($('.datalinq-code-output'));
+        };
+
+        let _versionClicks=0;
+        function onVersionClick() {
+            _versionClicks++;
+
+            if(_versionClicks === 7){
+                $('.datalinq-code-hidden-developer-content').removeClass('datalinq-code-hidden-developer-content');
+            }
+        };
+    </script>
+}

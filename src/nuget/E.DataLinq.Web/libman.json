@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "jquery@3.6.0",
+      "destination": "wwwroot/lib/jquery"
+    },
+    {
+      "library": "select2@4.0.13",
+      "destination": "wwwroot/lib/select2"
+    },
+    {
+      "library": "moment.js@2.29.1",
+      "destination": "wwwroot/lib/momentjs"
+    },
+    {
+      "library": "Chart.js@3.9.1",
+      "destination": "wwwroot/lib/chartjs-3x"
+    },
+    {
+      "library": "chartjs-plugin-datalabels@2.2.0",
+      "destination": "wwwroot/lib/chartjs-3x/plugins"
+    },
+    {
+      "library": "flatpickr@4.6.9",
+      "destination": "wwwroot/lib/flatpickr"
+    },
+    {
+      "library": "d3@7.9.0",
+      "destination": "wwwroot/lib/d3-7x"
+    } 
+  ]
+}
+ 

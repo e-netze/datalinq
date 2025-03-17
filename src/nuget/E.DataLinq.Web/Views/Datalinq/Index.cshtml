@@ -1,0 +1,94 @@
+﻿@inject E.DataLinq.Core.Services.Abstraction.IHostUrlHelper HostUrlHelper
+@inject E.DataLinq.Web.Services.DataLinqInfoService DataLinqInfo
+
+@{
+    ViewBag.Title = "DataLinq";
+    Layout = "~/Views/Shared/_Layout_empty-datalinq.cshtml";
+}
+
+<style>
+table {
+    font-size: 16px;
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    border-spacing: 0;
+    text-align:left;
+    margin: 20px 0;
+    display: table;
+    border: 1px solid #ccc;
+}
+
+table tr {
+    border-bottom: 1px solid #ddd;
+}
+
+table tr th {
+    padding-top: 11px;
+    padding-bottom: 11px;
+    background-color: #006eb8;
+    color: white;
+}
+
+table tr:nth-child(odd) {
+    background-color: #fff;
+}
+
+table tr:nth-child(even) {
+    background-color: #E7E9EB;
+}
+
+table tr td, table tr th {
+    text-align: left;
+    padding: 8px;
+}
+
+.error {
+    background-color:#f88;
+    color:#fff;
+    padding:10px;
+    box-sizing: border-box;
+    border:2px solid #f00;
+    border-radius:5px;
+    display:inline-block;
+}
+
+</style>
+
+<h1>DataLinq</h1>
+
+@if(!String.IsNullOrEmpty(Context.Request.Query["error"])) {
+    <div class="error">
+        <span>@Context.Request.Query["error"]</span>
+    </div>
+}
+
+<table>
+    <tr>
+        <th>Parameter</th>
+        <th>Value</th>
+    </tr>
+    <tr>
+        <td>
+            Version
+        </td>
+        <td>
+            @DataLinqInfo.Version.ToString()
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Root Url
+        </td>
+        <td>
+            <a href="@HostUrlHelper.HostAppRootUrl()">@HostUrlHelper.HostAppRootUrl()</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Code.Api
+        </td>
+        <td>
+            @DataLinqInfo.CodeApi
+        </td>
+    </tr>
+</table>

@@ -1,0 +1,44 @@
+﻿@using E.DataLinq.Core
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta http-equiv="X-UA-Compatible" content="IE=9,10,edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>@ViewBag.Title</title>
+    <environment names="Development">
+        <link href="~/_content/E.DataLinq.Code/css/datalinq-code.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+        <link href="~/_content/E.DataLinq.Code/css/datalinq-code-typeahead.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+    </environment>
+
+    <environment names="Staging,Production">
+        <link href="~/_content/E.DataLinq.Code/css/datalinq-code.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+        <link href="~/_content/E.DataLinq.Code/css/datalinq-code-typeahead.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+    </environment>
+
+    <style>
+    #datalinq-code-editor-frame {
+        position:absolute;
+        top:0px;
+        left:0px;
+        bottom:0px;
+        right:0px;
+    }
+    </style>
+</head>
+<body style="overflow:auto">
+
+    <script src="~/_content/E.DataLinq.Code/lib/jquery/jquery.min.js"></script>
+    <script src="~/_content/E.DataLinq.Code/js/lib/typeahead/dist/typeahead.jquery.min.js"></script>
+
+    @RenderBody()
+
+    @RenderSection("scripts", required: false)
+
+</body>
+</html>

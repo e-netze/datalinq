@@ -1,0 +1,141 @@
+﻿@using E.DataLinq.Code.Extensions
+@using E.DataLinq.Code.Services
+@model E.DataLinq.Core.Models.DataLinqEndPointQueryView
+
+@inject DataLinqCodeService DataLinqCode
+
+@{
+    Layout = "~/Views/Shared/_Layout_empty-datalinq-code-frame.cshtml";
+    ViewBag.Title = "DataLinq Code";
+}
+
+<div class="datalinq-code-editor-code-panel switch-to code">
+    <div id="datalinq-code-editor-code">
+
+    </div>
+    <div class="datalinq-code-editor-code-errors">
+
+    </div>
+
+    <div class="datalinq-code-editor-code-statusbar">
+
+    </div>
+</div>
+
+<div class="datalinq-code-editor-settings switch-to settings">
+    @using (Html.BeginForm("EditEndPointQueryView", "DataLinqCode", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.HiddenFor(m => m.EndPointId)
+        @Html.HiddenFor(m => m.QueryId)
+        @Html.HiddenFor(m => m.Code)
+
+        <h3>Link</h3>
+        <div class="hr" ></div>
+
+        <div class="datalinq-form-section">
+            <label for="_route">Route</label>
+            <input type="text" name="_route" readonly="readonly" />
+        </div>
+
+        <h3>General</h3>
+        <div class="hr" ></div>
+
+        <div class="datalinq-form-section">           
+            @Html.LabelFor(m => m.ViewId)
+            @Html.DescriptionFor(m => m.ViewId)
+            @Html.TextBoxFor(m => m.ViewId, htmlAttributes: new { @readonly = "readonly" })
+
+            @Html.LabelFor(m => m.Name)
+            @Html.DescriptionFor(m => m.Name)
+            @Html.TextBoxFor(m => m.Name)
+
+            @Html.LabelFor(m => m.Description)
+            @Html.DescriptionFor(m => m.Description)
+            @Html.TextAreaFor(m => m.Description)
+        </div>
+
+        <h3>Debug</h3>
+        <div class="hr" ></div>
+
+        <div class = "datalinq-form-section">
+            @Html.LabelFor(m => m.TestParameters)
+            @Html.DescriptionFor(m => m.TestParameters)
+            @Html.TextBoxFor(m => m.TestParameters)
+        </div>
+
+        <h3>JS Libraries</h3>
+        <div class="hr" ></div>
+
+        <div class="datalinq-form-section">
+            @Html.DescriptionFor(m => m.IncludedJsLibraries)
+            @foreach (var jsLib in await DataLinqCode.ApiClient.GetJsLibraries())
+            {
+                <div style="margin:8px 0px">
+                    @Html.CheckBox($"JsLibrary." + jsLib.Name, Model.IncludedJsLibraries.Split(',').Contains(jsLib.Name))
+                    <div style="display:inline-block">@jsLib.Description</div>
+                </div>
+
+            }
+        </div>
+
+        <h3>Info</h3>
+        <div class="hr" ></div>
+
+        <div class = "datalinq-form-section">
+            @Html.LabelFor(m => m.Created)
+            @Html.TextBoxFor(m => m.Created, htmlAttributes: new { @readonly = "readonly" })
+            @Html.LabelFor(m => m.Changed)
+            @Html.TextBoxFor(m => m.Changed, htmlAttributes: new { @readonly = "readonly" })
+        </div>
+
+        <button class="submit" style="display:none">Submit</button>
+    }
+
+    <div class="privileges-delete">
+        <h3>Delete</h3>
+        <div class="hr" ></div>
+
+        <div class = "datalinq-form-section">
+            <p class='description'>
+                Delete this view permanently
+            </p>
+            <button onclick='dataLinqCodeEditor.delete();return false;'>Delete</button>
+        </div>
+    </div>
+</div>
+
+<div class="datalinq-code-editor-switcher">
+
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        $(function () {
+            window._datalinqCodeAccessToken = new URLSearchParams(window.location.search).get('dl_token');
+            //console.log('_datalinqCodeSession', window._datalinqCodeAccessToken);
+
+            var url = new URL(document.location);
+            var id = (url.searchParams.get("endpoint") || '@(Model.EndPointId)') +
+              "@@" + (url.searchParams.get("query") || '@(Model.QueryId)') +
+              "@@" + (url.searchParams.get("view") || '@(Model.ViewId)');
+
+            $("input[name='_route']").val(id);
+
+            var value = "@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(Model.Code))";
+            
+            //console.log(value);
+
+            dataLinqCodeEditor.init(id, value, "razor");
+
+            if(!dataLinqCode.privileges.deleteViews()) {
+                $('.privileges-delete').remove();
+            }
+
+            dataLinqCodeEditor.events.on('editor-value-changed', function(channel, args) {
+                if(args.id === id) {
+                    $("input[name='Code']").val(args.value);
+                }
+            });
+        });
+    </script>
+}

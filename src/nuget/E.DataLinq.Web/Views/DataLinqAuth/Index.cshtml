@@ -1,0 +1,39 @@
+﻿@model E.DataLinq.Web.Models.Auth.LoginModel
+@{
+    Layout = "~/Views/Shared/_Layout_empty-datalinq.cshtml";
+}
+
+<div class="datalinq-form-panel login">
+
+    <h3>DataLinq.Code Login</h3>
+
+    @if(!String.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="datalinq-form-error">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    @using(Html.BeginForm(FormMethod.Post))
+    {
+        <div class="datalinq-form-label>">
+        @Html.LabelFor(m => m.Name)
+        </div>
+        <div class="datalinq-form-input>">
+        @Html.TextBoxFor(m => m.Name, htmlAttributes:new{ placeholder="Enter username..." })
+        </div>
+
+        <div class="datalinq-form-label>">
+        @Html.LabelFor(m => m.Password)
+        </div>
+        <div class="datalinq-form-input>">
+        @Html.PasswordFor(m => m.Password, htmlAttributes:new{ placeholder="Enter password..." })
+        </div>
+
+        @Html.HiddenFor(m => m.Redirect);
+
+        <br/>
+        <button type="submit">Login</button>
+    }
+
+</div>

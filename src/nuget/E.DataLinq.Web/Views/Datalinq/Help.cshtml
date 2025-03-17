@@ -1,0 +1,85 @@
+﻿@using E.DataLinq.Core
+@model E.DataLinq.Web.Models.HelpModel
+@inject E.DataLinq.Core.Services.Abstraction.IHostUrlHelper HostUrlHelper
+
+@{
+    ViewBag.Title = "Help";
+    Layout = "~/Views/Shared/_Layout_empty-datalinq.cshtml";
+}
+
+ <script src="@(ViewData["contentRootUrl"])/js/datalinq.help.js"></script>
+
+<style>
+    td {
+        border: 1px solid #d4d4d4;
+    }
+</style>
+<link href="@(ViewData["contentRootUrl"])/css/datalinq/help.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+
+@if (String.IsNullOrWhiteSpace(Model.Selected))
+{
+    <h2>DataLinq</h2>
+
+    <input type='text' class='content-search' placeholder='Search...' />
+
+    foreach (var classHelp in Model.Classes)
+    {
+        <h3>@classHelp.Name Klasse</h3>
+        <p class="searchable-content">
+            @classHelp.Description
+        </p>
+
+        <h4>Methods</h4>
+        <table width="100%">
+            @foreach (var methodName in classHelp.MethodNames.OrderBy(m => m))
+            {
+                var method = classHelp.Methods.Where(m => m.Name == methodName).FirstOrDefault();
+                if (!String.IsNullOrWhiteSpace(method.Description))
+                {
+                    <tr class="searchable-content">
+                        <td>
+                            <a href="help?selected=@(classHelp.Name + "." + methodName)">@methodName</a>
+                        </td>
+                        <td>
+                            <p>@method.Description.Split('.')[0]</p>
+                        </td>
+                    </tr>
+                }
+            }
+        </table>
+
+        @if (classHelp.ExtensionMethodNames.Count > 0)
+        {
+            <br />
+            <br />
+            <h4>Extended Methods</h4>
+            <table width="100%">
+                @foreach (var methodName in classHelp.ExtensionMethodNames.OrderBy(m => m))
+                {
+                    var method = classHelp.ExtensionMethods.Where(m => m.Name == methodName).FirstOrDefault();
+                    if (!String.IsNullOrWhiteSpace(method.Description))
+                    {
+                        <tr class="searchable-content">
+                            <td>
+                                <a href="help?selected=@(classHelp.Name + "." + methodName)">@methodName</a>
+                            </td>
+                            <td>
+                                <p>@method.Description.Split('.')[0]</p>
+                            </td>
+                        </tr>
+                    }
+                }
+            </table>
+        }
+    }
+}
+else
+{
+    <a href="@(HostUrlHelper.HostAppRootUrl())/datalinq/help">&lt;&lt; All Methods</a>
+
+    <h1>@Model.Selected</h1>
+
+    var helpClass = Model.Classes.Where(c => c.Name == Model.Selected.Split('.')[0]).FirstOrDefault();
+
+    @Html.Raw(helpClass.ToHtmlString(Model.Selected.Split('.')[1]))
+}

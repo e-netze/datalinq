@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<Version>7.25.1110</Version>
+		<Copyright>2025, Energienetze Steiermark</Copyright>
+		<PackageProjectUrl>https://github.com/e-netze/datalinq</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/e-netze/datalinq</RepositoryUrl>
+		<Authors>Jürgen Gstaltmaier</Authors>
+		<Company />
+		<Product />
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\E.Datalinq.Core\E.DataLinq.Core.csproj" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,36 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.datalinq-instance-panel {
+    cursor: pointer;
+    display: inline-block;
+    width: 320px;
+    height: 140px;
+    border: 1px solid #efefef;
+    background: #eee;
+    padding: 20px;
+    margin: 5px;
+    box-sizing: border-box;
+    border-radius: 12px;
+    box-shadow: 4px 4px 10px #aaa;
+}
+
+    .datalinq-instance-panel:hover {
+        filter: brightness(98%);
+    }

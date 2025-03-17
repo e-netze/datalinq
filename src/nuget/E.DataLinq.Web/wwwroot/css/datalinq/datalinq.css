@@ -1,0 +1,568 @@
+body {
+    background-color: white;
+}
+
+html {
+    background: #fff;
+}
+
+p, td, th {
+    font-family: Arial;
+    font-size: 14px;
+}
+
+select {
+    padding: 4px;
+}
+
+input, select, textarea {
+    border-color: #b5dbad;
+    font-size: 14px;
+}
+
+    input.error, select.error, textarea.error, .select2-selection.error, button.datalinq-submit-form.error {
+        border: 1px solid red !important;
+    }
+
+div.datalinq-error-msg {
+    color: red;
+}
+
+.datalinq-input:focus,
+.datalinq-textarea:focus,
+.datalinq-select:focus,
+.datalinq-input:hover,
+.datalinq-textarea:hover,
+.datalinq-select:hover {
+    border: 1px solid #82c828;
+}
+
+.datalinq-input,
+.datalinq-textarea,
+.datalinq-select {
+    background: #fcfcfc;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    width: 288px;
+    padding: 8px 5px;
+    max-width: 100%;
+    border-radius: 7px;
+    outline: none !important;
+    box-sizing: border-box;
+}
+
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+    border-radius: 0px;
+    border-color: #b5dbad;
+    min-height: 30px;
+}
+
+.select2-search__field {
+    margin-bottom: 2px;
+}
+
+.select2-container {
+    min-width: 300px;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    margin-top: 3px;
+}
+
+
+
+
+
+.responsive-switch {
+    display: none;
+}
+
+.datalinq-mass-attribution {
+    background-color: yellow;
+    margin: 0px;
+    vertical-align: middle;
+}
+
+.datalinq-mass-attribution-deactivated {
+    background-color: lightgrey;
+}
+
+    .datalinq-mass-attribution-deactivated:hover {
+        background-color: lightgrey;
+        cursor: default;
+    }
+
+a {
+    cursor: pointer;
+}
+
+.datalinq-execute-query, .datalinq-open-dialog {
+    vertical-align: middle;
+    min-width: unset;
+    border-radius: unset;
+    background-position: unset !important;
+}
+
+/*.datalinq-selectable {
+    cursor: pointer;
+}*/
+
+.datalinq-selectable.datalinq-selected {
+    background-color: #F7F58E !important;
+}
+
+.datalinq-copy-button {
+    min-width: 10px;
+    min-height: 10px;
+    float: left;
+    cursor: pointer;
+    display: none;
+    position: absolute;
+    top: 0px;
+    padding: 3px;
+    background-repeat: no-repeat;
+    background-position: 1px 1px;
+    border-radius: 4px 0px 0px 4px;
+    background-image: url('../img/copy-16.png');
+    left: -16px;
+}
+
+    .datalinq-copy-button:hover {
+        opacity: .8;
+        background-color: palevioletred;
+    }
+
+.datalinq-copy-helper {
+    position: relative;
+    float: left;
+}
+
+.datalinq-update-filter {
+    padding: 0px 2px 0px 2px;
+    margin: 0px 0px 1px 0px;
+    font-size: unset !important;
+    background-color: transparent;
+    border: none;
+    font-weight: normal;
+    color: black;
+    text-align: left;
+}
+
+.datalinq-update-filter-hover {
+    background-color: #E1F5B1;
+}
+
+.datalinq-update-filter:hover {
+    border: none;
+}
+
+.datalinq-filter-clear {
+    background: #b5dbad;
+}
+
+.datalinq-filter-parameter {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+input.datalinq-filter-parameter[type='text'] {
+    /*height: 18px;*/
+}
+
+input.datalinq-filter-parameter[type='checkbox'] {
+    margin: 7px 0;
+    width: 16px;
+    height: 16px;
+}
+
+.datalinq-chart-label {
+    text-align: center;
+    font-weight: bold;
+    font-size: larger;
+}
+
+.datalinq-button {
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: #b5dbad;
+    color: #303030;
+    font-size: 16px;
+    padding: 6px 16px;
+    border: 2px solid #82C828;
+    cursor: pointer;
+    box-sizing: border-box;
+    border-radius: 18px;
+    outline: none !important;
+}
+
+    .datalinq-button:hover {
+        color: #82C828;
+        background-color: #fff;
+    }
+
+    .datalinq-button.light {
+        background-color: #f6f6f6;
+        border: none;
+        color: #000;
+    }
+
+        .datalinq-button.light:hover {
+            background-color: #efefef;
+        }
+
+
+    .datalinq-button.loading {
+        background-position: 8px center;
+        background-repeat: no-repeat;
+        background-image: url(../img/hourglass/loader1.gif);
+        padding-left: 28px;
+    }
+
+.datalinq-label {
+    display: inline-block;
+    font-size: 14px;
+    margin: 10px 0px 2px 0px;
+    color: #555;
+    padding: 0px 0px 2px 4px;
+}
+
+.collapsed .datalinq-button.menu {
+    background-image: url('../img/down.png');
+    width: auto !important;
+}
+
+.datalinq-button.menu {
+    text-align: left;
+    padding-left: 30px;
+    background-repeat: no-repeat;
+    background-position: 5px center !important;
+    background-size: 20px;
+    background-image: url('../img/up.png');
+    width: 100%;
+}
+
+.datalinq-refresh-filter-container,
+.datalinq-refresh-ordering-container {
+    margin-right: 4px;
+}
+
+    .datalinq-refresh-filter-container.collapsed,
+    .datalinq-refresh-ordering-container.collapsed {
+        background-color: transparent;
+        margin-right: 0px;
+    }
+
+
+.datalinq-refresh-filter-body,
+.datalinq-refresh-ordering-body {
+    padding: 12px;
+    background-color: #fff;
+    border-left: 2px solid #82C828;
+    border-right: 2px solid #82C828;
+    border-bottom: 2px solid #82C828;
+    border-radius: 16px;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.25);
+}
+
+    .datalinq-refresh-filter-body .datalinq-label {
+        color: #7a7a7a;
+        font-size: 14px;
+        min-width: 150px;
+    }
+
+.datalinq-refresh-ordering-body {
+    color: #7a7a7a;
+}
+
+    .datalinq-refresh-ordering-body label {
+        font-weight: normal;
+        font-size: unset;
+    }
+
+.datalinq-modal-loader {
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    z-index: 10000;
+    background-image: url('../img/datalinq-loader2_black.gif');
+    -webkit-transform: rotate(90deg);
+    transform: rotate(90deg);
+    background-size: 60px 60px;
+    background-repeat: no-repeat;
+}
+
+div.datalinq-filter-field-wrapper {
+    margin-bottom: 4px;
+}
+
+    div.datalinq-filter-field-wrapper.loading {
+        background-color: #eee;
+        background-image: url('../img/hourglass/loader1.gif');
+        background-position:right 6px center;
+        background-repeat:no-repeat;
+    }
+
+    div.datalinq-filter-field-wrapper.has-dependencies {
+        opacity:.1;
+    }
+
+@media (min-width: 1200px) {
+    .datalinq-refresh-filter-body {
+        width: 550px;
+    }
+
+    .datalinq-filter-parameter {
+        margin-top: 0px;
+        margin-bottom: 0px;
+    }
+
+    div.datalinq-filter-field-wrapper > div.datalinq-label {
+        width: 200px;
+        float: left;
+        word-wrap: break-word;
+        margin: 0px 4px 2px 0;
+        padding-top: 5px;
+    }
+}
+
+@media (min-width: 1700px) {
+    .datalinq-refresh-filter-body {
+        width: 1100px;
+    }
+
+    div.datalinq-filter-field-wrapper {
+        width: 550px;
+        float: left;
+    }
+}
+
+div.datalinq-filter-field-wrapper:hover {
+    background-color: #e0e0e0;
+}
+
+div.datalinq-filter-field-wrapper:focus {
+    background-color: #ffaaaa;
+}
+
+
+@media (max-width: 400px) {
+    .responsive-container .responsive {
+        display: none;
+    }
+
+    .responsive-container.showall .responsive {
+        display: block;
+    }
+
+    .responsive-container.showall td.responsive,
+    .responsive-container.showall th.responsive {
+        display: table-cell;
+    }
+
+    .responsive-switch {
+        display: block;
+    }
+}
+
+.datalinq-geo-element {
+    cursor: pointer;
+}
+
+    .datalinq-geo-element:hover {
+        background-color: #efefef;
+    }
+
+.datalinq-statistics {
+    display: inline-table;
+    border: 1px solid #aaa;
+    padding: 5px;
+}
+
+.datalinq-refresh-ticker-container {
+    display: inline-block;
+    padding: 4px 13px;
+    border: 2px solid #82C828;
+    cursor: pointer;
+    border-radius: 16px;
+}
+
+    .datalinq-refresh-ticker-container * {
+        cursor: pointer;
+    }
+
+.datalinq-splashscreen {
+    z-index: 999999;
+    background: #eee url(../img/datalinq-splash-logo.png) no-repeat center center;
+    /*display: none;*/
+    padding: 10px;
+    text-align: center;
+    position: fixed;
+}
+
+.datalinq-splashscreen-text {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    color: black;
+    font-size: 8.5px;
+}
+
+.datalinq-filter-parameter.hasvalue,
+.datalinq-filter-parameter.hasvalue + .select2 > .selection > .select2-selection {
+    background-color: #b5dbad;
+}
+
+.datalinq-filter-parameter + .select2 > .selection > .select2-selection--multiple {
+    width: 300px;
+}
+
+.datalinq-button.menu.unused {
+    background-color: #fff;
+    color: #333;
+    box-sizing: border-box;
+}
+
+.datalinq-modal {
+    font-family: Verdana,Tahoma,Arial,sans-serif;
+    font-family: Verdana,Tahoma,Arial,sans-serif;
+    font-size: .73em;
+
+    background-color: #ffffff;
+    margin: 0px;
+    scrollbar-base-color: #ffffff;
+    scrollbar-shadow-color: #ffffff;
+    scrollbar-track-color: #ffffff;
+    scrollbar-arrow-color: #000000;
+    scrollbar-face-color: #bcbbbb;
+    scrollbar-highlight-color: #ffffff;
+    scrollbar-darkshadow-color: #ffffff;
+}
+
+    .datalinq-modal h1,
+    .datalinq-modal h2,
+    .datalinq-modal h3,
+    .datalinq-modal h4,
+    .datalinq-modal h5,
+    .datalinq-modal h6 {
+        font-family: Verdana,Tahoma,Arial,sans-serif;
+    }
+
+    .datalinq-modal,
+    .datalinq-modal *,
+    .datalinq-modal *::before,
+    .datalinq-modal *::after {
+        box-sizing: content-box;
+    }
+
+.datalinq-modal-title {
+    color: #000;
+    background-color: #fcfcfc;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 16px;
+    /*font-weight: bold;*/
+    padding: 12px;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    height: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    border-radius: 5px 5px 0px 0px;
+    text-overflow: ellipsis;
+    padding-right: 32px;
+}
+
+.datalinq-modal-body {
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+    border-radius: 5px;
+}
+
+    .datalinq-modal-body.enlargeable .datalinq-modal-title {
+        cursor: pointer;
+        background-image: url('../img/next-26.png');
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+    }
+
+    .datalinq-modal-body.enlargeable.modal-large .datalinq-modal-title {
+        background-image: url('../img/back-26.png');
+    }
+
+    .datalinq-modal-body.enlargeable .datalinq-modal-title.has-closebutton {
+        background-position: right 40px center;
+    }
+
+.datalinq-modal-content {
+    z-index: 1;
+    position: absolute;
+    overflow: auto;
+    left: 0px;
+    top: 38px;
+    right: 0px;
+    bottom: 0px;
+    padding: 0px 10px;
+}
+
+    .datalinq-modal-content .datalinq-modal-content-fill {
+        margin: 0px -10px;
+    }
+
+.datalinq-modal-body.center .datalinq-modal-content {
+    padding: 10px 15px;
+}
+
+    .datalinq-modal-body.center .datalinq-modal-content .datalinq-modal-content-fill {
+        padding: -10px -15px;
+    }
+
+
+.datalinq-modal-resize {
+    cursor: pointer;
+    background: url(../img/maximize-dialog-26.png) no-repeat center;
+    position: absolute;
+    top: 0px;
+    right: 44px;
+    width: 44px;
+    height: 44px;
+    margin: 0px;
+    padding: 0px;
+}
+
+.datalinq-modal-body.maximized {
+    margin: 8px;
+}
+
+@media (max-width: 600px) {
+    .datalinq-modal-body.maximized {
+        margin: 2px;
+    }
+}
+
+.datalinq-modal-body.maximized .datalinq-modal-resize {
+    background: url(../img/minimize-dialog-26.png) no-repeat center;
+}
+
+.datalinq-modal-close {
+    cursor: pointer;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 44px;
+    height: 44px;
+    background-image: url('../img/close-26.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+    /*background-color: rgba(226,226,226,.7);*/
+}
+
+    .datalinq-modal-close:hover {
+        background-color: #ff0101;
+    }
+
+.datalinq-modal-body.animate {
+    transition: opacity .3s ease-in, height .3s ease-in, width .3s ease-in, left .3s ease-in, top .3s ease-in
+}

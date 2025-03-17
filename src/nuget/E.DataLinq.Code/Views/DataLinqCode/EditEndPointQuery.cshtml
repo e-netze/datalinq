@@ -1,0 +1,191 @@
+﻿@using E.DataLinq.Code.Extensions
+@model E.DataLinq.Core.Models.DataLinqEndPointQuery
+
+@{
+    Layout = "~/Views/Shared/_Layout_empty-datalinq-code-frame.cshtml";
+    ViewBag.Title = "DataLinq Code";
+}
+
+<div class="datalinq-code-editor-code-panel switch-to code">
+    <div id="datalinq-code-editor-code">
+
+    </div>
+    <div class="datalinq-code-editor-code-errors">
+
+    </div>
+
+    <div class="datalinq-code-editor-code-statusbar">
+
+    </div>
+</div>
+
+<div class="datalinq-code-editor-settings switch-to settings">
+    @using (Html.BeginForm("EditEndPointQuery", "DataLinqCode", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.HiddenFor(m => m.EndPointId)
+        @Html.HiddenFor(m => m.Statement)
+
+        <h3>Link</h3>
+        <div class="hr" ></div>
+
+        <div class="datalinq-form-section">
+            <label for="_route">Route</label>
+            <input type="text" name="_route" readonly="readonly" />
+        </div>
+
+        <h3>General</h3>
+        <div class="hr" ></div>
+
+        <div class="datalinq-form-section">
+            @Html.LabelFor(m => m.QueryId)
+            @Html.DescriptionFor(m => m.QueryId)
+            @Html.TextBoxFor(m => m.QueryId, htmlAttributes: new { @readonly = "readonly" })
+
+            @Html.LabelFor(m => m.Name)
+            @Html.DescriptionFor(m => m.Name)
+            @Html.TextBoxFor(m => m.Name)
+
+            @Html.LabelFor(m => m.Description)
+            @Html.DescriptionFor(m => m.Description)
+            @Html.TextAreaFor(m => m.Description)
+        </div>
+       
+        <h3>Debug</h3>
+        <div class="hr" ></div>
+
+        <div class = "datalinq-form-section">
+            @Html.LabelFor(m => m.TestParameters)
+            @Html.DescriptionFor(m => m.TestParameters)
+            @Html.TextBoxFor(m => m.TestParameters)
+        </div>
+
+        <h3>Security</h3>
+        <div class="hr" ></div>
+
+       <div class = "datalinq-form-section">
+            @if (ViewData["AccessTree"] != null)
+            {
+                <span>Access Tree</span>
+                <div class="datalinq-access-tree"></div>
+            }
+            <div style="@(ViewData["AccessTree"] == null ? "" : "display:none")">
+                <span>Authorized Users/Roles:</span>
+                @Html.DescriptionFor(m => m.Access)
+                <div class="datalinq-access-control" data-value="@String.Join(',', Model.Access ?? new string[0])"></div>
+            </div>
+            <br />
+            @Html.LabelFor(m => m.AccessTokens)
+            @Html.DescriptionFor(m => m.AccessTokens)
+            <div>
+                <button type="button" onclick='dataLinqCodeEditor.refreshToken(0)'>Refresh</button>
+                <button type="button" onclick="dataLinqCodeEditor.clearToken(0)">Clear</button>
+                <br/>
+                <input type="text" readonly="readonly" name="datalinq_token0" value="@(Model.AccessTokens!=null && Model.AccessTokens.Length>0 ? Model.AccessTokens[0] : String.Empty)">
+            </div>
+            <div>
+                <button type="button" onclick='dataLinqCodeEditor.refreshToken(1)'>Refresh</button>
+                <button type="button" onclick="dataLinqCodeEditor.clearToken(1)">Clear</button>
+                <br/>
+                <input type="text" readonly="readonly" name="datalinq_token1" value="@(Model.AccessTokens!=null && Model.AccessTokens.Length>1 ? Model.AccessTokens[1] : String.Empty)">
+            </div>
+        </div>
+
+        <h3>Domains</h3>
+        <div class="hr"></div>
+
+        <div class = "datalinq-form-section">
+
+            @Html.LabelFor(m => m.Domains)
+            @Html.DescriptionFor(m => m.Domains)
+
+            <table style="width:100%;font-size:10px">
+                <tr>
+                    <th style="width:130px">Destination Field</th>
+                    <th>Query Id</th>
+                    <th style="width:120px">Value Field</th>
+                    <th style="width:120px">Name Field</th>
+                </tr>
+                @for (var i = 0; i < 10; i++)
+                {
+                    <tr>
+                        <td>
+                            <input type="text" style="width:100%" name="domain_destination_field_@(i)" value="@(Model.Domains != null && Model.Domains.Length > i ? Model.Domains[i].DestinationField : String.Empty)" />
+                        </td>
+                        <td>
+                            <input type="text" style="width:100%" name="domain_query_id_@(i)" value="@(Model.Domains != null && Model.Domains.Length > i ? Model.Domains[i].QueryId : String.Empty)" />
+                        </td>
+                        <td>
+                            <input type="text" style="width:100%" name="domain_value_field_@(i)" value="@(Model.Domains != null && Model.Domains.Length > i ? Model.Domains[i].ValueField : String.Empty)" />
+                        </td>
+                        <td>
+                            <input type="text" style="width:100%" name="domain_name_field_@(i)" value="@(Model.Domains != null && Model.Domains.Length > i ? Model.Domains[i].NameField : String.Empty)" />
+                        </td>
+                    </tr>
+                }
+            </table>
+
+        </div>
+
+        <h3>Info</h3>
+        <div class="hr" ></div>
+
+        <div class = "datalinq-form-section">
+            @Html.LabelFor(m => m.Created)
+            @Html.TextBoxFor(m => m.Created, htmlAttributes: new { @readonly = "readonly" })
+        </div>
+
+        <button class="submit" style="display:none">Submit</button>
+    }
+
+    <div class="privileges-delete">
+        <h3>Delete</h3>
+        <div class="hr" ></div>
+
+        <div class = "datalinq-form-section">
+            <p class='description'>
+                Delete this query (and included and views) permanently
+            </p>
+            <button onclick='dataLinqCodeEditor.delete();return false;'>Delete</button>
+        </div>
+    </div>
+</div>
+
+<div class="datalinq-code-editor-switcher">
+
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        $(function () {
+            window._datalinqCodeAccessToken = new URLSearchParams(window.location.search).get('dl_token');
+            //console.log('_datalinqCodeSession', window._datalinqCodeAccessToken);
+
+            var url = new URL(document.location);
+            var id = (url.searchParams.get("endpoint") || '@(Model.EndPointId)') +
+              "@@" + (url.searchParams.get("query") || '@(Model.QueryId)');
+
+            $("input[name='_route']").val(id);
+
+            var value = "@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(Model.Statement))";
+            
+            //console.log(value);
+
+            $(".datalinq-access-tree")
+                .data('tree', @Html.Raw(ViewData["AccessTree"] == null ? null : System.Text.Json.JsonSerializer.Serialize(ViewData["AccessTree"], new System.Text.Json.JsonSerializerOptions(){})));
+
+            //console.log($(".datalinq-access-tree").data('tree'));
+
+            dataLinqCodeEditor.init(id, value, "sql");
+
+            if(!dataLinqCode.privileges.deleteQueries()) {
+                $('.privileges-delete').remove();
+            }
+
+            dataLinqCodeEditor.events.on('editor-value-changed', function(channel, args) {
+                if(args.id === id) {
+                    $("input[name='Statement']").val(args.value);
+                }
+            });
+        });
+    </script>
+}
