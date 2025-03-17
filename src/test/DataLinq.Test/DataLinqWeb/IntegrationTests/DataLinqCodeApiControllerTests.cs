@@ -15,7 +15,7 @@ namespace E.DataLinq.Test.DataLinqWeb.IntegrationTests;
 [TestClass]
 public class DataLinqCodeCodeApiControllerTests
 {
-    private static readonly string ENDPOINTS_STORAGE_PATH = "c:\\temp\\datalinq-tests\\storage"; //"E:\\geonet_sys\\development\\shared\\webgis\\webgis5-storage\\webgis.tools.datalinq.endpoints";
+    private static readonly string ENDPOINTS_STORAGE_PATH = "c:\\temp\\datalinq-tests\\storage";
 
     //Setup
     #region Init
