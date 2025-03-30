@@ -1,14 +1,8 @@
-﻿#pragma warning restore 1591
-
-using E.DataLinq.Core;
+﻿using E.DataLinq.Core;
 using E.DataLinq.Core.Reflection;
 using E.DataLinq.Web.Extensions;
-using E.DataLinq.Web.Html;
-using E.DataLinq.Web.Html.Abstractions;
-using E.DataLinq.Web.Html.Extensions;
 using E.DataLinq.Web.Models;
 using E.DataLinq.Web.Models.Razor;
-using E.DataLinq.Web.Razor.Extensions;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using Microsoft.AspNetCore.Http;
@@ -16,7 +10,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Diagnostics.Metrics;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
@@ -26,25 +19,18 @@ using System.Web;
 
 namespace E.DataLinq.Web.Razor;
 
-
-/// <summary>
-/// DataLinqHelper is a utility class for dynamic content management in Razor environments, facilitating data fetching,
-/// view inclusion, and user interactions.
-/// It provides methods for loading data, managing views, and generating HTML
-/// elements for user interfaces.
-/// </summary>
 [HelpDescription(@"
 Die Klasse ist eine Hilfsklasse, die innerhalb der Razor Umgebeung von DataLinq genutzt werden kann. Der Zugriff verfolgt über den globalen Namen DataLinqHelper bzw. der Kurzform DLH.
 Die Methoden dieser Klasse ermöglichen dynamische Inhalte innerhalb einer DataLinq Seite, wie das nachladen von Views, Editieren, Karten, Sortierung usw. 
             ")]
-public class DataLinqHelper : IDataLinqHelper
+public class DataLinqHelperClassic : IDataLinqHelper
 {
     private readonly HttpContext _httpContext;
     private readonly DataLinqService _currentDatalinqService;
     private readonly IDataLinqUser _ui;
     private readonly IRazorCompileEngineService _razor;
 
-    public DataLinqHelper(
+    public DataLinqHelperClassic(
         HttpContext httpContext,
         DataLinqService currentDatalinqService,
         IRazorCompileEngineService razorService,
@@ -58,23 +44,6 @@ public class DataLinqHelper : IDataLinqHelper
 
     #region Load/Fetch Data
 
-    /// <summary>
-    /// Fetches data from a Datalinq query and passes 
-    /// the result to a specified JavaScript function.
-    /// </summary>
-    /// <param name="id">
-    /// Specifies the identifier for the query in a specific format.
-    /// </param>
-    /// <param name="jsCallbackFuncName">
-    /// Indicates the name of the JavaScript function that will receive the data.
-    /// </param>
-    /// <param name="filter">
-    /// Allows for additional filtering of the data being fetched.
-    /// </param>
-    /// <param name="encodeUrl">
-    /// Determines whether the identifier should be URL-encoded, defaulting to true.
-    /// </param>
-    /// <returns>Returns a raw string containing HTML markup for data fetching.</returns>
     [HelpDescription("Die Methode holt Daten aus einer Datalinq Query ab und übergibt das Ergebnis an eine Javascript Funktion.")]
     public object JsFetchData(
             [HelpDescription("Gibt die Id der Query in folgender Form an: endpoint-id@query-id")]
@@ -86,20 +55,19 @@ public class DataLinqHelper : IDataLinqHelper
             bool encodeUrl = true
         )
     {
-        var htmlBuilder = HtmlBuilder.Create()
-                .AppendDiv(div =>
-                {
-                    div.AddAttribute("class", "datalinq-fetch")
-                       .AddAttribute("data-source", ParseUrl(id, encodeUrl))
-                       .AddAttribute("data-js-callback", ParseUrl(jsCallbackFuncName, encodeUrl));
+        StringBuilder sb = new StringBuilder();
+        sb.Append("<div class='datalinq-fetch' data-source='");
+        sb.Append(ParseUrl(id, encodeUrl));
+        sb.Append("' data-js-callback='");
+        sb.Append(ParseUrl(jsCallbackFuncName, encodeUrl));
+        if (!String.IsNullOrEmpty(filter))
+        {
+            sb.Append("' data-filter='");
+            sb.Append(ParseUrl(filter, encodeUrl));
+        }
+        sb.Append("'></div>");
 
-                    if (!String.IsNullOrEmpty(filter))
-                    {
-                        div.AddAttribute("data-filter", ParseUrl(filter, encodeUrl));
-                    }
-                });
-
-        return _razor.RawString(htmlBuilder.BuildHtmlString());
+        return _razor.RawString(sb.ToString());
     }
 
     [HelpDescription("Übergibt records an eine Javascript Funktion.")]
@@ -110,43 +78,37 @@ public class DataLinqHelper : IDataLinqHelper
             string jsCallbackFuncName
          )
     {
-        #region Build Javascript Block
+        StringBuilder sb = new StringBuilder();
 
-        StringBuilder js = new StringBuilder();
+        sb.Append("<script>");
+        sb.Append("$(function(){");  // load, when page is rendered
 
-        js.Append("$(function(){");  // load, when page is rendered
-        js.Append($"window.{jsCallbackFuncName}(");
-
+        sb.Append($"window.{jsCallbackFuncName}(");
         if (records != null)
         {
             bool firstObject = true;
-            js.Append("[");
+            sb.Append("[");
             foreach (var record in records)
             {
-                if (firstObject) { firstObject = false; } else { js.Append(","); }
-                js.Append("{");
+                if (firstObject) { firstObject = false; } else { sb.Append(","); }
+                sb.Append("{");
 
                 bool firstProperty = true;
                 foreach (var kvp in record)
                 {
-                    if (firstProperty) { firstProperty = false; } else { js.Append(","); }
-                    js.Append($"{kvp.Key}:{System.Text.Json.JsonSerializer.Serialize(kvp.Value)}");
+                    if (firstProperty) { firstProperty = false; } else { sb.Append(","); }
+                    sb.Append($"{kvp.Key}:{System.Text.Json.JsonSerializer.Serialize(kvp.Value)}");
                 }
-                js.Append("}");
+                sb.Append("}");
             }
-            js.Append("]");
+            sb.Append("]");
         }
+        sb.Append(");");
 
-        js.Append(");");  // window.{jsCallbackFuncName}
-        js.Append("});");  // (function() {
+        sb.Append("});");
+        sb.Append("</script>");
 
-        #endregion
-
-        return _razor.RawString(
-            HtmlBuilder.Create()
-                .AppendJavaScriptBlick(js.ToString())
-                .BuildHtmlString()
-            );
+        return _razor.RawString(sb.ToString());
     }
 
     [HelpDescription("Die Methode lädt die Records aus der angegeben Query (endpoint@query). Die Abfrage passiert serverseitig während des Renderns der Seite.")]
@@ -208,16 +170,8 @@ public class DataLinqHelper : IDataLinqHelper
         [HelpDescription("Gibt an, die Id urlkodiert werden sollte. Standardmäßig sollte hier immer true übergeben werden")]
         bool encodeQueryString = true)
     {
-        return _razor.RawString(
-                HtmlBuilder.Create()
-                    .AppendDiv(div =>
-                        div.AddClass("datalinq-include")
-                           .AddAttribute("data-source", ParseUrl(id, encodeQueryString))
-                    )
-                    .BuildHtmlString()
-             );
-
-        //return _razor.RawString("<div class='datalinq-include' data-source='" + ParseUrl(id, encodeQueryString) + "'></div>");
+        return _razor.RawString("<div class='datalinq-include' data-source='" + ParseUrl(id, encodeQueryString) + "'></div>");
+        //return IncludeView(id, String.Empty, String.Empty, encodeQueryString);
     }
 
     [HelpDescription("Hier werden anstelle einer langen URL die Filter und Sortierungsfelder getrennt eingegeben. Das ist von Bedeutung, wenn im damit eingebundenen View nach Werten gefiltert werden soll, die im übergeordneten View mitgegeben werden.")]
@@ -231,18 +185,7 @@ public class DataLinqHelper : IDataLinqHelper
         [HelpDescription("Gibt an, die Id urlkodiert werden sollte. Standardmäßig sollte hier immer true übergeben werden")]
         bool encodeUrl = true)
     {
-        return _razor.RawString(
-                HtmlBuilder.Create()
-                    .AppendDiv(div =>
-                        div.AddClass("datalinq-include")
-                           .AddAttribute("data-source", ParseUrl(id, encodeUrl))
-                           .AddAttribute("data-filter", ParseUrl(filter, encodeUrl))
-                           .AddAttribute("data-orderby", ParseUrl(orderby, encodeUrl))
-                    )
-                    .BuildHtmlString()
-             );
-
-        //return _razor.RawString("<div class='datalinq-include' data-source='" + ParseUrl(id, encodeUrl) + "' data-filter='" + ParseUrl(filter, encodeUrl) + "' data-orderby='" + ParseUrl(orderby, encodeUrl) + "'></div>");
+        return _razor.RawString("<div class='datalinq-include' data-source='" + ParseUrl(id, encodeUrl) + "' data-filter='" + ParseUrl(filter, encodeUrl) + "' data-orderby='" + ParseUrl(orderby, encodeUrl) + "'></div>");
     }
 
     [HelpDescription(@"Die Methode bindet einen View ein. Der View wird nicht sofort nach dem Aufbau des übergeordneten Views geladen und angezeigt, sondern erst, wenn der Anwender auf einen Button klickt")]
@@ -254,17 +197,7 @@ public class DataLinqHelper : IDataLinqHelper
         [HelpDescription("Gibt an, die Id urlkodiert werden sollte. Standardmäßig sollte hier immer true übergeben werden")]
         bool encodeUrl = true)
     {
-        return _razor.RawString(
-                HtmlBuilder.Create()
-                    .AppendDiv(div =>
-                        div.AddClass("datalinq-include-click")
-                           .AddAttribute("data-source", ParseUrl(id, encodeUrl))
-                           .AddAttribute("data-header", text)
-                    )
-                    .BuildHtmlString()
-             );
-
-        //return _razor.RawString("<div class='datalinq-include-click' data-source='" + ParseUrl(id, encodeUrl) + "' data-header='" + text + "'></div>");
+        return _razor.RawString("<div class='datalinq-include-click' data-source='" + ParseUrl(id, encodeUrl) + "' data-header='" + text + "'></div>");
     }
 
     [HelpDescription("Hier werden anstelle einer langen URL die Filter und Sortierungsfelder getrennt eingegeben. Das ist von Bedeutung, wenn im damit eingebundenen View nach Werten gefiltert werden soll, die im übergeordneten View mitgegeben werden.")]
@@ -280,19 +213,7 @@ public class DataLinqHelper : IDataLinqHelper
         [HelpDescription("Gibt an, die Id urlkodiert werden sollte. Standardmäßig sollte hier immer true übergeben werden")]
         bool encodeUrl = true)
     {
-        return _razor.RawString(
-                HtmlBuilder.Create()
-                    .AppendDiv(div =>
-                        div.AddClass("datalinq-include-click")
-                           .AddAttribute("data-source", ParseUrl(id, encodeUrl))
-                           .AddAttribute("data-filter", ParseUrl(filter, encodeUrl))
-                           .AddAttribute("data-orderby", ParseUrl(orderby, encodeUrl))
-                           .AddAttribute("data-header", text)
-                    )
-                    .BuildHtmlString()
-             );
-
-        //return _razor.RawString("<div class='datalinq-include-click' data-source='" + ParseUrl(id, encodeUrl) + "' data-filter='" + ParseUrl(filter, encodeUrl) + "' data-orderby='" + ParseUrl(orderby, encodeUrl) + "' data-header='" + text + "'></div>");
+        return _razor.RawString("<div class='datalinq-include-click' data-source='" + ParseUrl(id, encodeUrl) + "' data-filter='" + ParseUrl(filter, encodeUrl) + "' data-orderby='" + ParseUrl(orderby, encodeUrl) + "' data-header='" + text + "'></div>");
     }
 
     [HelpDescription("Die Methode erzeugt einen Button, mit dem der Anwender den View durch klick aktualisieren kann. Es wird dabei immer nur der View aktualisiert, in dem der Button mit dieser Methode engefügt wurde.")]
@@ -302,19 +223,13 @@ public class DataLinqHelper : IDataLinqHelper
         [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für diesen Button ((z.B.: new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null)
     {
-        return _razor.RawString(
-                HtmlBuilder.Create()
-                    .AppendRefreshViewClickButtton(label, htmlAttributes)
-                    .BuildHtmlString()
-            );
+        StringBuilder sb = new StringBuilder();
+        sb.Append("<button ");
+        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-button apply");
+        AppendHtmlAttribute(sb, "onclick", "dataLinq.refresh(this)");
+        sb.Append(">" + label + "</button>");
 
-        //StringBuilder sb = new StringBuilder();
-        //sb.Append("<button ");
-        //AppendHtmlAttributes(sb, htmlAttributes, "datalinq-button apply");
-        //AppendHtmlAttribute(sb, "onclick", "dataLinq.refresh(this)");
-        //sb.Append(">" + label + "</button>");
-
-        //return _razor.RawString(sb.ToString());
+        return _razor.RawString(sb.ToString());
     }
 
     [HelpDescription("Die Methode erzeugt einen Button, über den ein View automatisch nach einer Zeitspanne aktualisiert wird. Aktualisiert wird abei nur jener View, in dem sich der Button befinden. Der Anwender kann den Button über Checkbox aktiv bzw. inaktiv schalten.")]
@@ -328,62 +243,37 @@ public class DataLinqHelper : IDataLinqHelper
         [HelpDescription("Gibt an, ob der Timer zu Beginn bereits aktiv ist, oder erst vom Anwender durch Klick auf das Checkbox Symbol aktiv wird.")]
         bool isActive = true)
     {
+        StringBuilder sb = new StringBuilder();
+
         string id = Guid.NewGuid().ToString("N");
 
-        return _razor.RawString(
-                HtmlBuilder.Create()
-                    .AppendDiv(div =>
-                    {
-                        div.AddClass("datalinq-refresh-ticker-container")
-                           .AddAttributes(htmlAttributes)
+        sb.Append("<div ");
+        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-refresh-ticker-container");
+        sb.Append(">");
+        sb.Append("<input ");
+        AppendHtmlAttribute(sb, "class", "datalinq-refresh-ticker");
+        AppendHtmlAttribute(sb, "data-value", seconds.ToString());
+        AppendHtmlAttribute(sb, "data-label", label);
+        AppendHtmlAttribute(sb, "type", "checkbox");
+        AppendHtmlAttribute(sb, "id", id);
+        if (isActive)
+        {
+            AppendHtmlAttribute(sb, "checked", "checked");
+        }
 
-                           .AppendCheckbox(isActive, checkbox =>
-                               checkbox
-                                    .WithId(id)
-                                    .AddClass("datalinq-refresh-ticker")
-                                    .AddAttribute("data-value", seconds.ToString())
-                                    .AddAttribute("data-label", label)
-                                    .AddAttributes(htmlAttributes)
-                           )
-                           .AppendLabelFor(id, label =>
-                               label.AddStyle("display", "inline")
-                                    .Content($"&nbsp;{label}&nbsp;{seconds}&nbsp;Sekunden")
-                           );
-                    })
-                    .BuildHtmlString()
-            );
+        sb.Append(">");
+        sb.Append("</input>");
 
-        //StringBuilder sb = new StringBuilder();
+        sb.Append("<label ");
+        AppendHtmlAttribute(sb, "style", "display:inline");
+        AppendHtmlAttribute(sb, "for", id);
+        sb.Append(">");
+        sb.Append("&nbsp;" + label + "&nbsp;" + seconds + "&nbsp;Sekunden");
+        sb.Append("</label>");
 
-        //string id = Guid.NewGuid().ToString("N");
+        sb.Append("</div>");
 
-        //sb.Append("<div ");
-        //AppendHtmlAttributes(sb, htmlAttributes, "datalinq-refresh-ticker-container");
-        //sb.Append(">");
-        //sb.Append("<input ");
-        //AppendHtmlAttribute(sb, "class", "datalinq-refresh-ticker");
-        //AppendHtmlAttribute(sb, "data-value", seconds.ToString());
-        //AppendHtmlAttribute(sb, "data-label", label);
-        //AppendHtmlAttribute(sb, "type", "checkbox");
-        //AppendHtmlAttribute(sb, "id", id);
-        //if (isActive)
-        //{
-        //    AppendHtmlAttribute(sb, "checked", "checked");
-        //}
-
-        //sb.Append(">");
-        //sb.Append("</input>");
-
-        //sb.Append("<label ");
-        //AppendHtmlAttribute(sb, "style", "display:inline");
-        //AppendHtmlAttribute(sb, "for", id);
-        //sb.Append(">");
-        //sb.Append("&nbsp;" + label + "&nbsp;" + seconds + "&nbsp;Sekunden");
-        //sb.Append("</label>");
-
-        //sb.Append("</div>");
-
-        //return _razor.RawString(sb.ToString());
+        return _razor.RawString(sb.ToString());
     }
 
     [HelpDescription("Die Methode erzeugt ein Steuerelement zum Sortieren eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Checkboxen bestimmen, nach welchen Eigenschaften sortiert wird bzw. ob auf- oder absteigend sortiert werden soll. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde aktualisiert.")]
@@ -424,120 +314,58 @@ public class DataLinqHelper : IDataLinqHelper
         [HelpDescription("Boolscher Wert, der angibt, ob die Sortierung zu Beginn geöffnet (aufgeklappt) ist")]
         bool isOpen = false)
     {
-        return _razor.RawString(
-                HtmlBuilder.Create()
-                    .AppendDiv(div =>
-                    {
-                        div.AddClass("datalinq-refresh-ordering-container")
-                           .AddClass("collapsed")
-                           .AddAttribute("data-isOpen", isOpen.ToString())
-                           .AddAttributes(htmlAttributes)
-                           .AppendButton(button =>
-                               button.AddClass("datalinq-button menu")
-                                     .AddAttribute("onclick", "$(this).closest('.datalinq-refresh-ordering-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-ordering-body').slideToggle()")
-                                     .Content(label)
-                           )
-                           .AppendDiv(div =>
-                               div.AddClass("datalinq-refresh-ordering-body")
-                                  .AddStyle("display", "none")
-                                  .AppendTable(table =>
-                                  {
-                                      table.AppendTableRow(tr =>
-                                      {
-                                          tr.AppendTableHeaderCell(th => th.Content("Feld"))
-                                            .AppendTableHeaderCell(th => th.Content("Absteigend"));
-                                      });
-                                      foreach (var orderField in orderFields)
-                                      {
-                                          var orderProperties = ToDictionary(orderField.Value);
-                                          bool checkedAsc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checked", false));
-                                          bool checkedDesc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checkedDesc", false));
+        StringBuilder sb = new StringBuilder();
 
-                                          table.AppendTableRow(tr =>
-                                          {
-                                              tr.AppendTableCell(td =>
-                                                  td.AppendLabel(label =>
-                                                      label
-                                                        .AppendCheckbox(checkedAsc, checkbox =>
-                                                            checkbox
-                                                                .AddClass("datalinq-ordering-field")
-                                                                .WithName(orderField.Key)
-                                                                .AddAttribute("onclick", "dataLinq.updateViewOrdering(this)")
-                                                        )
-                                                        .AppendSpan(span =>
-                                                            span.Content(GetDefaultValueFromRecord(orderProperties, "displayname", orderField.Key).ToString())
-                                                        )
-                                                     )
-                                                 )
-                                                 .AppendTableCell(td =>
-                                                    td.AppendCheckbox(checkedDesc, checkbox =>
-                                                        checkbox
-                                                           .AddClass("datalinq-ordering-desc")
-                                                           .WithName(orderField.Key)
-                                                           .AddAttribute("onclick", "dataLinq.updateViewOrdering(this)")
-                                                    )
-                                              );
-                                          });
-                                      }
-                                  })
-                                  .AppendRefreshViewClickButtton("Übernehmen")
-                           );
-                    })
-                    .BuildHtmlString()
-            );
+        sb.Append("<div ");
+        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-refresh-ordering-container collapsed");  // Ist unabhängig von isOpen immer collapsed. Wenn isOpen == true wird dann beim rendern onclick des Buttons getriggert und "collapsed" wirder entfernt. 
+        AppendHtmlAttribute(sb, "data-isOpen", isOpen.ToString());
+        sb.Append(">");
 
-        //StringBuilder sb = new StringBuilder();
+        sb.Append("<button ");
+        AppendHtmlAttribute(sb, "class", "datalinq-button menu");
+        AppendHtmlAttribute(sb, "onclick", "$(this).closest('.datalinq-refresh-ordering-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-ordering-body').slideToggle()");
+        sb.Append(">" + label + "</button>");
 
-        //sb.Append("<div ");
-        //AppendHtmlAttributes(sb, htmlAttributes, "datalinq-refresh-ordering-container collapsed");  // Ist unabhängig von isOpen immer collapsed. Wenn isOpen == true wird dann beim rendern onclick des Buttons getriggert und "collapsed" wirder entfernt. 
-        //AppendHtmlAttribute(sb, "data-isOpen", isOpen.ToString());
-        //sb.Append(">");
+        sb.Append("<div ");
+        AppendHtmlAttribute(sb, "class", "datalinq-refresh-ordering-body");
+        AppendHtmlAttribute(sb, "style", "display:none");
+        sb.Append(">");
 
-        //sb.Append("<button ");
-        //AppendHtmlAttribute(sb, "class", "datalinq-button menu");
-        //AppendHtmlAttribute(sb, "onclick", "$(this).closest('.datalinq-refresh-ordering-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-ordering-body').slideToggle()");
-        //sb.Append(">" + label + "</button>");
+        sb.Append("<table>");
+        sb.Append("<tr><th>Feld</th><th>Absteigend</th></tr>");
+        foreach (string orderField in orderFields.Keys)
+        {
+            var orderProperties = ToDictionary(orderFields[orderField]);
+            bool checkedAsc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checked", false));
+            bool checkedDesc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checkedDesc", false));
 
-        //sb.Append("<div ");
-        //AppendHtmlAttribute(sb, "class", "datalinq-refresh-ordering-body");
-        //AppendHtmlAttribute(sb, "style", "display:none");
-        //sb.Append(">");
+            sb.Append("<tr>");
+            sb.Append("<td>");
+            sb.Append("<label>");
+            sb.Append("<input");
+            AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-field");
+            //AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-field" + (checkedAsc ? " initial" : ""));
+            //if (checkedAsc == true)
+            //    sb.Append(" checked ");
+            sb.Append("/>&nbsp;" + GetDefaultValueFromRecord(orderProperties, "displayname", orderField) + "</label>");
+            sb.Append("</td>");
+            sb.Append("<td style='text-align:center'>");
+            sb.Append("<input");
+            AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-desc");
+            //AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-desc" + (checkedAsc ? " initial" : ""));
+            //if (checkedDesc == true)
+            //    sb.Append(" checked ");
+            sb.Append("/>");
+            sb.Append("</td>");
+            sb.Append("</tr>");
+        }
+        sb.Append("</table>");
+        sb.Append(RefreshViewClick("Übernehmen").ToString());
+        sb.Append("</div>");
 
-        //sb.Append("<table>");
-        //sb.Append("<tr><th>Feld</th><th>Absteigend</th></tr>");
-        //foreach (string orderField in orderFields.Keys)
-        //{
-        //    var orderProperties = ToDictionary(orderFields[orderField]);
-        //    bool checkedAsc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checked", false));
-        //    bool checkedDesc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checkedDesc", false));
+        sb.Append("</div>");
 
-        //    sb.Append("<tr>");
-        //    sb.Append("<td>");
-        //    sb.Append("<label>");
-        //    sb.Append("<input");
-        //    AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-field");
-        //    //AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-field" + (checkedAsc ? " initial" : ""));
-        //    //if (checkedAsc == true)
-        //    //    sb.Append(" checked ");
-        //    sb.Append("/>&nbsp;" + GetDefaultValueFromRecord(orderProperties, "displayname", orderField) + "</label>");
-        //    sb.Append("</td>");
-        //    sb.Append("<td style='text-align:center'>");
-        //    sb.Append("<input");
-        //    AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-desc");
-        //    //AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-desc" + (checkedAsc ? " initial" : ""));
-        //    //if (checkedDesc == true)
-        //    //    sb.Append(" checked ");
-        //    sb.Append("/>");
-        //    sb.Append("</td>");
-        //    sb.Append("</tr>");
-        //}
-        //sb.Append("</table>");
-        //sb.Append(RefreshViewClick("Übernehmen").ToString());
-        //sb.Append("</div>");
-
-        //sb.Append("</div>");
-
-        //return _razor.RawString(sb.ToString());
+        return _razor.RawString(sb.ToString());
     }
 
     [HelpDescription("Die Methode erzeugt ein Steuerelement zum Filtern eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Eingabefelder/Auswahllisten bestimmen, nach welchen Eigenschaften gefiltert wird. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde aktualisiert.")]
@@ -771,55 +599,6 @@ public class DataLinqHelper : IDataLinqHelper
             #endregion
         }
 
-        var html = HtmlBuilder.Create()
-            .AppendTable(table => 
-            {
-                table
-                    .AddAttributes(htmlAttributes ?? new { style = "width:100%;text-align:left;background:#efefef" })
-                    // header row
-                    .AppendTableRow(headerRow =>
-                    {
-                        headerRow.AddAttributes(row0HtmlAttributes ?? new { style = "background-color:#eee" });
-
-                        // header cells
-                        foreach (var column in columns)
-                        {
-                            headerRow.AppendTableHeaderCell(headerCell =>
-                                  headerCell
-                                      .Content(ToHtml(column))
-                                      .AddAttributes(cell0HtmlAttributes ?? new { style = "padding:4px" })
-                            );
-                        }
-                    });
-
-                // data rows
-                int counter = 0;
-                foreach (var record in records.Take(max))
-                {
-                    table.AppendTableRow(tableRow =>
-                    {
-                        tableRow.AddAttributes(counter++ % 2 == 1
-                                ? row1HtmlAttributes ?? new { style = "background-color:#fff" }
-                                : row2HtmlAttributes ?? new { style = "background-color:#ffd" });
-
-                        foreach (var column in columns)
-                        {
-                            tableRow.AppendTableCell(tableCell =>
-                                        tableCell.Content(record.ContainsKey(column)
-                                                        ? ToHtml(record[column]?.ToString())
-                                                        : String.Empty)
-                                        .AddAttributes(cellHtmlAttributes ?? new { style = "padding:4px" })
-                                    );
-                        }
-                    });
-                }
-
-            })
-        .BuildHtmlString();
-
-        return _razor.RawString(html);
-
-        /*
         sb.Append("<table ");
         AppendHtmlAttributes(sb, htmlAttributes ?? new { style = "width:100%;text-align:left;background:#efefef" });
         sb.Append(" >");
@@ -878,7 +657,6 @@ public class DataLinqHelper : IDataLinqHelper
         sb.Append("</table>");
 
         return _razor.RawString(sb.ToString());
-        */
     }
 
     #region Formular

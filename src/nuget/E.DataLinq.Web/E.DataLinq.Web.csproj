@@ -9,6 +9,8 @@
     <AssemblyVersion>
     </AssemblyVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<NoWarn>$(NoWarn);1591</NoWarn>
+
   </PropertyGroup>
 
 	<PropertyGroup>
@@ -21,6 +23,7 @@
 		<Product />
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 	</PropertyGroup>
 
   <ItemGroup>

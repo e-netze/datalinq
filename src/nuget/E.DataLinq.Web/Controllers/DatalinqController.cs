@@ -186,7 +186,8 @@ public class DataLinqController : DataLinqBaseController
     public IActionResult Help()
     {
         var model = new HelpModel();
-        model.Classes.Add(ClassHelp.FromType(typeof(DataLinqHelper)));
+        //model.Classes.Add(ClassHelp.FromTypeUseAttributes(typeof(DataLinqHelper)));
+        model.Classes.Add(ClassHelp.FromTypeUseXmlDocumentation(typeof(DataLinqHelper)));
         model.Selected = Request.Query["selected"];
 
         return ViewResult(model);
