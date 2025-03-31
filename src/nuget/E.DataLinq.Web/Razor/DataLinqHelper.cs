@@ -596,11 +596,12 @@ public class DataLinqHelper : IDataLinqHelper
         foreach (string filterParameter in filterParameters.Keys)
         {
             var filterProperties = ToDictionary(filterParameters[filterParameter]);
-            sb.Append("<div class='datalinq-filter-field-wrapper'>");
-            sb.Append("<div class='datalinq-label'>" + GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter) + "</div>");
+            sb.Append("<div class='datalinq-filter-field-wrapper'>");            
 
             if (filterProperties != null && filterProperties.ContainsKey("source"))
             {
+                sb.Append("<div class='datalinq-label'>" + GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter) + "</div>");
+
                 var source = GetDefaultValueFromRecord(filterProperties, "source").ToString();
                 var dependsOn = source.KeyParameters();
 
@@ -623,6 +624,10 @@ public class DataLinqHelper : IDataLinqHelper
                 );
                 sb.Append(rawString.ToString());
             }
+            else if(filterProperties != null && filterProperties.ContainsKey("hidden") && GetDefaultValueFromRecord(filterProperties, "hidden").Equals("true"))
+            {
+                sb.Append($"<input type='hidden' name='{filterParameter}' class='datalinq-filter-parameter' value='{GetDefaultValueFromRecord(filterProperties, "defaultValue") ?? ""}' />");
+            }
             else
             {
                 DataType fieldType = DataType.Text;
@@ -635,6 +640,8 @@ public class DataLinqHelper : IDataLinqHelper
                         fieldType = DataType.Text;
                     }
                 }
+
+                sb.Append("<div class='datalinq-label'>" + GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter) + "</div>");
 
                 sb.Append("<input");
                 AppendHtmlAttributes(sb, new
