@@ -185,9 +185,13 @@ public class DataLinqController : DataLinqBaseController
 
     public IActionResult Help()
     {
+        var language = Request.Query["lang"].ToString() ?? "de";
+
         var model = new HelpModel();
+        model.SelectedLanguage = language;
+
         //model.Classes.Add(ClassHelp.FromTypeUseAttributes(typeof(DataLinqHelper)));
-        model.Classes.Add(ClassHelp.FromTypeUseXmlDocumentation(typeof(DataLinqHelper)));
+        model.Classes.Add(ClassHelp.FromTypeUseXmlDocumentation(typeof(DataLinqHelper), language));
         model.Selected = Request.Query["selected"];
 
         return ViewResult(model);

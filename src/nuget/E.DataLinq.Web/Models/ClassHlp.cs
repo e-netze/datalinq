@@ -475,7 +475,7 @@ public class ClassHelp
 
         return classHelp;
     }
-    static public ClassHelp FromTypeUseXmlDocumentation(Type type)
+    static public ClassHelp FromTypeUseXmlDocumentation(Type type, string languageCode)
     {
         ClassHelp classHelp = new ClassHelp()
         {
@@ -491,9 +491,11 @@ public class ClassHelp
         var xdoc = XDocument.Load(xmlFilePath);
 
         // read the comment summary for this type
-        var typeSummary = GetXmlDocumentation(xdoc, type);
+        var typeSummary = GetXmlDocumentation(xdoc, type, languageCode);
 
         classHelp.Description = typeSummary;
+
+        int count = 0;
 
         foreach (var methodInfo in type.GetMethods())
         {
@@ -503,7 +505,7 @@ public class ClassHelp
             }
 
             // read the comment summery and params for this methodInfo
-            var methodSummary = GetXmlDocumentation(xdoc, methodInfo);
+            var methodSummary = GetXmlDocumentation(xdoc, methodInfo, count, languageCode);
 
             var methodHelp = new ClassHelp.MethodHelp()
             {
@@ -515,7 +517,7 @@ public class ClassHelp
 
             foreach (var parameterInfo in methodInfo.GetParameters())
             {
-                var parameterSummary = GetXmlDocumentation(xdoc, parameterInfo);
+                var parameterSummary = GetXmlDocumentation(xdoc, parameterInfo, count, languageCode);
                 methodHelp.Parameters.Add(new ClassHelp.MethodHelp.ParameterHelp()
                 {
                     Name = parameterInfo.Name,
@@ -525,6 +527,8 @@ public class ClassHelp
                     Description = parameterSummary
                 });
             }
+
+            count++;
         }
 
         AddExtensionMethodsUseAttributes(classHelp);
@@ -536,36 +540,71 @@ public class ClassHelp
 
     private const string NotCommented = "Sorry, documentation missing!";
 
-    private static string GetXmlDocumentation(XDocument xdoc, Type type)
+    private static string GetXmlDocumentation(XDocument xdoc, Type type, string languageCode)
     {
         var memberName = $"T:{type.FullName}";
         var member = xdoc
             .Descendants("member")
             .FirstOrDefault(m => m.Attribute("name")?.Value == memberName);
 
-        return member?.Element("summary")?.Value.Trim() ?? NotCommented;
+        return ExtractLanguageDocumentation(member?.Element("summary")?.Value.Trim(), languageCode);
     }
-    private static string GetXmlDocumentation(XDocument xdoc, MethodInfo methodInfo)
+    private static string GetXmlDocumentation(XDocument xdoc, MethodInfo methodInfo, int count, string languageCode)
     {
         var memberName = $"M:{methodInfo.DeclaringType.FullName}.{methodInfo.Name}";
         var member = xdoc
             .Descendants("member")
+            .Skip(count)
             .FirstOrDefault(m => m.Attribute("name")?.Value.StartsWith(memberName) == true);
 
-        return member?.Element("summary")?.Value.Trim() ?? NotCommented;
+        return ExtractLanguageDocumentation(member?.Element("summary")?.Value.Trim(),languageCode);
     }
-    private static string GetXmlDocumentation(XDocument xdoc, ParameterInfo parameterInfo)
+    private static string GetXmlDocumentation(XDocument xdoc, ParameterInfo parameterInfo, int count, string languageCode)
     {
         var memberName = $"M:{parameterInfo.Member.DeclaringType.FullName}.{parameterInfo.Member.Name}";
         var member = xdoc
             .Descendants("member")
+            .Skip(1).Skip(count)
             .FirstOrDefault(m => m.Attribute("name")?.Value.StartsWith(memberName) == true);
 
         var param = member?
             .Elements("param")
             .FirstOrDefault(p => p.Attribute("name")?.Value == parameterInfo.Name);
 
-        return param?.Value.Trim() ?? NotCommented;
+        return ExtractLanguageDocumentation(param?.Value.Trim(),languageCode);
+    }
+
+    private static string ExtractLanguageDocumentation(string xmlDoc, string languageCode)
+    {
+        if (string.IsNullOrEmpty(xmlDoc))
+        {
+            return string.Empty;
+        }
+
+        string languageMarker = languageCode + ":";
+        int langIndex = xmlDoc.IndexOf(languageMarker, StringComparison.OrdinalIgnoreCase);
+
+        if (langIndex == -1)
+        {
+            return xmlDoc;
+        }
+
+        int nextLangIndex = xmlDoc.Length;
+        string[] possibleLanguages = { "de:", "en:" }; 
+
+        foreach (var lang in possibleLanguages)
+        {
+            if (lang != languageCode + ":") 
+            {
+                int index = xmlDoc.IndexOf(lang, langIndex + languageMarker.Length, StringComparison.OrdinalIgnoreCase);
+                if (index > -1 && index < nextLangIndex)
+                {
+                    nextLangIndex = index;
+                }
+            }
+        }
+
+        return xmlDoc.Substring(langIndex + languageMarker.Length, nextLangIndex - (langIndex + languageMarker.Length)).Trim();
     }
 
     static private void AddExtensionMethodsUseAttributes(ClassHelp classHelp)
