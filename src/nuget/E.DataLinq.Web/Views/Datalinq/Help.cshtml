@@ -8,7 +8,7 @@
 }
 
 @{
-    var currentLang = Model.SelectedLanguage ?? "de";
+    var currentLang = Model.SelectedLanguage ?? "en";
 }
 
  <script src="@(ViewData["contentRootUrl"])/js/datalinq.help.js"></script>
@@ -56,8 +56,8 @@
         <h2>DataLinq</h2>
         <div class="language-selector">
             <select id="languageSelector" onchange="changeLanguage(this)">
-                <option value="de" @(currentLang == "de" ? "selected" : "")>DE</option>
                 <option value="en" @(currentLang == "en" ? "selected" : "")>EN</option>
+                <option value="de" @(currentLang == "de" ? "selected" : "")>DE</option>
             </select>
         </div>
     </div>

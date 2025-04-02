@@ -1,5 +1,6 @@
 ﻿using E.DataLinq.Core;
 using E.DataLinq.Core.Reflection;
+using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Razor;
 using System;
 using System.Collections.Generic;
@@ -204,7 +205,7 @@ public class ClassHelp
                 {
                     if (!String.IsNullOrWhiteSpace(parameter.Description))
                     {
-                        sb.Append("<div><strong>" + parameter.Name + ":</strong>&nbsp;");
+                        sb.Append("<div><div class='parameter-name'>" + parameter.Name + ":</div>");
                         sb.Append(ParseDescription(parameter.Description) + "</div>");
                         sb.Append("<br/>");
                     }
@@ -319,7 +320,8 @@ public class ClassHelp
 
         sb.Append("<div class='copyable-content'>");
 
-        sb.Append($"<span class='keyword'>@DLH.{method.Name}(</span>");
+        sb.Append($"<span class='keyword'>@DLH.{method.Name}</span>");
+        sb.Append("<span class='literal'>(</span>");
 
         bool firstParameter = true;
         foreach (var parameter in method.Parameters)
@@ -413,7 +415,7 @@ public class ClassHelp
             firstParameter = false;
         }
 
-        sb.Append("<span>)</span>");
+        sb.Append("<span class='literal'>)</span>");
 
         sb.Append("<button class='copy-button'>Copy</button>");
 
@@ -547,7 +549,7 @@ public class ClassHelp
             .Descendants("member")
             .FirstOrDefault(m => m.Attribute("name")?.Value == memberName);
 
-        return ExtractLanguageDocumentation(member?.Element("summary")?.Value.Trim(), languageCode);
+        return member?.Element("summary")?.Value.ExtractLanguage(languageCode);
     }
     private static string GetXmlDocumentation(XDocument xdoc, MethodInfo methodInfo, int count, string languageCode)
     {
@@ -557,7 +559,7 @@ public class ClassHelp
             .Skip(count)
             .FirstOrDefault(m => m.Attribute("name")?.Value.StartsWith(memberName) == true);
 
-        return ExtractLanguageDocumentation(member?.Element("summary")?.Value.Trim(),languageCode);
+        return member?.Element("summary")?.Value.ExtractLanguage(languageCode);
     }
     private static string GetXmlDocumentation(XDocument xdoc, ParameterInfo parameterInfo, int count, string languageCode)
     {
@@ -571,7 +573,7 @@ public class ClassHelp
             .Elements("param")
             .FirstOrDefault(p => p.Attribute("name")?.Value == parameterInfo.Name);
 
-        return ExtractLanguageDocumentation(param?.Value.Trim(),languageCode);
+        return param?.Value.Trim().ExtractLanguage(languageCode);
     }
 
     private static string ExtractLanguageDocumentation(string xmlDoc, string languageCode)

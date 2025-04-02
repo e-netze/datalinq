@@ -185,7 +185,7 @@ public class DataLinqController : DataLinqBaseController
 
     public IActionResult Help()
     {
-        var language = Request.Query["lang"].ToString() ?? "de";
+        var language = Request.Query["lang"].ToString().DefaultIfNullOrEmpty("en");
 
         var model = new HelpModel();
         model.SelectedLanguage = language;
