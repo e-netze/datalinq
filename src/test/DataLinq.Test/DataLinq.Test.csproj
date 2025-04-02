@@ -40,6 +40,7 @@
     <ProjectReference Include="..\..\nuget\E.DataLinq.Engine.Postgres\E.DataLinq.Engine.Postgres.csproj" />
     <ProjectReference Include="..\..\nuget\E.DataLinq.Engine.SQLite\E.DataLinq.Engine.SQLite.csproj" />
     <ProjectReference Include="..\..\nuget\E.DataLinq.Engine.SqlServer\E.DataLinq.Engine.SqlServer-legacy.csproj" />
+    <ProjectReference Include="..\..\nuget\E.Datalinq.Web\E.DataLinq.Web.csproj" />
   </ItemGroup>
 
 </Project>
