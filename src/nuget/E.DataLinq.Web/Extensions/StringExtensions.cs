@@ -1,4 +1,5 @@
-﻿using System.Collections.Specialized;
+﻿using System;
+using System.Collections.Specialized;
 using System.Text.RegularExpressions;
 
 namespace E.DataLinq.Web.Extensions;
@@ -101,4 +102,39 @@ internal static class StringExtensions
         return input;
     }
 
+    public static string DefaultIfNullOrEmpty(this string input, string defaultString)
+        => string.IsNullOrEmpty(input)
+            ? defaultString
+            : input;
+
+    public static string ExtractLanguage(this string input, string language)
+    {
+        if (string.IsNullOrEmpty(input))
+            return String.Empty;
+
+        var reader = new System.IO.StringReader(input);
+        var sb = new System.Text.StringBuilder();
+        string line, readerLine;
+        bool found = true;
+
+        while ((readerLine = reader.ReadLine()) != null)
+        {
+            line = readerLine.Trim();
+
+            var match = Regex.Match(line, @"^([a-z]{2}):");
+            if (match.Success)
+            {
+                found = match.Groups[1].Value == language;
+                line = line.Substring(3).Trim();
+            }
+
+            if (found)
+            {
+                sb.Append(line);
+                sb.Append(Environment.NewLine);
+            }
+        }
+
+        return sb.ToString().Trim();
+    }
 }

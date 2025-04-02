@@ -402,8 +402,8 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: The text displayed on the button. By default, the text is "Aktualisieren".
     /// </param>
     /// <param name="htmlAttributes">
-    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button. ((z.B.: new { style="width:300px" @class="meine-klasse" })).
-    /// en: An anonymous object containing HTML attributes for the button. ((e.g.: new { style="width:300px" @class="my-class" })).
+    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button. ((z.B.: new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object containing HTML attributes for the button. ((e.g.: new { style="width:300px" @class="my-class" }))
     /// </param>
     /// <returns>
     /// de: Gibt den generierten HTML-Block für den Button zurück.
@@ -441,8 +441,8 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: The number of seconds after which the view will be automatically refreshed.
     /// </param>
     /// <param name="htmlAttributes">
-    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button. ((z.B.: new { style="width:300px" @class="meine-klasse" })).
-    /// en: An anonymous object containing HTML attributes for the button. ((e.g.: new { style="width:300px" @class="my-class" })).
+    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button. ((z.B.: new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object containing HTML attributes for the button. ((e.g.: new { style="width:300px" @class="my-class" }))
     /// </param>
     /// <param name="isActive">
     /// de: Gibt an, ob der Timer zu Beginn aktiv ist oder ob er erst durch den Benutzer über das Checkbox-Symbol aktiviert wird.
@@ -1181,15 +1181,15 @@ public class DataLinqHelper : IDataLinqHelper
     /// </summary>
     /// <param name="id">  
     /// de: Die ID der Query, an die die Formulardaten gesendet werden sollen,  
-    /// im Format (( endpoint-id@query-id )).  
+    /// im Format (( endpoint-id@query-id ))
     /// en: The ID of the query to which the form data should be sent,  
-    /// in the format (( endpoint-id@query-id )).  
+    /// in the format (( endpoint-id@query-id ))
     /// </param>
     /// <param name="htmlAttributes">  
     /// de: Ein anonymes Objekt mit HTML-Attributen für das form-Tag,  
-    /// z. B.: (( new { style="width:300px", @class="meine-klasse" } )).  
+    /// z. B.: (( new { style="width:300px", @class="meine-klasse" } ))
     /// en: An anonymous object containing HTML attributes for the form tag,  
-    /// e.g.: (( new { style="width:300px", @class="my-class" } )).  
+    /// e.g.: (( new { style="width:300px", @class="my-class" } ))
     /// </param>
     /// <returns>  
     /// de: Der HTML-String für den Anfang eines Formulars.  
@@ -1916,7 +1916,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// </param>
     /// <param name="orderField">
     /// de: Art, nach der das Objekt sortiert werden soll. Es kann auf- und absteigend nach dem Gruppennamen (("OrderField.NameAsc", "OrderField.NameDesc")) oder nach Gruppengröße (("OrderField.ValueAsc", "OrderField.ValueDesc")) sortiert werden.
-    /// en: The way in which the object should be sorted. It can be sorted ascending or descending by group name (("OrderField.NameAsc", "OrderField.NameDesc")) or by group size (("OrderField.ValueAsc", "OrderField.ValueDesc")).
+    /// en: The way in which the object should be sorted. It can be sorted ascending or descending by group name (("OrderField.NameAsc", "OrderField.NameDesc")) or by group size (("OrderField.ValueAsc", "OrderField.ValueDesc"))
     /// </param>
     /// <returns>
     /// de: Gibt eine JavaScript-Variable im JSON-Format zurück, die die gruppierten und abgeleiteten Werte enthält, geeignet für Diagramme.
@@ -1963,7 +1963,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// </param>
     /// <param name="orderField">
     /// de: Art, nach der das Objekt sortiert werden soll. Es kann auf- und absteigend nach dem Gruppennamen (("OrderField.NameAsc", "OrderField.NameDesc")) oder nach Gruppengröße (("OrderField.ValueAsc", "OrderField.ValueDesc")) sortiert werden.
-    /// en: The type of sorting to be applied to the object. It can be sorted ascending or descending by group name (("OrderField.NameAsc", "OrderField.NameDesc")) or by group size (("OrderField.ValueAsc", "OrderField.ValueDesc")).
+    /// en: The type of sorting to be applied to the object. It can be sorted ascending or descending by group name (("OrderField.NameAsc", "OrderField.NameDesc")) or by group size (("OrderField.ValueAsc", "OrderField.ValueDesc"))
     /// </param>
     /// <returns>
     /// de: Gibt eine JavaScript-Variable im JSON-Format zurück, die die gruppierten Datensätze und ihre Anzahl enthält.
@@ -2354,12 +2354,12 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: Label for the chart.
     /// </param>
     /// <param name="htmlAttributes">
-    /// de: Ein anonymes Objekt mit HTML-Attributen für die Schaltfläche, bspw. ((new { style="width:300px" @class="meine-klasse" } )).
-    /// en: An anonymous object with HTML attributes for the button, e.g. ((new { style="width:300px" @class="my-class" } )).
+    /// de: Ein anonymes Objekt mit HTML-Attributen für die Schaltfläche, bspw. ((new { style="width:300px" @class="meine-klasse" } ))
+    /// en: An anonymous object with HTML attributes for the button, e.g. ((new { style="width:300px" @class="my-class" } ))
     /// </param>
     /// <param name="chartColorRGB">
-    /// de: Farben, die im Diagramm verwendet werden sollen als R,G,B-String, bspw. ((new string[] {""0,155,20"", ""160,0,25""} )).
-    /// en: Colors to be used in the chart as R,G,B string, e.g. ((new string[] {""0,155,20"", ""160,0,25""} )).
+    /// de: Farben, die im Diagramm verwendet werden sollen als R,G,B-String, bspw. ((new string[] {""0,155,20"", ""160,0,25""} ))
+    /// en: Colors to be used in the chart as R,G,B string, e.g. ((new string[] {""0,155,20"", ""160,0,25""} ))
     /// </param>
     /// <param name="jsDatasetVariable">
     /// de: Name der Javascript-Variable, die als JSON-Objekt Einstellungen zur Darstellung der Datensätze enthält. Je nach Diagrammtyp sind unterschiedliche Einstellungen möglich, siehe dazu http://www.chartjs.org/docs/latest/charts/ => Charttypen => Dataset Properties.
@@ -2411,8 +2411,8 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: Text to be displayed, can also be an empty string and thus display nothing. If no value is passed, the value of copyValue is used.
     /// </param>
     /// <param name="htmlAttributes">
-    /// de: Ein anonymes Objekt mit HTML-Attributen für diesen Button ((z.B.: new { style="width:300px" @class="meine-klasse" } )).
-    /// en: An anonymous object with HTML attributes for this button (e.g. new { style="width:300px" @class="my-class" } ).
+    /// de: Ein anonymes Objekt mit HTML-Attributen für diesen Button ((z.B.: new { style="width:300px" @class="meine-klasse" } ))
+    /// en: An anonymous object with HTML attributes for this button (e.g. new { style="width:300px" @class="my-class" } )
     /// </param>
     /// <returns>
     /// de: Gibt HTML-Code für einen Button zum Kopieren zurück.
