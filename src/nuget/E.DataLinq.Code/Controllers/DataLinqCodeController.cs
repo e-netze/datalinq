@@ -64,10 +64,13 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
     public IActionResult Connect(string id, string userDisplayName, string accessToken)
     {
-        return RedirectToAction("Index", new { dl_token = _crypto.ToSessionString(
-                _crypto.DecryptTextDefault(id), 
-                userDisplayName, 
-                accessToken) });
+        return RedirectToAction("Index", new
+        {
+            dl_token = _crypto.ToSessionString(
+                _crypto.DecryptTextDefault(id),
+                userDisplayName,
+                accessToken)
+        });
     }
 
     public IActionResult Logout()

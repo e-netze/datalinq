@@ -38,7 +38,7 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
             {
                 var parts = style.Split(':');
 
-                if (parts.Length == 2 
+                if (parts.Length == 2
                     && !String.IsNullOrEmpty(parts[0])
                     && !String.IsNullOrEmpty(parts[1]))
                 {
@@ -135,7 +135,7 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
     {
         stream.Write($"<{_elementName}");
 
-        if(_classes is not null)
+        if (_classes is not null)
         {
             stream.Write(" class=\"");
             foreach (var cls in _classes)

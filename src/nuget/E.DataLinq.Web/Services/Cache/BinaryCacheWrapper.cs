@@ -1,6 +1,5 @@
 ﻿using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Cache;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;

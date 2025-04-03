@@ -62,7 +62,7 @@ public class DataLinqCodeServiceTests
         _urlHelperMock = new Mock<IHostUrlHelper>();
 
         _identityServiceMock = new DataLinqCodeIndentityService(_httpContextAccessorMock.Object);
-        _service = new DataLinqCodeService(/*new Mock<IHostUrlHelper>().Object*/_urlHelperMock.Object , _cryptoMock.Object,  _identityServiceMock, _optionsMock.Object);
+        _service = new DataLinqCodeService(/*new Mock<IHostUrlHelper>().Object*/_urlHelperMock.Object, _cryptoMock.Object, _identityServiceMock, _optionsMock.Object);
     }
 
     [TestMethod]

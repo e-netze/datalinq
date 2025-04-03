@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System;
-using System.Runtime.CompilerServices;
 
 namespace E.DataLinq.Code.Extensions;
 static internal class StringExtensions

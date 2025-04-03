@@ -30,7 +30,7 @@ public class DeleteDataLinqRazorEngineTempFilesWorkerService : IWorkerService
 
             _binaryCache.Cleanup("*".ToRazorAssemblyFilename());
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             _logger.LogError(ex, "Error while deleting DataLinq RazorEngine Temp Files");
         }

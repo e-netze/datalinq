@@ -4,7 +4,6 @@ using E.DataLinq.Core;
 using E.DataLinq.Core.Reflection;
 using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Html;
-using E.DataLinq.Web.Html.Abstractions;
 using E.DataLinq.Web.Html.Extensions;
 using E.DataLinq.Web.Models;
 using E.DataLinq.Web.Models.Razor;
@@ -16,7 +15,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Diagnostics.Metrics;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
@@ -594,7 +592,7 @@ public class DataLinqHelper : IDataLinqHelper
     public object SortView(
         string label,
         Dictionary<string, object> orderFields,
-        object htmlAttributes=null,
+        object htmlAttributes = null,
         bool isOpen = false)
     {
         return _razor.RawString(
@@ -812,7 +810,7 @@ public class DataLinqHelper : IDataLinqHelper
         foreach (string filterParameter in filterParameters.Keys)
         {
             var filterProperties = ToDictionary(filterParameters[filterParameter]);
-            sb.Append("<div class='datalinq-filter-field-wrapper'>");            
+            sb.Append("<div class='datalinq-filter-field-wrapper'>");
 
             if (filterProperties != null && filterProperties.ContainsKey("source"))
             {
@@ -840,7 +838,7 @@ public class DataLinqHelper : IDataLinqHelper
                 );
                 sb.Append(rawString.ToString());
             }
-            else if(filterProperties != null && filterProperties.ContainsKey("hidden") && GetDefaultValueFromRecord(filterProperties, "hidden").Equals("true"))
+            else if (filterProperties != null && filterProperties.ContainsKey("hidden") && GetDefaultValueFromRecord(filterProperties, "hidden").Equals("true"))
             {
                 sb.Append($"<input type='hidden' name='{filterParameter}' class='datalinq-filter-parameter' value='{GetDefaultValueFromRecord(filterProperties, "defaultValue") ?? ""}' />");
             }
@@ -1064,7 +1062,7 @@ public class DataLinqHelper : IDataLinqHelper
         }
 
         var html = HtmlBuilder.Create()
-            .AppendTable(table => 
+            .AppendTable(table =>
             {
                 table
                     .AddAttributes(htmlAttributes ?? new { style = "width:100%;text-align:left;background:#efefef" })
@@ -1784,7 +1782,7 @@ public class DataLinqHelper : IDataLinqHelper
         string label,
         string name = "",
         object htmlAttributes = null,
-        bool newLine=true)
+        bool newLine = true)
     {
         var sb = new StringBuilder();
 

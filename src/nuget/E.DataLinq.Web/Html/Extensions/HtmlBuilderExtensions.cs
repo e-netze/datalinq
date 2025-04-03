@@ -1,5 +1,4 @@
 ﻿using E.DataLinq.Web.Html.Abstractions;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 
 namespace E.DataLinq.Web.Html.Extensions;
@@ -28,7 +27,8 @@ static public class HtmlBuilderExtensions
         => builder.Append("input", action);
 
     static public TBuilder AppendTextInput<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, string value, Action<IHtmlElementBuilder> action)
-        => builder.Append("input", input => {
+        => builder.Append("input", input =>
+        {
             input.AddAttribute("type", "text");
             input.AddAttribute("value", value);
             action(input);

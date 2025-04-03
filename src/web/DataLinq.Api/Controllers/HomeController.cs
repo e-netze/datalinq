@@ -1,6 +1,6 @@
-using System.Diagnostics;
+﻿using DataLinq.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using DataLinq.Api.Models;
+using System.Diagnostics;
 
 namespace DataLinq.Api.Controllers;
 

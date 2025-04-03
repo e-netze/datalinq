@@ -308,7 +308,7 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         if (!fi.Directory.Exists)
         {
             throw new ArgumentException($"Endpoint {endPointId} not exists");
-        } 
+        }
 
         fi.Directory.Delete(true);
 

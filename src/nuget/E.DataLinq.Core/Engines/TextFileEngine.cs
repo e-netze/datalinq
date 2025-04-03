@@ -7,12 +7,10 @@ using E.DataLinq.Core.IO;
 using E.DataLinq.Core.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace E.DataLinq.Core.Engines;
 
@@ -90,8 +88,8 @@ public class TextFileEngineOptions
     static public TextFileEngineOptions Default => new TextFileEngineOptions()
     {
         AllowedPaths = Platform.IsWindows
-            ? [ "C:\\DataLinq\\Data\\" ]
-            : [ "/etc/datalinq/data/" ],
+            ? ["C:\\DataLinq\\Data\\"]
+            : ["/etc/datalinq/data/"],
 
         AllowedExtensions = [".txt", ".csv"]
     };

@@ -4,7 +4,6 @@ using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Razor;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -592,11 +591,11 @@ public class ClassHelp
         }
 
         int nextLangIndex = xmlDoc.Length;
-        string[] possibleLanguages = { "de:", "en:" }; 
+        string[] possibleLanguages = { "de:", "en:" };
 
         foreach (var lang in possibleLanguages)
         {
-            if (lang != languageCode + ":") 
+            if (lang != languageCode + ":")
             {
                 int index = xmlDoc.IndexOf(lang, langIndex + languageMarker.Length, StringComparison.OrdinalIgnoreCase);
                 if (index > -1 && index < nextLangIndex)

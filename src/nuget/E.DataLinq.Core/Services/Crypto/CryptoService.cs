@@ -142,8 +142,8 @@ public partial class CryptoService : ICryptoService
 
         byte[] saltBytes = new byte[] { 176, 223, 23, 125, 64, 98, 177, 214 };
         var key = new Rfc2898DeriveBytes(
-                    hash, 
-                    _options.HashBytesSalt, 
+                    hash,
+                    _options.HashBytesSalt,
                     10,
                     hashAlgorithm: HashAlgorithmName.SHA1);
         ret = key.GetBytes(size);

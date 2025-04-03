@@ -69,7 +69,9 @@ internal static class StringExtensions
     public static string CleanRazorString(this string input)
     {
         if (string.IsNullOrWhiteSpace(input))
+        {
             return string.Empty;
+        }
 
         // Entferne Razor-Block-Kommentare (@* ... *@)
         input = Regex.Replace(input, @"@\*.*?\*@", "", RegexOptions.Singleline);
@@ -110,11 +112,15 @@ internal static class StringExtensions
     public static string ExtractLanguage(this string input, string language)
     {
         if (string.IsNullOrEmpty(input))
+        {
             return String.Empty;
+        }
 
         var reader = new System.IO.StringReader(input);
         var sb = new System.Text.StringBuilder();
         string line, readerLine;
+        // be optimistic and set found to true
+        // if there is no language tag, we assume the default language
         bool found = true;
 
         while ((readerLine = reader.ReadLine()) != null)
