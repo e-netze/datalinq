@@ -75,21 +75,25 @@ public static class FileEx
 
     async public static Task<string[]> ReadTopLinesAsync(string fileName, int numLines, string filter = "")
     {
-        List<string> lines = new List<string>();
+        if (numLines <= 0)
+            return [];
 
-        using (StreamReader sr = new StreamReader(fileName))
+        var matchedLines = new List<string>(numLines);
+
+        using var sr = new StreamReader(fileName);
+
+        while (await sr.ReadLineAsync() is { } line)
         {
-            for (int i = 0; i < numLines && !sr.EndOfStream; i++)
+            line = line.Trim();
+            if (!string.IsNullOrEmpty(line) &&
+                (string.IsNullOrEmpty(filter) || line.Contains(filter, StringComparison.OrdinalIgnoreCase)))
             {
-                string line = (await sr.ReadLineAsync()).Trim();
-
-                if (!String.IsNullOrEmpty(line))
-                {
-                    lines.Add(line);
-                }
+                matchedLines.Add(line);
+                if (matchedLines.Count >= numLines)
+                    break;
             }
         }
 
-        return lines.ToArray();
+        return [.. matchedLines];
     }
 }
