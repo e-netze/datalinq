@@ -26,6 +26,17 @@ static public class HtmlBuilderExtensions
     static public TBuilder AppendInput<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, Action<IHtmlElementBuilder> action)
         => builder.Append("input", action);
 
+    static public TBuilder AppendSelect<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, Action<IHtmlElementBuilder> action)
+        => builder.Append("select", action);
+
+    static public TBuilder AppendTextarea<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, Action<IHtmlElementBuilder> action)
+        => builder.Append("textarea", action);
+    static public TBuilder AppendBreak<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, Action<IHtmlElementBuilder> action)
+        => builder.Append("br", action);
+
+    static public TBuilder AppendHtmlElement<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, Action<IHtmlElementBuilder> action, string htmlElement)
+        => builder.Append(htmlElement, action);
+
     static public TBuilder AppendTextInput<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, string value, Action<IHtmlElementBuilder> action)
         => builder.Append("input", input =>
         {

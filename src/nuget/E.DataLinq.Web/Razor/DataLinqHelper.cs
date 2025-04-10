@@ -1,6 +1,7 @@
 ﻿#pragma warning restore 1591
 
 using E.DataLinq.Core;
+using E.DataLinq.Core.Models.AccessTree;
 using E.DataLinq.Core.Reflection;
 using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Html;
@@ -225,6 +226,7 @@ public class DataLinqHelper : IDataLinqHelper
 
     #endregion
 
+    
     #region Load View
 
     /// <summary>
@@ -255,8 +257,6 @@ public class DataLinqHelper : IDataLinqHelper
                     )
                     .BuildHtmlString()
              );
-
-        //return _razor.RawString("<div class='datalinq-include' data-source='" + ParseUrl(id, encodeQueryString) + "'></div>");
     }
 
     /// <summary>
@@ -299,8 +299,6 @@ public class DataLinqHelper : IDataLinqHelper
                     )
                     .BuildHtmlString()
              );
-
-        //return _razor.RawString("<div class='datalinq-include' data-source='" + ParseUrl(id, encodeUrl) + "' data-filter='" + ParseUrl(filter, encodeUrl) + "' data-orderby='" + ParseUrl(orderby, encodeUrl) + "'></div>");
     }
 
     /// <summary>
@@ -337,8 +335,6 @@ public class DataLinqHelper : IDataLinqHelper
                     )
                     .BuildHtmlString()
              );
-
-        //return _razor.RawString("<div class='datalinq-include-click' data-source='" + ParseUrl(id, encodeUrl) + "' data-header='" + text + "'></div>");
     }
 
     /// <summary>
@@ -387,8 +383,6 @@ public class DataLinqHelper : IDataLinqHelper
                     )
                     .BuildHtmlString()
              );
-
-        //return _razor.RawString("<div class='datalinq-include-click' data-source='" + ParseUrl(id, encodeUrl) + "' data-filter='" + ParseUrl(filter, encodeUrl) + "' data-orderby='" + ParseUrl(orderby, encodeUrl) + "' data-header='" + text + "'></div>");
     }
 
     /// <summary>
@@ -416,14 +410,6 @@ public class DataLinqHelper : IDataLinqHelper
                     .AppendRefreshViewClickButtton(label, htmlAttributes)
                     .BuildHtmlString()
             );
-
-        //StringBuilder sb = new StringBuilder();
-        //sb.Append("<button ");
-        //AppendHtmlAttributes(sb, htmlAttributes, "datalinq-button apply");
-        //AppendHtmlAttribute(sb, "onclick", "dataLinq.refresh(this)");
-        //sb.Append(">" + label + "</button>");
-
-        //return _razor.RawString(sb.ToString());
     }
 
     /// <summary>
@@ -457,6 +443,7 @@ public class DataLinqHelper : IDataLinqHelper
         bool isActive = true)
     {
         string id = Guid.NewGuid().ToString("N");
+        string label_ = label;
 
         return _razor.RawString(
                 HtmlBuilder.Create()
@@ -471,47 +458,14 @@ public class DataLinqHelper : IDataLinqHelper
                                     .AddClass("datalinq-refresh-ticker")
                                     .AddAttribute("data-value", seconds.ToString())
                                     .AddAttribute("data-label", label)
-                                    .AddAttributes(htmlAttributes)
                            )
                            .AppendLabelFor(id, label =>
                                label.AddStyle("display", "inline")
-                                    .Content($"&nbsp;{label}&nbsp;{seconds}&nbsp;Sekunden")
+                                    .Content($"&nbsp;{label_}&nbsp;{seconds}&nbsp;Sekunden")
                            );
                     })
                     .BuildHtmlString()
             );
-
-        //StringBuilder sb = new StringBuilder();
-
-        //string id = Guid.NewGuid().ToString("N");
-
-        //sb.Append("<div ");
-        //AppendHtmlAttributes(sb, htmlAttributes, "datalinq-refresh-ticker-container");
-        //sb.Append(">");
-        //sb.Append("<input ");
-        //AppendHtmlAttribute(sb, "class", "datalinq-refresh-ticker");
-        //AppendHtmlAttribute(sb, "data-value", seconds.ToString());
-        //AppendHtmlAttribute(sb, "data-label", label);
-        //AppendHtmlAttribute(sb, "type", "checkbox");
-        //AppendHtmlAttribute(sb, "id", id);
-        //if (isActive)
-        //{
-        //    AppendHtmlAttribute(sb, "checked", "checked");
-        //}
-
-        //sb.Append(">");
-        //sb.Append("</input>");
-
-        //sb.Append("<label ");
-        //AppendHtmlAttribute(sb, "style", "display:inline");
-        //AppendHtmlAttribute(sb, "for", id);
-        //sb.Append(">");
-        //sb.Append("&nbsp;" + label + "&nbsp;" + seconds + "&nbsp;Sekunden");
-        //sb.Append("</label>");
-
-        //sb.Append("</div>");
-
-        //return _razor.RawString(sb.ToString());
     }
 
     /// <summary>
@@ -588,7 +542,6 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Gibt das generierte HTML für das Sortier-Steuerelement zurück.
     /// en: Returns the generated HTML for the sorting control.
     /// </returns>
-
     public object SortView(
         string label,
         Dictionary<string, object> orderFields,
@@ -601,8 +554,8 @@ public class DataLinqHelper : IDataLinqHelper
                     {
                         div.AddClass("datalinq-refresh-ordering-container")
                            .AddClass("collapsed")
-                           .AddAttribute("data-isOpen", isOpen.ToString())
                            .AddAttributes(htmlAttributes)
+                           .AddAttribute("data-isOpen", isOpen.ToString())
                            .AppendButton(button =>
                                button.AddClass("datalinq-button menu")
                                      .AddAttribute("onclick", "$(this).closest('.datalinq-refresh-ordering-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-ordering-body').slideToggle()")
@@ -646,7 +599,7 @@ public class DataLinqHelper : IDataLinqHelper
                                                            .AddClass("datalinq-ordering-desc")
                                                            .WithName(orderField.Key)
                                                            .AddAttribute("onclick", "dataLinq.updateViewOrdering(this)")
-                                                    )
+                                                    ).AddStyle("text-align", "center")
                                               );
                                           });
                                       }
@@ -656,59 +609,6 @@ public class DataLinqHelper : IDataLinqHelper
                     })
                     .BuildHtmlString()
             );
-
-        //StringBuilder sb = new StringBuilder();
-
-        //sb.Append("<div ");
-        //AppendHtmlAttributes(sb, htmlAttributes, "datalinq-refresh-ordering-container collapsed");  // Ist unabhängig von isOpen immer collapsed. Wenn isOpen == true wird dann beim rendern onclick des Buttons getriggert und "collapsed" wirder entfernt. 
-        //AppendHtmlAttribute(sb, "data-isOpen", isOpen.ToString());
-        //sb.Append(">");
-
-        //sb.Append("<button ");
-        //AppendHtmlAttribute(sb, "class", "datalinq-button menu");
-        //AppendHtmlAttribute(sb, "onclick", "$(this).closest('.datalinq-refresh-ordering-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-ordering-body').slideToggle()");
-        //sb.Append(">" + label + "</button>");
-
-        //sb.Append("<div ");
-        //AppendHtmlAttribute(sb, "class", "datalinq-refresh-ordering-body");
-        //AppendHtmlAttribute(sb, "style", "display:none");
-        //sb.Append(">");
-
-        //sb.Append("<table>");
-        //sb.Append("<tr><th>Feld</th><th>Absteigend</th></tr>");
-        //foreach (string orderField in orderFields.Keys)
-        //{
-        //    var orderProperties = ToDictionary(orderFields[orderField]);
-        //    bool checkedAsc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checked", false));
-        //    bool checkedDesc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checkedDesc", false));
-
-        //    sb.Append("<tr>");
-        //    sb.Append("<td>");
-        //    sb.Append("<label>");
-        //    sb.Append("<input");
-        //    AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-field");
-        //    //AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-field" + (checkedAsc ? " initial" : ""));
-        //    //if (checkedAsc == true)
-        //    //    sb.Append(" checked ");
-        //    sb.Append("/>&nbsp;" + GetDefaultValueFromRecord(orderProperties, "displayname", orderField) + "</label>");
-        //    sb.Append("</td>");
-        //    sb.Append("<td style='text-align:center'>");
-        //    sb.Append("<input");
-        //    AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-desc");
-        //    //AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-desc" + (checkedAsc ? " initial" : ""));
-        //    //if (checkedDesc == true)
-        //    //    sb.Append(" checked ");
-        //    sb.Append("/>");
-        //    sb.Append("</td>");
-        //    sb.Append("</tr>");
-        //}
-        //sb.Append("</table>");
-        //sb.Append(RefreshViewClick("Übernehmen").ToString());
-        //sb.Append("</div>");
-
-        //sb.Append("</div>");
-
-        //return _razor.RawString(sb.ToString());
     }
 
     /// <summary>
@@ -758,7 +658,6 @@ public class DataLinqHelper : IDataLinqHelper
         return FilterView(label, dict, htmlAttributes, isOpen);
     }
 
-
     /// <summary>
     /// de: Die Methode erzeugt ein Steuerelement zum Filtern eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Eingabefelder/Auswahllisten bestimmen, nach welchen Eigenschaften gefiltert wird. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde, aktualisiert.
     /// en: The method generates a control for filtering a view. The element expands when a button is clicked. The user can then select which properties to filter by using input fields or dropdown lists. Once the options are confirmed, the view containing the control will be updated.
@@ -790,114 +689,123 @@ public class DataLinqHelper : IDataLinqHelper
         object htmlAttributes = null,
         bool isOpen = false)
     {
-        StringBuilder sb = new StringBuilder();
 
-        sb.Append("<div ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-refresh-filter-container collapsed");
-        AppendHtmlAttribute(sb, "data-isOpen", isOpen.ToString());
-        sb.Append(">");
-
-        sb.Append("<button ");
-        AppendHtmlAttribute(sb, "class", "datalinq-button menu");
-        AppendHtmlAttribute(sb, "onclick", "$(this).closest('.datalinq-refresh-filter-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-filter-body').slideToggle()");
-        sb.Append(">" + label + "</button>");
-
-        sb.Append("<div ");
-        AppendHtmlAttribute(sb, "class", "datalinq-refresh-filter-body");
-        AppendHtmlAttribute(sb, "style", "display:none");
-        sb.Append(">");
-
-        foreach (string filterParameter in filterParameters.Keys)
-        {
-            var filterProperties = ToDictionary(filterParameters[filterParameter]);
-            sb.Append("<div class='datalinq-filter-field-wrapper'>");
-
-            if (filterProperties != null && filterProperties.ContainsKey("source"))
-            {
-                sb.Append("<div class='datalinq-label'>" + GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter) + "</div>");
-
-                var source = GetDefaultValueFromRecord(filterProperties, "source").ToString();
-                var dependsOn = source.KeyParameters();
-
-                var rawString = ComboFor(null, filterParameter,
-                    new
+        return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendDiv(div =>
                     {
-                        @class = "datalinq-filter-parameter",
-                        onchange = "dataLinq.updateViewFilter(this)",
-                        multiple = GetDefaultValueFromRecord(filterProperties, "multiple")
-                    },
-                    new
-                    {
-                        source = source,
-                        valueField = GetDefaultValueFromRecord(filterProperties, "valueField")?.ToString(),
-                        nameField = GetDefaultValueFromRecord(filterProperties, "nameField")?.ToString(),
-                        prependEmpty = GetDefaultValueFromRecord(filterProperties, "prependEmpty"),
-                        dependsOn = dependsOn
-                    },
-                    GetDefaultValueFromRecord(filterProperties, "defaultValue")
+                        div.AddClass("datalinq-refresh-filter-container collapsed");
+                        div.AddAttributes(htmlAttributes);
+                        div.AddAttribute("data-isOpen",isOpen.ToString());
+                        div.AppendButton(button =>
+                        {
+                            button.AddClass("datalinq-button menu");
+                            button.AddAttribute("onclick", "$(this).closest('.datalinq-refresh-filter-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-filter-body').slideToggle()");
+                            button.Content(label);
+                        });
+                        div.AppendDiv(div2 =>
+                        {
+                            div2.AddClass("datalinq-refresh-filter-body");
+                            div2.AddStyle("display", "none");
+
+                            foreach (string filterParameter in filterParameters.Keys)
+                            {
+                                var filterProperties = ToDictionary(filterParameters[filterParameter]);
+                                div2.AppendDiv(div3 =>
+                                {
+                                    div3.AddClass("datalinq-filter-field-wrapper");
+
+                                    if (filterProperties != null && filterProperties.ContainsKey("source"))
+                                    {
+                                        var source = GetDefaultValueFromRecord(filterProperties, "source").ToString();
+                                        var dependsOn = source.KeyParameters();
+
+                                        var rawString = "<div class=\'datalinq-label\'>"+ GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter).ToString() + "</div>" + ComboFor(null, filterParameter,
+                                            new
+                                            {
+                                                @class = "datalinq-filter-parameter",
+                                                onchange = "dataLinq.updateViewFilter(this)",
+                                                multiple = GetDefaultValueFromRecord(filterProperties, "multiple")
+                                            },
+                                            new
+                                            {
+                                                source = source,
+                                                valueField = GetDefaultValueFromRecord(filterProperties, "valueField")?.ToString(),
+                                                nameField = GetDefaultValueFromRecord(filterProperties, "nameField")?.ToString(),
+                                                prependEmpty = GetDefaultValueFromRecord(filterProperties, "prependEmpty"),
+                                                dependsOn = dependsOn
+                                            },
+                                            GetDefaultValueFromRecord(filterProperties, "defaultValue")
+                                        );
+
+                                        div3.Content(rawString.ToString());
+                                    }
+                                    else if (filterProperties != null && filterProperties.ContainsKey("hidden") && GetDefaultValueFromRecord(filterProperties, "hidden").Equals("true"))
+                                    {
+                                        div3.AppendInput(input =>
+                                        {
+                                            input.AddAttribute("type", "hidden");
+                                            input.AddAttribute("name", filterParameter);
+                                            input.AddClass("datalinq-filter-parameter");
+                                            input.AddAttribute("value", GetDefaultValueFromRecord(filterProperties, "defaultValue")?.ToString() ?? "");
+                                        });
+                                    }
+                                    else
+                                    {
+                                        DataType fieldType = DataType.Text;
+                                        if (filterProperties != null && filterProperties.ContainsKey("dataType"))
+                                        {
+                                            fieldType = (DataType)Enum.Parse(typeof(DataType), GetDefaultValueFromRecord(filterProperties, "dataType")?.ToString());
+                                            // Nur wenn Checkbox ausgewählt ist, soll der FieldType geändert werden; da input type nicht "Date", etc. sein soll.
+                                            if (fieldType != DataType.Checkbox)
+                                            {
+                                                fieldType = DataType.Text;
+                                            }
+                                        }
+
+                                        div3.AppendDiv(div6 =>
+                                        {
+                                            div6.AddClass("datalinq-label");
+                                            div6.Content(GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter).ToString());
+                                        }).AppendInput(input =>
+                                        {
+                                            input.AddClass("datalinq-filter-parameter datalinq-input");
+                                            input.AddAttribute("type", fieldType.ToString().ToLower());
+                                            input.AddAttribute("name", filterParameter);
+                                            input.AddAttribute("onkeyup", "dataLinq.updateViewFilter(this)");
+                                            input.AddAttribute("onchange", "dataLinq.updateViewFilter(this)");
+
+                                            if (filterProperties != null)
+                                            {
+                                                if (filterProperties.ContainsKey("dataType"))
+                                                {
+                                                    input.AddAttribute("data-datatype", GetDefaultValueFromRecord(filterProperties, "dataType")?.ToString());
+                                                }
+                                                if (filterProperties.ContainsKey("dropProperty") && filterProperties.ContainsKey("dropQuery"))
+                                                {
+                                                    input.AddAttribute("data-drop-property", GetDefaultValueFromRecord(filterProperties, "dropProperty")?.ToString());
+                                                    input.AddAttribute("data-drop-query", GetDefaultValueFromRecord(filterProperties, "dropQuery")?.ToString());
+                                                }
+                                            }
+                                        });                                    
+                                    }
+                                });
+                            }
+                            div2.AppendBreak(b => { });
+                            div2.AppendDiv(div5 =>
+                            {
+                                div5.AddClass("datalinq-filter-buttongroup");
+                                div5.AppendButton(button2 =>
+                                {
+                                    button2.AddClass("datalinq-button datalinq-filter-clear");
+                                    button2.AddAttribute("onclick", "dataLinq.clearFilter(this)");
+                                    button2.Content("Filter leeren");
+                                });
+                                div5.AppendRefreshViewClickButtton("Übernehmen");
+                            });
+                        });
+                    }).BuildHtmlString()
                 );
-                sb.Append(rawString.ToString());
-            }
-            else if (filterProperties != null && filterProperties.ContainsKey("hidden") && GetDefaultValueFromRecord(filterProperties, "hidden").Equals("true"))
-            {
-                sb.Append($"<input type='hidden' name='{filterParameter}' class='datalinq-filter-parameter' value='{GetDefaultValueFromRecord(filterProperties, "defaultValue") ?? ""}' />");
-            }
-            else
-            {
-                DataType fieldType = DataType.Text;
-                if (filterProperties != null && filterProperties.ContainsKey("dataType"))
-                {
-                    fieldType = (DataType)Enum.Parse(typeof(DataType), GetDefaultValueFromRecord(filterProperties, "dataType")?.ToString());
-                    // Nur wenn Checkbox ausgewählt ist, soll der FieldType geändert werden; da input type nicht "Date", etc. sein soll.
-                    if (fieldType != DataType.Checkbox)
-                    {
-                        fieldType = DataType.Text;
-                    }
-                }
-
-                sb.Append("<div class='datalinq-label'>" + GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter) + "</div>");
-
-                sb.Append("<input");
-                AppendHtmlAttributes(sb, new
-                {
-                    type = fieldType.ToString().ToLower(),
-                    name = filterParameter,
-                    onkeyup = "dataLinq.updateViewFilter(this)",
-                    onchange = "dataLinq.updateViewFilter(this)"
-                }, "datalinq-filter-parameter datalinq-input");
-
-                if (filterProperties != null)
-                {
-                    if (filterProperties.ContainsKey("dataType"))
-                    {
-                        sb.Append(" data-datatype='" + GetDefaultValueFromRecord(filterProperties, "dataType")?.ToString() + "'");
-                    }
-                    if (filterProperties.ContainsKey("dropProperty") && filterProperties.ContainsKey("dropQuery"))
-                    {
-                        sb.Append(" data-drop-property='" + GetDefaultValueFromRecord(filterProperties, "dropProperty")?.ToString() + "'");
-                        sb.Append(" data-drop-query='" + GetDefaultValueFromRecord(filterProperties, "dropQuery")?.ToString() + "'");
-                    }
-                }
-
-                sb.Append("/>");
-            }
-            sb.Append("</div>");
-        }
-
-        sb.Append("<br/>");
-
-        sb.Append("<div ");
-        AppendHtmlAttribute(sb, "class", "datalinq-filter-buttongroup");
-        sb.Append(">");
-        sb.Append("<button class='datalinq-button datalinq-filter-clear' onclick='dataLinq.clearFilter(this)'>Filter leeren</button>");
-        sb.Append(RefreshViewClick("Übernehmen").ToString());
-        sb.Append("</div>");
-
-        sb.Append("</div>");
-
-        sb.Append("</div>");
-
-        return _razor.RawString(sb.ToString());
     }
 
 
@@ -921,15 +829,17 @@ public class DataLinqHelper : IDataLinqHelper
         string label = "Export",
         object htmlAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<button ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-button apply");
-        AppendHtmlAttribute(sb, "onclick", "dataLinq.export(this)");
-        sb.Append(">" + label + "</button>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b =>
+                {
+                    b.AddClass("datalinq-button apply");
+                    b.AddAttributes(htmlAttributes);
+                    b.AddAttribute("onclick", "dataLinq.export(this)");
+                    b.Content(label);
+                }).BuildHtmlString()
+            );
     }
-
 
     /// <summary>
     /// de: Macht aus einem Text einen Link. Dieser aktualisiert einen Filter einer View, das kann auch ein Filter eines in der Seite eingebauten Include(Click)Views sein.
@@ -966,14 +876,18 @@ public class DataLinqHelper : IDataLinqHelper
         string filterId = "",
         object htmlAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        //sb.Append("<button onclick=\"dataLinq.updateFilter(this, '" + filterId + "', '" + filterName + "', '" + filterValue + "')\" ");
-        sb.Append("<button data-filter-id='" + filterId + "' data-filter-name='" + filterName + "' data-filter-value='" + filterValue + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-update-filter");
-        sb.Append(" >");
-        sb.Append(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
-        sb.Append("</button>");
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b =>
+                {
+                    b.AddClass("datalinq-update-filter");
+                    b.AddAttributes(htmlAttributes);
+                    b.AddAttribute("data-filter-id", filterId);
+                    b.AddAttribute("data-filter-name", filterName);
+                    b.AddAttribute("data-filter-value", filterValue.ToString());
+                    b.Content(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
+                }).BuildHtmlString()
+            );
     }
 
     #endregion
@@ -1084,13 +998,13 @@ public class DataLinqHelper : IDataLinqHelper
 
                 // data rows
                 int counter = 0;
-                foreach (var record in records.Take(max))
+                foreach (var record in records.Take(max.Equals(0)?records.Count():max))
                 {
                     table.AppendTableRow(tableRow =>
                     {
                         tableRow.AddAttributes(counter++ % 2 == 1
-                                ? row1HtmlAttributes ?? new { style = "background-color:#fff" }
-                                : row2HtmlAttributes ?? new { style = "background-color:#ffd" });
+                                ? row1HtmlAttributes ?? new { style = "background-color:#ffd" }
+                                : row2HtmlAttributes ?? new { style = "background-color:#fff" });
 
                         foreach (var column in columns)
                         {
@@ -1108,67 +1022,6 @@ public class DataLinqHelper : IDataLinqHelper
         .BuildHtmlString();
 
         return _razor.RawString(html);
-
-        /*
-        sb.Append("<table ");
-        AppendHtmlAttributes(sb, htmlAttributes ?? new { style = "width:100%;text-align:left;background:#efefef" });
-        sb.Append(" >");
-
-        #region Haeder
-
-        sb.Append("<tr ");
-        AppendHtmlAttributes(sb, row0HtmlAttributes ?? new { style = "background-color:#eee" });
-        sb.Append(" >");
-        foreach (var colum in columns)
-        {
-            sb.Append("<th ");
-            AppendHtmlAttributes(sb, cell0HtmlAttributes ?? new { style = "padding:4px" });
-            sb.Append(" >");
-            sb.Append(ToHtml(colum));
-            sb.Append("</th>");
-        }
-        sb.Append("</tr>");
-
-        #endregion
-
-        #region Body
-
-        int counter = 1;
-        foreach (var record in records)
-        {
-            sb.Append("<tr ");
-            if (counter % 2 == 1)
-            {
-                AppendHtmlAttributes(sb, row1HtmlAttributes ?? new { style = "background-color:#fff" });
-            }
-            else
-            {
-                AppendHtmlAttributes(sb, row2HtmlAttributes ?? new { style = "background-color:#ffd" });
-            }
-            sb.Append(" >");
-            foreach (var colum in columns)
-            {
-                sb.Append("<td ");
-                AppendHtmlAttributes(sb, cellHtmlAttributes ?? new { style = "padding:4px" });
-                sb.Append(" >");
-                sb.Append(record.ContainsKey(colum) ? ToHtml(record[colum]?.ToString()) : String.Empty);
-                sb.Append("</td>");
-            }
-            sb.Append("</tr>");
-
-            if (max > 0 && counter >= max)
-            {
-                break;
-            }
-            counter++;
-        }
-
-        #endregion
-
-        sb.Append("</table>");
-
-        return _razor.RawString(sb.ToString());
-        */
     }
 
     #region Formular
@@ -1197,10 +1050,15 @@ public class DataLinqHelper : IDataLinqHelper
         string id,
         object htmlAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<form ");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        return _razor.RawString(sb.ToString() + " action='" + "../ExecuteNonQuery/" + id + "' method='POST'>");
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendForm(f =>
+                {
+                    f.AddAttributes(htmlAttributes);
+                    f.AddAttribute("action", "../ExecuteNonQuery/" + id);
+                    f.AddAttribute("method", "POST");
+                }).BuildHtmlString()[..^7]
+            );
     }
 
     /// <summary>
@@ -1225,21 +1083,50 @@ public class DataLinqHelper : IDataLinqHelper
         string submitText = "",
         string cancelText = "")
     {
-        StringBuilder sb = new StringBuilder();
-
-        sb.Append("<br/>");
-
-        if (!String.IsNullOrEmpty(submitText))
+        if (!String.IsNullOrEmpty(submitText) & !String.IsNullOrEmpty(cancelText))
         {
-            sb.Append("<button type='button', class='datalinq-submit-form' onclick='dataLinq.submitForm(this)' >" + submitText + "</button>");
-        }
-
-        if (!String.IsNullOrEmpty(cancelText))
+            return "<br/>"+ _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b =>
+                {
+                    b.AddClass("datalinq-submit-form");
+                    b.AddAttribute("type", "button");
+                    b.AddAttribute("onclick", "dataLinq.submitForm(this)");
+                    b.Content(submitText);
+                }).AppendButton(b1 =>
+                {
+                    b1.AddClass("datalinq-reset-form");
+                    b1.AddAttribute("type", "reset");
+                    b1.Content(cancelText);
+                }).BuildHtmlString() + "</form>"
+            );
+        } else if(!String.IsNullOrEmpty(submitText) & String.IsNullOrEmpty(cancelText))
         {
-            sb.Append("<button type='reset' class='datalinq-reset-form'>" + cancelText + "</button>");
+            return "<br/>" + _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b =>
+                {
+                    b.AddClass("datalinq-submit-form");
+                    b.AddAttribute("type", "button");
+                    b.AddAttribute("onclick", "dataLinq.submitForm(this)");
+                    b.Content(submitText);
+                }).BuildHtmlString() + "</form>"
+            );
+        } else if(String.IsNullOrEmpty(submitText) & !String.IsNullOrEmpty(cancelText))
+        {
+            return "<br/>" + _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b1 =>
+                {
+                    b1.AddClass("datalinq-reset-form");
+                    b1.AddAttribute("type", "reset");
+                    b1.Content(cancelText);
+                }).BuildHtmlString() + "</form>"
+            );
+        } else
+        {
+            return _razor.RawString("<br/></form>");
         }
-
-        return _razor.RawString(sb.ToString() + "</form>");
     }
 
     /// <summary>
@@ -1279,14 +1166,17 @@ public class DataLinqHelper : IDataLinqHelper
         string buttonText = "",
         object dialogAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        //sb.Append("<button onclick=\"dataLinq.openDialog(this, '" + id + "', " + (parameter != null ? JsonConvert.SerializeObject(parameter).Replace("\"", "") : "{}") + ");\" ");
-        sb.Append("<button data-dialog-id='" + id + "' data-dialog-parameter='" + (parameter != null ? JsonConvert.SerializeObject(parameter) : "{}") + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-open-dialog");
-        sb.Append(" data-dialog-attributes='" + (dialogAttributes != null ? JsonConvert.SerializeObject(dialogAttributes) : "{}") + "' >");
-        sb.Append(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
-        sb.Append("</button>");
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b => {
+                    b.AddClass("datalinq-open-dialog");
+                    b.AddAttributes(htmlAttributes);
+                    b.AddAttribute("data-dialog-id",id);
+                    b.AddAttribute("data-dialog-parameter", parameter != null ? JsonConvert.SerializeObject(parameter) : "{}");
+                    b.AddAttribute("data-dialog-attributes", dialogAttributes != null ? JsonConvert.SerializeObject(dialogAttributes) : "{}");
+                    b.Content(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
+                }).BuildHtmlString()
+            );
     }
 
     /// <summary>
@@ -1326,14 +1216,18 @@ public class DataLinqHelper : IDataLinqHelper
         string buttonText = "",
         object dialogAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        //sb.Append("<button onclick=\"dataLinq.executeNonQuery(this, '" + id + "', " + (parameter != null ? JsonConvert.SerializeObject(parameter).Replace("\"", "") : "{}") + ");\" ");
-        sb.Append("<button data-dialog-id='" + id + "' data-dialog-parameter='" + (parameter != null ? JsonConvert.SerializeObject(parameter) : "{}") + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-execute-non-query");
-        sb.Append(" data-dialog-attributes=\'" + (dialogAttributes != null ? JsonConvert.SerializeObject(dialogAttributes) : "{}") + "\' >");
-        sb.Append(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
-        sb.Append("</button>");
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b =>
+                {
+                    b.AddClass("datalinq-execute-non-query");
+                    b.AddAttributes(htmlAttributes);
+                    b.AddAttribute("data-dialog-id", id);
+                    b.AddAttribute("data-dialog-parameter", parameter != null ? JsonConvert.SerializeObject(parameter) : "{}");
+                    b.AddAttribute("data-dialog-attributes", dialogAttributes != null ? JsonConvert.SerializeObject(dialogAttributes) : "{}");
+                    b.Content(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
+                }).BuildHtmlString()
+            );
     }
 
     /// <summary>
@@ -1375,16 +1269,20 @@ public class DataLinqHelper : IDataLinqHelper
         object defaultValue = null,
         bool prependEmpty = false)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append($"<select id='{id}' name='{id}' class='datalinq-include-combo' ");
-        sb.Append($" data-url='{url}'");
-        sb.Append($" data-valuefield='{valueField}'");
-        sb.Append($" data-namefield='{nameField}'");
-        sb.Append($" data-defaultvalue='{(defaultValue == null ? "" : defaultValue.ToString())}'");
-        sb.Append($" data-prepend-empty='{prependEmpty.ToString().ToLower()}'");
-        sb.Append("></select>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendSelect(s =>
+                {
+                    s.AddClass("datalinq-include-combo");
+                    s.AddAttribute("id", id);
+                    s.AddAttribute("name",id);
+                    s.AddAttribute("data-url",url);
+                    s.AddAttribute("data-valuefield", valueField);
+                    s.AddAttribute("data-namefield", nameField);
+                    s.AddAttribute("data-defaultvalue", defaultValue == null ? "" : defaultValue.ToString());
+                    s.AddAttribute("data-prepend-empty", prependEmpty.ToString().ToLower());
+                }).BuildHtmlString()
+            );
     }
 
     /// <summary>
@@ -1426,64 +1324,72 @@ public class DataLinqHelper : IDataLinqHelper
     {
         object val = GetDefaultValueFromRecord(record, name, defaultValue);
 
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<select name='" + name + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-include-combo");
-
-        if (source != null && source.GetType().GetProperty("source") != null)
-        {
-            var sourceProperty = source.GetType().GetProperty("source");
-            var sourceValue = sourceProperty.GetValue(source);
-            bool prependEmpty = Convert.ToBoolean(GetDefaultValueFromRecord(ToDictionary(source), "prependEmpty", false));
-            sb.Append(" data-prepend-empty='" + prependEmpty.ToString().ToLower() + "' data-defaultvalue='" + (val == null ? "" : val.ToString()) + "'");
-
-            var dependsOn = GetDefaultValueFromRecord(ToDictionary(source), "dependsOn", null) as string[];
-            if (dependsOn != null && dependsOn.Length > 0)
-            {
-                sb.Append($" data-depends-on='{String.Join(",", dependsOn)}'");
-            }
-
-            if (sourceValue is string[])
-            {
-                sb.Append(">");
-                foreach (var optionValue in (string[])sourceValue)
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendSelect(s =>
                 {
-                    sb.Append("<option value='" + optionValue + "' " + (optionValue == val?.ToString() ? "selected" : "") + ">" + optionValue + "</option>");
-                }
-            }
-            else if (sourceValue is Dictionary<object, string>)
-            {
-                sb.Append(">");
-                foreach (var kvp in (Dictionary<object, string>)sourceValue)
-                {
-                    sb.Append("<option value='" + kvp.Key + "' " + (kvp.Key.ToString() == val?.ToString() ? "selected" : "") + ">" + kvp.Value + "</option>");
-                }
-            }
-            else if (sourceValue is string)
-            {
-                var valueFieldProperty = source.GetType().GetProperty("valueField");
-                var nameFieldProperty = source.GetType().GetProperty("nameField");
+                    s.AddClass("datalinq-include-combo");
+                    s.AddAttributes(htmlAttributes);
+                    s.AddAttribute("name", name);
 
-                if (valueFieldProperty == null || nameFieldProperty == null)
-                {
-                    valueFieldProperty.SetValue(source, "VALUE");
-                    nameFieldProperty.SetValue(source, "NAME");
-                }
+                    if (source != null && source.GetType().GetProperty("source") != null)
+                    {
+                        var sourceProperty = source.GetType().GetProperty("source");
+                        var sourceValue = sourceProperty.GetValue(source);
+                        bool prependEmpty = Convert.ToBoolean(GetDefaultValueFromRecord(ToDictionary(source), "prependEmpty", false));
 
-                if (valueFieldProperty.PropertyType == typeof(string) && nameFieldProperty.PropertyType == typeof(string))
-                {
-                    sb.Append(" data-url='" + sourceProperty.GetValue(source) + "' data-valuefield='" + valueFieldProperty.GetValue(source) + "' data-namefield='" + nameFieldProperty.GetValue(source) + "' >");
-                }
-                else
-                {
-                    throw new ArgumentException("valueField and nameField have to be typeof(string)");
-                }
-            }
-        }
+                        s.AddAttribute("data-prepend-empty", prependEmpty.ToString().ToLower());
+                        s.AddAttribute("data-defaultvalue", val == null ? "" : val.ToString());
 
-        sb.Append("</select>");
+                        var dependsOn = GetDefaultValueFromRecord(ToDictionary(source), "dependsOn", null) as string[];
+                        if (dependsOn != null && dependsOn.Length > 0)
+                        {
+                            s.AddAttribute("data-depends-on", String.Join(",", dependsOn));
+                        }
 
-        return _razor.RawString(sb.ToString());
+                        if (sourceValue is string[])
+                        {
+                            StringBuilder options = new StringBuilder();
+                            foreach (var optionValue in (string[])sourceValue)
+                            {
+                                options.Append("<option value='" + optionValue + "' " + (optionValue == val?.ToString() ? "selected" : "") + ">" + optionValue + "</option>");
+                            }
+                            s.Content(options.ToString());
+                        }
+                        else if (sourceValue is Dictionary<object, string>)
+                        {
+                            StringBuilder options = new StringBuilder();
+                            foreach (var kvp in (Dictionary<object, string>)sourceValue)
+                            {
+                                options.Append("<option value='" + kvp.Key + "' " + (kvp.Key.ToString() == val?.ToString() ? "selected" : "") + ">" + kvp.Value + "</option>");
+                            }
+                            s.Content(options.ToString());
+                        }
+                        else if (sourceValue is string)
+                        {
+                            var valueFieldProperty = source.GetType().GetProperty("valueField");
+                            var nameFieldProperty = source.GetType().GetProperty("nameField");
+
+                            if (valueFieldProperty == null || nameFieldProperty == null)
+                            {
+                                valueFieldProperty.SetValue(source, "VALUE");
+                                nameFieldProperty.SetValue(source, "NAME");
+                            }
+
+                            if (valueFieldProperty.PropertyType == typeof(string) && nameFieldProperty.PropertyType == typeof(string))
+                            {
+                                s.AddAttribute("data-url", sourceProperty.GetValue(source).ToString());
+                                s.AddAttribute("data-valuefield", valueFieldProperty.GetValue(source).ToString());
+                                s.AddAttribute("data-namefield", nameFieldProperty.GetValue(source).ToString());
+                            }
+                            else
+                            {
+                                throw new ArgumentException("valueField and nameField have to be typeof(string)");
+                            }
+                        }
+                    }
+                }).BuildHtmlString()
+            ); 
     }
 
     /// <summary>
@@ -1525,45 +1431,80 @@ public class DataLinqHelper : IDataLinqHelper
     {
         object val = GetDefaultValueFromRecord(record, name, defaultValue);
 
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<div ");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append(">");
-
         if (source != null && source.GetType().GetProperty("source") != null)
         {
             var sourceProperty = source.GetType().GetProperty("source");
 
             if (sourceProperty.PropertyType == typeof(string[]))
             {
-                foreach (var optionValue in (string[])sourceProperty.GetValue(source))
-                {
-                    sb.Append("<input type='radio' name='" + name + "' value='" + optionValue + "' " + (optionValue == val.ToString() ? "checked" : "") + " />" + optionValue + "<br/>");
-                }
+                return _razor.RawString(
+                    HtmlBuilder.Create()
+                        .AppendDiv(d =>
+                        {
+                            d.AddAttributes(htmlAttributes);
+                            foreach (var optionValue in (string[])sourceProperty.GetValue(source))
+                            {
+                                d.AppendInput(i =>
+                                {
+                                    i.AddAttribute("type", "radio");
+                                    i.AddAttribute("name", name);
+                                    i.AddAttribute("value", optionValue);
+                                    if (optionValue == val.ToString())
+                                        i.AddAttribute("checked", "checked");
+                                    i.Content(optionValue);
+                                });
+                            }
+                        }).BuildHtmlString()[..^6] + "</select>"
+                    );
             }
             else if (sourceProperty.PropertyType == typeof(Dictionary<object, string>))
             {
-                foreach (var kvp in (Dictionary<object, string>)sourceProperty.GetValue(source))
-                {
-                    sb.Append("<input type='radio' name='" + name + "' value='" + kvp.Key + "' " + (kvp.Key.ToString() == val.ToString() ? "checked" : "") + " />" + kvp.Value + "<br/>");
-                }
+                return _razor.RawString(
+                   HtmlBuilder.Create()
+                       .AppendDiv(d =>
+                       {
+                           d.AddAttributes(htmlAttributes);
+                           foreach (var kvp in (Dictionary<object, string>)sourceProperty.GetValue(source))
+                           {
+                               d.AppendInput(i =>
+                               {
+                                   i.AddAttribute("type", "radio");
+                                   i.AddAttribute("name", name);
+                                   i.AddAttribute("value", kvp.Key.ToString());
+                                   if (kvp.Key.ToString() == val.ToString())
+                                       i.AddAttribute("checked", "checked");
+                                   i.Content(kvp.Value);
+                               });
+                           }
+                       }).BuildHtmlString()[..^6] + "</select>"
+                   );
             }
             else if (sourceProperty.PropertyType == typeof(string))
             {
                 var valueFieldProperty = source.GetType().GetProperty("valueField");
                 var nameFieldProperty = source.GetType().GetProperty("nameField");
-                if (valueFieldProperty == null || nameFieldProperty == null)
-                {
-                    valueFieldProperty.SetValue(source, "VALUE");
-                    nameFieldProperty.SetValue(source, "NAME");
-                }
 
                 if (valueFieldProperty.PropertyType == typeof(string) && nameFieldProperty.PropertyType == typeof(string))
                 {
-                    sb.Clear();
-                    sb.Append("<div ");
-                    AppendHtmlAttributes(sb, htmlAttributes, "datalinq-include-radio");
-                    sb.Append(" data-name='" + name + "' data-url='" + sourceProperty.GetValue(source) + "' data-valuefield='" + valueFieldProperty.GetValue(source) + "' data-namefield='" + nameFieldProperty.GetValue(source) + "' data-defaultvalue='" + (val == null ? "" : val.ToString()) + "' >");
+                    if (valueFieldProperty == null || nameFieldProperty == null)
+                    {
+                        valueFieldProperty.SetValue(source, "VALUE");
+                        nameFieldProperty.SetValue(source, "NAME");
+                    }
+
+                    return _razor.RawString(
+                        HtmlBuilder.Create()
+                            .AppendDiv(d =>
+                            {
+                                d.AddClass("datalinq-include-radio");
+                                d.AddAttributes(htmlAttributes);
+                                d.AddAttribute("data-name", name);
+                                d.AddAttribute("data-url", sourceProperty.GetValue(source).ToString());
+                                d.AddAttribute("data-valuefield", valueFieldProperty.GetValue(source).ToString());
+                                d.AddAttribute("data-namefield", nameFieldProperty.GetValue(source).ToString());
+                                d.AddAttribute("data-defaultvalu", val == null ? "" : val.ToString());
+                            }).BuildHtmlString()[..^6] + "</select>"
+                        );
                 }
                 else
                 {
@@ -1571,10 +1512,18 @@ public class DataLinqHelper : IDataLinqHelper
                 }
             }
         }
+        else
+        {
+            return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendDiv(d =>
+                    {
+                        d.AddAttributes(htmlAttributes);
+                    }).BuildHtmlString()[..^6]+"</select>"
+                );
+        }
 
-        sb.Append("</select>");
-
-        return _razor.RawString(sb.ToString());
+        throw new ArgumentException("Invalid or unsupported source object passed to RadioFor.");
     }
 
     /// <summary>
@@ -1616,17 +1565,38 @@ public class DataLinqHelper : IDataLinqHelper
     {
         object val = GetDefaultValueFromRecord(record, name, defaultValue);
 
-        StringBuilder sb = new StringBuilder();
         if (dataType == DataType.DateTime || dataType == DataType.Date)
         {
-            sb.Append("<input type='hidden' name='" + name + "' value='" + (val == null ? "NULL" : val.ToString()) + "' />");
-            name += "_helper";
+            return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendInput(i =>
+                    {
+                        i.AddAttribute("type", "hidden");
+                        i.AddAttribute("name", name);
+                        i.AddAttribute("value", val == null ? "NULL" : val.ToString());
+                    }).AppendInput(i =>
+                    {
+                        i.AddAttributes(htmlAttributes);
+                        i.AddAttribute("type", "text");
+                        i.AddAttribute("name", name+ "_helper");
+                        i.AddAttribute("data-datatype", dataType.ToString());
+                        i.AddAttribute("value", val == null ? "" : val.ToString());
+                    }).BuildHtmlString()
+                );
+        } else
+        {
+            return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendInput(i =>
+                    {
+                        i.AddAttributes(htmlAttributes);
+                        i.AddAttribute("type", "text");
+                        i.AddAttribute("name", name);
+                        i.AddAttribute("data-datatype", dataType.ToString());
+                        i.AddAttribute("value", val == null ? "" : val.ToString());
+                    }).BuildHtmlString()
+                );
         }
-        sb.Append("<input type='text' name='" + name + "' data-datatype='" + dataType.ToString() + "'");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append("value='" + (val == null ? "" : val.ToString()) + "'/>");
-
-        return _razor.RawString(sb.ToString());
     }
 
     /// <summary>
@@ -1660,18 +1630,27 @@ public class DataLinqHelper : IDataLinqHelper
         object defaultValue = null)
     {
         object val = GetDefaultValueFromRecord(record, name, defaultValue);
-
-        StringBuilder sb = new StringBuilder();
-
-        // Checkbox-Value wird nur übergeben, wenn gecheckt. => Direkt davor ein hidden feld mit gleichem Namen und Guid
         string guid = Guid.NewGuid().ToString();
-        sb.Append("<input type='hidden' name='" + name + "' value='" + (Convert.ToBoolean(val) == true ? "true" : "false") + "' id='" + guid + "' />");
-        sb.Append("<input type='checkbox' data-guid='" + guid + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append("value='True' " + (Convert.ToBoolean(val) == true ? "checked" : ""));
-        sb.Append(" onclick='$(\"#\" + $(this).data(\"guid\")).val(this.checked)' />");
 
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendInput(i =>
+                {
+                    i.AddAttribute("type", "hidden");
+                    i.AddAttribute("name", name);
+                    i.AddAttribute("value", Convert.ToBoolean(val) == true ? "true" : "false");
+                    i.AddAttribute("id", guid);
+                }).AppendInput(i =>
+                {
+                    i.AddAttributes(htmlAttributes);
+                    i.AddAttribute("type", "checkbox");
+                    i.AddAttribute("data-guid", guid);
+                    i.AddAttribute("value", "True");
+                    if ((Convert.ToBoolean(val) == true))
+                        i.AddAttribute("checked", "checked");
+                    i.AddAttribute("onclick", "$(\"#\" + $(this).data(\"guid\")).val(this.checked)");
+                }).BuildHtmlString()
+            );
     }
 
     /// <summary>
@@ -1706,12 +1685,15 @@ public class DataLinqHelper : IDataLinqHelper
     {
         object val = GetDefaultValueFromRecord(record, name, defaultValue);
 
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<textarea name='" + name + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append(">" + (val == null ? "" : val.ToString()) + "</textarea>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendTextarea(t =>
+                {
+                    t.AddAttributes(htmlAttributes);
+                    t.AddAttribute("name", name);
+                    t.Content(val == null ? "" : val.ToString());
+                }).BuildHtmlString()
+            );
     }
 
     /// <summary>
@@ -1746,13 +1728,17 @@ public class DataLinqHelper : IDataLinqHelper
     {
         object val = GetDefaultValueFromRecord(record, name, defaultValue);
 
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<input type='hidden' name='" + name + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append(" value='" + (val == null ? "" : val.ToString()) + "' />");
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendInput(i =>
+                {
+                    i.AddAttributes(htmlAttributes);
+                    i.AddAttribute("type", "hidden");
+                    i.AddAttribute("name", name);
+                    i.AddAttribute("value", val == null ? "" : val.ToString());
+                }).BuildHtmlString()
+            );
     }
-
 
     /// <summary>
     /// de: Erstellt ein Label für eine Formular-Eingabe-Element.
@@ -1784,23 +1770,30 @@ public class DataLinqHelper : IDataLinqHelper
         object htmlAttributes = null,
         bool newLine = true)
     {
-        var sb = new StringBuilder();
-
         if (newLine)
         {
-            sb.Append("<br/>");
-        }
-
-        sb.Append($"<label for='{name}'");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append($">{label}</label>");
-
-        if (newLine)
+            return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendBreak(b => {})
+                    .AppendLabel(l =>
+                    {
+                        l.AddAttributes(htmlAttributes);
+                        l.AddAttribute("for", name);
+                        l.Content(label);
+                    }).AppendBreak(b => {}).BuildHtmlString()
+                );
+        } else
         {
-            sb.Append("<br/>");
+            return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendLabel(l =>
+                    {
+                        l.AddAttributes(htmlAttributes);
+                        l.AddAttribute("for", name);
+                        l.Content(label);
+                    }).BuildHtmlString()
+                );
         }
-
-        return _razor.RawString(sb.ToString());
     }
 
     #endregion
@@ -1832,19 +1825,24 @@ public class DataLinqHelper : IDataLinqHelper
         string label = "",
         object htmlAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<div ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-statistics");
-        sb.Append(">");
-        if (!String.IsNullOrWhiteSpace(label))
-        {
-            sb.Append("<strong>" + ToHtml(label) + "</strong>");
-        }
-
-        sb.Append(records != null ? records.Length.ToString() : "0");
-        sb.Append("</div>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                {
+                    d.AddClass("datalinq-statistics");
+                    d.AddAttributes(htmlAttributes);
+                    if (!String.IsNullOrWhiteSpace(label))
+                    {
+                        string labelStrong = "<strong>" + ToHtml(label) + "</strong>";
+                        string content = (records != null) ? records.Length.ToString() : "0";
+                        d.Content(labelStrong + content);
+                    }
+                    else
+                    {
+                        d.Content(records != null ? records.Length.ToString() : "0");
+                    }
+                }).BuildHtmlString()
+            );
     }
 
     /// <summary>
@@ -2377,22 +2375,20 @@ public class DataLinqHelper : IDataLinqHelper
         //,object chartOptions = null
         )
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<div ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-chart");
-        sb.Append(" data-chart-label='" + label + "'");
-        sb.Append(" data-chart-data='" + jsValueVariable + "'");
-        sb.Append(" data-chart-type='" + chartType.ToString() + "'");
-        sb.Append(" data-chart-dataset='" + jsDatasetVariable + "'");
-        chartColorRGB = (chartColorRGB == null ? new string[] { } : chartColorRGB);        // "0,155,20"
-        sb.Append(" data-chart-color='" + String.Join("|", chartColorRGB).Replace(" ", "") + "'");
-        //if (chartOptions != null)
-        //{
-        //    sb.Append(" data-chart-options='" + JsonConvert.SerializeObject(chartOptions) + "'");
-        //}
-        sb.Append("></div>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                {
+                    d.AddClass("datalinq-chart");
+                    d.AddAttributes(htmlAttributes);
+                    d.AddAttribute("data-chart-label", label);
+                    d.AddAttribute("data-chart-data", jsValueVariable);
+                    d.AddAttribute("data-chart-type", chartType.ToString());
+                    d.AddAttribute("data-chart-dataset", jsDatasetVariable);
+                    chartColorRGB = (chartColorRGB == null ? new string[] { } : chartColorRGB);
+                    d.AddAttribute("data-chart-color", String.Join("|", chartColorRGB).Replace(" ", ""));
+                }).BuildHtmlString()
+            );
     }
     #endregion
 
@@ -2436,13 +2432,24 @@ public class DataLinqHelper : IDataLinqHelper
             baseText = copyBaseText.ToString();
         }
 
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<div class='datalinq-copy-helper'>" + baseText);
-        sb.Append("<div data-copy-value='" + copyValue + "'");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-copy-button");
-        sb.Append(" ></div>");
-        sb.Append("</div>");
-        return _razor.RawString(sb.ToString());
+        string innerHTML = baseText + _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d1 =>
+                {
+                    d1.AddClass("datalinq-copy-button");
+                    d1.AddAttributes(htmlAttributes);
+                    d1.AddAttribute("data-copy-value", copyValue.ToString());
+                }).BuildHtmlString()
+            );
+
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                {
+                    d.AddClass("datalinq-copy-helper");
+                    d.Content(innerHTML);
+                }).BuildHtmlString()
+            );
     }
 
     /// <summary>
@@ -2475,58 +2482,61 @@ public class DataLinqHelper : IDataLinqHelper
         string htmlTag = "span",
         string defaultValue = null)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<" + htmlTag);
-
-        if (source != null && source.GetType().GetProperty("source") != null)
-        {
-            var sourceProperty = source.GetType().GetProperty("source");
-            var sourceValue = sourceProperty.GetValue(source);
-
-            if (sourceValue is string)
-            {
-                var nameFieldProperty = source.GetType().GetProperty("nameField");
-                if (nameFieldProperty == null)
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendHtmlElement(e =>
                 {
-                    nameFieldProperty.SetValue(source, "NAME");
-                }
-
-                if (nameFieldProperty.PropertyType == typeof(string))
-                {
-                    if (htmlAttributes != null)
+                    if (source != null && source.GetType().GetProperty("source") != null)
                     {
-                        foreach (var htmlAttribute in htmlAttributes.GetType().GetProperties())
+                        var sourceProperty = source.GetType().GetProperty("source");
+                        var sourceValue = sourceProperty.GetValue(source);
+
+                        if (sourceValue is string)
                         {
-                            if (htmlAttribute.Name.ToLower() == "class")
+                            var nameFieldProperty = source.GetType().GetProperty("nameField");
+                            if (nameFieldProperty == null)
                             {
-                                sb.Append(htmlAttribute.Name.ToLower() + "='" + (htmlAttribute.GetValue(htmlAttributes) != null ? htmlAttribute.GetValue(htmlAttributes).ToString() : "") + " datalinq-include-scalar' ");
+                                nameFieldProperty.SetValue(source, "NAME");
+                            }
+
+                            if (nameFieldProperty.PropertyType == typeof(string))
+                            {
+                                if (htmlAttributes != null)
+                                {
+                                    foreach (var htmlAttribute in htmlAttributes.GetType().GetProperties())
+                                    {
+                                        if (htmlAttribute.Name.ToLower() == "class")
+                                        {
+                                            e.AddAttribute(htmlAttribute.Name.ToLower(), (htmlAttribute.GetValue(htmlAttributes) != null ? htmlAttribute.GetValue(htmlAttributes).ToString() : "") + " datalinq-include-scalar");
+                                        }
+                                        else
+                                        {
+                                            if (htmlAttribute.GetValue(htmlAttributes) != null)
+                                            {
+                                                e.AddAttribute(htmlAttribute.Name, htmlAttribute.GetValue(htmlAttributes).ToString());
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (!e.ToString().Contains("class="))
+                                {
+                                    e.AddClass("datalinq-include-scalar");
+                                }
+
+                                bool prependEmpty = Convert.ToBoolean(GetDefaultValueFromRecord(ToDictionary(source), "prependEmpty", false));
+                                e.AddAttribute("data-url", sourceProperty.GetValue(source).ToString());
+                                e.AddAttribute("data-namefield", nameFieldProperty.GetValue(source).ToString());
+                                e.AddAttribute("data-defaultvalue", defaultValue.ToString().ToString());
                             }
                             else
                             {
-                                if (htmlAttribute.GetValue(htmlAttributes) != null)
-                                {
-                                    sb.Append(htmlAttribute.Name + "='" + htmlAttribute.GetValue(htmlAttributes).ToString() + "' ");
-                                }
+                                throw new ArgumentException("valueField and nameField have to be typeof(string)");
                             }
                         }
                     }
-
-                    if (!sb.ToString().Contains("class="))
-                    {
-                        sb.Append(" class='datalinq-include-scalar'");
-                    }
-
-                    bool prependEmpty = Convert.ToBoolean(GetDefaultValueFromRecord(ToDictionary(source), "prependEmpty", false));
-                    sb.Append(" data-url='" + sourceProperty.GetValue(source) + "' data-namefield='" + nameFieldProperty.GetValue(source) + "' data-defaultvalue='" + defaultValue.ToString() + "'>");
-                }
-                else
-                {
-                    throw new ArgumentException("valueField and nameField have to be typeof(string)");
-                }
-            }
-            sb.Append("</" + htmlTag + ">");
-        }
-        return _razor.RawString(sb.ToString());
+                },htmlTag).BuildHtmlString()
+            );
     }
 
     /// <summary>
@@ -2561,7 +2571,14 @@ public class DataLinqHelper : IDataLinqHelper
     /// </returns>
     public object ResponsiveSwitcher()
     {
-        return _razor.RawString("<button class='responsive-switch'>Alles anzeigen</button>");
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b =>
+                {
+                    b.AddClass("responsive-switch");
+                    b.Content("Alles anzeigen");
+                }).BuildHtmlString()
+            );
     }
 
     /// <summary>

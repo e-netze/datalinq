@@ -1,8 +1,11 @@
 ﻿#nullable enable
 
 using E.DataLinq.Web.Html.Abstractions;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using RazorEngine;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace E.DataLinq.Web.Html;
 
@@ -48,7 +51,10 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
             return this;
         }
 
-        _attributes[key] = value;
+        if(value != null)
+        {
+            _attributes[key] = value;
+        }
 
         return this;
     }
@@ -103,7 +109,7 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
         {
             foreach (var htmlAttribute in htmlAttributes.GetType().GetProperties())
             {
-                string val = htmlAttribute.GetValue(htmlAttributes)?.ToString() ?? "";
+                string val = htmlAttribute.GetValue(htmlAttributes)?.ToString()!;
 
                 AddAttribute(htmlAttribute.Name, val);
             }
@@ -133,51 +139,62 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
 
     public void WriteTo(IHtmlStream stream)
     {
-        stream.Write($"<{_elementName}");
-
-        if (_classes is not null)
+        if (_elementName.Equals("br"))
         {
-            stream.Write(" class=\"");
-            foreach (var cls in _classes)
-            {
-                stream.Write(cls);
-                stream.Write(" ");
-            }
-            stream.Write("\"");
-        }
-
-        if (_styles is not null)
-        {
-
-            stream.Write(" style=\"");
-            foreach (var style in _styles)
-            {
-                stream.Write($"{style.Key}:{style.Value};");
-            }
-            stream.Write("\"");
-        }
-
-        foreach (var attr in _attributes)
-        {
-            stream.Write($" {attr.Key}=\"{attr.Value}\"");
-        }
-
-        stream.Write(">");
-
-        if (_htmlElements is not null)
-        {
-            foreach (var htmlElement in _htmlElements)
-            {
-                htmlElement.WriteTo(stream);
-            }
+            stream.Write($"<{_elementName}/>");
         }
         else
         {
-            stream.Write(_content);
+            stream.Write($"<{_elementName}");
+
+            if (_classes is not null)
+            {
+                stream.Write(" class='");
+                stream.Write(string.Join(" ", _classes));
+                stream.Write("'");
+            }
+
+            if (_styles is not null)
+            {
+                stream.Write(" style=\'");
+
+                if (_styles.Count().Equals(1))
+                {
+                    stream.Write($"{_styles.First().Key}:{_styles.First().Value}");
+                }
+                else
+                {
+                    foreach (var style in _styles)
+                    {
+                        stream.Write($"{style.Key}:{style.Value};");
+                    }
+                }
+
+                stream.Write("\'");
+            }
+
+            foreach (var attr in _attributes)
+            {
+                stream.Write($" {attr.Key}=\'{attr.Value.Replace("'", "\"")}\'");
+            }
+
+            stream.Write(">");
+
+            if (_htmlElements is not null)
+            {
+                foreach (var htmlElement in _htmlElements)
+                {
+                    htmlElement.WriteTo(stream);
+                }
+            }
+            else
+            {
+                stream.Write(_content);
+            }
+
+            stream.Write($"</{_elementName}>");
+
         }
-
-        stream.Write($"</{_elementName}>");
-
     }
 
     #endregion
