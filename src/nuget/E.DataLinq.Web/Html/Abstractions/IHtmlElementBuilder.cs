@@ -10,6 +10,8 @@ public interface IHtmlElementBuilder : IHtmlParentElementBuilder<IHtmlElementBui
 
     IHtmlElementBuilder WithName(string name);
 
+    IHtmlElementBuilder WithValue(string value);
+
     IHtmlElementBuilder AddClass(string classNames);
 
     IHtmlElementBuilder AddStyle(string style, string value);

@@ -1,8 +1,6 @@
 ﻿#nullable enable
 
 using E.DataLinq.Web.Html.Abstractions;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using RazorEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,16 +15,19 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
     private Dictionary<string, string>? _styles;
 
     private readonly string _elementName;
+    private readonly WriteTags _writeTags;
     private string _content = "";
 
-    private HtmlElementBuilder(string elementName) : base()
+    private HtmlElementBuilder(string elementName, WriteTags writeTags) : base()
     {
         _elementName = elementName;
+        _writeTags = writeTags;
     }
 
     #region IHtmlElementBuilder
 
-    static public IHtmlElementBuilder Create(string elementName) => new HtmlElementBuilder(elementName);
+    static public IHtmlElementBuilder Create(string elementName, WriteTags writeTags)
+        => new HtmlElementBuilder(elementName, writeTags);
 
     public IHtmlElementBuilder AddAttribute(string key, string value)
     {
@@ -51,7 +52,7 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
             return this;
         }
 
-        if(value != null)
+        if (value != null)
         {
             _attributes[key] = value;
         }
@@ -69,6 +70,13 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
     public IHtmlElementBuilder WithName(string name)
     {
         AddAttribute("name", name);
+
+        return this;
+    }
+
+    public IHtmlElementBuilder WithValue(string value)
+    {
+        AddAttribute("value", value);
 
         return this;
     }
@@ -118,9 +126,12 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
         return this;
     }
 
-    public IHtmlElementBuilder Append(string elementName, Action<IHtmlElementBuilder> action)
+    public IHtmlElementBuilder Append(
+                string elementName,
+                Action<IHtmlElementBuilder> action,
+                WriteTags writeTags = WriteTags.OpenClose)
     {
-        var htmlElement = HtmlElementBuilder.Create(elementName);
+        var htmlElement = HtmlElementBuilder.Create(elementName, writeTags);
 
         _htmlElements ??= new List<IHtmlElementBuilder>();
         _htmlElements.Add(htmlElement);
@@ -139,11 +150,12 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
 
     public void WriteTo(IHtmlStream stream)
     {
-        if (_elementName.Equals("br"))
-        {
-            stream.Write($"<{_elementName}/>");
-        }
-        else
+        #region Open Tag
+
+        if (_writeTags == WriteTags.OpenOnly ||
+            _writeTags == WriteTags.OpenClose ||
+            _writeTags == WriteTags.SelfClose)
+
         {
             stream.Write($"<{_elementName}");
 
@@ -178,23 +190,43 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
                 stream.Write($" {attr.Key}=\'{attr.Value.Replace("'", "\"")}\'");
             }
 
+            if (_writeTags == WriteTags.SelfClose)
+            {
+                stream.Write("/>");
+                return;
+            }
+
             stream.Write(">");
-
-            if (_htmlElements is not null)
-            {
-                foreach (var htmlElement in _htmlElements)
-                {
-                    htmlElement.WriteTo(stream);
-                }
-            }
-            else
-            {
-                stream.Write(_content);
-            }
-
-            stream.Write($"</{_elementName}>");
-
         }
+
+        #endregion
+
+        #region Content
+
+        if (_htmlElements is not null)
+        {
+            foreach (var htmlElement in _htmlElements)
+            {
+                htmlElement.WriteTo(stream);
+            }
+        }
+        else
+        {
+            stream.Write(_content);
+        }
+
+        #endregion
+
+        #region End Tag
+
+        if (_writeTags == WriteTags.OpenClose ||
+           _writeTags == WriteTags.CloseOnly)
+        {
+            stream.Write($"</{_elementName}>");
+        }
+
+        #endregion
+
     }
 
     #endregion

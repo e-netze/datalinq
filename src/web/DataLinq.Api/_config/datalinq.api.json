@@ -1,6 +1,6 @@
 {
   "DataLinq.Api": {
-    "StoragePath": "E:\\geonet_sys\\development\\shared\\webgis\\webgis5-storage\\webgis.tools.datalinq.endpoints",
+    "StoragePath_": "",
     "Razor": {
       "Engine": "default" // default, legacy, core
     },

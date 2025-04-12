@@ -5,6 +5,7 @@ using E.DataLinq.Core.Models.AccessTree;
 using E.DataLinq.Core.Reflection;
 using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Html;
+using E.DataLinq.Web.Html.Abstractions;
 using E.DataLinq.Web.Html.Extensions;
 using E.DataLinq.Web.Models;
 using E.DataLinq.Web.Models.Razor;
@@ -155,7 +156,7 @@ public class DataLinqHelper : IDataLinqHelper
 
         return _razor.RawString(
             HtmlBuilder.Create()
-                .AppendJavaScriptBlick(js.ToString())
+                .AppendJavaScriptBlock(js.ToString())
                 .BuildHtmlString()
             );
     }
@@ -720,7 +721,14 @@ public class DataLinqHelper : IDataLinqHelper
                                         var source = GetDefaultValueFromRecord(filterProperties, "source").ToString();
                                         var dependsOn = source.KeyParameters();
 
-                                        var rawString = "<div class=\'datalinq-label\'>"+ GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter).ToString() + "</div>" + ComboFor(null, filterParameter,
+                                        div3.AppendDiv(div4 =>
+                                        {
+                                            div4.AddClass("datalinq-label");
+                                            div4.Content(GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter).ToString());
+                                        });
+                                        div3.ComboFor(
+                                            GetDefaultValueFromRecord(filterProperties, "defaultValue"), 
+                                            filterParameter,
                                             new
                                             {
                                                 @class = "datalinq-filter-parameter",
@@ -734,11 +742,8 @@ public class DataLinqHelper : IDataLinqHelper
                                                 nameField = GetDefaultValueFromRecord(filterProperties, "nameField")?.ToString(),
                                                 prependEmpty = GetDefaultValueFromRecord(filterProperties, "prependEmpty"),
                                                 dependsOn = dependsOn
-                                            },
-                                            GetDefaultValueFromRecord(filterProperties, "defaultValue")
+                                            }
                                         );
-
-                                        div3.Content(rawString.ToString());
                                     }
                                     else if (filterProperties != null && filterProperties.ContainsKey("hidden") && GetDefaultValueFromRecord(filterProperties, "hidden").Equals("true"))
                                     {
@@ -791,7 +796,7 @@ public class DataLinqHelper : IDataLinqHelper
                                     }
                                 });
                             }
-                            div2.AppendBreak(b => { });
+                            div2.AppendBreak();
                             div2.AppendDiv(div5 =>
                             {
                                 div5.AddClass("datalinq-filter-buttongroup");
@@ -1055,9 +1060,9 @@ public class DataLinqHelper : IDataLinqHelper
                 .AppendForm(f =>
                 {
                     f.AddAttributes(htmlAttributes);
-                    f.AddAttribute("action", "../ExecuteNonQuery/" + id);
+                    f.AddAttribute("action", $"../ExecuteNonQuery/{id}");
                     f.AddAttribute("method", "POST");
-                }).BuildHtmlString()[..^7]
+                }, WriteTags.OpenOnly).BuildHtmlString()
             );
     }
 
@@ -1083,50 +1088,61 @@ public class DataLinqHelper : IDataLinqHelper
         string submitText = "",
         string cancelText = "")
     {
-        if (!String.IsNullOrEmpty(submitText) & !String.IsNullOrEmpty(cancelText))
+        var htmlBuilder = HtmlBuilder.Create();
+
+        return _razor.RawString(
+               (submitText.IsNotEmpty(), cancelText.IsNotEmpty()) switch
         {
-            return "<br/>"+ _razor.RawString(
-            HtmlBuilder.Create()
-                .AppendButton(b =>
-                {
-                    b.AddClass("datalinq-submit-form");
-                    b.AddAttribute("type", "button");
-                    b.AddAttribute("onclick", "dataLinq.submitForm(this)");
-                    b.Content(submitText);
-                }).AppendButton(b1 =>
-                {
-                    b1.AddClass("datalinq-reset-form");
-                    b1.AddAttribute("type", "reset");
-                    b1.Content(cancelText);
-                }).BuildHtmlString() + "</form>"
-            );
-        } else if(!String.IsNullOrEmpty(submitText) & String.IsNullOrEmpty(cancelText))
-        {
-            return "<br/>" + _razor.RawString(
-            HtmlBuilder.Create()
-                .AppendButton(b =>
-                {
-                    b.AddClass("datalinq-submit-form");
-                    b.AddAttribute("type", "button");
-                    b.AddAttribute("onclick", "dataLinq.submitForm(this)");
-                    b.Content(submitText);
-                }).BuildHtmlString() + "</form>"
-            );
-        } else if(String.IsNullOrEmpty(submitText) & !String.IsNullOrEmpty(cancelText))
-        {
-            return "<br/>" + _razor.RawString(
-            HtmlBuilder.Create()
-                .AppendButton(b1 =>
-                {
-                    b1.AddClass("datalinq-reset-form");
-                    b1.AddAttribute("type", "reset");
-                    b1.Content(cancelText);
-                }).BuildHtmlString() + "</form>"
-            );
-        } else
-        {
-            return _razor.RawString("<br/></form>");
-        }
+            (true, true) => htmlBuilder
+                                .AppendForm(form =>
+                                {
+                                    form
+                                    .AppendBreak()
+                                    .AppendButton(submitButton =>
+                                    {
+                                        submitButton.AddClass("datalinq-submit-form");
+                                        submitButton.AddAttribute("type", "button");
+                                        submitButton.AddAttribute("onclick", "dataLinq.submitForm(this)");
+                                        submitButton.Content(submitText);
+                                    })
+                                    .AppendButton(cancelButton =>
+                                    {
+                                        cancelButton.AddClass("datalinq-reset-form");
+                                        cancelButton.AddAttribute("type", "reset");
+                                        cancelButton.Content(cancelText);
+                                    });
+                                }, WriteTags.CloseOnly).BuildHtmlString(),
+            (true, false) => htmlBuilder
+                                .AppendForm(form =>
+                                {
+                                    form
+                                    .AppendBreak()
+                                    .AppendButton(submitButton =>
+                                    {
+                                        submitButton.AddClass("datalinq-submit-form");
+                                        submitButton.AddAttribute("type", "button");
+                                        submitButton.AddAttribute("onclick", "dataLinq.submitForm(this)");
+                                        submitButton.Content(submitText);
+                                    });
+                                }, WriteTags.CloseOnly).BuildHtmlString(),
+            (false, true) => htmlBuilder
+                                .AppendForm(form =>
+                                {
+                                    form
+                                    .AppendBreak()
+                                    .AppendButton(resetButton =>
+                                    {
+                                        resetButton.AddClass("datalinq-reset-form");
+                                        resetButton.AddAttribute("type", "reset");
+                                        resetButton.Content(cancelText);
+                                    });
+                                }, WriteTags.CloseOnly).BuildHtmlString(),
+            _ => htmlBuilder
+                    .AppendForm(form =>
+                    {
+                        form.AppendBreak();
+                    }, WriteTags.CloseOnly).BuildHtmlString()
+        });
     }
 
     /// <summary>
@@ -1322,73 +1338,12 @@ public class DataLinqHelper : IDataLinqHelper
         object source = null,
         object defaultValue = null)
     {
-        object val = GetDefaultValueFromRecord(record, name, defaultValue);
+        object val = record.GetDefaultValueFromRecord(name, defaultValue);
 
         return _razor.RawString(
             HtmlBuilder.Create()
-                .AppendSelect(s =>
-                {
-                    s.AddClass("datalinq-include-combo");
-                    s.AddAttributes(htmlAttributes);
-                    s.AddAttribute("name", name);
-
-                    if (source != null && source.GetType().GetProperty("source") != null)
-                    {
-                        var sourceProperty = source.GetType().GetProperty("source");
-                        var sourceValue = sourceProperty.GetValue(source);
-                        bool prependEmpty = Convert.ToBoolean(GetDefaultValueFromRecord(ToDictionary(source), "prependEmpty", false));
-
-                        s.AddAttribute("data-prepend-empty", prependEmpty.ToString().ToLower());
-                        s.AddAttribute("data-defaultvalue", val == null ? "" : val.ToString());
-
-                        var dependsOn = GetDefaultValueFromRecord(ToDictionary(source), "dependsOn", null) as string[];
-                        if (dependsOn != null && dependsOn.Length > 0)
-                        {
-                            s.AddAttribute("data-depends-on", String.Join(",", dependsOn));
-                        }
-
-                        if (sourceValue is string[])
-                        {
-                            StringBuilder options = new StringBuilder();
-                            foreach (var optionValue in (string[])sourceValue)
-                            {
-                                options.Append("<option value='" + optionValue + "' " + (optionValue == val?.ToString() ? "selected" : "") + ">" + optionValue + "</option>");
-                            }
-                            s.Content(options.ToString());
-                        }
-                        else if (sourceValue is Dictionary<object, string>)
-                        {
-                            StringBuilder options = new StringBuilder();
-                            foreach (var kvp in (Dictionary<object, string>)sourceValue)
-                            {
-                                options.Append("<option value='" + kvp.Key + "' " + (kvp.Key.ToString() == val?.ToString() ? "selected" : "") + ">" + kvp.Value + "</option>");
-                            }
-                            s.Content(options.ToString());
-                        }
-                        else if (sourceValue is string)
-                        {
-                            var valueFieldProperty = source.GetType().GetProperty("valueField");
-                            var nameFieldProperty = source.GetType().GetProperty("nameField");
-
-                            if (valueFieldProperty == null || nameFieldProperty == null)
-                            {
-                                valueFieldProperty.SetValue(source, "VALUE");
-                                nameFieldProperty.SetValue(source, "NAME");
-                            }
-
-                            if (valueFieldProperty.PropertyType == typeof(string) && nameFieldProperty.PropertyType == typeof(string))
-                            {
-                                s.AddAttribute("data-url", sourceProperty.GetValue(source).ToString());
-                                s.AddAttribute("data-valuefield", valueFieldProperty.GetValue(source).ToString());
-                                s.AddAttribute("data-namefield", nameFieldProperty.GetValue(source).ToString());
-                            }
-                            else
-                            {
-                                throw new ArgumentException("valueField and nameField have to be typeof(string)");
-                            }
-                        }
-                    }
-                }).BuildHtmlString()
+                .ComboFor(val, name, htmlAttributes, source)
+                .BuildHtmlString()
             ); 
     }
 
@@ -1454,7 +1409,7 @@ public class DataLinqHelper : IDataLinqHelper
                                     i.Content(optionValue);
                                 });
                             }
-                        }).BuildHtmlString()[..^6] + "</select>"
+                        }).BuildHtmlString()
                     );
             }
             else if (sourceProperty.PropertyType == typeof(Dictionary<object, string>))
@@ -1476,7 +1431,7 @@ public class DataLinqHelper : IDataLinqHelper
                                    i.Content(kvp.Value);
                                });
                            }
-                       }).BuildHtmlString()[..^6] + "</select>"
+                       }).BuildHtmlString()
                    );
             }
             else if (sourceProperty.PropertyType == typeof(string))
@@ -1503,7 +1458,7 @@ public class DataLinqHelper : IDataLinqHelper
                                 d.AddAttribute("data-valuefield", valueFieldProperty.GetValue(source).ToString());
                                 d.AddAttribute("data-namefield", nameFieldProperty.GetValue(source).ToString());
                                 d.AddAttribute("data-defaultvalu", val == null ? "" : val.ToString());
-                            }).BuildHtmlString()[..^6] + "</select>"
+                            }).BuildHtmlString()
                         );
                 }
                 else
@@ -1519,7 +1474,7 @@ public class DataLinqHelper : IDataLinqHelper
                     .AppendDiv(d =>
                     {
                         d.AddAttributes(htmlAttributes);
-                    }).BuildHtmlString()[..^6]+"</select>"
+                    }).BuildHtmlString()
                 );
         }
 
@@ -1774,13 +1729,13 @@ public class DataLinqHelper : IDataLinqHelper
         {
             return _razor.RawString(
                 HtmlBuilder.Create()
-                    .AppendBreak(b => {})
+                    .AppendBreak()
                     .AppendLabel(l =>
                     {
                         l.AddAttributes(htmlAttributes);
                         l.AddAttribute("for", name);
                         l.Content(label);
-                    }).AppendBreak(b => {}).BuildHtmlString()
+                    }).AppendBreak().BuildHtmlString()
                 );
         } else
         {
@@ -1833,7 +1788,7 @@ public class DataLinqHelper : IDataLinqHelper
                     d.AddAttributes(htmlAttributes);
                     if (!String.IsNullOrWhiteSpace(label))
                     {
-                        string labelStrong = "<strong>" + ToHtml(label) + "</strong>";
+                        string labelStrong = $"<strong>{ToHtml(label)}</strong>";
                         string content = (records != null) ? records.Length.ToString() : "0";
                         d.Content(labelStrong + content);
                     }
@@ -2213,15 +2168,15 @@ public class DataLinqHelper : IDataLinqHelper
     {
         StringBuilder sb = new StringBuilder();
 
-        sb.Append("<script>");
-        sb.Append("var " + name + "=");
+        sb.Append($"var {name}=");
         sb.Append("jQuery.parseJSON('");
         sb.Append(JsonConvert.SerializeObject(obj).Replace("\\", "\\\\"));
         sb.Append("');");
-        //sb.Append("console.log(" + name + ");");
-        sb.Append("</script>");
 
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendJavaScriptBlock(sb.ToString())
+                .BuildHtmlString());
     }
 
     private object Stat_GroupBy(IDictionary<string, object>[] records, string field, OrderField orderField = OrderField.Non)
@@ -2675,7 +2630,7 @@ public class DataLinqHelper : IDataLinqHelper
     {
         if (attributeValue != null)
         {
-            sb.Append(" " + attributeName + "='" + attributeValue.Replace("\n", "<br/>").Replace("\r", "").Replace("'", "\"") + "'");
+            sb.Append($" {attributeName}='{attributeValue.Replace("\n", "<br/>").Replace("\r", "").Replace("'", "\"")}'");
         }
     }
 
@@ -2684,14 +2639,14 @@ public class DataLinqHelper : IDataLinqHelper
         return _razor.RawString(str);
     }
 
-    public object ToHtmlEncoded(string str)
-    {
-        return _razor switch
-        {
-            RazorEngineService => str,
-            _ => HttpUtility.HtmlEncode(str)
-        };
-    }
+    //public object ToHtmlEncoded(string str)
+    //{
+    //    return _razor switch
+    //    {
+    //        RazorEngineService => str,
+    //        _ => HttpUtility.HtmlEncode(str)
+    //    };
+    //}
 
     #endregion
 
@@ -2711,6 +2666,7 @@ public class DataLinqHelper : IDataLinqHelper
     private object GetDefaultValueFromRecord(object record, string name, object defaultValue = null)
     {
         object val = defaultValue;
+
         if (record != null)
         {
             if (!(record is IDictionary<string, object>))

@@ -143,4 +143,7 @@ internal static class StringExtensions
 
         return sb.ToString().Trim();
     }
+
+    public static bool IsNotEmpty(this string str)
+        => !string.IsNullOrEmpty(str);
 }

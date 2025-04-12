@@ -81,7 +81,7 @@ public class DataLinqHelperClassic : IDataLinqHelper
     {
         StringBuilder sb = new StringBuilder();
 
-        sb.Append("<script type='text/jacascript'>");
+        sb.Append("<script type='text/javascript'>");
         sb.Append("$(function(){");  // load, when page is rendered
 
         sb.Append($"window.{jsCallbackFuncName}(");
@@ -820,7 +820,7 @@ public class DataLinqHelperClassic : IDataLinqHelper
                 sb.Append(">");
                 foreach (var optionValue in (string[])sourceValue)
                 {
-                    sb.Append("<option value='" + optionValue + "' " + (optionValue == val?.ToString() ? "selected" : "") + ">" + optionValue + "</option>");
+                    sb.Append("<option value='" + optionValue + "'" + (optionValue == val?.ToString() ? " selected='selected'" : "") + ">" + optionValue + "</option>");
                 }
             }
             else if (sourceValue is Dictionary<object, string>)
@@ -828,7 +828,7 @@ public class DataLinqHelperClassic : IDataLinqHelper
                 sb.Append(">");
                 foreach (var kvp in (Dictionary<object, string>)sourceValue)
                 {
-                    sb.Append("<option value='" + kvp.Key + "' " + (kvp.Key.ToString() == val?.ToString() ? "selected" : "") + ">" + kvp.Value + "</option>");
+                    sb.Append("<option value='" + kvp.Key + "'" + (kvp.Key.ToString() == val?.ToString() ? " selected='selected'" : "") + ">" + kvp.Value + "</option>");
                 }
             }
             else if (sourceValue is string)
@@ -923,7 +923,7 @@ public class DataLinqHelperClassic : IDataLinqHelper
             }
         }
 
-        sb.Append("</select>");
+        sb.Append("</div>");
 
         return _razor.RawString(sb.ToString());
     }
@@ -1368,7 +1368,7 @@ public class DataLinqHelperClassic : IDataLinqHelper
     {
         StringBuilder sb = new StringBuilder();
 
-        sb.Append("<script>");
+        sb.Append("<script type='text/javascript'>");
         sb.Append("var " + name + "=");
         sb.Append("jQuery.parseJSON('");
         sb.Append(JsonConvert.SerializeObject(obj).Replace("\\", "\\\\"));

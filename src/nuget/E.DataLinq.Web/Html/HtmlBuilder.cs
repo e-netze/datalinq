@@ -17,9 +17,12 @@ public class HtmlBuilder : IHtmlBuilder
 
     #region IHtmlBuilder
 
-    public IHtmlBuilder Append(string elementName, Action<IHtmlElementBuilder> action)
+    public IHtmlBuilder Append(
+            string elementName, 
+            Action<IHtmlElementBuilder> action, 
+            WriteTags writeTags = WriteTags.OpenClose)
     {
-        var htmlElement = HtmlElementBuilder.Create(elementName);
+        var htmlElement = HtmlElementBuilder.Create(elementName, writeTags);
 
         _htmlElements.Add(htmlElement);
         action(htmlElement);

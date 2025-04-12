@@ -54,7 +54,8 @@ public class DataLinqHelperTests
         _uiMock = new Mock<IDataLinqUser>();
         _httpContextMock = new Mock<HttpContext>();
 
-        _razorMock.Setup(r => r.RawString(It.IsAny<string>())).Returns((string input) => input);
+        //_razorMock.Setup(r => r.RawString(It.IsAny<string>())).Returns((string input) => input);
+        _razorMock.Setup(r => r.RawString(It.IsAny<string>())).Returns((string input) => new RawContentTestable(input));
 
         _classicHelper = new DataLinqHelperClassic(_httpContextMock.Object, null, _razorMock.Object, _uiMock.Object);
         _newHelper = new DataLinqHelper(_httpContextMock.Object, null, _razorMock.Object, _uiMock.Object);
@@ -122,11 +123,13 @@ public class DataLinqHelperTests
     public void RefreshViewTicker_ShouldReturnSameResult_ForClassicAndNewImplementation()
     {
         // Act
-        var classicResult = _classicHelper.RefreshViewTicker("Test Test",99,HTML_ATTRIBUTES);
+        var classicResult = _classicHelper.RefreshViewTicker("Test Test", 99, HTML_ATTRIBUTES);
         var newResult = _newHelper.RefreshViewTicker("Test Test", 99, HTML_ATTRIBUTES);
 
         // Assert
-        Assert.AreEqual(RemoveIdAttributes(classicResult.ToString()), RemoveIdAttributes(newResult.ToString()));
+        Assert.AreEqual(
+            new RawContentTestable(RemoveIdAttributes(classicResult.ToString())),
+            new RawContentTestable(RemoveIdAttributes(newResult.ToString())));
     }
 
     [TestMethod]
@@ -222,8 +225,8 @@ public class DataLinqHelperTests
             }
         };
         // Act
-        var classicResult = _classicHelper.Table(records,null, HTML_ATTRIBUTES);
-        var newResult = _newHelper.Table(records,null, HTML_ATTRIBUTES);
+        var classicResult = _classicHelper.Table(records, null, HTML_ATTRIBUTES);
+        var newResult = _newHelper.Table(records, null, HTML_ATTRIBUTES);
 
         // Assert
         Assert.AreEqual(classicResult, newResult);
@@ -322,10 +325,12 @@ public class DataLinqHelperTests
     {
         // Act
         var classicResult = _classicHelper.CheckboxFor(OBJ, "name", HTML_ATTRIBUTES, true);
-        var newResult = _newHelper.CheckboxFor(OBJ, "name", HTML_ATTRIBUTES,  true);
+        var newResult = _newHelper.CheckboxFor(OBJ, "name", HTML_ATTRIBUTES, true);
 
         // Assert
-        Assert.AreEqual(Regex.Replace(classicResult,patternGuid,""), Regex.Replace(newResult,patternGuid,""));
+        Assert.AreEqual(
+            Regex.Replace(classicResult.ToString(), patternGuid, ""),
+            Regex.Replace(newResult.ToString(), patternGuid, ""));
     }
 
     [TestMethod]
@@ -365,7 +370,7 @@ public class DataLinqHelperTests
     public void CopyButton_ShouldReturnSameResult_ForClassicAndNewImplementation()
     {
         // Act
-        var classicResult = _classicHelper.CopyButton("id","baseText",HTML_ATTRIBUTES);
+        var classicResult = _classicHelper.CopyButton("id", "baseText", HTML_ATTRIBUTES);
         var newResult = _newHelper.CopyButton("id", "baseText", HTML_ATTRIBUTES);
 
         // Assert
@@ -376,7 +381,7 @@ public class DataLinqHelperTests
     public void ExecuteScalar_ShouldReturnSameResult_ForClassicAndNewImplementation()
     {
         // Act
-        var classicResult = _classicHelper.ExecuteScalar(HTML_ATTRIBUTES, new { source = "endpoint-id@query-id?id=2", nameField = "NAME" },"span", "test");
+        var classicResult = _classicHelper.ExecuteScalar(HTML_ATTRIBUTES, new { source = "endpoint-id@query-id?id=2", nameField = "NAME" }, "span", "test");
         var newResult = _newHelper.ExecuteScalar(HTML_ATTRIBUTES, new { source = "endpoint-id@query-id?id=2", nameField = "NAME" }, "span", "test");
 
         // Assert
@@ -387,7 +392,7 @@ public class DataLinqHelperTests
     public void StatisticsCount_ShouldReturnSameResult_ForClassicAndNewImplementation()
     {
         // Act
-        var classicResult = _classicHelper.StatisticsCount(RECORD,"Label",HTML_ATTRIBUTES);
+        var classicResult = _classicHelper.StatisticsCount(RECORD, "Label", HTML_ATTRIBUTES);
         var newResult = _newHelper.StatisticsCount(RECORD, "Label", HTML_ATTRIBUTES);
 
         // Assert
@@ -398,7 +403,7 @@ public class DataLinqHelperTests
     public void Chart_ShouldReturnSameResult_ForClassicAndNewImplementation()
     {
         // Act
-        var classicResult = _classicHelper.Chart(ChartType.Bar,"jsValueVariable","Label",HTML_ATTRIBUTES, ["123","124","125"],"jsDataSetVariable");
+        var classicResult = _classicHelper.Chart(ChartType.Bar, "jsValueVariable", "Label", HTML_ATTRIBUTES, ["123", "124", "125"], "jsDataSetVariable");
         var newResult = _newHelper.Chart(ChartType.Bar, "jsValueVariable", "Label", HTML_ATTRIBUTES, ["123", "124", "125"], "jsDataSetVariable");
 
         // Assert
@@ -421,8 +426,8 @@ public class DataLinqHelperTests
         string idPattern = @"id='[^']*'";
         string forPattern = @"for='[^']*'";
 
-        html = Regex.Replace(html, idPattern, string.Empty); 
-        html = Regex.Replace(html, forPattern, string.Empty); 
+        html = Regex.Replace(html, idPattern, string.Empty);
+        html = Regex.Replace(html, forPattern, string.Empty);
 
         return html;
     }
