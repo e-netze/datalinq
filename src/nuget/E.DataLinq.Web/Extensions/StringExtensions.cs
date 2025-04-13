@@ -125,13 +125,13 @@ internal static class StringExtensions
 
         while ((readerLine = reader.ReadLine()) != null)
         {
-            line = readerLine.Trim();
+            line = readerLine; //.Trim();
 
-            var match = Regex.Match(line, @"^([a-z]{2}):");
+            var match = Regex.Match(line.Trim(), @"^([a-z]{2}):");
             if (match.Success)
             {
                 found = match.Groups[1].Value == language;
-                line = line.Substring(3).Trim();
+                line = line.Trim().Substring(3).Trim();
             }
 
             if (found)

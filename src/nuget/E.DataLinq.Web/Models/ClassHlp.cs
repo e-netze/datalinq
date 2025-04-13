@@ -195,7 +195,7 @@ public class ClassHelp
 
             if (!String.IsNullOrWhiteSpace(method.Description))
             {
-                sb.Append("<div>" + ParseDescription(method.Description) + "</div><br/>");
+                sb.Append($"<div>{ParseDescription(method.Description)}</div><br/>");
             }
 
             if (method.Parameters.Count > 0)
@@ -204,9 +204,9 @@ public class ClassHelp
                 {
                     if (!String.IsNullOrWhiteSpace(parameter.Description))
                     {
-                        sb.Append("<div><div class='parameter-name'>" + parameter.Name + ":</div>");
-                        sb.Append(ParseDescription(parameter.Description) + "</div>");
-                        sb.Append("<br/>");
+                        sb.Append($"<div><div class='parameter-name'>{parameter.Name}:</div>");
+                        sb.Append(ParseDescription(parameter.Description));
+                        sb.Append("</div><br/>");
                     }
 
                 }
@@ -310,7 +310,12 @@ public class ClassHelp
 
     private string ParseDescription(string description)
     {
-        return description.Replace("((", "<pre class='descr-code'>").Replace("))", "</pre>").Replace("\n", "<br/>").Replace("\r", "");
+        return description
+            .Replace("((", "<pre class='descr-code'>")
+            .Replace("))", "</pre>")
+            //.Replace("\n", "<br/>")
+            .Replace("\r", "")
+            ;
     }
 
     private void RenderExample(MethodHelp method, StringBuilder sb, bool renderDefaults)

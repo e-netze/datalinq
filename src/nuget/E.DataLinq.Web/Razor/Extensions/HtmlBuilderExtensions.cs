@@ -84,8 +84,8 @@ static internal class HtmlBuilderExtensions
                     if (valueFieldProperty.PropertyType == typeof(string) && nameFieldProperty.PropertyType == typeof(string))
                     {
                         select.AddAttribute("data-url", sourceProperty.GetValue(source).ToString());
-                        select.AddAttribute("data-valuefield", valueFieldProperty.GetValue(source).ToString());
-                        select.AddAttribute("data-namefield", nameFieldProperty.GetValue(source).ToString());
+                        select.AddAttribute("data-valuefield", valueFieldProperty.GetValue(source)?.ToString() ?? "");
+                        select.AddAttribute("data-namefield", nameFieldProperty.GetValue(source)?.ToString() ?? "");
                     }
                     else
                     {

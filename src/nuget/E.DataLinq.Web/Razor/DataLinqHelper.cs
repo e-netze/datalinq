@@ -621,8 +621,12 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: The text for the button that expands the filtering control (e.g., "Apply Filter").
     /// </param>
     /// <param name="filterParameters">
-    /// de: Ein String-Array mit Parametern, nach denen gefiltert werden kann ((z.B.: new string[]{ "ort","strasse" } )) Die Parameter entsprechen hier jenen Parameternamen, die an die entsprechende Abfrage für den View übergeben werden können.
-    /// en: A string array with parameters that can be used for filtering (e.g., new string[]{ "city","street" }) The parameters correspond to the parameter names that can be passed to the corresponding query for the view.
+    /// de: Ein String-Array mit Parametern, nach denen gefiltert werden kann ((z.B.: new string[]{ "ort","strasse" } )) 
+    /// Die Parameter entsprechen hier jenen Parameternamen, die an die entsprechende Abfrage für den View übergeben 
+    /// werden können.
+    /// en: A string array with parameters that can be used for filtering ((e.g., new string[]{ "city","street" })) 
+    /// The parameters correspond to the parameter names that can be passed to the 
+    /// corresponding query for the view.
     /// </param>
     /// <param name="htmlAttributes">
     /// de: Ein anonymes Objekt mit HTML-Attributen für den Button ((z.B.: new { style="width:300px" @class="meine-klasse" }))
@@ -668,9 +672,64 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: The text for the button that expands the filtering control (e.g., "Apply Filter").
     /// </param>
     /// <param name="filterParameters">
-    /// de: Hier wird anstelle von Strings ein Dictionary übergeben. Die Keys entsprechen den Parametern von oben. Die Values geben ein anonymes Objekt an, mit dem beispielsweise die Anzeigenamen der Parameter bestimmt werden können oder auch, dass es ein Datumsfeld ist (siehe TextFor). Außerdem besteht die Möglichkeit, `source`, `valueField`, `nameField` und `prependEmpty` anzugeben. Damit wird eine Auswahlliste erzeugt. Weitere Details sind unter der Methode ComboFor() nachzulesen. 
-    /// Um Auswahlmenüs (ComboBox) mit Mehrfach-Auswahl zu ermöglichen, kann das Attribut `multiple='multiple'` mitgegeben werden.
-    /// en: Instead of strings, a dictionary is passed. The keys correspond to the filter parameters from above. The values represent an anonymous object that can define display names, data types (e.g., Date), and additional options like `source`, `valueField`, `nameField`, and `prependEmpty`. This allows generating a dropdown list. For multi-select dropdowns, the `multiple='multiple'` attribute can be added.
+    /// de: Hier wird anstelle von Strings ein Dictionary übergeben. Die Keys entsprechen den Parametern von oben. 
+    /// Die Values geben ein anonymes Objekt an, mit dem beispielsweise die Anzeigenamen der Parameter bestimmt
+    /// werden können oder auch, dass es ein Datumsfeld ist (siehe TextFor). Außerdem besteht die Möglichkeit, 
+    /// `diaplyName`, `source`, `valueField`, `nameField` und `prependEmpty` anzugeben. Damit wird eine Auswahlliste erzeugt. 
+    /// (( 
+    /// {
+    ///   { "kg", new { 
+    ///     displayname="KG Number", 
+    ///     valueField="kg", 
+    ///     nameField="kg", 
+    ///     source="offline-dkm@lut-kg", 
+    ///     prependEmpty=true 
+    ///     } 
+    ///   },
+    ///   { "gnr", new { 
+    ///     displayname="GR Number", 
+    ///     valueField="gnr", 
+    ///     nameField="gnr", 
+    ///     source="offline-dkm@lut-gnr?kg=[kg]", 
+    ///     prependEmpty=true 
+    ///     } 
+    ///   }
+    /// } ))
+    /// Gibt man bei `source` einen Filter an, der auf auf mindesten ein anderes Feld verweist, wird dieses Feld
+    /// erst geladen, wenn der Filter für das andere Feld gesetzt wurde. Das bedeutet, dass die Abfrage erst
+    /// durchgeführt wird, wenn alle abhängigen Werte eingeben werden. So können Cascading Comboboxen erzeugt werden.
+    /// Um Auswahlmenüs (ComboBox) mit Mehrfach-Auswahl zu ermöglichen, kann das Attribut `multiple='multiple'` 
+    /// mitgegeben werden.
+    /// en: Instead of strings, a dictionary is passed. The keys correspond to the filter parameters from above.
+    /// The values represent an anonymous object that can define display names, data types (e.g., Date), 
+    /// and additional options like 
+    /// `diaplayName`, `source`, `valueField`, `nameField`, and `prependEmpty`. This allows 
+    /// generating a dropdown list. 
+    /// (( 
+    /// {
+    ///   { "kg", new { 
+    ///     displayname="KG Number", 
+    ///     valueField="kg", 
+    ///     nameField="kg", 
+    ///     source="offline-dkm@lut-kg", 
+    ///     prependEmpty=true 
+    ///     } 
+    ///   },
+    ///   { "gnr", new { 
+    ///     displayname="GR Number", 
+    ///     valueField="gnr", 
+    ///     nameField="gnr", 
+    ///     source="offline-dkm@lut-gnr?kg=[kg]", 
+    ///     prependEmpty=true 
+    ///     } 
+    ///   }
+    /// } ))
+    /// If a filter is specified in `source` that references at least one other field, 
+    /// this field will only be loaded once the filter for the other field is set. This means 
+    /// the query will only be executed after all dependent values are provided. 
+    /// This allows for the creation of cascading comboboxes.
+    /// For multi-select dropdowns, the `multiple='multiple'` attribute 
+    /// can be added.
     /// </param>
     /// <param name="htmlAttributes">
     /// de: Ein anonymes Objekt mit HTML-Attributen für den Button (z.B.: new { style="width:300px" @class="meine-klasse" }).
