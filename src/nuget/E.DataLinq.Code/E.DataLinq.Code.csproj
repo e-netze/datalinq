@@ -69,8 +69,8 @@
     <Folder Include="wwwroot\lib\monaco-editor\min\vs\language\" />
   </ItemGroup>
   <ItemGroup>
-	<PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="2.1.175" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
+	<PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="3.0.71" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\E.DataLinq.Web.Api.Client\E.DataLinq.Web.Api.Client.csproj" />
