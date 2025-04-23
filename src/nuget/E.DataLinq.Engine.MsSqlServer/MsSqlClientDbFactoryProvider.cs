@@ -7,6 +7,13 @@ namespace E.DataLinq.Engine.MsSqlServer;
 
 public class MsSqlClientDbFactoryProvider : IDbFactoryProviderService
 {
+    private readonly IDbFactoryProviderConnectionStringModifyService? _connectionStringModifyService;
+
+    public MsSqlClientDbFactoryProvider(IDbFactoryProviderConnectionStringModifyService? connectionStringModifyService = null)
+    {
+        _connectionStringModifyService = connectionStringModifyService;
+    }
+
     public DbProviderFactory GetFactory()
     {
         return Microsoft.Data.SqlClient.SqlClientFactory.Instance;
@@ -14,7 +21,11 @@ public class MsSqlClientDbFactoryProvider : IDbFactoryProviderService
 
     public string RawConnectionString(string connectionString)
     {
-        return connectionString.RemovePrefix();
+        var rawConnectionString = connectionString.RemovePrefix();
+
+        rawConnectionString = _connectionStringModifyService?.ModifyConnectionString("sql", rawConnectionString) ?? rawConnectionString;
+
+        return rawConnectionString;
     }
 
     public bool SupportsConnection(string connectionString)
