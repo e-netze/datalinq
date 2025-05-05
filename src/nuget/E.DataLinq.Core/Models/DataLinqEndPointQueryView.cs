@@ -48,9 +48,4 @@ public class DataLinqEndPointQueryView
     [JsonProperty("included_js_libs")]
     [Description("Select JavaScript libraries here that should be loaded when the report is accessed. This option is only considered if the view is the main/startpage of the report. For subpages, this option is irrelevant. If a subpage uses JavaScript libraries, they must be included on the startpage.")]
     public string IncludedJsLibraries { get; set; }
-
-    [JsonProperty(PropertyName = "allow_code_reflection")]
-    [DisplayName("Allow Code Reflection")]
-    [Description("Use this option only if you develpe a guide for datalinq, where you also want to show code and query statements in the datalinq app. !! Do never use this options for production code!!")]
-    public bool AllowCodeReflection { get; set; }
 }
