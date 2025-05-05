@@ -19,13 +19,17 @@ namespace E.DataLinq.Web.Services;
 public class DataLinqCompilerService
 {
     private readonly IEnumerable<IRazorCompileEngineService> _razorEngines;
+    private readonly DataLinqCodeReflectionService _codeReflection;
     private readonly DataLinqOptions _options;
 
-    public DataLinqCompilerService(IEnumerable<IRazorCompileEngineService> razorEngines,
-                                   IOptionsMonitor<DataLinqOptions> optionsMonitor)
+    public DataLinqCompilerService(
+            IEnumerable<IRazorCompileEngineService> razorEngines,
+            IOptionsMonitor<DataLinqOptions> optionsMonitor,
+            DataLinqCodeReflectionService codeReflection = null)
     {
         _options = optionsMonitor.CurrentValue;
         _razorEngines = razorEngines;
+        _codeReflection = codeReflection;
     }
 
     public Task ValidateRazorCode(DataLinqEndPointQueryView view)
@@ -77,6 +81,11 @@ public class DataLinqCompilerService
 
         var code = CreateCodeStringBuilder(constants);
         code.Append(view.Code);
+
+        if(_codeReflection is not null && view.AllowCodeReflection == true)
+        {
+            code.Append(await _codeReflection.CodeReflectionBlocks(id, code.ToString(), true));
+        }
 
         try
         {

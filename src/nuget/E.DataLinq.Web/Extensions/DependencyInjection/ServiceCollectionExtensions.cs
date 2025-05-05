@@ -62,6 +62,7 @@ static public class ServiceCollectionExtensions
                        // Sonst kommt es zu Fehler (IFeatureCollection has been disposed), weil IHttpContextAccessor sonst auch Singleton wird!!!
                        .AddTransient<DataLinqService>()
                        .AddTransient<DataLinqCompilerService>()
+                       .AddTransient<DataLinqCodeReflectionService>()
                        .AddTransient<AccessControlService>()
                        .AddTransient<IDataLinqEnvironmentService, DataLinqEnvironmentService>()
                        .AddTransient<IRazorCompileEngineService, RazorEngineService>()  // classic version

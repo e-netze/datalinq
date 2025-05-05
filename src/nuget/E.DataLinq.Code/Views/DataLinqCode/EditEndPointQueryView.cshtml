@@ -88,6 +88,14 @@
             @Html.TextBoxFor(m => m.Changed, htmlAttributes: new { @readonly = "readonly" })
         </div>
 
+        <h3>Development</h3>
+        <div class="hr"></div>
+        <div class="datalinq-form-section">
+            @Html.DescriptionFor(m => m.AllowCodeReflection)
+            @Html.CheckBoxFor(m => m.AllowCodeReflection)
+            @Html.LabelFor(m => m.AllowCodeReflection)
+        </div>
+
         <button class="submit" style="display:none">Submit</button>
     }
 
