@@ -140,6 +140,16 @@
 
             dataLinqCode.events.fire('refresh-ui');
         });
+
+        var el = document.querySelector('.datalinq-code-tabs');
+        var sortable = Sortable.create(el, {
+            animation: 150,
+            ghostClass: 'dragging',
+            filter: '.start',
+            onMove: function (evt) {
+                return !evt.related.classList.contains('start');
+            }
+        });
     };
 
     var showOrAddTab = function ($tabs, title, id, cls, hideCloseButton) {
