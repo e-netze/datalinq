@@ -1101,6 +1101,11 @@ body {
         background-image: url(img/darkmode_32@1.png);
     }
 
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.sandbox {
+        background-image: url(img/sandbox_32@1.png);
+        float: right;
+    }
+
     .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.help {
         background-image: url(img/help_32@1.png);
         float:right;

@@ -147,6 +147,10 @@ var dataLinqCode = new function ($) {
             }
         });
 
+        dataLinqCode.events.on('toggle-sandbox', function (channel) {
+            window.open("https://localhost:7277/datalinq/report/datalinq-guide@select-all-users@index", "_blank");
+        });
+
         dataLinqCode.events.on('logout', function (channel) {
             document.location = document.location + '/logout';
         });
