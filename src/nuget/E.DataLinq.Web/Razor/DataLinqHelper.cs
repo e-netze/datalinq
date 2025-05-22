@@ -885,25 +885,39 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Ein anonymes Objekt mit HTML-Attributen für diesen Button (z.B.: new { style="width:300px" @class="meine-klasse" }).
     /// en: An anonymous object with HTML attributes for the button (e.g., new { style="width:300px" @class="my-class" }).
     /// </param>
+    /// <param name="columns">
+    /// de: Die Spalten, die exportiert werden sollen. Wird nichts angegeben, werden alle Spalten exportiert.  
+    /// en: The columns to be exported. If nothing is specified, all columns will be exported.  
+    /// </param>
     /// <returns>
     /// de: Gibt das generierte HTML für das Export-Steuerelement zurück.
     /// en: Returns the generated HTML for the export control.
     /// </returns>
     public object ExportView(
         string label = "Export",
-        object htmlAttributes = null)
+        object htmlAttributes = null,
+        IEnumerable<string> columns = null)
     {
+        string columnsJson = (columns != null && columns.Any())
+            ? System.Text.Json.JsonSerializer.Serialize(columns)
+            : null;
+
+        string onclickJs = columnsJson != null
+            ? $"dataLinq.export(this, {columnsJson})"
+            : "dataLinq.export(this)";
+
         return _razor.RawString(
             HtmlBuilder.Create()
                 .AppendButton(b =>
                 {
                     b.AddClass("datalinq-button apply");
                     b.AddAttributes(htmlAttributes);
-                    b.AddAttribute("onclick", "dataLinq.export(this)");
+                    b.AddAttribute("onclick", onclickJs);
                     b.Content(label);
                 }).BuildHtmlString()
             );
     }
+
 
     /// <summary>
     /// de: Macht aus einem Text einen Link. Dieser aktualisiert einen Filter einer View, das kann auch ein Filter eines in der Seite eingebauten Include(Click)Views sein.

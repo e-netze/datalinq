@@ -450,7 +450,7 @@ var dataLinq = new function () {
         }
     };
 
-    this.export = function (elem) {
+    this.export = function (elem, columnsToKeep) {
         var $e = $(elem).closest('.datalinq-include, .datalinq-include-click');
         var ids = $e.attr("data-source").split("@");
         if (ids.length !== 3) {
@@ -459,9 +459,71 @@ var dataLinq = new function () {
         }
         var where = $e.attr("data-filter");
         var order = $e.attr("data-orderby");
-        var exportUrl = dataLinq.baseUrl + "/datalinq/select/" + ids[0] + "@" + ids[1] + "?" + where + "&_orderby=" + order + "&_f=csv";
-        window.open(dataLinq.overrideModifyRequestUrlData(exportUrl));
+
+        if (Array.isArray(columnsToKeep) && columnsToKeep.length > 0) {
+            var jsonUrl = dataLinq.baseUrl + "/datalinq/select/" + ids[0] + "@" + ids[1] + "?" + where + "&_orderby=" + order + "&_pjson=true";
+
+            fetch(dataLinq.overrideModifyRequestUrlData(jsonUrl))
+                .then(response => {
+                    if (!response.ok) throw new Error("Network response was not ok");
+                    return response.json();
+                })
+                .then(jsonData => {
+                    const filteredData = jsonData.map(item => {
+                        const filteredItem = {};
+                        columnsToKeep.forEach(col => {
+                            if (col in item) filteredItem[col] = item[col];
+                        });
+                        return filteredItem;
+                    });
+
+                    const csv = jsonToCsv(filteredData);
+
+                    downloadCsv(csv, 'export.csv');
+                })
+                .catch(err => alert("Fehler beim Export: " + err.message));
+
+        } else {
+            var exportUrl = dataLinq.baseUrl + "/datalinq/select/" + ids[0] + "@" + ids[1] + "?" + where + "&_orderby=" + order + "&_f=csv";
+            window.open(dataLinq.overrideModifyRequestUrlData(exportUrl));
+        }
     };
+
+    function jsonToCsv(items) {
+        if (!items.length) return "";
+
+        const keys = Object.keys(items[0]);
+        const escapeCsv = (text) => {
+            if (typeof text === "string" && (text.includes(",") || text.includes('"') || text.includes("\n"))) {
+                return '"' + text.replace(/"/g, '""') + '"';
+            }
+            return text;
+        };
+
+        const header = keys.join(";");
+        const rows = items.map(item =>
+            keys.map(k => escapeCsv(item[k] ?? "")).join(";")
+        );
+
+        return [header, ...rows].join("\n");
+    }
+
+    function downloadCsv(csvContent, filename) {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        if (navigator.msSaveBlob) { 
+            navigator.msSaveBlob(blob, filename);
+        } else {
+            const url = URL.createObjectURL(blob);
+            link.href = url;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    }
+
 
     this.updateLegend = function (parent) {
         $('.legend').empty();
