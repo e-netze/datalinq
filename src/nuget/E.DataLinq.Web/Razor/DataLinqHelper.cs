@@ -520,12 +520,22 @@ public class DataLinqHelper : IDataLinqHelper
         [HelpDescription("Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes (z.B.: \"Export\")")]
         string label = "Export",
         [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für diesen Button ((z.B.: new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
-        object htmlAttributes = null)
+        object htmlAttributes = null,
+        [HelpDescription("Die Spalten, die im Export übernommen werden sollten. Wird hier nichts angegeben, werden alle Spalten exportiert.")]
+        IEnumerable<string> columns = null)
     {
+        string columnsJson = (columns != null && columns.Any())
+        ? System.Text.Json.JsonSerializer.Serialize(columns)
+        : null;
+
+        string onclickJs = columnsJson != null
+            ? $"dataLinq.export(this, {columnsJson})"
+            : "dataLinq.export(this)";
+
         StringBuilder sb = new StringBuilder();
         sb.Append("<button ");
         AppendHtmlAttributes(sb, htmlAttributes, "datalinq-button apply");
-        AppendHtmlAttribute(sb, "onclick", "dataLinq.export(this)");
+        AppendHtmlAttribute(sb, "onclick", onclickJs);
         sb.Append(">" + label + "</button>");
 
         return _razor.RawString(sb.ToString());
