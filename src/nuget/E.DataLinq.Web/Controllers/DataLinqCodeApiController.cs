@@ -28,6 +28,7 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly IHostAuthenticationService _hostAuthentication;
     private readonly DataLinqCompilerService _compiler;
     private readonly DataLinqCodeIdentity _identity;
+    private readonly IMonacoSnippetService _monacoSnippetService;
     private readonly DataLinqEndpointTypeService _endpointTypes;
     private readonly JsLibrariesService _jsLibraries;
     private readonly IDataLinqApiNotificationService _notification;
@@ -37,6 +38,7 @@ public class DataLinqCodeApiController : ApiBaseController
                                      DataLinqCompilerService compiler,
                                      DataLinqEndpointTypeService endpointTypes,
                                      IDataLinqCodeIdentityService _identitySerice,
+                                     IMonacoSnippetService monacoSnippetService,
                                      JsLibrariesService jsLibraries,
                                      IHostAuthenticationService hostAuthentication = null,
                                      IDataLinqApiNotificationService notification = null)
@@ -46,6 +48,7 @@ public class DataLinqCodeApiController : ApiBaseController
         _compiler = compiler;
         _endpointTypes = endpointTypes;
         _identity = _identitySerice.CurrentIdentity();
+        _monacoSnippetService = monacoSnippetService;
         _jsLibraries = jsLibraries;
         _hostAuthentication = hostAuthentication;
         _notification = notification;
@@ -489,6 +492,14 @@ For more information, see Help (?).
     [HttpGet]
     [Route("capabilities/jslibs")]
     public IActionResult GetJsLibraries() => base.JsonObject(_jsLibraries.Libraries);
+
+    [HttpGet]
+    [Route("monacosnippit")]
+    public IActionResult GetSnippets()
+    {
+        string json = _monacoSnippetService.BuildSnippetJson();
+        return Content(json, "application/json");
+    }
 
     #endregion
 

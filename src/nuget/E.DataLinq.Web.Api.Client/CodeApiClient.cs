@@ -194,6 +194,17 @@ public class CodeApiClient
         }
     }
 
+    public async Task<string> GetMonacoSnippit()
+    {
+        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/monacosnippit");
+        ModifyHttpRequest(requestMessage);
+
+        using var httpResponse = await _httpClient.SendAsync(requestMessage);
+        httpResponse.EnsureSuccessStatusCode();
+
+        return await httpResponse.Content.ReadAsStringAsync();
+    }
+
     async public Task<IEnumerable<string>> GetAuthPrefixes()
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/auth/prefixes"))

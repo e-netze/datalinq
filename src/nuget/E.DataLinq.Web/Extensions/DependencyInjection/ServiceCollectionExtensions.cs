@@ -10,6 +10,7 @@ using E.DataLinq.Core.Services.Crypto;
 using E.DataLinq.Core.Services.Crypto.Abstraction;
 using E.DataLinq.Core.Services.Persistance;
 using E.DataLinq.Core.Services.Persistance.Abstraction;
+using E.DataLinq.Web.Razor;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using E.DataLinq.Web.Services.Cache;
@@ -63,6 +64,7 @@ static public class ServiceCollectionExtensions
                        .AddTransient<DataLinqService>()
                        .AddTransient<DataLinqCompilerService>()
                        .AddTransient<AccessControlService>()
+                       .AddSingleton<IMonacoSnippetService>(provider => new MonacoSnippetService(typeof(DataLinqHelper)))
                        .AddTransient<IDataLinqEnvironmentService, DataLinqEnvironmentService>()
                        .AddTransient<IRazorCompileEngineService, RazorEngineService>()  // classic version
                        .AddTransient<IRazorCompileEngineService, RazorEngineLanguageEngineRazorService>()  // Datalinq version

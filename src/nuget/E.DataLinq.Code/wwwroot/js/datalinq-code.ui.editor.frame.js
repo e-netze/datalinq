@@ -25,7 +25,10 @@ dataLinqCodeEditor = new function () {
             _editor = monaco.editor.create(document.getElementById('datalinq-code-editor-code'), {
                 language: language || 'text',
                 automaticLayout: true,
-                theme: dataLinqCode.editorTheme()
+                theme: dataLinqCode.editorTheme(),
+                hover: {
+                    enabled: true
+                }
             });
 
             _editor.setValue(value || '');
@@ -35,6 +38,29 @@ dataLinqCodeEditor = new function () {
                 this.setDirty();
                 this.removeDecoration();
             });
+
+            let cachedCompletions = JSON.parse(localStorage.getItem('dlhCompletions'));
+
+            function loadDLHCompletions(monaco, language) {
+                if (cachedCompletions) {
+                    registerDLHCompletions(monaco, language || 'text', cachedCompletions);
+                    return;
+                }
+
+                dataLinqCode.api.getMonacoSnippit(function (data) {
+                    try {
+                        const completions = JSON.parse(data);
+                        cachedCompletions = completions;
+                        localStorage.setItem('dlhCompletions', JSON.stringify(completions));
+                        registerDLHCompletions(monaco, language || 'text', completions);
+                    } catch (e) {
+                        console.error("Failed to parse completions JSON", e);
+                    }
+                });
+            }
+
+            loadDLHCompletions(monaco, language || 'text');
+            registerRazorSnippets(monaco, language || 'text');
 
         } else {
             $('.datalinq-code-editor-settings').css('display', 'block');

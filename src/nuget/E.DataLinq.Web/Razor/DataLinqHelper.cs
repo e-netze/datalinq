@@ -2658,6 +2658,7 @@ public class DataLinqHelper : IDataLinqHelper
     public string GetRequestHeaderValue(string header)
         => _httpContext?.Request?.Headers[header] ?? "";
 
+    [ExcludeFromSnippets]
     private string ParseUrl(string url, bool encodeQueryString)
     {
         if (encodeQueryString && url.Contains("?"))
@@ -2677,6 +2678,7 @@ public class DataLinqHelper : IDataLinqHelper
 
     #region IDataLinqHelper
 
+    [ExcludeFromSnippets]
     public void AppendHtmlAttributes(StringBuilder sb, object htmlAttributes, string addClass = "")
     {
         bool classAdded = false;
@@ -2699,6 +2701,7 @@ public class DataLinqHelper : IDataLinqHelper
         }
     }
 
+    [ExcludeFromSnippets]
     public void AppendHtmlAttribute(StringBuilder sb, string attributeName, string attributeValue)
     {
         if (attributeValue != null)
@@ -2707,6 +2710,7 @@ public class DataLinqHelper : IDataLinqHelper
         }
     }
 
+    [ExcludeFromSnippets]
     public object ToRawString(string str)
     {
         return _razor.RawString(str);
@@ -2725,6 +2729,7 @@ public class DataLinqHelper : IDataLinqHelper
 
     #region Helper
 
+    [ExcludeFromSnippets]
     private string ToHtml(string str)
     {
         if (str == null)
@@ -2736,6 +2741,7 @@ public class DataLinqHelper : IDataLinqHelper
         return str;
     }
 
+    [ExcludeFromSnippets]
     private object GetDefaultValueFromRecord(object record, string name, object defaultValue = null)
     {
         object val = defaultValue;
@@ -2762,6 +2768,7 @@ public class DataLinqHelper : IDataLinqHelper
         return val;
     }
 
+    [ExcludeFromSnippets]
     private IDictionary<string, object> ToDictionary(object anonymousObject)
     {
         if (anonymousObject == null)

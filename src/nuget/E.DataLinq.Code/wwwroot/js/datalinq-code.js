@@ -185,6 +185,10 @@ var dataLinqCode = new function ($) {
             });
         };
 
+        this.getMonacoSnippit = function (callback) {
+            this.get('getMonacoSnippit', callback);
+        };
+
         this.getEndPointPrefixes = function (callback) {
             this.get('getEndPointPrefixes', callback);
         };

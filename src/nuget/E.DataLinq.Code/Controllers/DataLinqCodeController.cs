@@ -124,6 +124,13 @@ public class DataLinqCodeController : DataLinqCodeBaseController
             await _client.GetEndPointQueryViews(endPoint, query));
     }
 
+    async public Task<IActionResult> GetMonacoSnippit()
+    {
+        return base.JsonObject(_client == null ?
+            null :
+            await _client.GetMonacoSnippit());
+    }
+
     #endregion
 
     #region Edit 
