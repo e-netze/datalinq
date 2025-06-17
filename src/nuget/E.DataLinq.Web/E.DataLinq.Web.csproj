@@ -75,4 +75,171 @@
     <ProjectReference Include="..\E.Datalinq.Core\E.DataLinq.Core.csproj" />
     <ProjectReference Include="..\E.DataLinq.LanguageEngine.Razor\E.DataLinq.LanguageEngine.Razor.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Resources\datalinq-guide\datalinq-guide.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\exampel-delete-user.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\example-create-user.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\example-grouped-report-views\example-grouped-report.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\example-grouped-report.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\example-select-assets-views\assets-of-user.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\example-select-assets.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\example-select-usageofasset.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\example-select-user-views\delete-user.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\example-select-user-views\update-user.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\example-select-user.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\example-update-status.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\example-update-user.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\insert-asset.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\insert-user.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-firstnames.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-example-createuser.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-example-crud.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-example-grouped-report.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-example-tablestat.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-general-ifelse.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-general-linq.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-general-loops.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-general-model.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-chart.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-executenonquery.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-executescalar.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-exportview.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-filterview.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-form.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-getheader.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-getrecordsasync.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-getusername.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-hiddenswitcher.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-includeclickview.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-includeview.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-jsfetchdata.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-openviewindialog.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-recordstojs.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-refreshticker.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-refreshviewclick.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-sortview.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-statistics.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-table.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-updatefilterbtn.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\datalinq-helper-urlencode.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users-views\index.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-all-users.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-assetcount-views\table-assetcount.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-assetcount.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-surnames-where-firstname.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\queries\select-usagestats.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\version.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\_css.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\datalinq-guide\_js.blb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

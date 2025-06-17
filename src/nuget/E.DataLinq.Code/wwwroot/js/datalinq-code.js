@@ -28,6 +28,12 @@ var dataLinqCode = new function ($) {
 
         this.bindDocumentEvents(window.document);
 
+        window.addEventListener('message', (event) => {
+            if (event.data.lang) {
+                sessionStorage.setItem('selectedLang', event.data.lang);
+            }
+        });
+
         dataLinqCode.events.on('refresh-ui', function (channel, args) {
             var args = {
                 currentDoc: $editor.dataLinqCode_editor('currentDoc'),
@@ -38,7 +44,7 @@ var dataLinqCode = new function ($) {
         });
 
         dataLinqCode.events.on('save-current-document', function () {
-            var id = $editor.dataLinqCode_editor('currentDoc');
+            var id = $editor.dataLinqCode_editor('toSaveDoc');
             if (id) {
                 dataLinqCode.events.fire('save-document', { id: id });
             }
@@ -148,7 +154,7 @@ var dataLinqCode = new function ($) {
         });
 
         dataLinqCode.events.on('toggle-sandbox', function (channel) {
-            window.open("https://localhost:7277/datalinq/report/datalinq-guide@select-all-users@index", "_blank");
+            window.open(_dataLinqEngineUrl + "/report/datalinq-guide@select-all-users@index", "_blank");
         });
 
         dataLinqCode.events.on('logout', function (channel) {
@@ -185,8 +191,8 @@ var dataLinqCode = new function ($) {
             });
         };
 
-        this.getMonacoSnippit = function (callback) {
-            this.get('getMonacoSnippit', callback);
+        this.getMonacoSnippit = function (callback, lang) {
+            this.get('getMonacoSnippit', callback, { lang: lang });
         };
 
         this.getEndPointPrefixes = function (callback) {

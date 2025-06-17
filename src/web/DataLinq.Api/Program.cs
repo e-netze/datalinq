@@ -66,6 +66,7 @@ if (builder.Configuration.GetSection("DataLinq.CodeApi").Exists())
         config.DataLinqCodeClients = builder
             .Configuration.GetSection("DataLinq.CodeApi:ClientEndpoints")
             .Get<string[]>();
+        config.StoragePath = builder.Configuration["DataLinq.Api:StoragePath"];
     });
 }
 
@@ -76,8 +77,6 @@ builder.Services.AddScoped<IRoutingEndPointReflectionProvider, RoutingEndPointRe
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
-
-
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -101,6 +100,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

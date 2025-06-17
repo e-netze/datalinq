@@ -18,7 +18,8 @@
 <link href="@(ViewData["contentRootUrl"])/lib/select2/css/select2.min.css" rel="stylesheet" />
 <link href="@(ViewData["contentRootUrl"])/css/datalinq/datalinq.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
 
-<link href="@(ViewData["appRootUrl"])/datalinq/cssproxy/@(Model.EndpointId)?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+<link href="@(ViewData["appRootUrl"])/datalinq/cssproxyendpoint/@(Model.EndpointId)?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+<link href="@(ViewData["appRootUrl"])/datalinq/cssproxyview/@(Model.EndpointId)@@@(Model.QueryId)@@@(Model.ViewId)?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
 
 <link href="@(ViewData["contentRootUrl"])/lib/flatpickr/flatpickr.min.css" rel="stylesheet" />
 
@@ -75,7 +76,8 @@
     }
 }
 
-<script src="@(ViewData["appRootUrl"])/datalinq/jsproxy/@(Model.EndpointId)?@(DataLinqVersion.CssVersion)"></script>
+<script src="@(ViewData["appRootUrl"])/datalinq/jsproxyendpoint/@(Model.EndpointId)?@(DataLinqVersion.CssVersion)"></script>
+<script src="@(ViewData["appRootUrl"])/datalinq/jsproxyview/@(Model.EndpointId)@@@(Model.QueryId)@@@(Model.ViewId)?@(DataLinqVersion.JsVersion)"></script>
 
 <script type="text/javascript">
 

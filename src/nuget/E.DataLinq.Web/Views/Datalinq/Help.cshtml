@@ -143,6 +143,7 @@ else
     function changeLanguage(select) {
         var selectedLang = select.value;
         sessionStorage.setItem("selectedLang", selectedLang);
+        window.parent.postMessage({ lang: selectedLang }, '*');
         var url = new URL(window.location.href);
         url.searchParams.set("lang", selectedLang);
         window.location.href = url.toString();

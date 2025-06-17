@@ -34,7 +34,6 @@ dataLinqCodeEditor = new function () {
             _editor.setValue(value || '');
             _editor.getModel().onDidChangeContent((event) => {
                 dataLinqCodeEditor.events.fire('editor-value-changed', { id: _id, value: _editor.getValue() });
-
                 this.setDirty();
                 this.removeDecoration();
             });
@@ -47,6 +46,8 @@ dataLinqCodeEditor = new function () {
                     return;
                 }
 
+                const selectedLang = sessionStorage.getItem('selectedLang') || 'en';
+
                 dataLinqCode.api.getMonacoSnippit(function (data) {
                     try {
                         const completions = JSON.parse(data);
@@ -56,7 +57,8 @@ dataLinqCodeEditor = new function () {
                     } catch (e) {
                         console.error("Failed to parse completions JSON", e);
                     }
-                });
+                }, selectedLang);
+
             }
 
             loadDLHCompletions(monaco, language || 'text');
@@ -96,7 +98,7 @@ dataLinqCodeEditor = new function () {
     };
 
     var _event_save_document = function (channel, args) {
-        if (args.id === _id) {
+        if ((Array.isArray(args.id) && args.id.includes(_id)) || args.id === _id) {
             dataLinqCodeEditor.submitForm();
         }
     };

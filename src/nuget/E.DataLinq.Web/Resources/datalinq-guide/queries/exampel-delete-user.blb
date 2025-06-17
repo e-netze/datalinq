@@ -1,0 +1,1 @@
+{"id":"exampel-delete-user","name":null,"description":null,"statement":"enc:static:0x2DF562769CE56B0D905DDA49F4A07DA9F14C67CF9B8216CA55B0FA2A4D5A72E93F7427A7FBA34D2AFBEE98AA48CE5111","access":["beatles::datalinq"],"created":"2025-04-16T11:30:01","test_parameters":null}

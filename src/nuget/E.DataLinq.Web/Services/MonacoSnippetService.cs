@@ -1,16 +1,13 @@
-﻿using System;
+﻿using E.DataLinq.Web.Extensions;
+using E.DataLinq.Web.Services.Abstraction;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
-using E.DataLinq.Core.Reflection;
-using E.DataLinq.Web.Extensions;
-using E.DataLinq.Web.Models;
-using E.DataLinq.Web.Services.Abstraction;
-using Newtonsoft.Json;
-using RazorEngine.Compilation.ImpromptuInterface.Dynamic;
 
 public class MonacoSnippetService : IMonacoSnippetService
 {
@@ -21,7 +18,7 @@ public class MonacoSnippetService : IMonacoSnippetService
         _targetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
     }
 
-    public string BuildSnippetJson()
+    public string BuildSnippetJson(string lang)
     {
         var snippets = new List<object>();
 
@@ -35,7 +32,7 @@ public class MonacoSnippetService : IMonacoSnippetService
 
         foreach (var method in methods)
         {
-            if(currentMethod.Equals(method.Name))
+            if (currentMethod.Equals(method.Name))
                 skipper = 1;
             else
             {
@@ -43,7 +40,7 @@ public class MonacoSnippetService : IMonacoSnippetService
                 currentMethod = method.Name;
             }
 
-            var methodDescription = GetDescriptionFromXML(_targetType, "en", method, skipper);
+            var methodDescription = GetDescriptionFromXML(_targetType, lang, method, skipper);
 
             var parameters = method.GetParameters();
 
@@ -65,7 +62,7 @@ public class MonacoSnippetService : IMonacoSnippetService
                 kind = 3,
                 insertText = insertText.ToString(),
                 insertTextRules = 4,
-                documentation = $"{method.Name}({string.Join(", ", method.GetParameters().Select(p => TypeToString(p.ParameterType)))})\n\n"+methodDescription 
+                documentation = $"{method.Name}({string.Join(", ", method.GetParameters().Select(p => TypeToString(p.ParameterType)))})\n\n" + methodDescription
             };
 
             snippets.Add(snippet);
@@ -153,8 +150,8 @@ public class MonacoSnippetService : IMonacoSnippetService
 
     private static string GetDescriptionFromXML(Type type, string languageCode, MethodInfo methodInfo, int skipper)
     {
-        var xmlFilePath = $"{System.IO.Path.ChangeExtension(type.Assembly.Location, ".XML")}";
-        if (!System.IO.File.Exists(xmlFilePath))
+        var xmlFilePath = $"{Path.ChangeExtension(type.Assembly.Location, ".XML")}";
+        if (!File.Exists(xmlFilePath))
         {
             return "";
         }

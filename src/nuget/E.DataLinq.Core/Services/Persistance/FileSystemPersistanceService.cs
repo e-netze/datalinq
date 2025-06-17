@@ -113,9 +113,33 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         return string.Empty;
     }
 
+    async public Task<string> GetViewCss(string id)
+    {
+        FileInfo fi = new FileInfo(ViewCssBloblPath(id));
+
+        if (fi.Exists)
+        {
+            return await File.ReadAllTextAsync(fi.FullName);
+        }
+
+        return string.Empty;
+    }
+
     async public Task<string> GetEndPointJavascript(string endPointId)
     {
         FileInfo fi = new FileInfo(EndPointJavascriptBloblPath(endPointId));
+
+        if (fi.Exists)
+        {
+            return await File.ReadAllTextAsync(fi.FullName);
+        }
+
+        return string.Empty;
+    }
+
+    async public Task<string> GetViewJs(string id)
+    {
+        FileInfo fi = new FileInfo(ViewJavascriptBloblPath(id));
 
         if (fi.Exists)
         {
@@ -290,9 +314,27 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         return true;
     }
 
+    async public Task<bool> StoreViewCss(string id, string css)
+    {
+        FileInfo fi = new FileInfo(ViewCssBloblPath(id));
+
+        await File.WriteAllTextAsync(fi.FullName, css);
+
+        return true;
+    }
+
     async public Task<bool> StoreEndPointJavascript(string endPointId, string js)
     {
         FileInfo fi = new FileInfo(EndPointJavascriptBloblPath(endPointId));
+
+        await File.WriteAllTextAsync(fi.FullName, js);
+
+        return true;
+    }
+
+    async public Task<bool> StoreViewJs(string id, string js)
+    {
+        FileInfo fi = new FileInfo(ViewJavascriptBloblPath(id));
 
         await File.WriteAllTextAsync(fi.FullName, js);
 
@@ -425,6 +467,17 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         return Path.Combine(_storagePath, endPointId, "_css.blb");
     }
 
+    private string ViewCssBloblPath(string id)
+    {
+        var ids = id.Split('@');
+        if (!ids[0].IsValidDataLinqRouteId())
+        {
+            throw new Exception($"Invalid endpoint id {ids[0]}");
+        }
+
+        return Path.Combine(_storagePath, ids[0], "queries", $"{ids[1]}-views", $"_{ids[2]}_css.blb");
+    }
+
     private string EndPointJavascriptBloblPath(string endPointId)
     {
         if (!endPointId.IsValidDataLinqRouteId())
@@ -433,6 +486,17 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         }
 
         return Path.Combine(_storagePath, endPointId, "_js.blb");
+    }
+
+    private string ViewJavascriptBloblPath(string id)
+    {
+        var ids = id.Split('@');
+        if (!ids[0].IsValidDataLinqRouteId())
+        {
+            throw new Exception($"Invalid endpoint id {id}");
+        }
+
+        return Path.Combine(_storagePath, ids[0], "queries", $"{ids[1]}-views", $"_{ids[2]}_js.blb");
     }
 
     async private Task CreateEndpointIndex(string endPointId)

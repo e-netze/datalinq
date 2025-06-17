@@ -8,6 +8,6 @@ namespace E.DataLinq.Web.Services.Abstraction
 {
     public interface IMonacoSnippetService
     {
-        string BuildSnippetJson();
+        string BuildSnippetJson(string lang);
     }
 }

@@ -11,7 +11,9 @@ public interface IPersistanceProviderService
     Task<DataLinqEndPointQuery> GetEndPointQuery(string endPointId, string endPointQueryId);
     Task<DataLinqEndPointQueryView> GetEndPointQueryView(string endPointId, string endPointQueryId, string endPointQueryViewId);
     Task<string> GetEndPointCss(string endPointId);
+    Task<string> GetViewCss(string id);
     Task<string> GetEndPointJavascript(string endPointId);
+    Task<string> GetViewJs(string id);
 
     Task<bool> DeleteEndPoint(string endPointId);
     Task<bool> DeleteEndPointQuery(string endPointId, string endPointQueryId);
@@ -26,7 +28,9 @@ public interface IPersistanceProviderService
     Task<bool> StoreEndPointQuery(DataLinqEndPointQuery endPointQuery);
     Task<bool> StoreEndPointQueryView(DataLinqEndPointQueryView endPointQueryView);
     Task<bool> StoreEndPointCss(string endPointId, string css);
+    Task<bool> StoreViewCss(string id, string css);
     Task<bool> StoreEndPointJavascript(string endPointId, string css);
+    Task<bool> StoreViewJs(string id, string js);
 
     Task<string> EndPointCreator(string endPointId);
 

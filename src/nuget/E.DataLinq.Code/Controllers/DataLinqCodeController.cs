@@ -124,11 +124,11 @@ public class DataLinqCodeController : DataLinqCodeBaseController
             await _client.GetEndPointQueryViews(endPoint, query));
     }
 
-    async public Task<IActionResult> GetMonacoSnippit()
+    async public Task<IActionResult> GetMonacoSnippit(string lang) 
     {
         return base.JsonObject(_client == null ?
             null :
-            await _client.GetMonacoSnippit());
+            await _client.GetMonacoSnippit(lang));
     }
 
     #endregion
@@ -201,6 +201,37 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     }
 
     [HttpGet]
+    async public Task<IActionResult> EditViewCss(string endpoint,string query,string view)
+    {
+        var id = $"{endpoint}@{query}@{view}";
+        var model = new ViewCssModel()
+        {
+            Id = id,
+            Css = _client != null ? await _client.GetViewCss(id) : null
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> EditViewCss(ViewCssModel model)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return base.JsonObject(new SuccessModel(await _client.StoreViewCss(model.Id, model.Css)));
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    [HttpGet]
     async public Task<IActionResult> EditEndPointJavascript(string endPoint)
     {
         var model = new EndPointJavascriptModel()
@@ -223,6 +254,37 @@ public class DataLinqCodeController : DataLinqCodeBaseController
             }
 
             return base.JsonObject(new SuccessModel(await _client.StoreEndPointJavascript(model.EndPointId, model.Javascript)));
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    [HttpGet]
+    async public Task<IActionResult> EditViewJs(string endpoint, string query, string view)
+    {
+        var id = $"{endpoint}@{query}@{view}";
+        var model = new ViewJsModel()
+        {
+            Id = id,
+            Js = _client != null ? await _client.GetViewJs(id) : null
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> EditViewJs(ViewJsModel model)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return base.JsonObject(new SuccessModel(await _client.StoreViewJs(model.Id, model.Js)));
         }
         catch (Exception ex)
         {

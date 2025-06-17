@@ -202,7 +202,7 @@ public class DataLinqController : DataLinqBaseController
         return await JsonObject(new { success = _datalinq.ClearCachedResults() });
     }
 
-    async public Task<IActionResult> CssProxy(string __dataLinqRoute)
+    async public Task<IActionResult> CssProxyEndpoint(string __dataLinqRoute)
     {
         // ToDo: Wird bei jedem Aufruf geladen
         // Irgend ein Caching/Dot Modified 304 Mechanismus?
@@ -215,7 +215,17 @@ public class DataLinqController : DataLinqBaseController
         return RawResponse(Encoding.UTF8.GetBytes(css ?? String.Empty), "text/css", new NameValueCollection());
     }
 
-    async public Task<IActionResult> JsProxy(string __dataLinqRoute)
+    async public Task<IActionResult> CssProxyView(string __dataLinqRoute)
+    {
+        NameValueCollection parameters = new NameValueCollection();
+        parameters.Add("endpoint", __dataLinqRoute);
+
+        string css = await _datalinq.GetViewCss(__dataLinqRoute);
+
+        return RawResponse(Encoding.UTF8.GetBytes(css ?? String.Empty), "text/css", new NameValueCollection());
+    }
+
+    async public Task<IActionResult> JsProxyEndpoint(string __dataLinqRoute)
     {
         // ToDo: Wird bei jedem Aufruf geladen
         // Irgend ein Caching/Dot Modified 304 Mechanismus?
@@ -224,6 +234,16 @@ public class DataLinqController : DataLinqBaseController
         parameters.Add("endpoint", __dataLinqRoute);
 
         string javascript = await _datalinq.GetEndpointJavascript(__dataLinqRoute);
+
+        return RawResponse(Encoding.UTF8.GetBytes(javascript ?? String.Empty), "text/javascript", new NameValueCollection());
+    }
+
+    async public Task<IActionResult> JsProxyView(string __dataLinqRoute)
+    {
+        NameValueCollection parameters = new NameValueCollection();
+        parameters.Add("endpoint", __dataLinqRoute);
+
+        string javascript = await _datalinq.GetViewJs(__dataLinqRoute);
 
         return RawResponse(Encoding.UTF8.GetBytes(javascript ?? String.Empty), "text/javascript", new NameValueCollection());
     }

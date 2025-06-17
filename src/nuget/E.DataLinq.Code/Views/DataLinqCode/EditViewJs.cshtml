@@ -1,0 +1,57 @@
+﻿@using E.DataLinq.Code.Extensions
+@using E.DataLinq.Core.Models
+@model E.DataLinq.Code.Models.ViewJsModel
+
+@{
+    Layout = "~/Views/Shared/_Layout_empty-datalinq-code-frame.cshtml";
+    ViewBag.Title = "DataLinq Code";
+}
+
+<div class="datalinq-code-editor-code-panel switch-to code">
+    <div id="datalinq-code-editor-code">
+
+    </div>
+    <div class="datalinq-code-editor-code-errors">
+
+    </div>
+
+    <div class="datalinq-code-editor-code-statusbar">
+
+    </div>
+</div>
+
+<div class="datalinq-code-editor-settings switch-to settings">
+    @using (Html.BeginForm("EditViewJs", "DataLinqCode", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.HiddenFor(m => m.Id)
+        @Html.HiddenFor(m => m.Js);
+
+        <button class="submit" style="display:none">Submit</button>
+    }
+</div>
+
+@*
+<div class="datalinq-code-editor-switcher">
+</div>
+*@
+
+@section scripts {
+    <script type="text/javascript">
+        $(function () {
+            window._datalinqCodeAccessToken = new URLSearchParams(window.location.search).get('dl_token');
+            //console.log('_datalinqCodeSession', window._datalinqCodeAccessToken);
+
+            var url = new URL(document.location);
+            var id = (url.searchParams.get("endpoint") + "@@" + url.searchParams.get("query") + "@@" + url.searchParams.get("view") || '@Model.Id')+'@@_js';
+            
+            var value = "@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(Model.Js))";
+            
+            dataLinqCodeEditor.init(id, value, "javascript");
+            dataLinqCodeEditor.events.on('editor-value-changed', function(channel, args) {
+                if(args.id === id) {
+                    $("input[name='Js']").val(args.value);
+                }
+            });
+        });
+    </script>
+}

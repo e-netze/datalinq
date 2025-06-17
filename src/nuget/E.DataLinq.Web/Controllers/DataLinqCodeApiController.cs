@@ -101,6 +101,17 @@ public class DataLinqCodeApiController : ApiBaseController
     }
 
     [HttpGet]
+    [Route("css/view/{id}")]
+    async public Task<string> ViewCss(string id)
+    {
+        return await SecureMethodHandler(async () =>
+        {
+            var css = await _persistanceProvider.GetViewCss(id);
+            return css;
+        }, new[] { id });
+    }
+
+    [HttpGet]
     [Route("js/{endPointId}")]
     async public Task<string> EndPointJavascript(string endPointId)
     {
@@ -109,6 +120,17 @@ public class DataLinqCodeApiController : ApiBaseController
             var js = await _persistanceProvider.GetEndPointJavascript(endPointId);
             return js;
         }, new[] { endPointId });
+    }
+
+    [HttpGet]
+    [Route("js/view/{id}")]
+    async public Task<string> ViewJs(string id)
+    {
+        return await SecureMethodHandler(async () =>
+        {
+            var js = await _persistanceProvider.GetViewJs(id);
+            return js;
+        }, new[] { id });
     }
 
     [HttpGet]
@@ -207,6 +229,31 @@ public class DataLinqCodeApiController : ApiBaseController
     }
 
     [HttpPost]
+    [Route("post/viewcss")]
+    async public Task<IActionResult> StoreViewCss([FromForm] string id, [FromForm] string css)
+    {
+        return await SecureMethodHandler(async () =>
+        {
+            if (String.IsNullOrEmpty(id))
+            {
+                throw new ArgumentException("Invalid endPointId");
+            }
+
+            var endpointId = id.Split('@')[0];
+
+            if (await _persistanceProvider.GetEndPoint(endpointId) == null)
+            {
+                throw new ArgumentException($"Unknown endPoint Id {id}");
+            }
+
+            return base.JsonObject(new SuccessModel(await _persistanceProvider.StoreViewCss(id, css)).OnSuccess((model) =>
+            {
+
+            }));
+        }, new[] { id });
+    }
+
+    [HttpPost]
     [Route("post/endpointjs")]
     async public Task<IActionResult> StoreEndPointJavascript([FromForm] string endPointId, [FromForm] string js)
     {
@@ -227,6 +274,29 @@ public class DataLinqCodeApiController : ApiBaseController
 
             }));
         }, new[] { endPointId });
+    }
+
+    [HttpPost]
+    [Route("post/viewjs")]
+    async public Task<IActionResult> StoreViewJs([FromForm] string id, [FromForm] string js)
+    {
+        return await SecureMethodHandler(async () =>
+        {
+            if (String.IsNullOrEmpty(id))
+            {
+                throw new ArgumentException("Invalid endPointId");
+            }
+
+            if (await _persistanceProvider.GetEndPoint(id.Split('@')[0]) == null)
+            {
+                throw new ArgumentException($"Unknown endPoint Id {id}");
+            }
+
+            return base.JsonObject(new SuccessModel(await _persistanceProvider.StoreViewJs(id, js)).OnSuccess((model) =>
+            {
+
+            }));
+        }, new[] { id });
     }
 
     [HttpPost]
@@ -495,9 +565,9 @@ For more information, see Help (?).
 
     [HttpGet]
     [Route("monacosnippit")]
-    public IActionResult GetSnippets()
+    public IActionResult GetSnippets([FromQuery] string lang)
     {
-        string json = _monacoSnippetService.BuildSnippetJson();
+        string json = _monacoSnippetService.BuildSnippetJson(lang);
         return Content(json, "application/json");
     }
 

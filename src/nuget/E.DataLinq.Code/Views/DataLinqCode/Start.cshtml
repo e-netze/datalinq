@@ -89,5 +89,15 @@
                 $('.datalinq-code-hidden-developer-content').removeClass('datalinq-code-hidden-developer-content');
             }
         };
+
+        const output = document.querySelector('.datalinq-code-output');
+
+        if (output) {
+          const observer = new MutationObserver(() => {
+            output.scrollTop = output.scrollHeight;
+          });
+
+          observer.observe(output, { childList: true });
+        }
     </script>
 }

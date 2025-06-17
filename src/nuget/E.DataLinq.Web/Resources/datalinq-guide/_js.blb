@@ -1,0 +1,112 @@
+dataLinq.events.on('onpageloaded', function() {
+    injectPopupModal();
+    const collapsibles = document.querySelectorAll(".collapsible");
+
+    const storageKey = "openedCollapsibleIndex_" + window.location.pathname;
+
+    const savedIndex = localStorage.getItem(storageKey);
+    if (savedIndex !== null && collapsibles[savedIndex]) {
+        const content = collapsibles[savedIndex].nextElementSibling;
+        content.style.display = "block";
+    }
+
+    collapsibles.forEach((btn, index) => {
+        btn.addEventListener("click", function () {
+            const content = this.nextElementSibling;
+            const currentlyOpen = content.style.display === "block";
+
+            if (!currentlyOpen) {
+                localStorage.setItem(storageKey, index);
+                location.reload();
+            } else {
+                content.style.display = "none";
+                localStorage.removeItem(storageKey);
+            }
+        });
+    });
+});
+
+
+function injectPopupModal() {
+  if ($("#popupModal").length) return;
+
+  const $modal = $("<div>", { id: "popupModal", class: "popup-modal hidden" });
+  const $content = $("<div>", { class: "popup-content" });
+
+  const $close = $("<span>", {
+    class: "popup-close",
+    html: "&times;",
+    click: function () { closePopup(); }
+  });
+
+  const $title = $("<h2>", { id: "popupTitle", text: "Code snippit" });
+  const $description = $("<pre>", { id: "popupDescription", class: "description-box" });
+
+  const $codeBox = $("<pre>").append(
+    $("<code>", { id: "popupCode", class: "code-box" })
+  );
+  const $copyCodeBtn = $("<button>", {
+    class: "action-button",
+    text: "Copy code to Clipboard",
+    style: "margin-top: 12px;",
+    click: function () { copyCode("popupCode"); }
+  });
+
+  const $sqlBox = $("<pre>").append(
+    $("<code>", { id: "popupSQL", class: "code-box" })
+  );
+  const $copySqlBtn = $("<button>", {
+    class: "action-button",
+    text: "Copy SQL to Clipboard",
+    style: "margin-top: 12px;",
+    click: function () { copyCode("popupSQL"); }
+  });
+
+  $content.append($close, $title, $description, $codeBox, $copyCodeBtn, $sqlBox, $copySqlBtn);
+  $modal.append($content);
+
+  const $target = $(".datalinq-include.finished").first();
+  if ($target.length) {
+    $target.append($modal);
+  } else {
+    console.warn("Target container .datalinq-include.finished not found.");
+  }
+}
+
+function openPopup(event, type) {
+    event.stopPropagation(); 
+
+    const codeElement = document.getElementById('csharp_'+type);
+    const queryElement = document.getElementById('sql_'+type);
+    const descriptionElement = document.getElementById('description_'+type);
+
+    const code = codeElement?.querySelector("script")?.textContent.trim();
+    const sql = queryElement?.innerHTML.trim();
+
+    const selectedLang = sessionStorage.getItem('selectedLang') || 'en';
+    const description = extractLangSection(descriptionElement?.innerHTML.trim(), selectedLang);
+    
+    document.getElementById("popupCode").textContent = code ? code : "No code available for this DLH function!";
+    document.getElementById("popupSQL").textContent = sql ? sql : "No SQL available for this DLH function!";
+    document.getElementById("popupDescription").textContent = description ? description : "No description available for this DLH function!";
+    
+    document.getElementById("popupModal").classList.remove("hidden");
+  }
+
+  function closePopup() {
+    document.getElementById("popupModal").classList.add("hidden");
+  }
+
+  function copyCode(type) {
+    const codeText = document.getElementById(type).textContent;
+    navigator.clipboard.writeText(codeText).then(() => {
+      console.log("Code copied to clipboard!");
+    }).catch(err => {
+      console.log("Failed to copy code.");
+    });
+  }
+
+  function extractLangSection(input, lang) {
+  const match = input.match(new RegExp(`${lang}:(.*?)(?=\\n\\w+:|$)`, 's'));
+  return match ? match[1].trim() : null;
+}

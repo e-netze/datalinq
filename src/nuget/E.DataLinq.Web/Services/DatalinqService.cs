@@ -440,6 +440,29 @@ public class DataLinqService
         return css;
     }
 
+    async public Task<string> GetViewCss(string endPointId)
+    {
+        string css = String.Empty;
+
+        if (_options.CssInPerstanceStorage == true)
+        {
+            css = await _persistanceProvider.GetViewCss(endPointId);
+        }
+
+        // Fallback: auch wenn shared Storage, dann locale Instanz durchsuchen
+        if (String.IsNullOrEmpty(css))
+        {
+            var fi = new System.IO.FileInfo($"{_environment.WebRootPath}/content/datalinq/{endPointId}/datalinq.css");
+
+            if (fi.Exists)
+            {
+                css = System.IO.File.ReadAllText(fi.FullName);
+            }
+        }
+
+        return css;
+    }
+
     async public Task<string> GetEndpointJavascript(string endPointId)
     {
         string js = String.Empty;
@@ -447,6 +470,18 @@ public class DataLinqService
         if (_options.JavascriptInPerstanceStorage == true)
         {
             js = await _persistanceProvider.GetEndPointJavascript(endPointId);
+        }
+
+        return js;
+    }
+
+    async public Task<string> GetViewJs(string endPointId)
+    {
+        string js = String.Empty;
+
+        if (_options.JavascriptInPerstanceStorage == true)
+        {
+            js = await _persistanceProvider.GetViewJs(endPointId);
         }
 
         return js;

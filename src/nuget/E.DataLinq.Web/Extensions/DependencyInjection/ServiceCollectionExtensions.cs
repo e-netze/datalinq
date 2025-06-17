@@ -156,7 +156,8 @@ static public class ServiceCollectionExtensions
             .AddTransient<IDataLinqCodeIdentityProvider, TIdentityProvider>()
             .AddTransient<IDataLinqCodeIdentityService, DataLinqCodeIdentityService>()
             .AddTransient<IDataLinqAccessTokenAuthProvider, DataLinqAuthTokenHttpHeaderProvider>()
-            .AddTransient<IDataLinqAccessTokenAuthProvider, DataLinqAuthTokenCookieProvider>();
+            .AddTransient<IDataLinqAccessTokenAuthProvider, DataLinqAuthTokenCookieProvider>()
+            .AddHostedService<SandboxInitializer>();
     }
 
     #endregion
