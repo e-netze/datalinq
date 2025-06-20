@@ -12,8 +12,10 @@ public interface IPersistanceProviderService
     Task<DataLinqEndPointQueryView> GetEndPointQueryView(string endPointId, string endPointQueryId, string endPointQueryViewId);
     Task<string> GetEndPointCss(string endPointId);
     Task<string> GetViewCss(string id);
+    string GetViewCssSync(string id);
     Task<string> GetEndPointJavascript(string endPointId);
     Task<string> GetViewJs(string id);
+    string GetViewJsSync(string id);
 
     Task<bool> DeleteEndPoint(string endPointId);
     Task<bool> DeleteEndPointQuery(string endPointId, string endPointQueryId);

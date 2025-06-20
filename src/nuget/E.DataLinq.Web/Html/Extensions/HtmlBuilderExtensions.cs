@@ -15,6 +15,9 @@ static public class HtmlBuilderExtensions
     static public TBuilder AppendTableRow<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, Action<IHtmlElementBuilder> action, WriteTags writeTags = WriteTags.OpenClose)
         => builder.Append("tr", action, writeTags);
 
+    static public TBuilder AppendStyle<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, Action<IHtmlElementBuilder> action, WriteTags writeTags = WriteTags.OpenClose)
+        => builder.Append("style", action, writeTags);
+
     static public TBuilder AppendTableCell<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, Action<IHtmlElementBuilder> action, WriteTags writeTags = WriteTags.OpenClose)
         => builder.Append("td", action, writeTags);
 

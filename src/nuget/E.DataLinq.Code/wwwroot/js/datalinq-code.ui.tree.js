@@ -496,6 +496,14 @@
         }
     };
 
+    var ctrlPressed = false;
+
+    $(document).keydown(function (e) {
+        if (e.key === "Control") ctrlPressed = true;
+    }).keyup(function (e) {
+        if (e.key === "Control") ctrlPressed = false;
+    });
+
     var addViewNode = function ($parent, endPoint, query, view) {
         var $node = createTreeNodeView(view || 'New view...', null, view === null, endPoint, query, view)
             .addClass('view')
@@ -511,17 +519,67 @@
         addToNodes($node, $parent);
 
         if (view) {
-            $node.click(function (e) {
+            $node.off('click').on('click', function (e) {
                 e.stopPropagation();
 
-                var $this = $(this);
-                dataLinqCode.events.fire('open-view', {
-                    endpoint: $this.data('data-endpoint'),
-                    query: $this.data('data-query'),
-                    view: $this.data('data-view')
-                });
+                const $this = $(this);
+                const endpoint = $this.data('data-endpoint');
+                const query = $this.data('data-query');
+                const view = $this.data('data-view');
+                const baseId = `${endpoint}@${query}@${view}`;
+
+                const $tabs = $(".datalinq-code-tab");
+                const $existingTab = $tabs.filter(`[data-id="${baseId}"]`);
+                const $existingTabCss = $tabs.filter(`[data-id="${baseId}@_css"]`);
+                const $existingTabJs = $tabs.filter(`[data-id="${baseId}@_js"]`);
+
+                const tabExists = $existingTab.length > 0;
+                const tabExistsCss = $existingTabCss.length > 0;
+                const tabExistsJs = $existingTabJs.length > 0;
+
+                const clearSelection = () => {
+                    $tabs.filter('.selected').removeClass('selected').removeAttr('data-selected-at');
+                };
+
+                const selectTab = ($tab) => {
+                    $tab.addClass('selected').attr('data-selected-at', Date.now());
+                };
+
+                if (ctrlPressed) {
+                    if (!tabExists) {
+                        if (tabExistsCss || tabExistsJs) {
+                            dataLinqCode.events.fire('open-view', { endpoint, query, view });
+                        } else {
+                            clearSelection();
+                            dataLinqCode.events.fire('open-view', { endpoint, query, view });
+                            dataLinqCode.events.fire('open-view-css', { endpoint, query, view });
+                            dataLinqCode.events.fire('open-view-js', { endpoint, query, view });
+                        }
+                    } else {
+                        if ($existingTab.hasClass('selected')) {
+                            $existingTab.removeClass('selected').removeAttr('data-selected-at');
+                        } else {
+                            const selectedCount = $tabs.filter('.selected').length;
+                            if (selectedCount >= 3) {
+                                dataLinqCode.ui.alert('Limit', 'You can only select up to 3 tabs.');
+                                return;
+                            }
+                            selectTab($existingTab);
+                        }
+                        dataLinqCode.events.fire('tab-selected', { id: baseId });
+                    }
+                } else {
+                    if (tabExists) {
+                        clearSelection();
+                        selectTab($existingTab);
+                        dataLinqCode.events.fire('tab-selected', { id: baseId });
+                    } else {
+                        dataLinqCode.events.fire('open-view', { endpoint, query, view });
+                    }
+                }
             });
-        } else {
+        }
+        else {
             $node
                 .addClass('add')
                 .click(function (e) {
@@ -546,6 +604,43 @@
                 });
         }
     };
+
+    function restoreSavedTabs() {
+        const savedTabs = JSON.parse(localStorage.getItem('datalinq-open-tabs') || '[]');
+
+        dataLinqCode.ui.confirmIf(
+            savedTabs.length > 0,
+            "Restore Tabs",
+            "Would you like to restore the tabs from your previous session?",
+            function () {
+                savedTabs.forEach(id => {
+                    const parts = id.split('@');
+
+                    if (parts.length === 1) {
+                        const endpoint = parts[0];
+                        dataLinqCode.events.fire('open-endpoint', { endpoint });
+                    } else if (parts.length === 2) {
+                        const [endpoint, query] = parts;
+                        dataLinqCode.events.fire('open-query', { endpoint, query });
+                    } else {
+                        const endpoint = parts[0] || '';
+                        const query = parts[1] || '';
+                        const view = parts[2] || '';
+                        const suffix = parts[3] || '';
+
+                        if (suffix === '_js') {
+                            dataLinqCode.events.fire('open-view-js', { endpoint, query, view });
+                        } else if (suffix === '_css') {
+                            dataLinqCode.events.fire('open-view-css', { endpoint, query, view });
+                        } else {
+                            dataLinqCode.events.fire('open-view', { endpoint, query, view });
+                        }
+                    }
+                });
+            }
+        );
+    }
+
 
     var renderEndPointPrefixesList = function ($parent, $content, prefixes) {
         var $tree = $parent.children('.datalinq-code-tree');
@@ -598,6 +693,7 @@
             .click(function () {
                 $(null).dataLinq_code_modal('close');
                 refrehTree($parent, null);
+                restoreSavedTabs();
             });
 
         $("<button>")

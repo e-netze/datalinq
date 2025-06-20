@@ -63,12 +63,18 @@
     </script>
 
     <script type="text/javascript">
-            const sidebar = document.getElementById('sidebar');
+        const sidebar = document.getElementById('sidebar');
         const handle = document.getElementById('sidebar-resize-handle');
 
         let isDragging = false;
         let startX = 0;
         let startWidth = 300;
+
+        const savedWidth = localStorage.getItem('sidebarWidth');
+        if (savedWidth) {
+          startWidth = parseInt(savedWidth, 10) || startWidth;
+        }
+
         const minWidth = 300;
         const maxWidth = 500;
 

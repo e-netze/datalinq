@@ -125,6 +125,18 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         return string.Empty;
     }
 
+    public string GetViewCssSync(string id)
+    {
+        FileInfo fi = new FileInfo(ViewCssBloblPath(id));
+
+        if (fi.Exists)
+        {
+            return File.ReadAllText(fi.FullName);
+        }
+
+        return string.Empty;
+    }
+
     async public Task<string> GetEndPointJavascript(string endPointId)
     {
         FileInfo fi = new FileInfo(EndPointJavascriptBloblPath(endPointId));
@@ -144,6 +156,18 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         if (fi.Exists)
         {
             return await File.ReadAllTextAsync(fi.FullName);
+        }
+
+        return string.Empty;
+    }
+
+    public string GetViewJsSync(string id)
+    {
+        FileInfo fi = new FileInfo(ViewJavascriptBloblPath(id));
+
+        if (fi.Exists)
+        {
+            return File.ReadAllText(fi.FullName);
         }
 
         return string.Empty;

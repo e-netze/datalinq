@@ -463,6 +463,28 @@ public class DataLinqService
         return css;
     }
 
+    public string GetViewCssSync(string endPointId)
+    {
+        string css = String.Empty;
+
+        if (_options.CssInPerstanceStorage == true)
+        {
+            css = _persistanceProvider.GetViewCssSync(endPointId);
+        }
+
+        if (String.IsNullOrEmpty(css))
+        {
+            var fi = new System.IO.FileInfo($"{_environment.WebRootPath}/content/datalinq/{endPointId}/datalinq.css");
+
+            if (fi.Exists)
+            {
+                css = System.IO.File.ReadAllText(fi.FullName);
+            }
+        }
+
+        return css;
+    }
+
     async public Task<string> GetEndpointJavascript(string endPointId)
     {
         string js = String.Empty;
@@ -482,6 +504,18 @@ public class DataLinqService
         if (_options.JavascriptInPerstanceStorage == true)
         {
             js = await _persistanceProvider.GetViewJs(endPointId);
+        }
+
+        return js;
+    }
+
+    public string GetViewJsSync(string endPointId)
+    {
+        string js = String.Empty;
+
+        if (_options.JavascriptInPerstanceStorage == true)
+        {
+            js = _persistanceProvider.GetViewJsSync(endPointId);
         }
 
         return js;

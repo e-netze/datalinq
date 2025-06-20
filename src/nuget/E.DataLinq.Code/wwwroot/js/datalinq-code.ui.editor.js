@@ -228,6 +228,14 @@
                 $clicked.attr('data-selected-at', Date.now());
             }
 
+            const clickedId = $clicked.attr('data-id');
+
+            const ide = $('.datalinq-code-ide');
+            var editorTheme = ide.hasClass('colorscheme-light') ? 'vs' : 'vs-dark';
+            sessionStorage.setItem('editorTheme', editorTheme);
+            console.log(clickedId);
+            console.log(editorTheme);
+
             dataLinqCode.events.fire('tab-selected', { id: $clicked.attr('data-id') });
         });
 
@@ -404,6 +412,36 @@
                 .attr('src', src)
                 .appendTo($editor);
         }
+
+        $frame.on('load', function () {
+            try {
+                const iframeWindow = this.contentWindow;
+
+                const theme = sessionStorage.getItem('editorTheme');
+
+                const doc = iframeWindow.document;
+
+                if (theme === 'vs') {
+                    doc.body.classList.add('colorscheme-light');
+                } else {
+                    doc.body.classList.remove('colorscheme-light');
+                }
+
+                iframeWindow.addEventListener('message', function (event) {
+                    const data = event.data;
+                    if (data && typeof data.theme === 'string') {
+                        const doc = iframeWindow.document;
+                        if (data.theme === 'vs') {
+                            doc.body.classList.add('colorscheme-light');
+                        } else {
+                            doc.body.classList.remove('colorscheme-light');
+                        }
+                    }
+                });
+            } catch (e) {
+                console.warn(`Could not access iframe content for [${id}] due to cross-origin policy.`);
+            }
+        });
 
         const isSelected = $frame.hasClass('selected');
         const selectedCount = $editor.children(".datalinq-code-editor-frame.selected").length;

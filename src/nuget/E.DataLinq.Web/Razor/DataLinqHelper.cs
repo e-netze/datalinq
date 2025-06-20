@@ -252,12 +252,16 @@ public class DataLinqHelper : IDataLinqHelper
     {
         return _razor.RawString(
                 HtmlBuilder.Create()
-                    .AppendDiv(div =>
+                .AppendStyle(style => 
+                    style.Content(_currentDatalinqService.GetViewCssSync(id))
+                ).AppendJavaScriptBlock(
+                    _currentDatalinqService.GetViewJsSync(id)
+                ).AppendDiv(div =>
                         div.AddClass("datalinq-include")
                            .AddAttribute("data-source", ParseUrl(id, encodeQueryString))
-                    )
-                    .BuildHtmlString()
+                ).BuildHtmlString()
              );
+
     }
 
     /// <summary>
@@ -292,7 +296,11 @@ public class DataLinqHelper : IDataLinqHelper
     {
         return _razor.RawString(
                 HtmlBuilder.Create()
-                    .AppendDiv(div =>
+                .AppendStyle(style =>
+                    style.Content(_currentDatalinqService.GetViewCssSync(id))
+                ).AppendJavaScriptBlock(
+                    _currentDatalinqService.GetViewJsSync(id)
+                ).AppendDiv(div =>
                         div.AddClass("datalinq-include")
                            .AddAttribute("data-source", ParseUrl(id, encodeUrl))
                            .AddAttribute("data-filter", ParseUrl(filter, encodeUrl))
