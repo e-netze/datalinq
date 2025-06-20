@@ -233,6 +233,103 @@
         return $node;
     };
 
+    var createTreeNodeEndpoint = function (label, element, asInput, endpoint) {
+        var $node = $(element || "<li>")
+            .addClass("tree-node");
+
+        if (label) {
+            $("<div>").addClass('icon').appendTo($node);
+            if (asInput == true) {
+                $("<input type='text'/>")
+                    .attr('placeholder', label)
+                    .appendTo($node);
+            } else {
+                var $label = $("<div>").addClass('label').text(label).appendTo($node);
+
+                $node.on('mousemove', function (e) {
+                    $(this).closest('.datalinq-code-tree-holder').find('.tree-node').removeClass('mouseover');
+                    e.stopPropagation();
+                    if (e.originalEvent.layerY >= 0 && e.originalEvent.layerY <= 32) {
+                        $(this).addClass('mouseover');
+                    } else {
+                        $(this).removeClass('mouseover');
+                    }
+                }).on('mouseleave', function (e) {
+                    $(this).removeClass('mouseover');
+                });
+
+                var $copyButton = $("<div>")
+                    .addClass('copy-button')
+                    .appendTo($node)
+                    .mouseout(function () {
+                        $(this).find('.tooltiptext').removeClass('show');
+                    })
+                    .click(function (e) {
+                        e.stopPropagation();
+
+                        var route = $(this).closest('.tree-node').data('data-route');
+                        navigator.clipboard.writeText(route);
+
+                        if (route.length > 20)
+                            route = route.substr(0, 20) + '...';
+
+                        $(this)
+                            .find('.tooltiptext')
+                            .text("Copied route: " + route)
+                            .addClass('show');
+                    });
+
+                $("<span>")
+                    .addClass('tooltiptext')
+                    .text('Copy placeholder')
+                    .appendTo($copyButton);
+
+                // --- Added CSS Button ---
+                var $cssButton = $("<div>")
+                    .addClass('copy-button css-button')
+                    .appendTo($node)
+                    .mouseout(function () {
+                        $(this).find('.tooltiptext').removeClass('show');
+                    })
+                    .click(function (e) {
+                        e.stopPropagation();
+
+                        dataLinqCode.events.fire('open-endpoint-css', {
+                            id: endpoint
+                        });
+
+                    });
+
+                $("<span>")
+                    .addClass('tooltiptext')
+                    .text('CSS')
+                    .appendTo($cssButton);
+
+                // --- Added JS Button ---
+                var $jsButton = $("<div>")
+                    .addClass('copy-button js-button')
+                    .appendTo($node)
+                    .mouseout(function () {
+                        $(this).find('.tooltiptext').removeClass('show');
+                    })
+                    .click(function (e) {
+                        e.stopPropagation();
+
+                        dataLinqCode.events.fire('open-endpoint-js', {
+                            id: endpoint
+                        });
+                    });
+
+                $("<span>")
+                    .addClass('tooltiptext')
+                    .text('JS')
+                    .appendTo($jsButton);
+            }
+        }
+
+        return $node;
+    };
+
     var createTreeNodeView = function (label, element, asInput, endpoint, query, view) {
         var $node = $(element || "<li>")
             .addClass("tree-node");
@@ -345,7 +442,7 @@
     }
 
     var addEndPointNode = function ($parent, endPoint, collapsedRoutes) {
-        var $node = createTreeNode(endPoint || 'New endpoint...', null, endPoint === null)
+        var $node = createTreeNodeEndpoint(endPoint || 'New endpoint...', null, endPoint === null, endPoint)
             .addClass('endpoint')
             .data('data-endpoint', endPoint)
             .data('data-route', endPoint);
