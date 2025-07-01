@@ -1960,15 +1960,12 @@ body.colorscheme-light .datalinq-autocomplete-multiselect .datalinq-autocomplete
 
 .datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.logout {
     background-image: url(img/account_32@1_light.png);
+    background-position: 6px center;
     color: #555;
 }
 
-.datalinq-code-modal.colorscheme-light .datalinq-code-app-prefixes .datalinq-code-app-prefix {
-    background-image: url(img/endpoint_16@1_light.png);
-}
-
-.datalinq-code-modal.colorscheme-light .datalinq-code-app-prefixes .datalinq-code-app-prefix .text {
-    color: black;
+.datalinq-code-ide.colorscheme-light .datalinq-tree-search-input {
+    background-image: url(img/magnifier_16@1_light.png);
 }
 
 .datalinq-code-modal.colorscheme-light .datalinq-code-app-prefixes .datalinq-code-app-prefix .subtext {
