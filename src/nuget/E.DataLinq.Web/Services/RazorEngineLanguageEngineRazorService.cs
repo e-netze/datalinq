@@ -2,6 +2,7 @@
 using E.DataLinq.Core.Models;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.LanguageEngine.Razor;
+using E.DataLinq.LanguageEngine.Razor.Abstractions;
 using E.DataLinq.LanguageEngine.Razor.Exceptions;
 using E.DataLinq.LanguageEngine.Razor.Templates;
 using E.DataLinq.LanguageEngine.Razor.Utilities;
@@ -71,8 +72,13 @@ public class RazorEngineLanguageEngineRazorService : IRazorCompileEngineService
                     return await cachedRazorAssembly.RunAsync(instance => { instance.Model = model; });
                 }
 
-                using var razorAssembly = await razorEngine.CompileAsync<RazorEngineTemplate<TModel>>(
-                    code, builder => builder.AddDefaults(_options));
+                IRazorAssembly<RazorEngineTemplate<TModel>> razorAssembly;
+
+                using (var mutex = await FuzzyMutexAsync.LockAsync(razorCacheId))
+                {
+                    razorAssembly = await razorEngine.CompileAsync<RazorEngineTemplate<TModel>>(
+                        code, builder => builder.AddDefaults(_options));
+                }
 
                 if (_options.RunGarbageCollectAfterCompile)
                 {
