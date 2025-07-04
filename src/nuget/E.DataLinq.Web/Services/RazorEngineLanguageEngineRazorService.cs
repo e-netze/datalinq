@@ -2,7 +2,6 @@
 using E.DataLinq.Core.Models;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.LanguageEngine.Razor;
-using E.DataLinq.LanguageEngine.Razor.Abstractions;
 using E.DataLinq.LanguageEngine.Razor.Exceptions;
 using E.DataLinq.LanguageEngine.Razor.Templates;
 using E.DataLinq.LanguageEngine.Razor.Utilities;
@@ -72,13 +71,8 @@ public class RazorEngineLanguageEngineRazorService : IRazorCompileEngineService
                     return await cachedRazorAssembly.RunAsync(instance => { instance.Model = model; });
                 }
 
-                IRazorAssembly<RazorEngineTemplate<TModel>> razorAssembly;
-
-                using (var mutex = await FuzzyMutexAsync.LockAsync(razorCacheId))
-                {
-                    razorAssembly = await razorEngine.CompileAsync<RazorEngineTemplate<TModel>>(
-                        code, builder => builder.AddDefaults(_options));
-                }
+                using var razorAssembly = await razorEngine.CompileAsync<RazorEngineTemplate<TModel>>(
+                    code, builder => builder.AddDefaults(_options));
 
                 if (_options.RunGarbageCollectAfterCompile)
                 {
@@ -92,8 +86,11 @@ public class RazorEngineLanguageEngineRazorService : IRazorCompileEngineService
                     using var ms = new MemoryStream();
                     await razorAssembly.SaveToStreamAsync(ms);
 
-                    _binaryCache.SetBytes(razorCacheId.ToRazorAssemblyFilename(), ms.ToArray(), CacheNamespace);
-                }
+                    using (var mutex = await FuzzyMutexAsync.LockAsync(razorCacheId))
+                    {
+                        _binaryCache.SetBytes(razorCacheId.ToRazorAssemblyFilename(), ms.ToArray(), CacheNamespace);
+                    }
+            }
 
                 return await razorAssembly.RunAsync(instance => { instance.Model = model; });
 
