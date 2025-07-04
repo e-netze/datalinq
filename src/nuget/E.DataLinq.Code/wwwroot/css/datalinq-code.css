@@ -201,6 +201,14 @@ body {
                     background-size: 16px 16px;
                 }
 
+.dragging {
+    background-color: #5badff !important;
+    opacity: 0.8;
+    border: 1px solid #4b9ad1;
+    box-shadow: 0 0 5px rgba(91, 173, 255, 0.5);
+    transition: background-color 0.2s, opacity 0.2s, box-shadow 0.2s;
+}
+
 /****** Buttons *********/
 .datalinq-code-button {
     background-color: #5badff;

@@ -11,7 +11,7 @@ public class MsSqlClientDbFactoryProviderTests
     [TestInitialize]
     public void Setup()
     {
-        _provider = new MsSqlClientDbFactoryProvider();
+        _provider = new MsSqlClientDbFactoryProvider(null);
     }
 
     [TestMethod]

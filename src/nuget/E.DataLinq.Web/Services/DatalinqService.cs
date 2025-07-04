@@ -319,15 +319,32 @@ public class DataLinqService
             if (dataLinqRoute.HasView)
             {
                 StringBuilder sb = new StringBuilder();
+                bool showStackTrace = false;
+#if DEBUG
+                showStackTrace = true;
+#endif
                 sb.Append("<div style='background-color:#efefaa;display:inline-block;margin:5px;padding:10px;border:1px solid red'>");
                 sb.Append(ex.Message);
 
-                if (ex is NullReferenceException)
+                if (showStackTrace || ex is NullReferenceException)
                 {
                     sb.Append("<br/><br/>");
                     sb.Append(ex.StackTrace.Replace("\n", "<br/>"));
                 }
+#if DEBUG
+                var innerException = ex.InnerException;
+                while (innerException != null)
+                {
+                    sb.Append("<br/><br/>");
+                    sb.Append("Inner Exception: ");
+                    sb.Append("<br/>");
+                    sb.Append(innerException.Message);
+                    sb.Append("<br/><br/>");
+                    sb.Append(innerException.StackTrace.Replace("\n", "<br/>"));
 
+                    innerException = innerException.InnerException;
+                }
+#endif
                 sb.Append("</div>");
 
                 contentType = "text/html";

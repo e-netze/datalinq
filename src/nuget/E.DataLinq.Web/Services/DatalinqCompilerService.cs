@@ -88,6 +88,18 @@ public class DataLinqCompilerService
                 CheckRazorBlackAndWhiteList(view.Code);
             }
 
+            // just for checking cuncurrency issues
+            //var tasks = new Task<string>[] {
+            //    razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model),
+            //    razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model),
+            //    razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model),
+            //    razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model),
+            //    razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model)
+            //};
+
+            //Task.WaitAll(tasks);
+            //htmlResultString = tasks[0].Result;
+
             htmlResultString = await razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model);
         }
         catch (RazorCompileException ex)

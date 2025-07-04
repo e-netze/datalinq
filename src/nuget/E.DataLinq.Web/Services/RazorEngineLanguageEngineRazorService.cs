@@ -65,7 +65,7 @@ public class RazorEngineLanguageEngineRazorService : IRazorCompileEngineService
 
                 if (IsCompilationCached(razorCacheId, model.GetType()))
                 {
-                    using var ms = new MemoryStream(_binaryCache.GetBytes(razorCacheId.ToRazorAssemblyFilename(), CacheNamespace));
+                    using var ms = new MemoryStream(await _binaryCache.GetBytes(razorCacheId.ToRazorAssemblyFilename(), CacheNamespace));
                     using var cachedRazorAssembly = await RazorAssemblyUtility.LoadFromStreamAsync<RazorEngineTemplate<TModel>>(ms);
 
                     return await cachedRazorAssembly.RunAsync(instance => { instance.Model = model; });
@@ -86,7 +86,7 @@ public class RazorEngineLanguageEngineRazorService : IRazorCompileEngineService
                     using var ms = new MemoryStream();
                     await razorAssembly.SaveToStreamAsync(ms);
 
-                    _binaryCache.SetBytes(razorCacheId.ToRazorAssemblyFilename(), ms.ToArray(), CacheNamespace);
+                    await _binaryCache.SetBytes(razorCacheId.ToRazorAssemblyFilename(), ms.ToArray(), CacheNamespace);
                 }
 
                 return await razorAssembly.RunAsync(instance => { instance.Model = model; });
