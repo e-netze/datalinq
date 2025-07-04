@@ -1,9 +1,9 @@
 ﻿using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Cache;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Threading.Tasks;
 
 namespace E.DataLinq.Web.Services.Cache;
 internal class BinaryCacheWrapper : IBinaryCache
@@ -29,11 +29,11 @@ internal class BinaryCacheWrapper : IBinaryCache
         _cache.Cleanup(filter);
     }
 
-    public byte[] GetBytes(string key, string @namespace = "") => _cache.GetBytes(key, @namespace);
+    public Task<byte[]> GetBytes(string key, string @namespace = "") => _cache.GetBytes(key, @namespace);
 
     public bool HasData(string key, string @namespace = "") => _cache.HasData(key, @namespace);
 
     public void Remove(string key, string @namespace = "") => _cache.Remove(key, @namespace);
 
-    public void SetBytes(string key, byte[] bytes, string @namespace = "") => _cache.SetBytes(key, bytes, @namespace);
+    public Task SetBytes(string key, byte[] bytes, string @namespace = "") => _cache.SetBytes(key, bytes, @namespace);
 }

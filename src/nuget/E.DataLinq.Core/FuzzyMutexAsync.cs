@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
+namespace E.DataLinq.Core;
+
 public class FuzzyMutexAsync
 {
     private static readonly ConcurrentDictionary<string, DateTime> _mutexDirectory = new ConcurrentDictionary<string, DateTime>();

@@ -91,10 +91,12 @@ public class DataLinqCompilerService
             //var tasks = new Task<string>[] {
             //    razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model),
             //    razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model),
+            //    razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model),
+            //    razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model),
             //    razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model)
             //};
 
-            //tasks[0].Wait();
+            //Task.WaitAll(tasks);
             //htmlResultString = tasks[0].Result;
 
             htmlResultString = await razorEngineService.RunCompile<SelectResult>(code.ToString(), razorCacheId, model);

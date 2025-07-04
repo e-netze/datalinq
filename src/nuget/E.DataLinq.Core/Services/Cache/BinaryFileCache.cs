@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace E.DataLinq.Core.Services.Cache;
 public class BinaryFileCache : IBinaryCache
@@ -39,32 +40,35 @@ public class BinaryFileCache : IBinaryCache
         return File.Exists(path);
     }
 
-    public byte[] GetBytes(string key, string @namespace = "")
+    public Task<byte[]> GetBytes(string key, string @namespace = "")
     {
         var path = Path.Combine(_sessionFolder, @namespace, key);
         if (!File.Exists(path))
         {
-            return null;
+            return Task.FromResult<byte[]>(null);
         }
 
-        return File.ReadAllBytes(path);
+        return File.ReadAllBytesAsync(path);
     }
 
-    public void SetBytes(string key, byte[] bytes, string @namespace = "")
+    async public Task SetBytes(string key, byte[] bytes, string @namespace = "")
     {
         var folder = Path.Combine(_sessionFolder, @namespace);
         var path = Path.Combine(_sessionFolder, @namespace, key);
 
-        if (!Directory.Exists(folder))
-        {
-            Directory.CreateDirectory(folder);
-        }
-        if (File.Exists(path))
-        {
-            File.Delete(path);
-        }
+        using (var mutex = await FuzzyMutexAsync.LockAsync(path))
+        { 
+            if (!Directory.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
 
-        File.WriteAllBytes(path, bytes);
+            await File.WriteAllBytesAsync(path, bytes);
+        }
     }
 
     public void Remove(string key, string @namespace = "")
