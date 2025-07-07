@@ -14,7 +14,7 @@
   </PropertyGroup>
 
 	<PropertyGroup>
-		<Version>7.25.1110</Version>
+		<Version>7.25.1701</Version>
 		<Copyright>2025, Energienetze Steiermark</Copyright>
 		<PackageProjectUrl>https://github.com/e-netze/datalinq</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/e-netze/datalinq</RepositoryUrl>
@@ -41,9 +41,9 @@
   </ItemGroup>
   <ItemGroup>
 	<PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="3.0.71" />  
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     <PackageReference Include="RazorEngine.NetCore" Version="3.1.0" />
-    <PackageReference Include="System.Drawing.Common" Version="9.0.4" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.6" />
   </ItemGroup>
 	<ItemGroup>
 		<Content Update="libman.json">

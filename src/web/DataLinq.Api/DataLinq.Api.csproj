@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="9.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\aspire\DataLinq.ServiceDefaults\DataLinq.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\nuget\E.DataLinq.Engine.MsSqlServer\E.DataLinq.Engine.MsSqlServer.csproj" />
     <ProjectReference Include="..\..\nuget\E.DataLinq.Engine.OracleClient\E.DataLinq.Engine.OracleClient.csproj" />

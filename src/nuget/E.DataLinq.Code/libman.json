@@ -9,6 +9,11 @@
     {
       "library": "monaco-editor@0.52.2",
       "destination": "wwwroot/lib/monaco-editor"
+    },
+    {
+      "provider": "jsdelivr",
+      "library": "sortablejs@1.15.6",
+      "destination": "wwwroot/lib/sortablejs/"
     }
   ]
 }
