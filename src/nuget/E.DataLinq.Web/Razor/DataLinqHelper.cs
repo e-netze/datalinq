@@ -162,6 +162,84 @@ public class DataLinqHelper : IDataLinqHelper
     }
 
     /// <summary>
+    /// de: Erstellt einen JSON-Editor für die Darstellung und Bearbeitung von JSON-Daten im Browser. 
+    /// Die Methode baut die benötigten JavaScript-Skripte dynamisch auf und rendert ein DIV-Element mit eindeutiger ID.
+    /// en: Creates a JSON editor for displaying and editing JSON data in the browser. 
+    /// The method dynamically builds the required JavaScript scripts and renders a DIV element with a unique ID.
+    /// </summary>
+    /// <param name="records">
+    /// de: Ein Array von Dictionaries, die die darzustellenden JSON-Daten repräsentieren.
+    /// en: An array of dictionaries representing the JSON data to be displayed.
+    /// </param>
+    /// <returns>
+    /// de: Ein Roh-HTML-String, der das DIV-Element und die erforderlichen JavaScript-Blöcke enthält, um den JSON-Editor auf der Clientseite zu initialisieren.
+    /// en: A raw HTML string containing the DIV element and the required JavaScript blocks to initialize the JSON editor on the client side.
+    /// </returns>
+    public object JsonEditor(
+            IDictionary<string, object>[] records
+         )
+    {
+        #region Build Javascript Data Block
+
+        StringBuilder js = new StringBuilder();
+
+        var uuid = Guid.NewGuid().ToString("N");
+        js.AppendLine($"console.log(\" in the data block \")");
+        js.Append("$(function(){");
+        js.Append($"window.jsonviewer_{uuid}(");
+
+        if (records != null)
+        {
+            bool firstObject = true;
+            js.Append("[");
+            foreach (var record in records)
+            {
+                if (firstObject) { firstObject = false; } else { js.Append(","); }
+                js.Append("{");
+
+                bool firstProperty = true;
+                foreach (var kvp in record)
+                {
+                    if (firstProperty) { firstProperty = false; } else { js.Append(","); }
+                    js.Append($"{kvp.Key}:{System.Text.Json.JsonSerializer.Serialize(kvp.Value)}");
+                }
+                js.Append("}");
+            }
+            js.Append("]");
+        }
+
+        js.Append(");");  // window.{jsCallbackFuncName}
+        js.Append("});");  // (function() {
+
+        #endregion
+
+        #region Build Javascript JsonViewerBlock
+
+        var jsonViewer = new StringBuilder();
+        jsonViewer.AppendLine($"window.jsonviewer_{uuid} = function(data) {{");
+        jsonViewer.AppendLine($"const container = document.getElementById(\"jsonviewer_{uuid}\");");
+        jsonViewer.AppendLine($"const options = {{mode: 'view'}};");
+        jsonViewer.AppendLine("const editor = new JSONEditor(container, options);");
+        jsonViewer.AppendLine("editor.set(data);");
+        jsonViewer.AppendLine("const updatedJson = editor.get();");
+        jsonViewer.AppendLine("};");
+
+        #endregion
+
+        var builder = HtmlBuilder.Create()
+            .AppendDiv(div =>
+            {
+                div.WithId($"jsonviewer_{uuid}");
+                div.AddStyle("width", "1000px");
+                div.AddStyle("height", "1000px");
+            })
+            .AppendJavaScriptBlock(js.ToString())
+            .AppendJavaScriptBlock(jsonViewer.ToString());
+
+        return _razor.RawString(builder.BuildHtmlString());
+    }
+
+    /// <summary>
     /// de: Die Methode lädt Records aus einer angegebenen Query (endpoint@query) und gibt diese als Sammlung von Dictionaries zurück. Die Abfrage erfolgt serverseitig während des Renderns der Seite.
     /// en: The method loads records from a specified query (endpoint@query) and returns them as a collection of dictionaries. The query is executed server-side during page rendering.
     /// </summary>
@@ -253,9 +331,9 @@ public class DataLinqHelper : IDataLinqHelper
         return _razor.RawString(
                 HtmlBuilder.Create()
                 .AppendStyle(style => 
-                    style.Content(_currentDatalinqService.GetViewCssSync(id))
+                    style.Content(_currentDatalinqService.GetViewCss(id).GetAwaiter().GetResult())
                 ).AppendJavaScriptBlock(
-                    _currentDatalinqService.GetViewJsSync(id)
+                    _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
                 ).AppendDiv(div =>
                         div.AddClass("datalinq-include")
                            .AddAttribute("data-source", ParseUrl(id, encodeQueryString))
@@ -297,9 +375,9 @@ public class DataLinqHelper : IDataLinqHelper
         return _razor.RawString(
                 HtmlBuilder.Create()
                 .AppendStyle(style =>
-                    style.Content(_currentDatalinqService.GetViewCssSync(id))
+                    style.Content(_currentDatalinqService.GetViewCss(id).GetAwaiter().GetResult())
                 ).AppendJavaScriptBlock(
-                    _currentDatalinqService.GetViewJsSync(id)
+                    _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
                 ).AppendDiv(div =>
                         div.AddClass("datalinq-include")
                            .AddAttribute("data-source", ParseUrl(id, encodeUrl))
@@ -337,7 +415,11 @@ public class DataLinqHelper : IDataLinqHelper
     {
         return _razor.RawString(
                 HtmlBuilder.Create()
-                    .AppendDiv(div =>
+                .AppendStyle(style =>
+                    style.Content(_currentDatalinqService.GetViewCss(id).GetAwaiter().GetResult())
+                ).AppendJavaScriptBlock(
+                    _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
+                ).AppendDiv(div =>
                         div.AddClass("datalinq-include-click")
                            .AddAttribute("data-source", ParseUrl(id, encodeUrl))
                            .AddAttribute("data-header", text)
@@ -383,14 +465,17 @@ public class DataLinqHelper : IDataLinqHelper
     {
         return _razor.RawString(
                 HtmlBuilder.Create()
-                    .AppendDiv(div =>
-                        div.AddClass("datalinq-include-click")
-                           .AddAttribute("data-source", ParseUrl(id, encodeUrl))
-                           .AddAttribute("data-filter", ParseUrl(filter, encodeUrl))
-                           .AddAttribute("data-orderby", ParseUrl(orderby, encodeUrl))
-                           .AddAttribute("data-header", text)
-                    )
-                    .BuildHtmlString()
+                    .AppendStyle(style =>
+                    style.Content(_currentDatalinqService.GetViewCss(id).GetAwaiter().GetResult())
+                    ).AppendJavaScriptBlock(
+                        _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
+                    ).AppendDiv(div =>
+                            div.AddClass("datalinq-include-click")
+                               .AddAttribute("data-source", ParseUrl(id, encodeUrl))
+                               .AddAttribute("data-filter", ParseUrl(filter, encodeUrl))
+                               .AddAttribute("data-orderby", ParseUrl(orderby, encodeUrl))
+                               .AddAttribute("data-header", text)
+                    ).BuildHtmlString()
              );
     }
 

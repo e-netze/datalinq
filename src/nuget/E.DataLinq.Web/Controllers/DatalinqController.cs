@@ -104,6 +104,19 @@ public class DataLinqController : DataLinqBaseController
 
                     return RawResponse(dataBOM, "text/csv", new NameValueCollection { { "Content-Disposition", "attachment;filename=export.csv" } });
                 }
+                else if (result is object[] arr && arr.Length > 0)
+                {
+                    var first = arr[0];
+
+                    if (first is IDictionary<string, object> dict &&
+                        dict.TryGetValue("IsJsonApiResponse", out var val) &&
+                        val is bool isMarker && isMarker)
+                    {
+                        var newArr = arr.Skip(1).ToArray();
+                        return await JsonObjectNew(newArr, Request.Query["_pjson"] == "true");
+                    }
+                }
+
 
                 return await JsonObject(result, Request.Query["_pjson"] == "true");
             }

@@ -127,6 +127,7 @@ static public class ServiceCollectionExtensions
         });
 
         services.AddDataLinqSelectEngine<TextFileEngine>();
+        services.AddDataLinqSelectEngine<JsonApiEngine>();
 
         #endregion
 
@@ -194,11 +195,15 @@ static public class ServiceCollectionExtensions
                     Name = JsLibNames.ChartJs_3x_Plugin_DataLabels,
                     Description = " optional ChartJS plugin - DataLabels v2.2.0"
                 },
-
                 new()
                 {
                     Name=JsLibNames.D3_7x,
                     Description = "D3 Charting Library v7.9.0"
+                },
+                new()
+                {
+                    Name=JsLibNames.JsonEditor,
+                    Description = "JsonEditor v10.2.0"
                 }
             };
         });

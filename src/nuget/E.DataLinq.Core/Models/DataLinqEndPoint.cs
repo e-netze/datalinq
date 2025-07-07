@@ -14,8 +14,9 @@ public enum DefaultEndPointTypes  // NEVER CHANGE VALUES !!!
     //WebGISApi = 2,  //  Reserved: Legacy
     DataLinq = 3,
     PlainText = 5,
-    TextFile = 6
+    TextFile = 6,
     //Plugin = 4      //  Reserved: Legacy
+    JsonApi = 7
 }
 
 public class DataLinqEndPoint : IDataLinqAuthProperties

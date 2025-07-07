@@ -566,3 +566,7 @@ div.datalinq-filter-field-wrapper:focus {
 .datalinq-modal-body.animate {
     transition: opacity .3s ease-in, height .3s ease-in, width .3s ease-in, left .3s ease-in, top .3s ease-in
 }
+
+a.jsoneditor-poweredBy {
+    display: none !important;
+}

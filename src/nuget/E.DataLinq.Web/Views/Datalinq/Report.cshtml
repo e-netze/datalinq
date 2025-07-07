@@ -27,6 +27,7 @@
 <script src="@(ViewData["contentRootUrl"])/js/datalinq.events.js?@(DataLinqVersion.JsVersion)"></script>
 <script src="@(ViewData["contentRootUrl"])/js/datalinq.ui.js?@(DataLinqVersion.JsVersion)"></script>
 <script src="@(ViewData["contentRootUrl"])/lib/select2/js/select2.min.js"></script>
+<script src="@(ViewData["contentRootUrl"])/lib/select2/js/select2.min.js"></script>
 
 <script src="@(ViewData["contentRootUrl"])/lib/momentjs/moment.min.js"></script>
 <script src="@(ViewData["contentRootUrl"])/lib/momentjs/locale/de-at.js"></script>
@@ -54,6 +55,12 @@
     {
         <script src="@(ViewData["contentRootUrl"])/lib/chartjs-3x/plugins/chartjs-plugin-datalabels.min.js"></script>
     }
+}
+
+@if (Model.IncludedJsLibraries.Contains(JsLibNames.JsonEditor))
+{
+    <script src="@(ViewData["contentRootUrl"])/lib/jsoneditor/jsoneditor.min.js"></script>
+    <link href="@(ViewData["contentRootUrl"])/lib/jsoneditor/jsoneditor.min.css" rel="stylesheet" type="text/css" />
 }
 
 @if (Model.IncludedJsLibraries.Contains(JsLibNames.D3_7x))

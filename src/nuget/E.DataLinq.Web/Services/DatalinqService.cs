@@ -19,6 +19,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Security.Authentication;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -275,9 +276,27 @@ public class DataLinqService
                     }
                     else
                     {
-                        var transformed = _selectResultProviders.TransformAny(dataLinqRoute.ViewId,
-                                                                              records.Select(r => (IDictionary<string, object>)r)
-                                                                                     .ToArray());
+                        (object result, string contentType) transformed = (null, null);
+
+                        if (records?.Length > 0)
+                        {
+                            var first = records[0];
+
+                            if (first is IDictionary<string, object> dict &&
+                                dict.TryGetValue("IsJsonApiResponse", out var val) &&
+                                val is bool isMarker && isMarker)
+                            {
+                                records = records.Skip(1).ToArray();
+                            }
+                            else
+                            {
+                                transformed = _selectResultProviders.TransformAny(
+                                    dataLinqRoute.ViewId,
+                                    records.Select(r => (IDictionary<string, object>)r).ToArray()
+                                );
+                            }
+                        }
+
 
                         if (transformed.result != null)
                         {
@@ -463,28 +482,6 @@ public class DataLinqService
         return css;
     }
 
-    public string GetViewCssSync(string endPointId)
-    {
-        string css = String.Empty;
-
-        if (_options.CssInPerstanceStorage == true)
-        {
-            css = _persistanceProvider.GetViewCssSync(endPointId);
-        }
-
-        if (String.IsNullOrEmpty(css))
-        {
-            var fi = new System.IO.FileInfo($"{_environment.WebRootPath}/content/datalinq/{endPointId}/datalinq.css");
-
-            if (fi.Exists)
-            {
-                css = System.IO.File.ReadAllText(fi.FullName);
-            }
-        }
-
-        return css;
-    }
-
     async public Task<string> GetEndpointJavascript(string endPointId)
     {
         string js = String.Empty;
@@ -504,18 +501,6 @@ public class DataLinqService
         if (_options.JavascriptInPerstanceStorage == true)
         {
             js = await _persistanceProvider.GetViewJs(endPointId);
-        }
-
-        return js;
-    }
-
-    public string GetViewJsSync(string endPointId)
-    {
-        string js = String.Empty;
-
-        if (_options.JavascriptInPerstanceStorage == true)
-        {
-            js = _persistanceProvider.GetViewJsSync(endPointId);
         }
 
         return js;

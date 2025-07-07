@@ -8,6 +8,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace E.DataLinq.Web.Controllers;
@@ -50,6 +51,20 @@ public class DataLinqBaseController : Controller
 
         string json = System.Text.Encoding.UTF8.GetString(ms.GetBuffer());
         json = json.Trim('\0');
+
+        return Task.FromResult<IActionResult>(JsonResultStream(json));
+    }
+
+    protected Task<IActionResult> JsonObjectNew(object obj, bool pretty = false)
+    {
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = pretty,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+            ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+        };
+
+        string json = System.Text.Json.JsonSerializer.Serialize(obj, options);
 
         return Task.FromResult<IActionResult>(JsonResultStream(json));
     }

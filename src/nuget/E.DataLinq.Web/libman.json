@@ -29,7 +29,11 @@
     {
       "library": "d3@7.9.0",
       "destination": "wwwroot/lib/d3-7x"
-    } 
+    },
+    {
+      "library": "jsoneditor@10.2.0",
+      "destination": "wwwroot/lib/jsoneditor"
+    }
   ]
 }
  
