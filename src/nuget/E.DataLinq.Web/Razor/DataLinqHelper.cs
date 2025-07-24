@@ -2482,17 +2482,23 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Name der Javascript-Variable, die als JSON-Objekt Einstellungen zur Darstellung der Datensätze enthält. Je nach Diagrammtyp sind unterschiedliche Einstellungen möglich, siehe dazu http://www.chartjs.org/docs/latest/charts/ => Charttypen => Dataset Properties.
     /// en: Name of the JavaScript variable containing JSON settings for dataset representation. Depending on the chart type, different settings are possible, see http://www.chartjs.org/docs/latest/charts/ => Chart types => Dataset Properties.
     /// </param>
+    /// /// <param name="locale">
+    /// de: Legt das Zahlenformat für Achsen und Tooltips fest. Mögliche Werte: ChartLocale.None (keine Formatierung), ChartLocale.DE (deutsches Format mit Punkt als Tausendertrennzeichen), ChartLocale.US (US-Format mit Komma als Tausendertrennzeichen).
+    /// en: Specifies number formatting for axes and tooltips. Possible values: ChartLocale.None (no formatting), ChartLocale.DE (German format using dot as thousands separator), ChartLocale.US (US format using comma as thousands separator).
+    /// </param>
     /// <returns>
     /// de: Gibt HTML-Code für das Diagramm zurück.
     /// en: Returns HTML code for the chart.
     /// </returns>
+
     public object Chart(
         ChartType chartType,
         string jsValueVariable,
         string label = "",
         object htmlAttributes = null,
         string[] chartColorRGB = null,
-        string jsDatasetVariable = ""
+        string jsDatasetVariable = "",
+        ChartLocale locale = ChartLocale.None
         //,object chartOptions = null
         )
     {
@@ -2508,6 +2514,7 @@ public class DataLinqHelper : IDataLinqHelper
                     d.AddAttribute("data-chart-dataset", jsDatasetVariable);
                     chartColorRGB = (chartColorRGB == null ? new string[] { } : chartColorRGB);
                     d.AddAttribute("data-chart-color", String.Join("|", chartColorRGB).Replace(" ", ""));
+                    d.AddAttribute("data-chart-locale", locale.ToString());
                 }).BuildHtmlString()
             );
     }
