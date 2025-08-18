@@ -125,6 +125,7 @@ static public class ServiceCollectionExtensions
         });
 
         services.AddDataLinqSelectEngine<TextFileEngine>();
+        services.AddDataLinqSelectEngine<CypherEngine>();
 
         #endregion
 

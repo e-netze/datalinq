@@ -14,7 +14,8 @@ public enum DefaultEndPointTypes  // NEVER CHANGE VALUES !!!
     //WebGISApi = 2,  //  Reserved: Legacy
     DataLinq = 3,
     PlainText = 5,
-    TextFile = 6
+    TextFile = 6,
+    Cypher = 8
     //Plugin = 4      //  Reserved: Legacy
 }
 
