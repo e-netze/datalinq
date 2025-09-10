@@ -22,16 +22,19 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     private readonly DataLinqCodeService _dataLinqCode;
     private readonly IDataLinqAccessTreeService _accessTree;
     private readonly ICryptoService _crypto;
+    private readonly SemanticKernelService _semanticKernelService;
 
     public DataLinqCodeController(DataLinqCodeService dataLinqCode,
                                   IDataLinqAccessTreeService accessTree,
-                                  ICryptoService crypto)
+                                  ICryptoService crypto,
+                                  SemanticKernelService semanticKernelService)
         : base()
     {
         _dataLinqCode = dataLinqCode;
         _client = _dataLinqCode.ApiClient;
         _accessTree = accessTree;
         _crypto = crypto;
+        _semanticKernelService = semanticKernelService;
     }
 
     public IActionResult Index()
@@ -93,6 +96,20 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     }
 
     #endregion
+
+    public IActionResult Copilot()
+    {
+        return View();
+    }
+
+    public async Task<IActionResult> AskDatalinqCopilot([FromForm] string[] questions)
+    {
+        var skResponse = await _semanticKernelService.ProcessAsync(questions);
+
+        var answer = $"{skResponse}";
+
+        return Json(new { answer }); 
+    }
 
     #region Api
 

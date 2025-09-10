@@ -1,0 +1,98 @@
+﻿@using E.DataLinq.Code.Extensions
+@using E.DataLinq.Code.Services
+@using E.DataLinq.Core.Models
+@using E.DataLinq.Core
+@using Microsoft.Extensions.Options
+
+@{
+    Layout = "~/Views/Shared/_Layout_empty-datalinq-code-copilot.cshtml";
+    ViewBag.Title = "DataLinq Copilot";
+}
+
+<script src="~/_content/E.DataLinq.Code/js/datalinq-code-compile.js?@(DataLinqVersion.JsVersion)"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<div class="copilot-page">
+    <div class="topbar">
+        <div class="topbar-left">
+            <span class="topbar-title">DataLinq Chat</span>
+        </div>
+        <div class="topbar-center">
+            <div class="copilot-hints top-hint" onclick="" hidden>
+                Chatverlauf
+            </div>
+        </div>
+        <div class="topbar-right">
+            <button class="topbar-btn" onclick="deleteHistory()" title="Neuer Chat">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <button class="topbar-btn" onclick="toggleChatHistory()" title="Chat Verlauf">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 3h5l2 3h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path>
+                </svg>
+            </button>
+            <button class="topbar-btn" onclick="toggleExpand()" title="Expand">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h6v6"></path>
+                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                    <path d="M9 21H3v-6"></path>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div id="copilot-intro">
+        <img id="copilot-logo"
+             src="~/_content/E.DataLinq.Code/css/img/datalinq_copilot_lightgrey.png"
+             alt="DataLinq Copilot Logo"
+             style="cursor:pointer" 
+             onclick="switchMode()"/>
+        <h1 class="copilot-heading">DataLinq Copilot</h1>
+        <h4 class="copilot-heading">Stellen Sie Fragen an Ihren Co-Piloten</h4>
+
+        <p class="copilot-paragraph">
+            Der DataLinq Copilot benützt KI, um Ihre Fragen zu beantworten. Fehler sind möglich,
+            bitte überprüfen Sie die Ausgaben vor der Verwendung.
+        </p><br />
+
+        <div class="copilot-helpers">
+            <p class="copilot-paragraph"><strong>@@</strong> für einen bestimmten DataLinq Helper</p>
+            <p class="copilot-paragraph"><strong>/</strong> um Befehle auszuführen</p>
+            <p class="copilot-paragraph"><strong>#</strong> um eine id (endpoint@@query@@view) zu referenzieren</p>
+        </div><br />
+
+        <div class="copilot-suggestions">
+            <button class="copilot-chip" type="button" onclick="explainCurrentCode()">Erkläre mir den Code des aktuellen Tabs</button>
+            <button class="copilot-chip" type="button" onclick="sendMessageAsync('Erstelle mir eine Tabelle mit Filter und Sortierung')">Erstelle mir eine Tabelle mit Filter und Sortierung</button>
+            <button class="copilot-chip" type="button" onclick="sendMessageAsync('Schreibe mir Beispiel-Queries für SQL mit #if')">Gib mir Beispiel-Queries für SQL mit #if</button>
+            <button class="copilot-chip" type="button" onclick="currentError()">Erkläre mir, was der aktuelle Fehler bedeutet</button>
+        </div>
+    </div>
+
+    <div id="copilot-chat-history">
+
+    </div>
+
+    <div id="copilot-input" role="region" aria-label="Copilot Eingabebereich">
+        <div class="copilot-input-wrap">
+            <input type="text" placeholder="Frag mich etwas… (z. B. „Wie erstelle ich einen Datalinq Table mit Filter und Sortier Funktion.“)" />
+            <button id="copilot-submit" type="button" title="Senden" aria-label="Senden" onclick="sendMessageAsync()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M3 11L21 3L13 21L11 13L3 11Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                </svg>
+            </button>
+        </div>
+        <div class="copilot-hints">Tipp: Mit <kbd>Click</kbd> auf "Expand" oben rechts lässt sich Code besser lesen :)</div>
+    </div>
+
+</div>
+
+
+@section scripts {
+    <script>
+        
+    </script>
+}

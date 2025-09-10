@@ -1,4 +1,5 @@
 ﻿using E.DataLinq.Code.Services;
+using E.DataLinq.Code.Services.Plugins;
 using E.DataLinq.Core.Services;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Crypto;
@@ -34,7 +35,9 @@ static public class ServiceCollectionExtensions
 
         return services.Configure(configAction)
                    .AddTransient<DataLinqCodeService>()
-                   .AddTransient<DataLinqCodeIndentityService>();
+                   .AddTransient<DataLinqCodeIndentityService>()
+                   .AddTransient<DataLinqFunctionsPlugin>()
+                   .AddTransient<SemanticKernelService>();
     }
 
     //static public IServiceCollection AddDataLinqCodeService<TCryptoService,

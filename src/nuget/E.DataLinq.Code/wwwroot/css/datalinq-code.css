@@ -1226,6 +1226,11 @@ body {
         float: right;
     }
 
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.copilot {
+        background-image: url(img/copilot_32@1.png);
+        float: right;
+    }
+
     .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.help {
         background-image: url(img/help_32@1.png);
         float:right;

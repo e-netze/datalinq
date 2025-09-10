@@ -90,6 +90,9 @@
         dataLinqCode.events.on('open-endpoint-js', function (channel, args) {
             var $tab = showOrAddTab($tabs, 'Javascript: ' + args.id, args.id + '@_js', 'js');
         });
+        dataLinqCode.events.on('open-copilot', function (channel, args) {
+            var $tab = showOrAddTab($tabs, 'DataLinq Copilot', 'copilot');
+        });
         dataLinqCode.events.on('tab-selected', function (channel, args) {
             showOrAddEditorFrame($editor, args.id);
 
@@ -488,6 +491,9 @@
         const [endpoint, query, view, suffix] = parts;
 
         if (parts.length === 1) {
+            if (parts[0] === 'copilot') {
+                return `${base}/copilot?dl_token=${token}`;
+            }
             return `${base}/EditEndPoint?endpoint=${endpoint}&dl_token=${token}`;
         }
 

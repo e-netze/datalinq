@@ -24,6 +24,10 @@ var dataLinqCode = new function ($) {
             dataLinqCode.ui.refreshTree();
         });
 
+        if (typeof window.CopilotInitializer === "function") {
+            window.CopilotInitializer(_targetUrl);
+        }
+
         $editor.dataLinqCode_editor('addTab', { title: 'Start', id: '_start', className: 'start', hideCloseButton: true });
 
         this.bindDocumentEvents(window.document);
@@ -32,7 +36,26 @@ var dataLinqCode = new function ($) {
             if (event.data.lang) {
                 sessionStorage.setItem('selectedLang', event.data.lang);
             }
+            if (event.data.action === 'expand-copilot')
+            {
+                const copilotTab = document.querySelector('[data-id="copilot"]');
+                if (copilotTab) {
+                    copilotTab.querySelector('.close-button').click();
+                } else {
+                    dataLinqCode.events.fire('open-copilot', {});
+                }
+
+                dataLinqCode.events.fire('toggle-copilot');
+            }
         });
+
+        function clearSessionData() {
+            sessionStorage.removeItem('currentChatId');
+        }
+
+        window.addEventListener('beforeunload', clearSessionData);
+        window.addEventListener('unload', clearSessionData);
+        window.addEventListener('pagehide', clearSessionData);
 
         dataLinqCode.events.on('refresh-ui', function (channel, args) {
             var args = {
@@ -157,6 +180,27 @@ var dataLinqCode = new function ($) {
 
             if ($datalinqBody.hasClass('showhelp')) {
                 $datalinqBody.find('.datalinq-code-help > #help-frame').attr('src', _dataLinqEngineUrl + '/help');
+            }
+        });
+
+        var ctrlPressed = false;
+
+        $(document).keydown(function (e) {
+            if (e.key === "Control") ctrlPressed = true;
+        }).keyup(function (e) {
+            if (e.key === "Control") ctrlPressed = false;
+        });
+
+        dataLinqCode.events.on('toggle-copilot', function (channel, args) {
+            if (ctrlPressed) {
+                dataLinqCode.events.fire('open-copilot', {});
+            } else {
+                var $datalinqBody = $('.datalinq-code-body');
+                $datalinqBody.toggleClass('showhelp');
+
+                if ($datalinqBody.hasClass('showhelp')) {
+                    $datalinqBody.find('.datalinq-code-help > #help-frame').attr('src', dataLinqCode.targetUrl() + '/copilot?dl_token=' + window._datalinqCodeAccessToken);
+                }
             }
         });
 
