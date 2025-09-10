@@ -21,6 +21,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -1964,6 +1965,48 @@ public class DataLinqHelper : IDataLinqHelper
                     }
                 }).BuildHtmlString()
             );
+    }
+
+    /// <summary>
+    /// de: Gibt ein dynamisches Objekt in einer JavaScript-Variablen aus. Das Objekt wird zuvor in JSON serialisiert und als String in jQuery.parseJSON eingebettet, damit es direkt in JavaScript genutzt werden kann.
+    /// en: Outputs a dynamic object into a JavaScript variable. The object is first serialized to JSON and embedded as a string inside jQuery.parseJSON so it can be used directly in JavaScript.
+    /// </summary>
+    /// <param name="record">
+    /// de: Das dynamische Objekt das in der JavaScript-Variable ausgegeben werden sollen. Kann z.B. eine Liste von ExpandoObjects oder anonymen Typen sein.
+    /// en: The dynamic object to output in the JavaScript variable. Can be a list of ExpandoObjects or anonymous types.
+    /// </param>
+    /// <returns>
+    /// de: Gibt eine HTML-Rohzeichenfolge zurück, die ein Skript-Tag enthält, in dem die JavaScript-Variable mit den serialisierten Daten erstellt wird.
+    /// en: Returns a raw HTML string containing a script tag, in which the JavaScript variable with the serialized data is created.
+    /// </returns>
+
+    public object StatisticsSeries(object record)
+    {
+        if (record == null)
+            throw new ArgumentNullException(nameof(record));
+
+        var properties = record switch
+        {
+            ExpandoObject expando => (IDictionary<string, object>)expando,
+            _ => record.GetType()
+                       .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                       .Where(p => p.CanRead)
+                       .ToDictionary(p => p.Name, p => p.GetValue(record))
+        };
+
+        var seriesData = properties.Select(kvp => new { name = kvp.Key, value = kvp.Value });
+
+        var json = JsonConvert.SerializeObject(seriesData, new JsonSerializerSettings
+        {
+            StringEscapeHandling = StringEscapeHandling.EscapeHtml,
+            NullValueHandling = NullValueHandling.Include
+        });
+
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendJavaScriptBlock($"var statisticsSeriesOutput = jQuery.parseJSON('{json}');")
+                .BuildHtmlString()
+        );
     }
 
     /// <summary>
