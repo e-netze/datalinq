@@ -182,6 +182,40 @@ html, body {
     gap: 0.5rem;
 }
 
+#copilot-input textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--fg);
+    padding: 0.9rem 1rem;
+    font-size: 14px;
+    line-height: 1.4; /* define a consistent line-height */
+    resize: none; /* user shouldn't drag-resize manually */
+    overflow-y: hidden; /* we control when scroll appears */
+    outline: none;
+    font-family: inherit;
+    white-space: pre-wrap; /* preserve wrapping */
+    word-break: break-word;
+}
+
+#copilot-input textarea.scrollable {
+    overflow-y: auto; /* when exceeds 4 lines */
+}
+
+    #copilot-input textarea.scrollable::-webkit-scrollbar {
+        width: 8px;
+        background: transparent; /* The scrollbar itself */
+    }
+
+    #copilot-input textarea.scrollable::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.15); /* The thumb (the "handle") */
+        border-radius: 4px;
+    }
+
+    #copilot-input textarea.scrollable::-webkit-scrollbar-track {
+        background: transparent; /* The track behind the thumb */
+    }
+
 #copilot-input input[type="text"] {
     width: 100%;
     background: transparent;

@@ -78,7 +78,10 @@
 
     <div id="copilot-input" role="region" aria-label="Copilot Eingabebereich">
         <div class="copilot-input-wrap">
-            <input type="text" placeholder="Frag mich etwas… (z. B. „Wie erstelle ich einen Datalinq Table mit Filter und Sortier Funktion.“)" />
+            <textarea id="copilot-inputfield"
+                      placeholder="Frag mich etwas… (z. B. „Wie erstelle ich einen Datalinq Table mit Filter und Sortier Funktion.“)"
+                      rows="1"
+                      aria-label="Copilot Eingabe"></textarea>
             <button id="copilot-submit" type="button" title="Senden" aria-label="Senden" onclick="sendMessageAsync()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M3 11L21 3L13 21L11 13L3 11Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />

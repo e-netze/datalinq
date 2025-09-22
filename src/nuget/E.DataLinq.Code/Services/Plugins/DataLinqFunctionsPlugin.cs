@@ -777,72 +777,11 @@ public record DataLinqFunctionInfo(string Name, string ShortDescription);
         }
     }
 
-    [KernelFunction("create_datalinq_endpoint")]
-    [Description("Creates a new datalinq endpoint with a given endpoint ID")]
-    [return: Description("True if the endpoint creation was successful, false otherwise")]
-    public async Task<bool> CreateDatalinqEndpoint(
-        [Description("The unique identifier for the endpoint to create")] string endpointId)
-    {
-        try
-        {
-            var eId = formatDataLinqName(endpointId);
-            var endpoint = await _client.CreateEndPoint(eId);
-            return endpoint.Success;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Failed to create endpoint '{endpointId}': {ex.Message}", ex);
-        }
-    }
-
-    [KernelFunction("create_datalinq_query")]
-    [Description("Creates a new query under a given endpoint with the provided query ID")]
-    [return: Description("True if the query creation was successful, false otherwise")]
-    public async Task<bool> CreateDatalinqQuery(
-        [Description("The ID of the endpoint under which the query will be created")] string endpointId,
-        [Description("The unique identifier for the query to create")] string queryId)
-    {
-        try
-        {
-            var eId = formatDataLinqName(endpointId);
-            var qId = formatDataLinqName(queryId);
-            var query = await _client.CreateEndPointQuery(eId, qId);
-            return query.Success;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                $"Failed to create query '{queryId}' under endpoint '{endpointId}': {ex.Message}", ex);
-        }
-    }
-
-    [KernelFunction("create_datalinq_view")]
-    [Description("Creates a new view under a given query within a given endpoint")]
-    [return: Description("True if the view creation was successful, false otherwise")]
-    public async Task<bool> CreateDatalinqView(
-        [Description("The ID of the endpoint containing the query")] string endpointId,
-        [Description("The ID of the query under which the view will be created")] string queryId,
-        [Description("The unique identifier for the view to create")] string viewId)
-    {
-        try
-        {
-            var eId = formatDataLinqName(endpointId);
-            var qId = formatDataLinqName(queryId);
-            var vId = formatDataLinqName(viewId);
-            var view = await _client.CreateEndPointQueryView(eId, qId, vId);
-            return view.Success;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                $"Failed to create view '{viewId}' under query '{queryId}' in endpoint '{endpointId}': {ex.Message}", ex);
-        }
-    }
-
-#region Helpers
+    #region Helpers
     private string formatDataLinqName(string input)
     {
         return input.ToLower().Replace('_', '-').Replace(" ","");
     }
     #endregion
+
 }

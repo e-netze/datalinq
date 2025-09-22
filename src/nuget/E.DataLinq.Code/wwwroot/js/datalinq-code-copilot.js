@@ -90,6 +90,8 @@ CopilotInitializer();
             const displayText = command || message;
             createChatMessage(displayText, true);
 
+            createChatMessage('<img src="/_content/E.DataLinq.Code/css/img/copilot-spinner@1.gif" style="height: 25px;"/>', false);
+
             message = preprocessMessage(message);
 
             messages.push(message);
@@ -98,6 +100,7 @@ CopilotInitializer();
 
             const answer = await askCopilot(messages);
 
+            deleteLastChatMessage();
             createChatMessage(answer, false);
             messages.push(answer);
 
@@ -112,6 +115,70 @@ CopilotInitializer();
             scrollChatToBottom();
         }
     }
+
+    function deleteLastChatMessage() {
+        const history = document.getElementById("copilot-chat-history");
+        if (history.lastChild) {
+            history.removeChild(history.lastChild);
+        }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const i = document.getElementById('copilot-inputfield');
+    const b = document.getElementById('copilot-submit');
+    i?.addEventListener('keydown', e => e.key === 'Enter' && !e.shiftKey && !e.isComposing && (e.preventDefault(), b?.click()));
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const ta = document.getElementById('copilot-inputfield');
+    const btn = document.getElementById('copilot-submit');
+    if (!ta || !btn) return;
+
+    const maxLines = 4;
+
+    // Pre-calculate single-line height
+    const style = window.getComputedStyle(ta);
+    const lineHeight = parseFloat(style.lineHeight) || 20;
+    const verticalPadding =
+        parseFloat(style.paddingTop) +
+        parseFloat(style.paddingBottom) +
+        parseFloat(style.borderTopWidth) +
+        parseFloat(style.borderBottomWidth);
+
+    function autoResize() {
+        ta.classList.remove('scrollable');
+        ta.style.height = 'auto';
+        const fullHeight = ta.scrollHeight;
+        const maxHeight = lineHeight * maxLines + verticalPadding;
+
+        if (fullHeight <= maxHeight) {
+            ta.style.height = fullHeight + 'px';
+            ta.style.overflowY = 'hidden';
+        } else {
+            ta.style.height = maxHeight + 'px';
+            ta.style.overflowY = 'auto';
+            ta.classList.add('scrollable');
+        }
+    }
+
+    // Initial sizing
+    autoResize();
+
+    ta.addEventListener('input', autoResize);
+
+    ta.addEventListener('keydown', e => {
+        if (e.isComposing) return;
+
+        // Plain Enter submits
+        if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            e.preventDefault();
+            btn.click();
+            return;
+        }
+
+        // Shift+Enter => allow newline; resize happens on input event
+    });
+});
 
     async function toggleChatHistory() {
         try {
@@ -538,16 +605,19 @@ function displayLoadedMessages() {
         return messageDiv;
     }
 
-    function getMessageInput(inputMessage) {
-        if (inputMessage) {
-            return inputMessage;
-        }
+function getMessageInput(inputMessage) {
+    if (inputMessage) return inputMessage;
 
-        const input = document.querySelector("#copilot-input input");
-        const message = input.value.trim();
-        input.value = "";
-        return message;
+    const input = document.getElementById('copilot-inputfield');
+    if (!input) {
+        console.warn('getMessageInput: #copilot-inputfield not found');
+        return '';
     }
+
+    const message = input.value.trim();
+    input.value = '';
+    return message;
+}
 
     function hideIntroSection() {
         const intro = document.getElementById("copilot-intro");
