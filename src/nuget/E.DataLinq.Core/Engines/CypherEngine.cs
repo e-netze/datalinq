@@ -96,6 +96,10 @@ public class CypherEngine : IDataLinqSelectEngine
 
                 if (val is INode node)
                 {
+                    dict[$"elementId"] = node.ElementId;
+
+                    dict[$"identity"] = node.ElementId.Split(':')[2];
+
                     foreach (var kvp in node.Properties)
                     {
                         dict[kvp.Key] = kvp.Value;
