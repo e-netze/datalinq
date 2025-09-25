@@ -14,6 +14,7 @@ using E.DataLinq.Web.Razor;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using E.DataLinq.Web.Services.Cache;
+using E.DataLinq.Web.Services.Plugins;
 using E.DataLinq.Web.Services.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,7 +74,9 @@ static public class ServiceCollectionExtensions
                        .AddTransient<DataLinqInfoService>()
                        .AddSingleton<IBinaryCache, BinaryCacheWrapper>()
                        .AddSingletonIfNotExists<IDataLinqAccessProviderService, DataLinqAccessProviderService>()
-                       .AddHostedService<TimedHostedBackgroundService>();
+                       .AddHostedService<TimedHostedBackgroundService>()
+                       .AddTransient<DataLinqFunctionsPlugin>()
+                       .AddTransient<SemanticKernelService>(); ;
     }
 
 

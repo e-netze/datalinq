@@ -257,6 +257,25 @@ public class CodeApiClient
         }
     }
 
+    public async Task<string> AskDataLinqCopilot(string[] questions)
+    {
+        var requestPayload = new { questions = questions };
+        var jsonContent = JsonConvert.SerializeObject(requestPayload);
+
+        using (var content = new StringContent(jsonContent, Encoding.UTF8, "application/json"))
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/askdatalinqcopilot"))
+        {
+            requestMessage.Content = content;
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
+                return responseText;
+            }
+        }
+    }
+
     async public Task<bool> StoreEndPoint(DataLinqEndPoint endPoint)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/endpoint"))

@@ -32,6 +32,7 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly DataLinqEndpointTypeService _endpointTypes;
     private readonly JsLibrariesService _jsLibraries;
     private readonly IDataLinqApiNotificationService _notification;
+    private readonly SemanticKernelService _semanticKernelService;
 
     public DataLinqCodeApiController(ILogger<DataLinqCodeApiController> logger,
                                      IPersistanceProviderService persistanceProvider,
@@ -40,6 +41,7 @@ public class DataLinqCodeApiController : ApiBaseController
                                      IDataLinqCodeIdentityService _identitySerice,
                                      IMonacoSnippetService monacoSnippetService,
                                      JsLibrariesService jsLibraries,
+                                     SemanticKernelService semanticKernelService,
                                      IHostAuthenticationService hostAuthentication = null,
                                      IDataLinqApiNotificationService notification = null)
     {
@@ -52,6 +54,7 @@ public class DataLinqCodeApiController : ApiBaseController
         _jsLibraries = jsLibraries;
         _hostAuthentication = hostAuthentication;
         _notification = notification;
+        _semanticKernelService = semanticKernelService;
     }
 
     #region Get
@@ -189,6 +192,16 @@ public class DataLinqCodeApiController : ApiBaseController
     #endregion
 
     #region Edit (Post)
+
+    [HttpPost]
+    [Route("askdatalinqcopilot")]
+    public async Task<string> AskDataLinqCopilot()
+    {
+        var requestPayload = await Request.FromBody<AskDataLinqCopilotRequest>();
+
+        return await SecureMethodHandler(async () =>
+            await _semanticKernelService.ProcessAsync(requestPayload.Questions));
+    }
 
     [HttpPost]
     [Route("post/endpoint")]

@@ -104,11 +104,13 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
     public async Task<IActionResult> AskDatalinqCopilot([FromForm] string[] questions)
     {
-        var skResponse = await _semanticKernelService.ProcessAsync(questions);
+        if (_client == null)
+        {
+            return base.JsonObject(new { answer = "Service unavailable" });
+        }
 
-        var answer = $"{skResponse}";
-
-        return Json(new { answer }); 
+        var response = await _client.AskDataLinqCopilot(questions);
+        return base.JsonObject(new { answer = response });
     }
 
     #region Api

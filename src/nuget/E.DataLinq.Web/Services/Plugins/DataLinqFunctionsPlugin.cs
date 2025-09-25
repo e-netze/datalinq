@@ -1,32 +1,25 @@
-﻿using E.DataLinq.Core;
-using E.DataLinq.Core.Models;
-using E.DataLinq.Web.Api.Client;
+﻿using E.DataLinq.Core.Services.Persistance.Abstraction;
 using Microsoft.SemanticKernel;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace E.DataLinq.Code.Services.Plugins;
+namespace E.DataLinq.Web.Services.Plugins;
 
 public class DataLinqFunctionsPlugin
 {
-    private readonly CodeApiClient _client;
-    private readonly DataLinqCodeService _dataLinqCode;
+    private readonly IPersistanceProviderService _persistanceProvider;
 
-    public DataLinqFunctionsPlugin(DataLinqCodeService dataLinqCode)
+    public DataLinqFunctionsPlugin(IPersistanceProviderService persistanceProvider)
     {
-        _dataLinqCode = dataLinqCode;
-        _client = _dataLinqCode.ApiClient;
+        _persistanceProvider = persistanceProvider;
     }
 
-public record DataLinqFunctionInfo(string Name, string ShortDescription);
+    public record DataLinqFunctionInfo(string Name, string ShortDescription);
 
     [KernelFunction("get_all_datalinq_functions")]
     [Description("Gets all of the datalinq function names and short descriptions")]
@@ -68,7 +61,7 @@ public record DataLinqFunctionInfo(string Name, string ShortDescription);
                 new("StatisticsTime", "Creates a JavaScript variable with datetime-based values (for charts)."),
                 new("Chart", "Creates a chart from data produced by a Statistics function."),
                 new("Model.CountRecords", "Returns the number of records as a string."),
-                new("Model.ElapsedMilliseconds", "Returns the query execution time in milliseconds as a string."), 
+                new("Model.ElapsedMilliseconds", "Returns the query execution time in milliseconds as a string."),
                 new("Model.Records", "Returns a list of data records as IEnumerable<IDictionary<string, object>>."),
                 new("Model.RecordColumns", "Returns the list of column names from the query."),
                 new("Model.QueryString", "Returns a dictionary of URL parameters."),
@@ -92,8 +85,8 @@ public record DataLinqFunctionInfo(string Name, string ShortDescription);
             "Table" => new(
                 "@DLH.Table()",
                 "@DLH.Table(records,columns,htmlAttributes,row0HtmlAttributes,row1HtmlAttributes,row2HtmlAttributes,cell0HtmlAttributes,cellHtmlAttributes,max)",
-                new() 
-                { 
+                new()
+                {
                     ("records", "IEnumerable<IDictionary<string, object>>","Contains the data of the query of the view",true),
                     ("columns", "IEnumerable<string>","The columns to display in the table",false),
                     ("htmlAttributes", "object","CSS style object for the <table>",false),
@@ -700,9 +693,6 @@ public record DataLinqFunctionInfo(string Name, string ShortDescription);
     [Description("The view id of the datalinq identifier")]
     string part3)
     {
-        if (_client == null)
-            throw new InvalidOperationException("DataLinq endpoint not configured");
-
         if (string.IsNullOrWhiteSpace(part1))
             throw new ArgumentException("Endpoint cannot be null or empty", nameof(part1));
 
@@ -714,7 +704,7 @@ public record DataLinqFunctionInfo(string Name, string ShortDescription);
 
         try
         {
-            var model = await _client.GetEndPointQueryView(part1, part2,part3);
+            var model = await _persistanceProvider.GetEndPointQueryView(part1, part2, part3);
             return model != null ? model.Code : string.Empty;
         }
         catch (Exception ex)
@@ -732,9 +722,6 @@ public record DataLinqFunctionInfo(string Name, string ShortDescription);
     [Description("The query id of the datalinq identifier")]
     string part2)
     {
-        if (_client == null)
-            throw new InvalidOperationException("DataLinq endpoint not configured");
-
         if (string.IsNullOrWhiteSpace(part1))
             throw new ArgumentException("Part1 cannot be null or empty", nameof(part1));
 
@@ -743,7 +730,7 @@ public record DataLinqFunctionInfo(string Name, string ShortDescription);
 
         try
         {
-            var model = await _client.GetEndPointQuery(part1, part2);
+            var model = await _persistanceProvider.GetEndPointQuery(part1, part2);
             return model != null ? model.Statement : string.Empty;
         }
         catch (Exception ex)
@@ -759,15 +746,12 @@ public record DataLinqFunctionInfo(string Name, string ShortDescription);
         [Description("The datalinq endpoint identifier")]
     string part1)
     {
-        if (_client == null)
-            throw new InvalidOperationException("DataLinq endpoint not configured");
-
         if (string.IsNullOrWhiteSpace(part1))
             throw new ArgumentException("Part1 cannot be null or empty", nameof(part1));
 
         try
         {
-            var model = await _client.GetEndPoint(part1);
+            var model = await _persistanceProvider.GetEndPoint(part1);
             return model != null ? JsonSerializer.Serialize(model, new JsonSerializerOptions { WriteIndented = true }) : string.Empty;
 
         }
@@ -780,7 +764,7 @@ public record DataLinqFunctionInfo(string Name, string ShortDescription);
     #region Helpers
     private string formatDataLinqName(string input)
     {
-        return input.ToLower().Replace('_', '-').Replace(" ","");
+        return input.ToLower().Replace('_', '-').Replace(" ", "");
     }
     #endregion
 

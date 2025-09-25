@@ -40,6 +40,9 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+	<PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.65.0" />
+	<PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.65.0" />
+	<PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.65.0" />
 	<PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="3.0.71" />  
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     <PackageReference Include="RazorEngine.NetCore" Version="3.1.0" />

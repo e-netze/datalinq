@@ -35,9 +35,7 @@ static public class ServiceCollectionExtensions
 
         return services.Configure(configAction)
                    .AddTransient<DataLinqCodeService>()
-                   .AddTransient<DataLinqCodeIndentityService>()
-                   .AddTransient<DataLinqFunctionsPlugin>()
-                   .AddTransient<SemanticKernelService>();
+                   .AddTransient<DataLinqCodeIndentityService>();
     }
 
     //static public IServiceCollection AddDataLinqCodeService<TCryptoService,

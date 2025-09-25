@@ -1,6 +1,5 @@
-﻿using E.DataLinq.Code.Services.Plugins;
+﻿using E.DataLinq.Web.Services.Plugins;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
@@ -8,10 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace E.DataLinq.Code.Services;
+namespace E.DataLinq.Web.Services;
 
 public class SemanticKernelService
 {
@@ -28,7 +26,7 @@ public class SemanticKernelService
         kernelBuilder.AddAzureOpenAIChatCompletion(
             "az-openai-gpt4omini-bi-general-prod-sc",
             "https://az-openai-bi-general-prod-sc.openai.azure.com/",
-            "xxxxxxxxxxxxxxxxxxx"
+            "2958d52d3fb94ea2929fd50f72cf7ff3"
             );
 
         _kernel = kernelBuilder.Build();
@@ -135,7 +133,7 @@ public class SemanticKernelService
         var response = await _chat.GetChatMessageContentAsync(
             _history,
             executionSettings: _settings,
-            kernel: _kernel 
+            kernel: _kernel
         );
 
         var content = response.Content ?? string.Empty;
