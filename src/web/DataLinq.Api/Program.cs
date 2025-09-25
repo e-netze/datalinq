@@ -4,6 +4,7 @@ using E.DataLinq.Core.Services.Crypto;
 using E.DataLinq.Core.Services.Persistance;
 using E.DataLinq.Web;
 using E.DataLinq.Web.Extensions.DependencyInjection;
+using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,6 +49,7 @@ builder.Services.AddDataLinqServices<FileSystemPersistanceService, CryptoService
     }
 );
 
+builder.Services.Configure<AiServiceOptions>(builder.Configuration.GetSection(AiServiceOptions.Key));
 builder.Services.AddDefaultDatalinqEngines(builder.Configuration.GetSection("DataLinq.Api:SelectEngines"));
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.Postgres.DbFactoryProvider>();
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.MsSqlServer.MsSqlClientDbFactoryProvider>();

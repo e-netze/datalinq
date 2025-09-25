@@ -1,5 +1,6 @@
 ﻿using E.DataLinq.Web.Services.Plugins;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
@@ -18,16 +19,30 @@ public class SemanticKernelService
     private readonly ChatHistory _history;
     private readonly OpenAIPromptExecutionSettings _settings;
     private readonly IServiceProvider _serviceProvider;
+    private readonly AiServiceOptions _options;
 
-    public SemanticKernelService(IServiceProvider serviceProvider)
+    public SemanticKernelService(IServiceProvider serviceProvider, IOptions<AiServiceOptions> options)
     {
         _serviceProvider = serviceProvider;
+        _options = options.Value;
         IKernelBuilder kernelBuilder = Kernel.CreateBuilder();
-        kernelBuilder.AddAzureOpenAIChatCompletion(
-            "az-openai-gpt4omini-bi-general-prod-sc",
-            "https://az-openai-bi-general-prod-sc.openai.azure.com/",
-            "2958d52d3fb94ea2929fd50f72cf7ff3"
+
+        if (_options.UseAzure)
+        {
+            kernelBuilder.AddAzureOpenAIChatCompletion(
+                _options.AzureOpenAi.DeploymentName,
+                _options.AzureOpenAi.Endpoint,
+                _options.AzureOpenAi.ApiKey
             );
+        }
+        else
+        {
+            kernelBuilder.AddOpenAIChatCompletion(
+                    _options.OpenAi.ModelId,
+                    _options.OpenAi.ApiKey,
+                    _options.OpenAi.ServiceUrl
+                );
+        }
 
         _kernel = kernelBuilder.Build();
         _chat = _kernel.GetRequiredService<IChatCompletionService>();
