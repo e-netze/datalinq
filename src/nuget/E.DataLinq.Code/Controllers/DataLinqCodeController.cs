@@ -22,19 +22,16 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     private readonly DataLinqCodeService _dataLinqCode;
     private readonly IDataLinqAccessTreeService _accessTree;
     private readonly ICryptoService _crypto;
-    private readonly SemanticKernelService _semanticKernelService;
 
     public DataLinqCodeController(DataLinqCodeService dataLinqCode,
                                   IDataLinqAccessTreeService accessTree,
-                                  ICryptoService crypto,
-                                  SemanticKernelService semanticKernelService)
+                                  ICryptoService crypto)
         : base()
     {
         _dataLinqCode = dataLinqCode;
         _client = _dataLinqCode.ApiClient;
         _accessTree = accessTree;
         _crypto = crypto;
-        _semanticKernelService = semanticKernelService;
     }
 
     public IActionResult Index()
