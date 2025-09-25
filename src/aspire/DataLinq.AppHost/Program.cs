@@ -1,10 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var dataLinqCode = builder.AddProject<Projects.DataLinq_Code>("datalinq-code").WithEndpoint("https", e =>
-{
-    e.Port = 57654;
-    e.UriScheme = "https";
-});
+var dataLinqCode = builder.AddProject<Projects.DataLinq_Code>("datalinq-code").WithHttpsEndpoint();
 var datdaLinqApi = builder.AddProject<Projects.DataLinq_Api>("datalinq-api");
 
 dataLinqCode.WithEnvironment(e =>
