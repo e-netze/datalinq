@@ -7,4 +7,5 @@ public interface IDataLinqUser
     string Username { get; }
 
     IEnumerable<string> Userroles { get; }
+    IEnumerable<string> UserrolesParameters { get; }
 }
