@@ -1669,6 +1669,23 @@ public class DataLinqHelper : IDataLinqHelper
              .Userroles?
              .Any(r => r.Equals(roleName, StringComparison.InvariantCultureIgnoreCase)) == true;
 
+    [HelpDescription("Liefert den Wert eines Rollenparameters zurück, zB GKZ (Gemeindekennzahl). Rollenparameter werden nur in speziellen Authentication Umgebungen wie PVP unterstützt.")]
+    public string GetUserClaim(
+        [HelpDescription("Name des Claims, dessen Wert zurückgegeben werden soll, zB GKZ")]
+        string claimName,
+        [HelpDescription("Gibt an, ob bei der Suche nach dem Claim auf Groß-/Kleinschreibung geachtet werden soll (true) oder nicht (false). Standardwert ist true.")]
+        bool caseSensitiv = true)
+    {
+        var claimValue = _ui?
+            .Claims?
+            .Where(p => p?.StartsWith($"{claimName}=", caseSensitiv ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase) == true)
+            .FirstOrDefault()?
+            .Substring(claimName.Length + 1)
+            .Trim() ?? "";
+
+        return claimValue;
+    }
+
     //[HelpDescription("Gibt alle HTTP Request Header Namen zurück")]
     //public IEnumerable<string> GetRequestHeaders()
     //    => _httpContext?.Request?.Headers?.Keys ?? Enumerable.Empty<string>();
