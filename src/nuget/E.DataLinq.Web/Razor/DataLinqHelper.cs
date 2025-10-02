@@ -8,6 +8,7 @@ using E.DataLinq.Web.Services.Abstraction;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Dynamic;
@@ -109,6 +110,50 @@ public class DataLinqHelper : IDataLinqHelper
         sb.Append("</script>");
 
         return _razor.RawString(sb.ToString());
+    }
+
+    public string[] GetCypherPath(string startNode, IDictionary<string, object> endNode, IEnumerable<IDictionary<string, object>> records)
+    {
+        var pathList = new List<string>() { startNode };
+
+        var relsValue = endNode["rels"];
+
+        if (relsValue is IList relsList && relsList.Count > 0)
+        {
+            var nodeDict = new Dictionary<string, string>();
+            foreach (var record in records)
+            {
+                string identity = record["identity"]?.ToString();
+                string displayName = record["displayname"]?.ToString() ?? "Unknown";
+                if (!string.IsNullOrEmpty(identity))
+                {
+                    nodeDict[identity] = displayName;
+                }
+            }
+
+            foreach (var relObj in relsList)
+            {
+                try
+                {
+                    var endNodeIdProperty = relObj.GetType().GetProperty("EndNodeId");
+                    if (endNodeIdProperty != null)
+                    {
+                        var endNodeIdValue = endNodeIdProperty.GetValue(relObj);
+                        string endNodeId = endNodeIdValue?.ToString();
+
+                        if (!string.IsNullOrEmpty(endNodeId) && nodeDict.ContainsKey(endNodeId))
+                        {
+                            pathList.Add(nodeDict[endNodeId]);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    pathList.Add(" [Error: " + ex.Message + "]");
+                }
+            }
+        }
+        return pathList.ToArray();
     }
 
     [HelpDescription("Die Methode lädt die Records aus der angegeben Query (endpoint@query). Die Abfrage passiert serverseitig während des Renderns der Seite.")]
@@ -424,7 +469,7 @@ public class DataLinqHelper : IDataLinqHelper
         foreach (string filterParameter in filterParameters.Keys)
         {
             var filterProperties = ToDictionary(filterParameters[filterParameter]);
-            sb.Append("<div class='datalinq-filter-field-wrapper'>");            
+            sb.Append("<div class='datalinq-filter-field-wrapper'>");
 
             if (filterProperties != null && filterProperties.ContainsKey("source"))
             {
