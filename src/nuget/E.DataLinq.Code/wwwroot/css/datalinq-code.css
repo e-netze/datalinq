@@ -1985,6 +1985,14 @@ body.colorscheme-light .datalinq-autocomplete-multiselect .datalinq-autocomplete
     color: black;
 }
 
+.datalinq-code-modal.colorscheme-light .datalinq-code-app-prefixes .datalinq-code-app-prefix .text {
+    color: black;
+}
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-app-prefixes .datalinq-code-app-prefix {
+    background-image: url(img/endpoint_16@1_light.png);
+}
+
 .datalinq-code-modal.colorscheme-light .datalinq-code-messagebox-content {
     color: black;
 }

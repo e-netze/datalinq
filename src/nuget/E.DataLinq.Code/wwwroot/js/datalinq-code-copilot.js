@@ -10,6 +10,17 @@ async function CopilotInitializer() {
     if (controllerTargetUrl === undefined) {
         controllerTargetUrl = window.location.origin;
 
+        const theme = sessionStorage.getItem('editorTheme');
+
+        document.body.classList.toggle('colorscheme-light', theme === 'vs');
+
+        window.addEventListener('message', function (event) {
+            const data = event.data;
+            if (data && typeof data.theme === 'string') {
+                document.body.classList.toggle('colorscheme-light', data.theme === 'vs');
+            }
+        });
+
         const urlParams = new URLSearchParams(window.location.search);
         dlToken = urlParams.get("dl_token") || null;
 

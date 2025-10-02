@@ -171,6 +171,11 @@ var dataLinqCode = new function ($) {
             ide.find('iframe').each(function () {
                 this.contentWindow.postMessage({ theme: _editorTheme }, '*');
             });
+
+            const helpFrame = document.getElementById('help-frame');
+            if (helpFrame && helpFrame.contentWindow) {
+                helpFrame.contentWindow.postMessage({ theme: _editorTheme }, '*');
+            }
         }, this);
 
 

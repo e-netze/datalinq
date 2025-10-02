@@ -462,3 +462,70 @@ html, body {
             font-size: 14px;
         }
 }
+
+/* Light Mode*/
+body.colorscheme-light {
+    background: #ffffff;
+    color: #000000;
+}
+
+    body.colorscheme-light .topbar {
+        background: #ffffff;
+    }
+
+    body.colorscheme-light .topbar-title {
+        color: #000000;
+    }
+
+    body.colorscheme-light #copilot-intro img {
+        content: url('img/datalinq_copilot_black.png'); /* new image for light mode */
+    }
+
+    /* Light mode overrides */
+    body.colorscheme-light .copilot-paragraph {
+        color: #000000; /* light-mode text */
+    }
+
+    body.colorscheme-light #copilot-intro h4.copilot-heading {
+        color: #555555; /* muted heading in light mode */
+    }
+
+    body.colorscheme-light .copilot-chip {
+        color: #000000;
+        background-color: #f0f0f0;
+    }
+
+    body.colorscheme-light #copilot-chat-history {
+        color: #000000;
+        background-color: #f8f8f8;
+    }
+
+    body.colorscheme-light #copilot-input {
+        background-color: #f8f8f8;
+    }
+
+    body.colorscheme-light #copilot-submit {
+        color: #000000;
+        background-color: #e0e0e0;
+    }
+
+    body.colorscheme-light .copilot-input-wrap {
+        background-color: #f0f0f0;
+    }
+
+    body.colorscheme-light .copilot-hints {
+        color: #555555;
+    }
+
+    body.colorscheme-light #copilot-input textarea {
+        color: black;
+    }
+
+    body.colorscheme-light .user-message {
+        background: #5badff;
+        color: white;
+    }
+
+    body.colorscheme-light .assistant-message {
+        background: #e0e0e0;
+    }
