@@ -50,6 +50,7 @@ builder.Services.AddDataLinqServices<FileSystemPersistanceService, CryptoService
 );
 
 builder.Services.Configure<AiServiceOptions>(builder.Configuration.GetSection(AiServiceOptions.Key));
+builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection(AgentOptions.Key));
 builder.Services.AddDefaultDatalinqEngines(builder.Configuration.GetSection("DataLinq.Api:SelectEngines"));
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.Postgres.DbFactoryProvider>();
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.MsSqlServer.MsSqlClientDbFactoryProvider>();

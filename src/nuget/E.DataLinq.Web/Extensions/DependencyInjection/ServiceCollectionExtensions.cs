@@ -75,8 +75,10 @@ static public class ServiceCollectionExtensions
                        .AddSingleton<IBinaryCache, BinaryCacheWrapper>()
                        .AddSingletonIfNotExists<IDataLinqAccessProviderService, DataLinqAccessProviderService>()
                        .AddHostedService<TimedHostedBackgroundService>()
-                       .AddTransient<DataLinqFunctionsPlugin>()
-                       .AddTransient<SemanticKernelService>(); ;
+                       .AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
+
+        .AddTransient<DataLinqFunctionsPlugin>()
+        .AddTransient<SemanticKernelService>();
     }
 
 

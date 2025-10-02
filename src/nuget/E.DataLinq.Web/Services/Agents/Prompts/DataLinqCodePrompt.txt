@@ -1,0 +1,3 @@
+Help the user with ur Plugins from DataLinqFunctionsPlugin with the handeling of DataLinq Helper functions.
+
+User question: {{$question}}
