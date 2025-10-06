@@ -112,22 +112,24 @@ public class DataLinqHelper : IDataLinqHelper
         return _razor.RawString(sb.ToString());
     }
 
-    public string[] GetCypherPath(string startNode, IDictionary<string, object> endNode, IEnumerable<IDictionary<string, object>> records, bool reverse)
+    public IDictionary<string, object>[] GetCypherPath(string startNode, IDictionary<string, object> endNode, IEnumerable<IDictionary<string, object>> records, bool reverse)
     {
-        var pathList = new List<string>() { startNode };
+        var pathList = new List<IDictionary<string, object>>();
+
+        var startNodeDict = new Dictionary<string, object> { ["id"] = startNode, ["displayname"] = "Start Node" };
+        pathList.Add(startNodeDict);
 
         var relsValue = endNode["rels"];
 
         if (relsValue is IList relsList && relsList.Count > 0)
         {
-            var nodeDict = new Dictionary<string, string>();
+            var nodeDict = new Dictionary<string, IDictionary<string, object>>();
             foreach (var record in records)
             {
                 string identity = record["identity"]?.ToString();
-                string displayName = record["id"]?.ToString() ?? "Unknown";
                 if (!string.IsNullOrEmpty(identity))
                 {
-                    nodeDict[identity] = displayName;
+                    nodeDict[identity] = record;
                 }
             }
 
@@ -149,10 +151,12 @@ public class DataLinqHelper : IDataLinqHelper
                 }
                 catch (Exception ex)
                 {
-                    pathList.Add(" [Error: " + ex.Message + "]");
+                    var errorNode = new Dictionary<string, object> { ["error"] = ex.Message };
+                    pathList.Add(errorNode);
                 }
             }
         }
+
         return pathList.ToArray();
     }
 
