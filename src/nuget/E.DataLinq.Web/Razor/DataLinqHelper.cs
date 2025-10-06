@@ -112,7 +112,7 @@ public class DataLinqHelper : IDataLinqHelper
         return _razor.RawString(sb.ToString());
     }
 
-    public string[] GetCypherPath(string startNode, IDictionary<string, object> endNode, IEnumerable<IDictionary<string, object>> records)
+    public string[] GetCypherPath(string startNode, IDictionary<string, object> endNode, IEnumerable<IDictionary<string, object>> records, bool reverse)
     {
         var pathList = new List<string>() { startNode };
 
@@ -124,7 +124,7 @@ public class DataLinqHelper : IDataLinqHelper
             foreach (var record in records)
             {
                 string identity = record["identity"]?.ToString();
-                string displayName = record["displayname"]?.ToString() ?? "Unknown";
+                string displayName = record["id"]?.ToString() ?? "Unknown";
                 if (!string.IsNullOrEmpty(identity))
                 {
                     nodeDict[identity] = displayName;
@@ -135,7 +135,7 @@ public class DataLinqHelper : IDataLinqHelper
             {
                 try
                 {
-                    var endNodeIdProperty = relObj.GetType().GetProperty("EndNodeId");
+                    var endNodeIdProperty = relObj.GetType().GetProperty(reverse ? "StartNodeId" : "EndNodeId");
                     if (endNodeIdProperty != null)
                     {
                         var endNodeIdValue = endNodeIdProperty.GetValue(relObj);
