@@ -570,3 +570,79 @@ div.datalinq-filter-field-wrapper:focus {
 a.jsoneditor-poweredBy {
     display: none !important;
 }
+.datalinq-quicksearch-search-container {
+    width: calc(100% - 120px); /* Account for the button being 60px outside */
+    box-sizing: border-box;
+    margin-right: -60px; /* Pull it back so it doesn't create scrollbar */
+}
+
+.datalinq-quicksearch-search-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.datalinq-quicksearch-search-input {
+    width: 100%;
+    padding: 18px 60px 18px 55px;
+    font-size: 16px;
+    border: 2px solid #82C828;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    color: #333;
+    outline: none;
+}
+
+    .datalinq-quicksearch-search-input::placeholder {
+        color: #999;
+    }
+
+    .datalinq-quicksearch-search-input:focus {
+        background: #ffffff;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+        transform: translateY(-2px);
+    }
+
+.datalinq-quicksearch-search-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #667eea;
+    pointer-events: none;
+}
+
+.datalinq-quicksearch-clear-button {
+    position: absolute;
+    right: -60px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #82C828;
+    background: #b5dbad;
+    color: #666;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+    .datalinq-quicksearch-clear-button:hover {
+        background: #e0e0e0;
+        color: #333;
+    }
+
+.datalinq-quicksearch-search-input:not(:placeholder-shown) ~ .datalinq-quicksearch-clear-button {
+    opacity: 1;
+    visibility: visible;
+}

@@ -707,6 +707,71 @@ public class DataLinqHelper : IDataLinqHelper
     }
 
     /// <summary>
+    /// de: Erstellt eine Schnellsuchleiste zum durchsuchen einer DataLinq Tabelle.
+    /// en: Creates a quick search bar for additional querying of a DataLinq table.
+    /// </summary>
+    /// <param name="columns">
+    /// de: Die zu durchsuchenden Spalten.
+    /// en: The searchable columns.
+    /// </param>
+    /// <param name="placeholder">
+    /// de: Der platzhalter innerhalb der Suchleiste.
+    /// en: The placeholder inside of the searchbar.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button ((z.B.: new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object containing HTML attributes for the button ((e.g., new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <param name="isOpen">
+    /// de: Boolscher Wert, der angibt, ob der Fokus direkt auf das Suchfeld gerichtet sein soll..
+    /// en: A boolean value indicating whether the input field should be focused directly.
+    /// </param>
+    /// <returns>
+    /// de: Gibt das generierte HTML für die Schnellsuchleiste zurück.
+    /// en: Returns the generated HTML for the quick search bar.
+    /// </returns>
+    public object QuickSearch(
+        string[] columns,
+        string placeholder = "Search for anything...",
+        object htmlAttributes = null,
+        bool isOpen = false)
+    {
+        return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendDiv(div =>
+                    {
+                        div.AddAttributes(htmlAttributes);
+                        div.AddClass("datalinq-quicksearch-search-container");
+                        div.AddAttribute("datalinq-quicksearch-columns", String.Join(',', columns));
+                        div.AppendDiv(div2 =>
+                        {
+                            div2.AddClass("datalinq-quicksearch-search-wrapper");
+                            div2.Content("<svg class=\"datalinq-quicksearch-search-icon\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\r\n    //            <circle cx = \"11\" cy=\"11\" r=\"8\"></circle>\r\n    //            <path d = \"m21 21-4.35-4.35\" ></ path >\r\n    //        </ svg >");
+                            div2.AppendInput(input =>
+                            {
+                                input.AddAttribute("type", "text");
+                                input.AddClass("datalinq-quicksearch-search-input");
+                                input.AddAttribute("placeholder", placeholder);
+                                input.AddAttribute("id", "datalinq-quicksearch-searchInput");
+                                input.AddAttribute("oninput", "dataLinq.onSearchInput(this)");
+
+                                if (isOpen)
+                                    input.AddAttribute("autofocus", "autofocus");
+                            });
+                            div2.AppendButton(button =>
+                            {
+                                button.AddClass("datalinq-quicksearch-clear-button");
+                                button.AddAttribute("id", "datalinq-quicksearch-clearButton");
+                                button.AddAttribute("onclick", "dataLinq.deleteQuicksearch(this)");
+                                button.Content("×");
+                            });
+                        });
+                    })
+                    .BuildHtmlString()
+            );
+    }
+
+    /// <summary>
     /// de: Die Methode erzeugt ein Steuerelement zum Filtern eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Eingabefelder/Auswahllisten bestimmen, nach welchen Eigenschaften gefiltert wird. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde, aktualisiert.
     /// en: The method generates a control for filtering a view. The element expands when a button is clicked. The user can then select which properties to filter by using input fields or dropdown lists. Once the options are confirmed, the view containing the control will be updated.
     /// </summary>
@@ -2039,7 +2104,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// </returns>
     public object StatisticsGroupBy(
         IDictionary<string, object>[] records,
-                string jsVariableName,
+        string jsVariableName,
         string field,
         OrderField orderField = OrderField.Non)
     {

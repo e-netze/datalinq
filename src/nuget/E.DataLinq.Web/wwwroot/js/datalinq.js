@@ -431,6 +431,75 @@ var dataLinq = new function () {
         dataLinq.updateViewFilter(sender);
     };
 
+    this.deleteQuicksearch = function (elem) {
+        var $input = $(elem).closest('.datalinq-quicksearch-search-wrapper')
+            .find('.datalinq-quicksearch-search-input');
+
+        $input.val('')
+            .trigger('input')
+            .focus();
+    };
+
+    this.onSearchInput = function (elem) {
+        var value = $(elem).val().toLowerCase().trim();
+
+        var columns = $(elem).closest('.datalinq-quicksearch-search-container')
+            .attr('datalinq-quicksearch-columns')
+            .split(',');
+
+        var $table = $(elem).closest('.datalinq-quicksearch-search-container').next('table');
+
+        if ($table.length === 0) {
+            console.warn('No table found below search container');
+            return;
+        }
+
+        var $headerRow = $table.find('thead th, thead td');
+        var hasTheadStructure = $headerRow.length > 0;
+
+        if (!hasTheadStructure) {
+            $headerRow = $table.find('tr').first().find('th, td');
+        }
+
+        var columnIndices = [];
+        $headerRow.each(function (index) {
+            var headerText = $(this).text().trim();
+            if (columns.indexOf(headerText) !== -1) {
+                columnIndices.push(index);
+            }
+        });
+
+        if (columnIndices.length === 0) {
+            console.warn('None of the specified columns found in table:', columns);
+            return;
+        }
+
+        var $rows;
+        if (hasTheadStructure) {
+            $rows = $table.find('tbody tr');
+        } else {
+            $rows = $table.find('tr:not(:first)');
+        }
+
+        $rows.each(function () {
+            var $row = $(this);
+            var matchFound = false;
+
+            for (var i = 0; i < columnIndices.length; i++) {
+                var cellText = $row.find('td, th').eq(columnIndices[i]).text().toLowerCase();
+                if (cellText.indexOf(value) !== -1) {
+                    matchFound = true;
+                    break; 
+                }
+            }
+
+            if (matchFound || value === '') {
+                $row.show();
+            } else {
+                $row.hide();
+            }
+        });
+    };
 
     this.refresh = function (elem) {
         var $e = $(elem).closest('.datalinq-include, .datalinq-include-click').removeClass('datalinq-include-click-loaded');
