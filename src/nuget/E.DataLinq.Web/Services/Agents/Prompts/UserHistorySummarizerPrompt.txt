@@ -10,7 +10,7 @@ Inputs:
 - Latest user message:
 {{$lastQuestion}}
 
-- Full chat history (oldest → newest):
+- Full chat history (oldest -> newest):
 {{$history}}
 
 Instructions:

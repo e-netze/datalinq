@@ -1,13 +1,11 @@
 ﻿using E.DataLinq.Web.Services.Abstraction;
 using E.DataLinq.Web.Services.Agents;
+using E.DataLinq.Web.Services.Plugins;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
-using Microsoft.SemanticKernel.Agents.Orchestration;
 using Microsoft.SemanticKernel.Agents.Orchestration.GroupChat;
 using Microsoft.SemanticKernel.Agents.Runtime.InProcess;
-using Microsoft.SemanticKernel.ChatCompletion;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 
@@ -15,52 +13,50 @@ using System.Threading.Tasks;
 public class SemanticKernelService
 {
     private readonly ISemanticKernelFactory _skFactory;
-    private readonly DataLinqAgentFactory _dataLinqAgentFactory;
     private readonly IAgent<string[], string> _userHistorySummarizerAgent;
-    ChatHistory history = [];
-    public SemanticKernelService(ISemanticKernelFactory skFactory, IAgent<string[], string> userHistorySummarizerAgent, DataLinqAgentFactory dataLinqAgentFactory)
+    private readonly ChatCompletionAgent _dataLinqCodeAgent;
+    private readonly ChatCompletionAgent _dataLinqQueryAgent;
+    private readonly ChatCompletionAgent _dataLinqEndpointAgent;
+    private readonly ChatCompletionAgent _dataLinqGeneralAgent;
+
+    public SemanticKernelService(
+        ISemanticKernelFactory skFactory,
+        IAgent<string[], string> userHistorySummarizerAgent,
+        DataLinqAgentFactory dataLinqAgentFactory)
     {
         _skFactory = skFactory;
         _userHistorySummarizerAgent = userHistorySummarizerAgent;
-        _dataLinqAgentFactory = dataLinqAgentFactory;
+
+        _dataLinqCodeAgent = dataLinqAgentFactory.CreateAgent("DataLinqCodeAgent","DataLinq View and Code expert agent.",typeof(DataLinqHelperFunctionsPlugin),typeof(DataLinqViewPlugin));
+        _dataLinqQueryAgent = dataLinqAgentFactory.CreateAgent("DataLinqQueryAgent","DataLinq Query and Database expert agent.",typeof(DataLinqQueryPlugin));
+        _dataLinqEndpointAgent = dataLinqAgentFactory.CreateAgent("DataLinqEndpointAgent","DataLinq Endpoint and parameterization expert agent.",typeof(DataLinqEndpointPlugin));
+        _dataLinqGeneralAgent = dataLinqAgentFactory.CreateAgent("DataLinqGeneralAgent","DataLinq general information agent");
     }
 
     public async Task<string> ProcessAsync(string[] userChatHistory)
     {
-        Kernel kernel = _skFactory.CreateKernel();
+        var kernel = _skFactory.CreateKernel();
 
-        var dataLinqCodeAgent = _dataLinqAgentFactory.CreateAgent("DataLinqCodeAgent", "DataLinq View and Code expert agent.");
-        var dataLinqQueryAgent = _dataLinqAgentFactory.CreateAgent("DataLinqQueryAgent", "DataLinq Query and Database expert agent.");
-        var dataLinqEndpointAgent = _dataLinqAgentFactory.CreateAgent("DataLinqEndpointAgent", "DataLinq Endpoint and parameterization expert agent.");
-        var dataLinqOrchestrator = new CustomGroupChatManager
+        var dataLinqOrchestrator = new DataLinqCopilotOrchestrator
         {
             MaximumInvocationCount = 5,
             UserHistory = userChatHistory,
             Kernel = kernel
         };
 
-        GroupChatOrchestration orchestration = new GroupChatOrchestration(
+        var orchestration = new GroupChatOrchestration(
             dataLinqOrchestrator,
-            dataLinqCodeAgent, 
-            dataLinqQueryAgent, 
-            dataLinqEndpointAgent)
-        {
-            ResponseCallback = responseCallback,
-        };
+            _dataLinqCodeAgent,
+            _dataLinqQueryAgent,
+            _dataLinqEndpointAgent,
+            _dataLinqGeneralAgent);
 
-        InProcessRuntime runtime = new InProcessRuntime();
+        var userHistoryQuestionSummary = await _userHistorySummarizerAgent.RunAsync(userChatHistory);
+
+        var runtime = new InProcessRuntime();
         await runtime.StartAsync();
 
-        var result = await orchestration.InvokeAsync(await _userHistorySummarizerAgent.RunAsync(userChatHistory), runtime);
-
-        string output = await result.GetValueAsync(TimeSpan.FromSeconds(60));
-
-        return output;
-    }
-
-    ValueTask responseCallback(ChatMessageContent response)
-    {
-        history.Add(response);
-        return ValueTask.CompletedTask;
+        var result = await orchestration.InvokeAsync(userHistoryQuestionSummary, runtime);
+        return await result.GetValueAsync(TimeSpan.FromSeconds(60));
     }
 }

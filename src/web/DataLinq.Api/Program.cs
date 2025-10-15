@@ -10,6 +10,7 @@ using E.DataLinq.Web.Services.Abstraction;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile(Path.Combine("_config", "datalinq.api.json"), optional: false, reloadOnChange: false);
+builder.Configuration.AddUserSecrets<Program>();
 
 builder.AddServiceDefaults();
 builder.Services.AddControllersWithViews();

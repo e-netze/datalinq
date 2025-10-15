@@ -36,5 +36,25 @@
         "EndPointParameters": "*,_*"
       }
     ]
+  },
+  "AiService": {
+    "UseAzure": false,
+    "AzureOpenAi": {
+      "DeploymentName": "",
+      "Endpoint": "",
+      "ApiKey": ""
+    },
+    "OpenAi": {
+      "ModelId": "",
+      "ApiKey": "",
+      "ServiceUrl": ""
+    }
+  },
+  "Agent": {
+    "DataLinqQueryAgent": "../../nuget/E.Datalinq.Web/Services/Agents/Prompts/DataLinqQueryPrompt.txt",
+    "DataLinqCodeAgent": "../../nuget/E.Datalinq.Web/Services/Agents/Prompts/DataLinqCodePrompt.txt",
+    "DataLinqEndpointAgent": "../../nuget/E.Datalinq.Web/Services/Agents/Prompts/DataLinqEndpointPrompt.txt",
+    "DataLinqGeneralAgent": "../../nuget/E.Datalinq.Web/Services/Agents/Prompts/DataLinqGeneralPrompt.txt",
+    "UserHistorySummarizerAgent": "../../nuget/E.Datalinq.Web/Services/Agents/Prompts/UserHistorySummarizerPrompt.txt"
   }
 }
