@@ -197,7 +197,13 @@ static public class ServiceCollectionExtensions
                 {
                     Name=JsLibNames.D3_7x,
                     Description = "D3 Charting Library v7.9.0"
-                }
+                },
+
+                new()
+                {
+                    Name = JsLibNames.Mermaid,
+                    Description = "Mermaid"
+                },
             };
         });
 

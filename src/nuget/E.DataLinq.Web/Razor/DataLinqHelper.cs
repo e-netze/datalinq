@@ -116,8 +116,6 @@ public class DataLinqHelper : IDataLinqHelper
     {
         var pathList = new List<IDictionary<string, object>>();
 
-        var startNodeDict = new Dictionary<string, object> { ["id"] = startNode, ["displayname"] = "Start Node" };
-        pathList.Add(startNodeDict);
 
         var relsValue = endNode["rels"];
 
@@ -133,6 +131,16 @@ public class DataLinqHelper : IDataLinqHelper
                 }
             }
 
+            var startRecord = nodeDict.Values
+                .FirstOrDefault(r => r.TryGetValue("id", out var v) &&
+                                        v is not null &&
+                                        string.Equals(v.ToString(), startNode, StringComparison.OrdinalIgnoreCase));
+
+            if (startRecord != null)
+            {
+                pathList.Add(startRecord);
+            }
+            
             foreach (var relObj in relsList)
             {
                 try
