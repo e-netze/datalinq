@@ -21,8 +21,9 @@ public class DataLinqCompilerService
     private readonly IEnumerable<IRazorCompileEngineService> _razorEngines;
     private readonly DataLinqOptions _options;
 
-    public DataLinqCompilerService(IEnumerable<IRazorCompileEngineService> razorEngines,
-                                   IOptionsMonitor<DataLinqOptions> optionsMonitor)
+    public DataLinqCompilerService(
+            IEnumerable<IRazorCompileEngineService> razorEngines,
+            IOptionsMonitor<DataLinqOptions> optionsMonitor)
     {
         _options = optionsMonitor.CurrentValue;
         _razorEngines = razorEngines;

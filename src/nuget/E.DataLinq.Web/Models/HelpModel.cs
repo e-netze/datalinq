@@ -12,4 +12,6 @@ public class HelpModel
     public List<ClassHelp> Classes { get; }
 
     public string Selected { get; set; }
+
+    public string SelectedLanguage { get; set; }
 }

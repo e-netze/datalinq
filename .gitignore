@@ -369,3 +369,4 @@ FodyWeavers.xsd
 
 # Secrets
 **/*.HiddenSecrets.cs
+/src/web/DataLinq.Api/datalinq_helpers_for_copilot.json

@@ -23,8 +23,9 @@ public class DataLinqEngine : IDataLinqSelectEngine
 
         // reuse http client...
         _httpClient = _httpClient ?? new HttpClient(
-                new HttpClientHandler { 
-                    UseDefaultCredentials = true 
+                new HttpClientHandler
+                {
+                    UseDefaultCredentials = true
                 }
             );
     }

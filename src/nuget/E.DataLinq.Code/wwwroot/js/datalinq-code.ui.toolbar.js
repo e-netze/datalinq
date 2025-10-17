@@ -89,6 +89,16 @@
             .addClass('datalinq-code-toolbutton help')
             .appendTo($parent);
 
+        $("<div><div class='text'>Datalinq Sandbox</div></div>")
+            .data('event', 'toggle-sandbox')
+            .addClass('datalinq-code-toolbutton sandbox')
+            .appendTo($parent);
+
+        $("<div><div class='text'>Datalinq Copilot</div></div>")
+            .data('event', 'toggle-copilot')
+            .addClass('datalinq-code-toolbutton copilot')
+            .appendTo($parent);
+
         var $logout = $("<div>")
             .data('event', 'logout')
             .addClass('datalinq-code-toolbutton logout')

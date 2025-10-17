@@ -1,21 +1,40 @@
 html {
     font-size: 14px;
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    line-height: 1.4em;
 }
 
+body {
+    background-color: #333;
+    color: #f0f0f0;
+}
+
+a {
+    color: #5badff;
+}
+
+td {
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid #555;
+    padding: 0px 8px;
+}
 .method-def {
     font-family: Consolas,Courier,monospace;
-    border: 3px solid #ccc;
+    border: 3px solid #777;
+    border-radius: 5px;
     padding: 15px;
     border-radius: 3px;
+    color: #56b6c2;
 }
 
     .method-def .keyword {
-        color: blue;
+        color: #e06c75;
     }
 
     .method-def .literal {
-        color: #A31515;
+        color: #e5c076;
     }
 
 .descr-code {
@@ -23,7 +42,11 @@ html {
     border: 1px solid #ccc;
     padding: 5px;
     border-radius: 3px;
-    background: #cfefef;
+    background: #444;
+}
+
+.parameter-name {
+    color: #56b6c2;
 }
 
 button.copy-button {

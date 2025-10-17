@@ -3,12 +3,9 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
 using E.DataLinq.Core.Models;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Primitives;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using System.Text;
 using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace E.DataLinq.Test.DataLinqWeb.IntegrationTests;
 
@@ -175,7 +172,7 @@ public class DataLinqCodeCodeApiControllerTests
         string endPointId = "integration-test-endpoint";
         string queryId = "integration-test-query";
 
-        await CreateQuery(endPointId,queryId);
+        await CreateQuery(endPointId, queryId);
 
         string requestUrl = $"{_clientAuthorized.BaseAddress}datalinqcodeapi/get/{endPointId}/{queryId}";
 
@@ -193,7 +190,7 @@ public class DataLinqCodeCodeApiControllerTests
         Assert.IsNotNull(deserializedModel, "Model should not be null");
         Assert.AreEqual(queryId, deserializedModel.QueryId, "Property value mismatch");
 
-        await DeleteQuery(endPointId,queryId);
+        await DeleteQuery(endPointId, queryId);
     }
 
     [TestMethod]
@@ -1595,7 +1592,7 @@ public class DataLinqCodeCodeApiControllerTests
 
         var response = await _clientAuthorized.SendAsync(requestMessage);
 
-        await DeleteQuery(endpoint,query);
+        await DeleteQuery(endpoint, query);
     }
 
     public async Task CreateCssEndpoint(string endpoint, string css)

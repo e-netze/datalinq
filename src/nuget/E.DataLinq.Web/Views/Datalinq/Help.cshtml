@@ -7,18 +7,61 @@
     Layout = "~/Views/Shared/_Layout_empty-datalinq.cshtml";
 }
 
+@{
+    var currentLang = Model.SelectedLanguage ?? "en";
+}
+
  <script src="@(ViewData["contentRootUrl"])/js/datalinq.help.js"></script>
 
 <style>
     td {
         border: 1px solid #d4d4d4;
     }
+
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-container h2 {
+        margin: 0;
+    }
+
+    .language-selector {
+        margin-left: 10px; 
+    }
+
+    .language-selector select {
+        font-size: 14px;
+        padding: 5px;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .language-selector select:focus {
+        outline: none;
+        border-color: #007bff;
+    }
+
 </style>
+
 <link href="@(ViewData["contentRootUrl"])/css/datalinq/help.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
 
 @if (String.IsNullOrWhiteSpace(Model.Selected))
 {
-    <h2>DataLinq</h2>
+    <div class="header-container">
+        <h2>DataLinq</h2>
+        <div class="language-selector">
+            <select id="languageSelector" onchange="changeLanguage(this)">
+                <option value="en" @(currentLang == "en" ? "selected" : "")>EN</option>
+                <option value="de" @(currentLang == "de" ? "selected" : "")>DE</option>
+            </select>
+        </div>
+    </div>
+    <br />
 
     <input type='text' class='content-search' placeholder='Search...' />
 
@@ -38,7 +81,7 @@
                 {
                     <tr class="searchable-content">
                         <td>
-                            <a href="help?selected=@(classHelp.Name + "." + methodName)">@methodName</a>
+                            <a href="help?selected=@(classHelp.Name + "." + methodName)&lang=@currentLang">@methodName</a>
                         </td>
                         <td>
                             <p>@method.Description.Split('.')[0]</p>
@@ -61,7 +104,7 @@
                     {
                         <tr class="searchable-content">
                             <td>
-                                <a href="help?selected=@(classHelp.Name + "." + methodName)">@methodName</a>
+                                <a href="help?selected=@(classHelp.Name + "." + methodName)&lang=@currentLang">@methodName</a>
                             </td>
                             <td>
                                 <p>@method.Description.Split('.')[0]</p>
@@ -75,7 +118,7 @@
 }
 else
 {
-    <a href="@(HostUrlHelper.HostAppRootUrl())/datalinq/help">&lt;&lt; All Methods</a>
+    <a href="@(HostUrlHelper.HostAppRootUrl())/datalinq/help?lang=@currentLang">&lt;&lt; All Methods</a>
 
     <h1>@Model.Selected</h1>
 
@@ -83,3 +126,27 @@ else
 
     @Html.Raw(helpClass.ToHtmlString(Model.Selected.Split('.')[1]))
 }
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var storedLang = sessionStorage.getItem("selectedLang");
+        var currentLang = document.getElementById("languageSelector").value;
+
+        if (storedLang && storedLang !== currentLang) {
+            document.getElementById("languageSelector").value = storedLang;
+            var url = new URL(window.location.href);
+            url.searchParams.set("lang", storedLang);
+            window.location.href = url.toString();
+        }
+    });
+
+    function changeLanguage(select) {
+        var selectedLang = select.value;
+        sessionStorage.setItem("selectedLang", selectedLang);
+        window.parent.postMessage({ lang: selectedLang }, '*');
+        var url = new URL(window.location.href);
+        url.searchParams.set("lang", selectedLang);
+        window.location.href = url.toString();
+    }
+</script>
+

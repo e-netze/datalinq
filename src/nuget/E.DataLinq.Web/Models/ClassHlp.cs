@@ -1,5 +1,6 @@
 ﻿using E.DataLinq.Core;
 using E.DataLinq.Core.Reflection;
+using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Razor;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Xml.Linq;
 
 namespace E.DataLinq.Web.Models;
 
@@ -193,7 +195,7 @@ public class ClassHelp
 
             if (!String.IsNullOrWhiteSpace(method.Description))
             {
-                sb.Append("<div>" + ParseDescription(method.Description) + "</div><br/>");
+                sb.Append($"<div>{ParseDescription(method.Description)}</div><br/>");
             }
 
             if (method.Parameters.Count > 0)
@@ -202,9 +204,9 @@ public class ClassHelp
                 {
                     if (!String.IsNullOrWhiteSpace(parameter.Description))
                     {
-                        sb.Append("<div><strong>" + parameter.Name + ":</strong>&nbsp;");
-                        sb.Append(ParseDescription(parameter.Description) + "</div>");
-                        sb.Append("<br/>");
+                        sb.Append($"<div><div class='parameter-name'>{parameter.Name}:</div>");
+                        sb.Append(ParseDescription(parameter.Description));
+                        sb.Append("</div><br/>");
                     }
 
                 }
@@ -220,7 +222,7 @@ public class ClassHelp
         return sb.ToString();
     }
 
-    #region Helper
+    #region Helpers
 
     private string TypeToString(Type type)
     {
@@ -308,7 +310,12 @@ public class ClassHelp
 
     private string ParseDescription(string description)
     {
-        return description.Replace("((", "<pre class='descr-code'>").Replace("))", "</pre>").Replace("\n", "<br/>").Replace("\r", "");
+        return description
+            .Replace("((", "<pre class='descr-code'>")
+            .Replace("))", "</pre>")
+            //.Replace("\n", "<br/>")
+            .Replace("\r", "")
+            ;
     }
 
     private void RenderExample(MethodHelp method, StringBuilder sb, bool renderDefaults)
@@ -317,7 +324,8 @@ public class ClassHelp
 
         sb.Append("<div class='copyable-content'>");
 
-        sb.Append($"<span class='keyword'>@DLH.{method.Name}(</span>");
+        sb.Append($"<span class='keyword'>@DLH.{method.Name}</span>");
+        sb.Append("<span class='literal'>(</span>");
 
         bool firstParameter = true;
         foreach (var parameter in method.Parameters)
@@ -411,7 +419,7 @@ public class ClassHelp
             firstParameter = false;
         }
 
-        sb.Append("<span>)</span>");
+        sb.Append("<span class='literal'>)</span>");
 
         sb.Append("<button class='copy-button'>Copy</button>");
 
@@ -424,7 +432,7 @@ public class ClassHelp
 
     #region Static Members
 
-    static public ClassHelp FromType(Type type)
+    static public ClassHelp FromTypeUseAttributes(Type type)
     {
         ClassHelp classHelp = new ClassHelp()
         {
@@ -469,6 +477,144 @@ public class ClassHelp
             }
         }
 
+        AddExtensionMethodsUseAttributes(classHelp);
+
+        return classHelp;
+    }
+    static public ClassHelp FromTypeUseXmlDocumentation(Type type, string languageCode)
+    {
+        ClassHelp classHelp = new ClassHelp()
+        {
+            Name = type.Name
+        };
+
+        var xmlFilePath = $"{System.IO.Path.ChangeExtension(type.Assembly.Location, ".XML")}";
+        if (!System.IO.File.Exists(xmlFilePath))
+        {
+            return classHelp;
+        }
+
+        var xdoc = XDocument.Load(xmlFilePath);
+
+        // read the comment summary for this type
+        var typeSummary = GetXmlDocumentation(xdoc, type, languageCode);
+
+        classHelp.Description = typeSummary;
+
+        int count = 0;
+
+        foreach (var methodInfo in type.GetMethods())
+        {
+            if (!methodInfo.IsPublic)
+            {
+                break;
+            }
+
+            // read the comment summery and params for this methodInfo
+            var methodSummary = GetXmlDocumentation(xdoc, methodInfo, count, languageCode);
+
+            var methodHelp = new ClassHelp.MethodHelp()
+            {
+                Name = methodInfo.Name,
+                ReturnType = methodInfo.ReturnType,
+                Description = methodSummary
+            };
+            classHelp.Methods.Add(methodHelp);
+
+            foreach (var parameterInfo in methodInfo.GetParameters())
+            {
+                var parameterSummary = GetXmlDocumentation(xdoc, parameterInfo, count, languageCode);
+                methodHelp.Parameters.Add(new ClassHelp.MethodHelp.ParameterHelp()
+                {
+                    Name = parameterInfo.Name,
+                    ParameterType = parameterInfo.ParameterType,
+                    HasDefault = parameterInfo.HasDefaultValue,
+                    DefaultValue = parameterInfo.DefaultValue,
+                    Description = parameterSummary
+                });
+            }
+
+            count++;
+        }
+
+        AddExtensionMethodsUseAttributes(classHelp);
+
+        return classHelp;
+    }
+
+    #region Static Helpers
+
+    private const string NotCommented = "Sorry, documentation missing!";
+
+    private static string GetXmlDocumentation(XDocument xdoc, Type type, string languageCode)
+    {
+        var memberName = $"T:{type.FullName}";
+        var member = xdoc
+            .Descendants("member")
+            .FirstOrDefault(m => m.Attribute("name")?.Value == memberName);
+
+        return member?.Element("summary")?.Value.ExtractLanguage(languageCode);
+    }
+    private static string GetXmlDocumentation(XDocument xdoc, MethodInfo methodInfo, int count, string languageCode)
+    {
+        var memberName = $"M:{methodInfo.DeclaringType.FullName}.{methodInfo.Name}";
+        var member = xdoc
+            .Descendants("member")
+            .Skip(count)
+            .FirstOrDefault(m => m.Attribute("name")?.Value.StartsWith(memberName) == true);
+
+        return member?.Element("summary")?.Value.ExtractLanguage(languageCode);
+    }
+    private static string GetXmlDocumentation(XDocument xdoc, ParameterInfo parameterInfo, int count, string languageCode)
+    {
+        var memberName = $"M:{parameterInfo.Member.DeclaringType.FullName}.{parameterInfo.Member.Name}";
+        var member = xdoc
+            .Descendants("member")
+            .Skip(1).Skip(count)
+            .FirstOrDefault(m => m.Attribute("name")?.Value.StartsWith(memberName) == true);
+
+        var param = member?
+            .Elements("param")
+            .FirstOrDefault(p => p.Attribute("name")?.Value == parameterInfo.Name);
+
+        return param?.Value.Trim().ExtractLanguage(languageCode);
+    }
+
+    private static string ExtractLanguageDocumentation(string xmlDoc, string languageCode)
+    {
+        if (string.IsNullOrEmpty(xmlDoc))
+        {
+            return string.Empty;
+        }
+
+        string languageMarker = languageCode + ":";
+        int langIndex = xmlDoc.IndexOf(languageMarker, StringComparison.OrdinalIgnoreCase);
+
+        if (langIndex == -1)
+        {
+            return xmlDoc;
+        }
+
+        int nextLangIndex = xmlDoc.Length;
+        string[] possibleLanguages = { "de:", "en:" };
+
+        foreach (var lang in possibleLanguages)
+        {
+            if (lang != languageCode + ":")
+            {
+                int index = xmlDoc.IndexOf(lang, langIndex + languageMarker.Length, StringComparison.OrdinalIgnoreCase);
+                if (index > -1 && index < nextLangIndex)
+                {
+                    nextLangIndex = index;
+                }
+            }
+        }
+
+        return xmlDoc.Substring(langIndex + languageMarker.Length, nextLangIndex - (langIndex + languageMarker.Length)).Trim();
+    }
+
+    static private void AddExtensionMethodsUseAttributes(ClassHelp classHelp)
+    {
         #region Extension Methods
 
         var extendedType = typeof(IDataLinqHelper);
@@ -483,7 +629,7 @@ public class ClassHelp
 
         foreach (var methodInfo in extendedMethods)
         {
-            descriptionAttribute = (HelpDescriptionAttribute)methodInfo.GetCustomAttributes(typeof(HelpDescriptionAttribute), false).FirstOrDefault();
+            var descriptionAttribute = (HelpDescriptionAttribute)methodInfo.GetCustomAttributes(typeof(HelpDescriptionAttribute), false).FirstOrDefault();
 
             var methodHelp = new ClassHelp.MethodHelp()
             {
@@ -491,6 +637,7 @@ public class ClassHelp
                 ReturnType = methodInfo.ReturnType,
                 Description = descriptionAttribute?.Description
             };
+
             classHelp.ExtensionMethods.Add(methodHelp);
 
             // Skip first parameter in ExtensionMethods => the "this" Parameter!
@@ -508,10 +655,11 @@ public class ClassHelp
                 });
             }
         }
-        #endregion
 
-        return classHelp;
+        #endregion
     }
+
+    #endregion
 
     #endregion
 }

@@ -431,6 +431,75 @@ var dataLinq = new function () {
         dataLinq.updateViewFilter(sender);
     };
 
+    this.deleteQuicksearch = function (elem) {
+        var $input = $(elem).closest('.datalinq-quicksearch-search-wrapper')
+            .find('.datalinq-quicksearch-search-input');
+
+        $input.val('')
+            .trigger('input')
+            .focus();
+    };
+
+    this.onSearchInput = function (elem) {
+        var value = $(elem).val().toLowerCase().trim();
+
+        var columns = $(elem).closest('.datalinq-quicksearch-search-container')
+            .attr('datalinq-quicksearch-columns')
+            .split(',');
+
+        var $table = $(elem).closest('.datalinq-quicksearch-search-container').next('table');
+
+        if ($table.length === 0) {
+            console.warn('No table found below search container');
+            return;
+        }
+
+        var $headerRow = $table.find('thead th, thead td');
+        var hasTheadStructure = $headerRow.length > 0;
+
+        if (!hasTheadStructure) {
+            $headerRow = $table.find('tr').first().find('th, td');
+        }
+
+        var columnIndices = [];
+        $headerRow.each(function (index) {
+            var headerText = $(this).text().trim();
+            if (columns.indexOf(headerText) !== -1) {
+                columnIndices.push(index);
+            }
+        });
+
+        if (columnIndices.length === 0) {
+            console.warn('None of the specified columns found in table:', columns);
+            return;
+        }
+
+        var $rows;
+        if (hasTheadStructure) {
+            $rows = $table.find('tbody tr');
+        } else {
+            $rows = $table.find('tr:not(:first)');
+        }
+
+        $rows.each(function () {
+            var $row = $(this);
+            var matchFound = false;
+
+            for (var i = 0; i < columnIndices.length; i++) {
+                var cellText = $row.find('td, th').eq(columnIndices[i]).text().toLowerCase();
+                if (cellText.indexOf(value) !== -1) {
+                    matchFound = true;
+                    break; 
+                }
+            }
+
+            if (matchFound || value === '') {
+                $row.show();
+            } else {
+                $row.hide();
+            }
+        });
+    };
 
     this.refresh = function (elem) {
         var $e = $(elem).closest('.datalinq-include, .datalinq-include-click').removeClass('datalinq-include-click-loaded');
@@ -511,7 +580,7 @@ var dataLinq = new function () {
     function downloadCsv(csvContent, filename) {
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
-        if (navigator.msSaveBlob) {
+        if (navigator.msSaveBlob) { 
             navigator.msSaveBlob(blob, filename);
         } else {
             const url = URL.createObjectURL(blob);
@@ -523,6 +592,7 @@ var dataLinq = new function () {
             URL.revokeObjectURL(url);
         }
     }
+
 
     this.updateLegend = function (parent) {
         $('.legend').empty();
@@ -547,6 +617,13 @@ var dataLinq = new function () {
             var label = $(e).data('chart-label');
             var dataset_options = window[$(e).data('chart-dataset')];
             var colorsRGB = $(e).data('chart-color').split("|");
+            var localeKey = $(e).data('chart-locale');  // e.g. "DE", "US", "None"
+            var localeMap = {
+                'DE': 'de-DE',
+                'US': 'en-US',
+                'None': null
+            };
+            var locale = localeMap[localeKey] || null;
             //var chartOptions = $(e).data('chart-options');
 
             if (label.length > 0)
@@ -557,18 +634,18 @@ var dataLinq = new function () {
                 case "Bar":
                 case "Pie":
                 case "Doughnut":
-                    dataLinq.createBarPieChart($canvas, data, colorsRGB, type.toLowerCase(), dataset_options/*, chartOptions*/);
+                    dataLinq.createBarPieChart($canvas, data, colorsRGB, type.toLowerCase(), dataset_options/*, chartOptions*/, locale);
                     break;
                 case "Line":
                 case "Scatter":
-                    dataLinq.createLineChart($canvas, data, colorsRGB, type.toLowerCase(), dataset_options);
+                    dataLinq.createLineChart($canvas, data, colorsRGB, type.toLowerCase(), dataset_options, locale);
                     break;
             }
         });
 
     };
 
-    this.createBarPieChart = function (ctx, data, colorRGB, type, dataset_options/*, chartCustomOptions*/) {
+    this.createBarPieChart = function (ctx, data, colorRGB, type, dataset_options/*, chartCustomOptions*/, locale) {
         var datasets = [], labels = null;
         // ### Wenn keine Kategorie (siehe StatisticsGroupBy, StatisticsGroupByDerived)
         if (typeof data.categories === 'undefined') {
@@ -651,7 +728,15 @@ var dataLinq = new function () {
                     ticks: {
                         // Achse: nur ganzzahlig
                         //callback: function (value) { if (Number.isInteger(value)) { return value; } },
-                        callback: function (value) { if (Math.floor(value) === value && $.isNumeric(value)) { return value; } }
+                        //callback: function (value) { if (Math.floor(value) === value && $.isNumeric(value)) { return value; } }
+
+                        // Anforderung Y-Achse Tausender Trennzeichen de-DE Format mit . DataLinq Forum #32
+                        callback: function (value) {
+                            if (Math.floor(value) === value && $.isNumeric(value)) {
+                                return locale ? value.toLocaleString(locale) : value;
+                            }
+                            return value;
+                        }
                     }
                 }],
                 xAxes: [{
@@ -663,13 +748,30 @@ var dataLinq = new function () {
                         display: false
                     },
                     ticks: {
-                        autoSkip: false
+                        autoSkip: false,
+                        callback: function (value) {
+                            if (Math.floor(value) === value && $.isNumeric(value)) {
+                                return locale ? value.toLocaleString(locale) : value;
+                            }
+                            return value;
+                        }
                     }
                 }]
             },
             legend: {
                 display: (type !== 'bar' ? true : false),
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        let label = data.datasets[tooltipItem.datasetIndex].label || '';
+                        let value = tooltipItem.yLabel !== undefined ? tooltipItem.yLabel : tooltipItem.value;
+                        return label ? `${label}: ${locale ? value.toLocaleString(locale) : value}` : (locale ? value.toLocaleString(locale) : value);
+                    }
+                }
             }
+
+            
         };
 
         if (type !== 'bar') {
@@ -701,7 +803,7 @@ var dataLinq = new function () {
         ctx.closest(".datalinq-chart").data("datalinq-chartobject", myChart);
     };
 
-    this.createLineChart = function (ctx, data, colorRGB, type, dataset_options) {
+    this.createLineChart = function (ctx, data, colorRGB, type, dataset_options, locale) {
         var chartData;
 
         if (typeof (data.categories) === 'undefined') {
@@ -775,7 +877,15 @@ var dataLinq = new function () {
             maintainAspectRatio: false,
             scales: {
                 xAxes: [{
-                    ticks: { autoSkip: (typeof (data.categories) === 'undefined' ? false : true) },
+                    ticks: {
+                        autoSkip: (typeof (data.categories) === 'undefined' ? false : true),
+                        callback: function (value) {
+                            if (Math.floor(value) === value && $.isNumeric(value)) {
+                                return locale ? value.toLocaleString(locale) : value;
+                            }
+                            return value;
+                        }
+                    },
                     type: 'time',
                     time: {
                         tooltipFormat: 'DD.MM.YYYY HH:mm',
@@ -791,13 +901,31 @@ var dataLinq = new function () {
                     ticks: {
                         // Achse: nur ganzzahlig
                         //callback: function (value) { if (Number.isInteger(value)) { return value; } },
-                        callback: function (value) { if (Math.floor(value) === value && $.isNumeric(value)) { return value; } }
+                        //callback: function (value) { if (Math.floor(value) === value && $.isNumeric(value)) { return value; } }
+
+                        // Anforderung Y-Achse Tausender Trennzeichen de-DE Format mit . DataLinq Forum #32
+                        callback: function (value) {
+                            if (Math.floor(value) === value && $.isNumeric(value)) {
+                                return locale ? value.toLocaleString(locale) : value;
+                            }
+                            return value;
+                        }
+
                         //,beginAtZero: true
                     }
                 }]
             },
             legend: {
                 display: (typeof (data.categories) === 'undefined' || data.categories.length === 1) ? false : true
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        let label = data.datasets[tooltipItem.datasetIndex].label || '';
+                        let value = tooltipItem.yLabel !== undefined ? tooltipItem.yLabel : tooltipItem.value;
+                        return label ? `${label}: ${locale ? value.toLocaleString(locale) : value}` : (locale ? value.toLocaleString(locale) : value);
+                    }
+                }
             }
         };
 

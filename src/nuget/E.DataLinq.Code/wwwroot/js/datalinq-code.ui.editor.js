@@ -26,6 +26,13 @@
 
             return $tabs.children(".datalinq-code-tab.selected").attr('data-id');
         },
+        toSaveDoc: function (options) {
+            var $tabs = $(this).children('.datalinq-code-tabs')
+
+            return $tabs.children(".datalinq-code-tab.selected").map(function () {
+                return $(this).attr('data-id');
+            }).get();
+        },
         dirtyDocs: function (options) {
             var ids = [];
             $(this).children('.datalinq-code-tabs').children(".datalinq-code-tab.dirty").each(function (i, e) {
@@ -71,11 +78,20 @@
         dataLinqCode.events.on('open-view', function (channel, args) {
             var $tab = showOrAddTab($tabs, args.view, args.endpoint + '@' + args.query + '@' + args.view, 'view');
         });
+        dataLinqCode.events.on('open-view-css', function (channel, args) {
+            var $tab = showOrAddTab($tabs, args.view, args.endpoint + '@' + args.query + '@' + args.view + '@_css' , 'viewcss');
+        });
+        dataLinqCode.events.on('open-view-js', function (channel, args) {
+            var $tab = showOrAddTab($tabs, args.view, args.endpoint + '@' + args.query + '@' + args.view + '@_js', 'viewjs');
+        });
         dataLinqCode.events.on('open-endpoint-css', function (channel, args) {
             var $tab = showOrAddTab($tabs, 'CSS: ' + args.id, args.id + '@_css', 'css');
         });
         dataLinqCode.events.on('open-endpoint-js', function (channel, args) {
             var $tab = showOrAddTab($tabs, 'Javascript: ' + args.id, args.id + '@_js', 'js');
+        });
+        dataLinqCode.events.on('open-copilot', function (channel, args) {
+            var $tab = showOrAddTab($tabs, 'DataLinq Copilot', 'copilot');
         });
         dataLinqCode.events.on('tab-selected', function (channel, args) {
             showOrAddEditorFrame($editor, args.id);
@@ -102,10 +118,19 @@
             dataLinqCode.events.fire('refresh-ui');
         });
 
-        dataLinqCode.events.on(['save-document','verify-document'], function (channel, args) {
+        dataLinqCode.events.on(['verify-document'], function (channel, args) {
             $tabs.children(".datalinq-code-tab[data-id='" + args.id + "']")
                 .addClass('loading');
         });
+
+        dataLinqCode.events.on(['save-document'], function (channel, args) {
+            var ids = Array.isArray(args.id) ? args.id : [args.id];
+
+            $tabs.children(".datalinq-code-tab").filter(function () {
+                return ids.includes($(this).attr("data-id"));
+            }).addClass('loading');
+        });
+
         dataLinqCode.events.on(['document-saved', 'document-verified'], function (channel, args) {
             $tabs.children(".datalinq-code-tab[data-id='" + args.id + "']")
                 .removeClass('loading')
@@ -194,11 +219,46 @@
         $tab.click(function (e) {
             e.stopPropagation();
 
-            $tabs.children('.selected').removeClass('selected');
-            $(this).addClass('selected');
+            const $clicked = $(this);
+            const isSelected = $clicked.hasClass('selected');
+            const $selectedTabs = $tabs.children(".datalinq-code-tab.selected");
+            const selectedCount = $selectedTabs.length;
 
-            dataLinqCode.events.fire('tab-selected', { id: $(this).attr('data-id') });
+            if (ctrlPressed) {
+                if (isSelected) {
+                    $clicked.removeClass('selected');
+                    $clicked.removeAttr('data-selected-at');
+                } else if (selectedCount < 3) {
+                    $clicked.addClass('selected');
+                    $clicked.attr('data-selected-at', Date.now());
+                } else if (selectedCount >= 3) {
+                    dataLinqCode.ui.alert('Limit', 'You can only select up to 3 tabs.');
+                    return;
+                }
+            } else {
+                $tabs.children('.selected').removeClass('selected').removeAttr('data-selected-at');
+                $clicked.addClass('selected');
+                $clicked.attr('data-selected-at', Date.now());
+            }
+
+            const clickedId = $clicked.attr('data-id');
+
+            const ide = $('.datalinq-code-ide');
+            var editorTheme = ide.hasClass('colorscheme-light') ? 'vs' : 'vs-dark';
+            sessionStorage.setItem('editorTheme', editorTheme);
+            console.log(clickedId);
+            console.log(editorTheme);
+
+            dataLinqCode.events.fire('tab-selected', { id: $clicked.attr('data-id') });
         });
+
+        var tabs = $tabs.children(".datalinq-code-tab");
+
+        if (tabs.length > 1) {
+            tabs.first().removeClass('selected');
+        } else if (frames.length === 1) {
+            tabs.first().addClass('selected');
+        }
 
         $tab.trigger('click');
 
@@ -347,32 +407,18 @@
         }
     };
 
+    var ctrlPressed = false;
+
+    $(document).keydown(function (e) {
+        if (e.key === "Control") ctrlPressed = true;
+    }).keyup(function (e) {
+        if (e.key === "Control") ctrlPressed = false;
+    });
+
     var showOrAddEditorFrame = function ($editor, id) {
-        var $frame = $editor.children(".datalinq-code-editor-frame[data-id='" + id + "']");
+        let $frame = $editor.children(`.datalinq-code-editor-frame[data-id='${id}']`);
         if ($frame.length === 0) {
-            var src = '';
-
-            if (id === '_start') {
-                src = dataLinqCode.targetUrl() + '/Start';
-            } else {
-                var ids = id.split('@');
-                if (ids.length === 1) {
-                    src = dataLinqCode.targetUrl() + '/EditEndPoint?endpoint=' + ids[0] + '&dl_token=' + window._datalinqCodeAccessToken;
-                } else if (ids.length === 2) {
-                    if (ids[1] == '_css') {
-                        src = dataLinqCode.targetUrl() + '/EditEndPointCss?endpoint=' + ids[0] + '&dl_token=' + window._datalinqCodeAccessToken;
-                    } else if (ids[1] == '_js') {
-                        src = dataLinqCode.targetUrl() + '/EditEndPointJavascript?endpoint=' + ids[0] + '&dl_token=' + window._datalinqCodeAccessToken;
-                    } else {
-                        src = dataLinqCode.targetUrl() + '/EditEndPointQuery?endpoint=' + ids[0] + '&query=' + ids[1] + '&dl_token=' + window._datalinqCodeAccessToken;
-                    }
-                } else if (ids.length === 3) {
-                    src = dataLinqCode.targetUrl() + '/EditEndPointQueryView?endpoint=' + ids[0] + '&query=' + ids[1] + '&view=' + ids[2] + '&dl_token=' + window._datalinqCodeAccessToken;
-                } else {
-                    dataLinqCode.ui.alert('Error', 'unknown datalinq route/id: ' + id);
-                }
-            }
-
+            const src = buildFrameSrc(id);
             $frame = $("<iframe>")
                 .addClass('datalinq-code-editor-frame')
                 .attr('data-id', id)
@@ -380,7 +426,145 @@
                 .appendTo($editor);
         }
 
-        $editor.children('.selected').removeClass('selected');
-        $frame.addClass('selected');
+        $frame.on('load', function () {
+            try {
+                const iframeWindow = this.contentWindow;
+
+                const theme = sessionStorage.getItem('editorTheme');
+
+                const doc = iframeWindow.document;
+
+                if (theme === 'vs') {
+                    doc.body.classList.add('colorscheme-light');
+                } else {
+                    doc.body.classList.remove('colorscheme-light');
+                }
+
+                iframeWindow.addEventListener('message', function (event) {
+                    const data = event.data;
+                    if (data && typeof data.theme === 'string') {
+                        const doc = iframeWindow.document;
+                        if (data.theme === 'vs') {
+                            doc.body.classList.add('colorscheme-light');
+                        } else {
+                            doc.body.classList.remove('colorscheme-light');
+                        }
+                    }
+                });
+            } catch (e) {
+                console.warn(`Could not access iframe content for [${id}] due to cross-origin policy.`);
+            }
+        });
+
+        const isSelected = $frame.hasClass('selected');
+        const selectedCount = $editor.children(".datalinq-code-editor-frame.selected").length;
+
+        if (ctrlPressed) {
+            if (isSelected) {
+                $frame.removeClass('selected');
+            } else if (selectedCount < 3) {
+                $frame.addClass('selected');
+            }
+        } else {
+            $editor.children(".datalinq-code-editor-frame.selected").removeClass('selected');
+            $frame.addClass('selected');
+        }
+
+        const $tabs = $('.datalinq-code-tabs');
+        const selectedFrames = getOrderedSelectedFrames($tabs, $editor);
+        selectedFrames.forEach(frame => {
+            if (!$(frame).parent().is($editor)) {
+                $(frame).appendTo($editor);
+            }
+        });
+
+        layoutFrames($editor, selectedFrames);
     };
+
+    function buildFrameSrc(id) {
+        const base = dataLinqCode.targetUrl();
+        const token = window._datalinqCodeAccessToken;
+
+        if (id === '_start') return `${base}/Start`;
+
+        const parts = id.split('@');
+        const [endpoint, query, view, suffix] = parts;
+
+        if (parts.length === 1) {
+            if (parts[0] === 'copilot') {
+                return `${base}/copilot?dl_token=${token}`;
+            }
+            return `${base}/EditEndPoint?endpoint=${endpoint}&dl_token=${token}`;
+        }
+
+        if (parts.length === 2) {
+            if (query === '_css') return `${base}/EditEndPointCss?endpoint=${endpoint}&dl_token=${token}`;
+            if (query === '_js') return `${base}/EditEndPointJavascript?endpoint=${endpoint}&dl_token=${token}`;
+            return `${base}/EditEndPointQuery?endpoint=${endpoint}&query=${query}&dl_token=${token}`;
+        }
+
+        if (parts.length === 3) {
+            return `${base}/EditEndPointQueryView?endpoint=${endpoint}&query=${query}&view=${view}&dl_token=${token}`;
+        }
+
+        if (parts.length === 4) {
+            if (suffix === '_css') return `${base}/EditViewCss?endpoint=${endpoint}&query=${query}&view=${view}&dl_token=${token}`;
+            if (suffix === '_js') return `${base}/EditViewJs?endpoint=${endpoint}&query=${query}&view=${view}&dl_token=${token}`;
+        }
+
+        dataLinqCode.ui.alert('Error', 'Unknown datalinq route/id: ' + id);
+        return '';
+    }
+
+    function getOrderedSelectedFrames($tabs, $editor) {
+        return $tabs.children(".datalinq-code-tab.selected")
+            .sort((a, b) => +$(a).attr('data-selected-at') - +$(b).attr('data-selected-at'))
+            .map(function () {
+                return $editor.children(`.datalinq-code-editor-frame[data-id='${$(this).attr('data-id')}']`)[0];
+            }).get().filter(Boolean).slice(0, 3);
+    }
+
+    function layoutFrames($editor, frames) {
+        $editor.find('.datalinq-frame-stack').remove();
+        $editor.find('.datalinq-separator').remove();
+        $editor.children(".datalinq-code-editor-frame").hide().css({ flex: '', width: '', height: '', display: 'none' });
+        $editor.css({ display: 'flex', flexDirection: 'row', width: '100%', height: '100%' });
+
+        const count = frames.length;
+
+        if (count === 1) {
+            $(frames[0]).css({ flex: '1 1 100%', width: '100%', height: '98%', display: 'block' }).show().appendTo($editor);
+        } else if (count === 2) {
+            $(frames[0]).css({ flex: '1 1 50%', width: '50%', height: '98%', display: 'block' }).show().appendTo($editor);
+
+            $('<div class="datalinq-separator vertical-separator"></div>').appendTo($editor);
+
+            $(frames[1]).css({ flex: '1 1 50%', width: '50%', height: '98%', display: 'block' }).show().appendTo($editor);
+        } else if (count === 3) {
+            const [$left, $topRight, $bottomRight] = frames;
+
+            $($left).css({ flex: '1 1 50%', width: '50%', height: '98%', display: 'block' }).show().appendTo($editor);
+
+            $('<div class="datalinq-separator vertical-separator"></div>').appendTo($editor);
+
+            const $stack = $('<div class="datalinq-frame-stack">').css({
+                display: 'flex',
+                flexDirection: 'column',
+                flex: '1 1 50%',
+                width: '50%',
+                height: '98%',
+                position: 'relative',
+            });
+
+            $(frames[1]).css({ flex: '1 1 50%', width: '100%', height: '50%', display: 'block' }).show().appendTo($stack);
+
+            $('<div class="datalinq-separator horizontal-separator"></div>').appendTo($stack);
+
+            $(frames[2]).css({ flex: '1 1 50%', width: '100%', height: '50%', display: 'block' }).show().appendTo($stack);
+
+            $stack.appendTo($editor);
+        }
+    }
+
+
 })(jQuery);

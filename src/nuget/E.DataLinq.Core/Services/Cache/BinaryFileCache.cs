@@ -1,5 +1,4 @@
 ﻿using E.DataLinq.Core.Services.Abstraction;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;

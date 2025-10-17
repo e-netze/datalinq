@@ -3,37 +3,36 @@
     Layout = "~/Views/Shared/_Layout_empty-datalinq.cshtml";
 }
 
-<div class="datalinq-form-panel login">
+<div class="datalinq-login-wrapper">
+    <div class="datalinq-form-panel login">
+        <div class="datalinq-login-logo"></div>
+        <h3>Login</h3>
 
-    <h3>DataLinq.Code Login</h3>
+        @if (!String.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="datalinq-form-error">
+                @Model.ErrorMessage
+            </div>
+        }
 
-    @if(!String.IsNullOrEmpty(Model.ErrorMessage))
-    {
-        <div class="datalinq-form-error">
-            @Model.ErrorMessage
-        </div>
-    }
+        @using (Html.BeginForm(FormMethod.Post))
+        {
+            <div class="datalinq-form-group">
+                @Html.LabelFor(m => m.Name)
+                @Html.TextBoxFor(m => m.Name, new { placeholder = "Enter username...", autocomplete = "username" })
+            </div>
 
-    @using(Html.BeginForm(FormMethod.Post))
-    {
-        <div class="datalinq-form-label>">
-        @Html.LabelFor(m => m.Name)
-        </div>
-        <div class="datalinq-form-input>">
-        @Html.TextBoxFor(m => m.Name, htmlAttributes:new{ placeholder="Enter username..." })
-        </div>
+            <div class="datalinq-form-group">
+                @Html.LabelFor(m => m.Password)
+                @Html.PasswordFor(m => m.Password, new { placeholder = "Enter password...", autocomplete = "current-password" })
+            </div>
 
-        <div class="datalinq-form-label>">
-        @Html.LabelFor(m => m.Password)
-        </div>
-        <div class="datalinq-form-input>">
-        @Html.PasswordFor(m => m.Password, htmlAttributes:new{ placeholder="Enter password..." })
-        </div>
+            @Html.HiddenFor(m => m.Redirect)
 
-        @Html.HiddenFor(m => m.Redirect);
-
-        <br/>
-        <button type="submit">Login</button>
-    }
-
+            <div class="datalinq-form-group button-group">
+                <button type="submit">Login</button>
+            </div>
+        }
+    </div>
 </div>
+

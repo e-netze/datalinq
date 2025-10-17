@@ -21,6 +21,7 @@ internal static class JsLibNames
     public const string RazorEngineDataLinqLanguageEngine = "DataLinqLanguageEngine";
 
     public const string Mermaid = "Mermaid";
+    public const string JsonEditor = "JsonEditor";
 }
 
 public static class RazorEngineIds

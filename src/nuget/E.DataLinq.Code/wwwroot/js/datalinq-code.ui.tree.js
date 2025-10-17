@@ -233,6 +233,204 @@
         return $node;
     };
 
+    var createTreeNodeEndpoint = function (label, element, asInput, endpoint) {
+        var $node = $(element || "<li>")
+            .addClass("tree-node");
+
+        if (label) {
+            $("<div>").addClass('icon').appendTo($node);
+            if (asInput == true) {
+                $("<input type='text'/>")
+                    .attr('placeholder', label)
+                    .appendTo($node);
+            } else {
+                var $label = $("<div>").addClass('label').text(label).appendTo($node);
+
+                $node.on('mousemove', function (e) {
+                    $(this).closest('.datalinq-code-tree-holder').find('.tree-node').removeClass('mouseover');
+                    e.stopPropagation();
+                    if (e.originalEvent.layerY >= 0 && e.originalEvent.layerY <= 32) {
+                        $(this).addClass('mouseover');
+                    } else {
+                        $(this).removeClass('mouseover');
+                    }
+                }).on('mouseleave', function (e) {
+                    $(this).removeClass('mouseover');
+                });
+
+                var $copyButton = $("<div>")
+                    .addClass('copy-button')
+                    .appendTo($node)
+                    .mouseout(function () {
+                        $(this).find('.tooltiptext').removeClass('show');
+                    })
+                    .click(function (e) {
+                        e.stopPropagation();
+
+                        var route = $(this).closest('.tree-node').data('data-route');
+                        navigator.clipboard.writeText(route);
+
+                        if (route.length > 20)
+                            route = route.substr(0, 20) + '...';
+
+                        $(this)
+                            .find('.tooltiptext')
+                            .text("Copied route: " + route)
+                            .addClass('show');
+                    });
+
+                $("<span>")
+                    .addClass('tooltiptext')
+                    .text('Copy placeholder')
+                    .appendTo($copyButton);
+
+                // --- Added CSS Button ---
+                var $cssButton = $("<div>")
+                    .addClass('copy-button css-button')
+                    .appendTo($node)
+                    .mouseout(function () {
+                        $(this).find('.tooltiptext').removeClass('show');
+                    })
+                    .click(function (e) {
+                        e.stopPropagation();
+
+                        dataLinqCode.events.fire('open-endpoint-css', {
+                            id: endpoint
+                        });
+
+                    });
+
+                $("<span>")
+                    .addClass('tooltiptext')
+                    .text('CSS')
+                    .appendTo($cssButton);
+
+                // --- Added JS Button ---
+                var $jsButton = $("<div>")
+                    .addClass('copy-button js-button')
+                    .appendTo($node)
+                    .mouseout(function () {
+                        $(this).find('.tooltiptext').removeClass('show');
+                    })
+                    .click(function (e) {
+                        e.stopPropagation();
+
+                        dataLinqCode.events.fire('open-endpoint-js', {
+                            id: endpoint
+                        });
+                    });
+
+                $("<span>")
+                    .addClass('tooltiptext')
+                    .text('JS')
+                    .appendTo($jsButton);
+            }
+        }
+
+        return $node;
+    };
+
+    var createTreeNodeView = function (label, element, asInput, endpoint, query, view) {
+        var $node = $(element || "<li>")
+            .addClass("tree-node");
+
+        if (label) {
+            $("<div>").addClass('icon').appendTo($node);
+            if (asInput == true) {
+                $("<input type='text'/>")
+                    .attr('placeholder', label)
+                    .appendTo($node);
+            } else {
+                var $label = $("<div>").addClass('label').text(label).appendTo($node);
+
+                $node.on('mousemove', function (e) {
+                    $(this).closest('.datalinq-code-tree-holder').find('.tree-node').removeClass('mouseover');
+                    e.stopPropagation();
+                    if (e.originalEvent.layerY >= 0 && e.originalEvent.layerY <= 32) {
+                        $(this).addClass('mouseover');
+                    } else {
+                        $(this).removeClass('mouseover');
+                    }
+                }).on('mouseleave', function (e) {
+                    $(this).removeClass('mouseover');
+                });
+
+                var $copyButton = $("<div>")
+                    .addClass('copy-button')
+                    .appendTo($node)
+                    .mouseout(function () {
+                        $(this).find('.tooltiptext').removeClass('show');
+                    })
+                    .click(function (e) {
+                        e.stopPropagation();
+
+                        var route = $(this).closest('.tree-node').data('data-route');
+                        navigator.clipboard.writeText(route);
+
+                        if (route.length > 20)
+                            route = route.substr(0, 20) + '...';
+
+                        $(this)
+                            .find('.tooltiptext')
+                            .text("Copied route: " + route)
+                            .addClass('show');
+                    });
+
+                $("<span>")
+                    .addClass('tooltiptext')
+                    .text('Copy placeholder')
+                    .appendTo($copyButton);
+
+                // --- Added CSS Button ---
+                var $cssButton = $("<div>")
+                    .addClass('copy-button css-button')
+                    .appendTo($node)
+                    .mouseout(function () {
+                        $(this).find('.tooltiptext').removeClass('show');
+                    })
+                    .click(function (e) {
+                        e.stopPropagation();
+
+                        dataLinqCode.events.fire('open-view-css', {
+                            endpoint: endpoint,
+                            query: query,
+                            view: view
+                        });
+
+                    });
+
+                $("<span>")
+                    .addClass('tooltiptext')
+                    .text('Copy CSS code')
+                    .appendTo($cssButton);
+
+                // --- Added JS Button ---
+                var $jsButton = $("<div>")
+                    .addClass('copy-button js-button')
+                    .appendTo($node)
+                    .mouseout(function () {
+                        $(this).find('.tooltiptext').removeClass('show');
+                    })
+                    .click(function (e) {
+                        e.stopPropagation();
+
+                        dataLinqCode.events.fire('open-view-js', {
+                            endpoint: endpoint,
+                            query: query,
+                            view: view
+                        });
+                    });
+
+                $("<span>")
+                    .addClass('tooltiptext')
+                    .text('Copy JS code')
+                    .appendTo($jsButton);
+            }
+        }
+
+        return $node;
+    };
+
     var addToNodes = function ($node, $parent) {
         var $nodes = $parent.children('.tree-nodes');
         if ($nodes.length === 0) {
@@ -244,7 +442,7 @@
     }
 
     var addEndPointNode = function ($parent, endPoint, collapsedRoutes) {
-        var $node = createTreeNode(endPoint || 'New endpoint...', null, endPoint === null)
+        var $node = createTreeNodeEndpoint(endPoint || 'New endpoint...', null, endPoint === null, endPoint)
             .addClass('endpoint')
             .data('data-endpoint', endPoint)
             .data('data-route', endPoint);
@@ -395,8 +593,16 @@
         }
     };
 
+    var ctrlPressed = false;
+
+    $(document).keydown(function (e) {
+        if (e.key === "Control") ctrlPressed = true;
+    }).keyup(function (e) {
+        if (e.key === "Control") ctrlPressed = false;
+    });
+
     var addViewNode = function ($parent, endPoint, query, view) {
-        var $node = createTreeNode(view || 'New view...', null, view === null)
+        var $node = createTreeNodeView(view || 'New view...', null, view === null, endPoint, query, view)
             .addClass('view')
             .data('data-endpoint', endPoint)
             .data('data-query', query)
@@ -410,17 +616,67 @@
         addToNodes($node, $parent);
 
         if (view) {
-            $node.click(function (e) {
+            $node.off('click').on('click', function (e) {
                 e.stopPropagation();
 
-                var $this = $(this);
-                dataLinqCode.events.fire('open-view', {
-                    endpoint: $this.data('data-endpoint'),
-                    query: $this.data('data-query'),
-                    view: $this.data('data-view')
-                });
+                const $this = $(this);
+                const endpoint = $this.data('data-endpoint');
+                const query = $this.data('data-query');
+                const view = $this.data('data-view');
+                const baseId = `${endpoint}@${query}@${view}`;
+
+                const $tabs = $(".datalinq-code-tab");
+                const $existingTab = $tabs.filter(`[data-id="${baseId}"]`);
+                const $existingTabCss = $tabs.filter(`[data-id="${baseId}@_css"]`);
+                const $existingTabJs = $tabs.filter(`[data-id="${baseId}@_js"]`);
+
+                const tabExists = $existingTab.length > 0;
+                const tabExistsCss = $existingTabCss.length > 0;
+                const tabExistsJs = $existingTabJs.length > 0;
+
+                const clearSelection = () => {
+                    $tabs.filter('.selected').removeClass('selected').removeAttr('data-selected-at');
+                };
+
+                const selectTab = ($tab) => {
+                    $tab.addClass('selected').attr('data-selected-at', Date.now());
+                };
+
+                if (ctrlPressed) {
+                    if (!tabExists) {
+                        if (tabExistsCss || tabExistsJs) {
+                            dataLinqCode.events.fire('open-view', { endpoint, query, view });
+                        } else {
+                            clearSelection();
+                            dataLinqCode.events.fire('open-view', { endpoint, query, view });
+                            dataLinqCode.events.fire('open-view-css', { endpoint, query, view });
+                            dataLinqCode.events.fire('open-view-js', { endpoint, query, view });
+                        }
+                    } else {
+                        if ($existingTab.hasClass('selected')) {
+                            $existingTab.removeClass('selected').removeAttr('data-selected-at');
+                        } else {
+                            const selectedCount = $tabs.filter('.selected').length;
+                            if (selectedCount >= 3) {
+                                dataLinqCode.ui.alert('Limit', 'You can only select up to 3 tabs.');
+                                return;
+                            }
+                            selectTab($existingTab);
+                        }
+                        dataLinqCode.events.fire('tab-selected', { id: baseId });
+                    }
+                } else {
+                    if (tabExists) {
+                        clearSelection();
+                        selectTab($existingTab);
+                        dataLinqCode.events.fire('tab-selected', { id: baseId });
+                    } else {
+                        dataLinqCode.events.fire('open-view', { endpoint, query, view });
+                    }
+                }
             });
-        } else {
+        }
+        else {
             $node
                 .addClass('add')
                 .click(function (e) {
@@ -445,6 +701,43 @@
                 });
         }
     };
+
+    function restoreSavedTabs() {
+        const savedTabs = JSON.parse(localStorage.getItem('datalinq-open-tabs') || '[]');
+
+        dataLinqCode.ui.confirmIf(
+            savedTabs.length > 0,
+            "Restore Tabs",
+            "Would you like to restore the tabs from your previous session?",
+            function () {
+                savedTabs.forEach(id => {
+                    const parts = id.split('@');
+
+                    if (parts.length === 1) {
+                        const endpoint = parts[0];
+                        dataLinqCode.events.fire('open-endpoint', { endpoint });
+                    } else if (parts.length === 2) {
+                        const [endpoint, query] = parts;
+                        dataLinqCode.events.fire('open-query', { endpoint, query });
+                    } else {
+                        const endpoint = parts[0] || '';
+                        const query = parts[1] || '';
+                        const view = parts[2] || '';
+                        const suffix = parts[3] || '';
+
+                        if (suffix === '_js') {
+                            dataLinqCode.events.fire('open-view-js', { endpoint, query, view });
+                        } else if (suffix === '_css') {
+                            dataLinqCode.events.fire('open-view-css', { endpoint, query, view });
+                        } else {
+                            dataLinqCode.events.fire('open-view', { endpoint, query, view });
+                        }
+                    }
+                });
+            }
+        );
+    }
+
 
     var renderEndPointPrefixesList = function ($parent, $content, prefixes) {
         var $tree = $parent.children('.datalinq-code-tree');
@@ -497,6 +790,7 @@
             .click(function () {
                 $(null).dataLinq_code_modal('close');
                 refrehTree($parent, null);
+                restoreSavedTabs();
             });
 
         $("<button>")

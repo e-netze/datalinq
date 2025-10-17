@@ -4,68 +4,101 @@ html {
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    html {
+        font-size: 16px;
+    }
 }
 
 body {
   margin-bottom: 60px;
 }
 
+.datalinq-login-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 60px);
+}
+
 .datalinq-form-panel.login {
-    width: 360px;
-    max-width: 100%;
-    padding: 10px 20px 20px 20px;
-    box-sizing: border-box;
-    border-radius: 6px;
-    background: #555;
-    color: #fff;
-    margin: 10% auto;
-    box-shadow: 4px 4px 10px #333;
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    background: #2a2a2a;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .datalinq-form-panel h3 {
-    margin: 5px 0px 20px 0px;
+    margin-bottom: 24px;
+    text-align: center;
     color: #5badff;
+    font-size: 1.5rem;
 }
+
+.datalinq-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+    .datalinq-form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.9rem;
+        color: #ccc;
+    }
 
 .datalinq-form-panel input {
-    width:100%;
-    padding:8px 8px;
-    border:1px solid #eee;
-    border-radius: 8px;
-    box-sizing:border-box;
-    background:#fff;
-    margin:4px 0px;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 1rem;
+    box-sizing: border-box;
 }
 
-.datalinq-form-panel input:focus {
-    outline:none;
+.datalinq-login-logo {
+    background-image: url(img/datalinq-splash-logo_login.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 100px;
+    margin-bottom: 12px;
 }
 
-.datalinq-form-panel label {
-    font-size: 12px;
-    padding-left:6px;
-}
+    .datalinq-form-panel input:focus {
+        outline: none;
+        border-color: #5badff;
+        box-shadow: 0 0 0 2px rgba(90, 173, 255, 0.3);
+    }
 
 .datalinq-form-panel button {
-    background: #333;
-    color: #5badff;
+    width: 100%;
+    padding: 12px;
+    background: #5badff;
     border: none;
-    padding: 10px;
     border-radius: 6px;
-    min-width: 150px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1rem;
     cursor: pointer;
+    transition: background 0.2s;
 }
 
-.datalinq-form-panel .datalinq-form-error {
-    font-size:12px;
-    color:#f88;
-    padding:6px;
+    .datalinq-form-panel button:hover {
+        background: #4898e0;
+    }
+
+.datalinq-form-error {
+    background-color: #441111;
+    padding: 10px;
+    border-radius: 6px;
+    color: #f88;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    text-align: center;
 }

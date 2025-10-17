@@ -1,8 +1,15 @@
-﻿using E.DataLinq.Core;
+﻿#pragma warning restore 1591
+
+using E.DataLinq.Core;
+using E.DataLinq.Core.Models.AccessTree;
 using E.DataLinq.Core.Reflection;
 using E.DataLinq.Web.Extensions;
+using E.DataLinq.Web.Html;
+using E.DataLinq.Web.Html.Abstractions;
+using E.DataLinq.Web.Html.Extensions;
 using E.DataLinq.Web.Models;
 using E.DataLinq.Web.Models.Razor;
+using E.DataLinq.Web.Razor.Extensions;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using Microsoft.AspNetCore.Http;
@@ -15,15 +22,19 @@ using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 
 namespace E.DataLinq.Web.Razor;
 
-[HelpDescription(@"
-Die Klasse ist eine Hilfsklasse, die innerhalb der Razor Umgebeung von DataLinq genutzt werden kann. Der Zugriff verfolgt über den globalen Namen DataLinqHelper bzw. der Kurzform DLH.
-Die Methoden dieser Klasse ermöglichen dynamische Inhalte innerhalb einer DataLinq Seite, wie das nachladen von Views, Editieren, Karten, Sortierung usw. 
-            ")]
+
+/// <summary>
+/// de: Die Klasse ist eine Hilfsklasse, die innerhalb der Razor-Umgebung von DataLinq genutzt werden kann. Der Zugriff erfolgt über den globalen Namen DataLinqHelper bzw. der Kurzform DLH. 
+/// Die Methoden dieser Klasse ermöglichen dynamische Inhalte innerhalb einer DataLinq-Seite, wie das Nachladen von Views, Editieren, Karten, Sortierung und vieles mehr.
+/// en: This class is a helper class that can be used within the Razor environment of DataLinq. It is accessed through the global name DataLinqHelper or the shorthand DLH. 
+/// The methods in this class allow dynamic content within a DataLinq page, such as loading views, editing, maps, sorting, and more.
+/// </summary>
 public class DataLinqHelper : IDataLinqHelper
 {
     private readonly HttpContext _httpContext;
@@ -45,71 +56,189 @@ public class DataLinqHelper : IDataLinqHelper
 
     #region Load/Fetch Data
 
-    [HelpDescription("Die Methode holt Daten aus einer Datalinq Query ab und übergibt das Ergebnis an eine Javascript Funktion.")]
+    /// <summary>
+    /// de: Die Methode holt Daten aus einer Datalinq-Query ab, verarbeitet die Daten und übergibt das Ergebnis an eine angegebene JavaScript-Funktion.
+    /// en: The method retrieves data from a Datalinq query, processes the data, and passes the result to a specified JavaScript function.
+    /// </summary>
+    /// <param name="id">
+    /// de: Gibt die ID der Query an, die in der Form endpoint-id@query-id übergeben wird, um die richtigen Daten abzurufen.
+    /// en: Specifies the query ID in the format endpoint-id@query-id to fetch the correct data.
+    /// </param>
+    /// <param name="jsCallbackFuncName">
+    /// de: Der Name einer JavaScript-Funktion, die die abgerufenen Daten entgegennehmen wird, z.B. window.my_dataprocessor_function = function(data) {...}.
+    /// en: The name of the JavaScript function that will receive the retrieved data, e.g., window.my_dataprocessor_function = function(data) {...}.
+    /// </param>
+    /// <param name="filter">
+    /// de: Ein optionaler Filter, der auf die abgerufenen Daten angewendet wird, um nur relevante Ergebnisse zurückzugeben.
+    /// en: An optional filter applied to the retrieved data to return only relevant results.
+    /// </param>
+    /// <param name="encodeUrl">
+    /// de: Gibt an, ob die URL kodiert werden soll. Standardmäßig ist dieser Wert auf true gesetzt, um sicherzustellen, dass die URL korrekt übertragen wird.
+    /// en: Indicates whether the URL should be encoded. By default, this is set to true to ensure the URL is properly transmitted.
+    /// </param>
+    /// <returns>
+    /// de: Gibt das erzeugte HTML-Element als Raw-String zurück, das in der Webanwendung verwendet werden kann.
+    /// en: Returns the generated HTML element as a raw string, which can be used in the web application.
+    /// </returns>
     public object JsFetchData(
-            [HelpDescription("Gibt die Id der Query in folgender Form an: endpoint-id@query-id")]
             string id,
-            [HelpDescription("Der Name einer Javascript Funktion, der die Daten übergeben werden: window.my_dataprocessor_funtion = function(data) {...}")]
             string jsCallbackFuncName,
             string filter = "",
-            [HelpDescription("Gibt an, die Id urlkodiert werden sollte. Standardmäßig sollte hier immer true übergeben werden")]
             bool encodeUrl = true
         )
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<div class='datalinq-fetch' data-source='");
-        sb.Append(ParseUrl(id, encodeUrl));
-        sb.Append("' data-js-callback='");
-        sb.Append(ParseUrl(jsCallbackFuncName, encodeUrl));
-        if (!String.IsNullOrEmpty(filter))
-        {
-            sb.Append("' data-filter='");
-            sb.Append(ParseUrl(filter, encodeUrl));
-        }
-        sb.Append("'></div>");
+        var htmlBuilder = HtmlBuilder.Create()
+                .AppendDiv(div =>
+                {
+                    div.AddAttribute("class", "datalinq-fetch")
+                       .AddAttribute("data-source", ParseUrl(id, encodeUrl))
+                       .AddAttribute("data-js-callback", ParseUrl(jsCallbackFuncName, encodeUrl));
 
-        return _razor.RawString(sb.ToString());
+                    if (!String.IsNullOrEmpty(filter))
+                    {
+                        div.AddAttribute("data-filter", ParseUrl(filter, encodeUrl));
+                    }
+                });
+
+        return _razor.RawString(htmlBuilder.BuildHtmlString());
     }
 
-    [HelpDescription("Übergibt records an eine Javascript Funktion.")]
+    /// <summary>
+    /// de: Die Methode übergibt eine Sammlung von Datensätzen (Records) an eine JavaScript-Funktion, die diese dann verarbeitet.
+    /// en: The method passes a collection of records to a JavaScript function for processing.
+    /// </summary>
+    /// <param name="records">
+    /// de: Eine Sammlung von Records (Dictionary), die an die JavaScript-Funktion übergeben werden. Jeder Record ist ein Key-Value-Paar.
+    /// en: A collection of records (Dictionaries) to be passed to the JavaScript function. Each record is a key-value pair.
+    /// </param>
+    /// <param name="jsCallbackFuncName">
+    /// de: Der Name der JavaScript-Funktion, die die Records entgegennimmt und verarbeitet: window.my_dataprocessor_function = function(data) {...}.
+    /// en: The name of the JavaScript function that will receive and process the records: window.my_dataprocessor_function = function(data) {...}.
+    /// </param>
+    /// <returns>
+    /// de: Gibt den generierten HTML-Block mit eingebettetem JavaScript zurück, der die Records an die JavaScript-Funktion übergibt.
+    /// en: Returns the generated HTML block with embedded JavaScript that passes the records to the JavaScript function.
+    /// </returns>
     public object RecordsToJs(
-            [HelpDescription("Records, die an eine Javascript Funktion übergeben werden sollten.")]
             IDictionary<string, object>[] records,
-            [HelpDescription("Der Name einer Javascript Funktion, der die Daten übergeben werden: window.my_dataprocessor_funtion = function(data) {...}")]
             string jsCallbackFuncName
          )
     {
-        StringBuilder sb = new StringBuilder();
+        #region Build Javascript Block
 
-        sb.Append("<script>");
-        sb.Append("$(function(){");  // load, when page is rendered
+        StringBuilder js = new StringBuilder();
 
-        sb.Append($"window.{jsCallbackFuncName}(");
+        js.Append("$(function(){");  // load, when page is rendered
+        js.Append($"window.{jsCallbackFuncName}(");
+
         if (records != null)
         {
             bool firstObject = true;
-            sb.Append("[");
+            js.Append("[");
             foreach (var record in records)
             {
-                if (firstObject) { firstObject = false; } else { sb.Append(","); }
-                sb.Append("{");
+                if (firstObject) { firstObject = false; } else { js.Append(","); }
+                js.Append("{");
 
                 bool firstProperty = true;
                 foreach (var kvp in record)
                 {
-                    if (firstProperty) { firstProperty = false; } else { sb.Append(","); }
-                    sb.Append($"{kvp.Key}:{System.Text.Json.JsonSerializer.Serialize(kvp.Value)}");
+                    if (firstProperty) { firstProperty = false; } else { js.Append(","); }
+                    js.Append($"{kvp.Key}:{System.Text.Json.JsonSerializer.Serialize(kvp.Value)}");
                 }
-                sb.Append("}");
+                js.Append("}");
             }
-            sb.Append("]");
+            js.Append("]");
         }
-        sb.Append(");");
 
-        sb.Append("});");
-        sb.Append("</script>");
+        js.Append(");");  // window.{jsCallbackFuncName}
+        js.Append("});");  // (function() {
 
-        return _razor.RawString(sb.ToString());
+        #endregion
+
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendJavaScriptBlock(js.ToString())
+                .BuildHtmlString()
+            );
+    }
+
+    /// <summary>
+    /// de: Erstellt einen JSON-Editor für die Darstellung und Bearbeitung von JSON-Daten im Browser. 
+    /// Die Methode baut die benötigten JavaScript-Skripte dynamisch auf und rendert ein DIV-Element mit eindeutiger ID.
+    /// en: Creates a JSON editor for displaying and editing JSON data in the browser. 
+    /// The method dynamically builds the required JavaScript scripts and renders a DIV element with a unique ID.
+    /// </summary>
+    /// <param name="records">
+    /// de: Ein Array von Dictionaries, die die darzustellenden JSON-Daten repräsentieren.
+    /// en: An array of dictionaries representing the JSON data to be displayed.
+    /// </param>
+    /// <returns>
+    /// de: Ein Roh-HTML-String, der das DIV-Element und die erforderlichen JavaScript-Blöcke enthält, um den JSON-Editor auf der Clientseite zu initialisieren.
+    /// en: A raw HTML string containing the DIV element and the required JavaScript blocks to initialize the JSON editor on the client side.
+    /// </returns>
+    public object JsonEditor(
+            IDictionary<string, object>[] records
+         )
+    {
+        #region Build Javascript Data Block
+
+        StringBuilder js = new StringBuilder();
+
+        var uuid = Guid.NewGuid().ToString("N");
+        js.AppendLine($"console.log(\" in the data block \")");
+        js.Append("$(function(){");
+        js.Append($"window.jsonviewer_{uuid}(");
+
+        if (records != null)
+        {
+            bool firstObject = true;
+            js.Append("[");
+            foreach (var record in records)
+            {
+                if (firstObject) { firstObject = false; } else { js.Append(","); }
+                js.Append("{");
+
+                bool firstProperty = true;
+                foreach (var kvp in record)
+                {
+                    if (firstProperty) { firstProperty = false; } else { js.Append(","); }
+                    js.Append($"{kvp.Key}:{System.Text.Json.JsonSerializer.Serialize(kvp.Value)}");
+                }
+                js.Append("}");
+            }
+            js.Append("]");
+        }
+
+        js.Append(");");  // window.{jsCallbackFuncName}
+        js.Append("});");  // (function() {
+
+        #endregion
+
+        #region Build Javascript JsonViewerBlock
+
+        var jsonViewer = new StringBuilder();
+        jsonViewer.AppendLine($"window.jsonviewer_{uuid} = function(data) {{");
+        jsonViewer.AppendLine($"const container = document.getElementById(\"jsonviewer_{uuid}\");");
+        jsonViewer.AppendLine($"const options = {{mode: 'view'}};");
+        jsonViewer.AppendLine("const editor = new JSONEditor(container, options);");
+        jsonViewer.AppendLine("editor.set(data);");
+        jsonViewer.AppendLine("const updatedJson = editor.get();");
+        jsonViewer.AppendLine("};");
+
+        #endregion
+
+        var builder = HtmlBuilder.Create()
+            .AppendDiv(div =>
+            {
+                div.WithId($"jsonviewer_{uuid}");
+                div.AddStyle("width", "1000px");
+                div.AddStyle("height", "1000px");
+            })
+            .AppendJavaScriptBlock(js.ToString())
+            .AppendJavaScriptBlock(jsonViewer.ToString());
+
+        return _razor.RawString(builder.BuildHtmlString());
     }
 
     public IDictionary<string, object>[] GetCypherPath(string startNode, IDictionary<string, object> endNode, IEnumerable<IDictionary<string, object>> records, bool reverse)
@@ -171,10 +300,29 @@ public class DataLinqHelper : IDataLinqHelper
     [HelpDescription("Die Methode lädt die Records aus der angegeben Query (endpoint@query). Die Abfrage passiert serverseitig während des Renderns der Seite.")]
     async public Task<IDictionary<string, object>[]> GetRecordsAsync(
         [HelpDescription("Gibt die Id der Query in folgender Form an: endpoint-id@query-id")]
+    /// <summary>
+    /// de: Die Methode lädt Records aus einer angegebenen Query (endpoint@query) und gibt diese als Sammlung von Dictionaries zurück. Die Abfrage erfolgt serverseitig während des Renderns der Seite.
+    /// en: The method loads records from a specified query (endpoint@query) and returns them as a collection of dictionaries. The query is executed server-side during page rendering.
+    /// </summary>
+    /// <param name="id">
+    /// de: Gibt die ID der Query an, die im Format endpoint-id@query-id vorliegt. Diese wird zur Abfrage der entsprechenden Daten verwendet.
+    /// en: Specifies the query ID in the format endpoint-id@query-id. This is used to query the corresponding data.
+    /// </param>
+    /// <param name="filter">
+    /// de: Ein optionaler Filter im Format von URL-Parametern, der auf die abgerufenen Daten angewendet wird: ((NAME=Franz&amp;STRASSE=Eberweg))
+    /// en: An optional filter in the format of URL parameters applied to the retrieved data: ((NAME=Franz&amp;STRASSE=Eberweg))
+    /// </param>
+    /// <param name="orderby">
+    /// de: Ein optionaler Parameter, der angibt, nach welchen Feldern die Daten sortiert werden sollen. Vor einem Feldnamen kann ein Minuszeichen (-) gesetzt werden, um absteigend zu sortieren.
+    /// en: An optional parameter specifying the fields to sort the data by. A minus sign (-) before a field name indicates descending order.
+    /// </param>
+    /// <returns>
+    /// de: Gibt eine Sammlung von Records als Dictionary zurück, die aus der serverseitigen Datalinq-Abfrage geladen wurden.
+    /// en: Returns a collection of records as dictionaries, loaded from the server-side Datalinq query.
+    /// </returns>
+    public async Task<IDictionary<string, object>[]> GetRecordsAsync(
         string id,
-        [HelpDescription("Feldnamen mit Werten, Übergabe wie bei einem URL-Parameter, bspw ((NAME=Franz&STRASSE=Eberweg))")]
         string filter = "",
-        [HelpDescription("Feldnamen mit Komma getrennt in der Reihenfolge, in der sortiert werden soll. Um absteigend zu sortieren, kann ein Minus(-) vor den Feldnamen gestellt werden, bspw ((PLZ,STRASSE,-HAUSNR))")]
         string orderby = "")
     {
         var dataLinqRoute = new DataLinqRoute(id, _httpContext);
@@ -218,130 +366,291 @@ public class DataLinqHelper : IDataLinqHelper
 
     #endregion
 
+    
     #region Load View
 
-    [HelpDescription("Die Methode bindet einen View ein. Der View wird sofort nach dem Aufbau des übergeordneten Views geladen und angezeigt")]
+    /// <summary>
+    /// de: Die Methode bindet einen View ein und zeigt diesen sofort nach dem Aufbau des übergeordneten Views an.
+    /// en: The method embeds a view and displays it immediately after the parent view is built.
+    /// </summary>
+    /// <param name="id">
+    /// de: Gibt die ID des Views an, die im Format endpoint-id@query-id@view-id vorliegt, um den richtigen View zu laden.
+    /// en: Specifies the ID of the view in the format endpoint-id@query-id@view-id to load the correct view.
+    /// </param>
+    /// <param name="encodeQueryString">
+    /// de: Gibt an, ob die Query-String-Parameter URL-kodiert werden sollen. Standardmäßig ist dieser Wert auf true gesetzt.
+    /// en: Indicates whether the query string parameters should be URL encoded. This is true by default.
+    /// </param>
+    /// <returns>
+    /// de: Gibt den generierten HTML-Block mit eingebettetem View zurück, der im übergeordneten View angezeigt wird.
+    /// en: Returns the generated HTML block with the embedded view, which will be displayed in the parent view.
+    /// </returns>
     public object IncludeView(
-        [HelpDescription("Gibt die Id des Views in folgender Form an: endpoint-id@query-id@view-id")]
         string id,
-        [HelpDescription("Gibt an, die Id urlkodiert werden sollte. Standardmäßig sollte hier immer true übergeben werden")]
         bool encodeQueryString = true)
     {
-        return _razor.RawString("<div class='datalinq-include' data-source='" + ParseUrl(id, encodeQueryString) + "'></div>");
-        //return IncludeView(id, String.Empty, String.Empty, encodeQueryString);
+        return _razor.RawString(
+                HtmlBuilder.Create()
+                .AppendStyle(style => 
+                    style.Content(_currentDatalinqService.GetViewCss(id).GetAwaiter().GetResult())
+                ).AppendJavaScriptBlock(
+                    _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
+                ).AppendDiv(div =>
+                        div.AddClass("datalinq-include")
+                           .AddAttribute("data-source", ParseUrl(id, encodeQueryString))
+                ).BuildHtmlString()
+             );
+
     }
 
-    [HelpDescription("Hier werden anstelle einer langen URL die Filter und Sortierungsfelder getrennt eingegeben. Das ist von Bedeutung, wenn im damit eingebundenen View nach Werten gefiltert werden soll, die im übergeordneten View mitgegeben werden.")]
+    /// <summary>
+    /// de: Die Methode bindet einen View ein und übergibt Filter- und Sortierungsparameter an den eingebundenen View. Dies ist nützlich, wenn der eingebundene View nach Werten filtern soll, die im übergeordneten View mitgegeben werden.
+    /// en: The method embeds a view and passes filter and sorting parameters to the embedded view. This is useful when the embedded view needs to filter based on values provided in the parent view.
+    /// </summary>
+    /// <param name="id">
+    /// de: Gibt die ID des Views an, die im Format endpoint-id@query-id@view-id vorliegt, um den richtigen View zu laden.
+    /// en: Specifies the ID of the view in the format endpoint-id@query-id@view-id to load the correct view.
+    /// </param>
+    /// <param name="filter">
+    /// de: Ein Filter im Format von URL-Parametern (z.B. NAME=Franz&amp;STRASSE=Eberweg), der auf die abgerufenen Daten im eingebundenen View angewendet wird.
+    /// en: A filter in the format of URL parameters (e.g., NAME=Franz&amp;STRASSE=Eberweg) that is applied to the data retrieved in the embedded view.
+    /// </param>
+    /// <param name="orderby">
+    /// de: Ein optionaler Parameter, der angibt, nach welchen Feldern die Daten im eingebundenen View sortiert werden sollen. Vor einem Feldnamen kann ein Minuszeichen (-) gesetzt werden, um absteigend zu sortieren.
+    /// en: An optional parameter specifying the fields by which the data in the embedded view should be sorted. A minus sign (-) before a field name indicates descending order.
+    /// </param>
+    /// <param name="encodeUrl">
+    /// de: Gibt an, ob die URL-Parameter URL-kodiert werden sollen. Standardmäßig ist dieser Wert auf true gesetzt.
+    /// en: Indicates whether the URL parameters should be URL encoded. This is true by default.
+    /// </param>
+    /// <returns>
+    /// de: Gibt den generierten HTML-Block mit eingebettetem View und den übergebenen Parametern zurück.
+    /// en: Returns the generated HTML block with the embedded view and the passed parameters.
+    /// </returns>
     public object IncludeView(
-        [HelpDescription("Gibt die Id des Views in folgender Form an: endpoint-id@query-id@view-id")]
         string id,
-        [HelpDescription("Feldnamen mit Werten, Übergabe wie bei einem URL-Parameter, bspw ((NAME=Franz&STRASSE=Eberweg))")]
         string filter,
-        [HelpDescription("Feldnamen mit Komma getrennt in der Reihenfolge, in der sortiert werden soll. Um absteigend zu sortieren, kann ein Minus(-) vor den Feldnamen gestellt werden, bspw ((PLZ,STRASSE,-HAUSNR))")]
         string orderby = "",
-        [HelpDescription("Gibt an, die Id urlkodiert werden sollte. Standardmäßig sollte hier immer true übergeben werden")]
         bool encodeUrl = true)
     {
-        return _razor.RawString("<div class='datalinq-include' data-source='" + ParseUrl(id, encodeUrl) + "' data-filter='" + ParseUrl(filter, encodeUrl) + "' data-orderby='" + ParseUrl(orderby, encodeUrl) + "'></div>");
+        return _razor.RawString(
+                HtmlBuilder.Create()
+                .AppendStyle(style =>
+                    style.Content(_currentDatalinqService.GetViewCss(id).GetAwaiter().GetResult())
+                ).AppendJavaScriptBlock(
+                    _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
+                ).AppendDiv(div =>
+                        div.AddClass("datalinq-include")
+                           .AddAttribute("data-source", ParseUrl(id, encodeUrl))
+                           .AddAttribute("data-filter", ParseUrl(filter, encodeUrl))
+                           .AddAttribute("data-orderby", ParseUrl(orderby, encodeUrl))
+                    )
+                    .BuildHtmlString()
+             );
     }
 
-    [HelpDescription(@"Die Methode bindet einen View ein. Der View wird nicht sofort nach dem Aufbau des übergeordneten Views geladen und angezeigt, sondern erst, wenn der Anwender auf einen Button klickt")]
+    /// <summary>
+    /// de: Die Methode bindet einen View ein, der nicht sofort nach dem Aufbau des übergeordneten Views geladen wird, sondern erst, wenn der Benutzer auf einen Button klickt, der den View anzeigt.
+    /// en: The method embeds a view that is not loaded immediately after the parent view is built, but only when the user clicks a button to load the view.
+    /// </summary>
+    /// <param name="id">
+    /// de: Gibt die ID des Views an, die im Format endpoint-id@query-id@view-id vorliegt, um den richtigen View zu laden.
+    /// en: Specifies the ID of the view in the format endpoint-id@query-id@view-id to load the correct view.
+    /// </param>
+    /// <param name="text">
+    /// de: Der Text, der auf der Schaltfläche angezeigt wird, die den View lädt, wenn der Benutzer darauf klickt.
+    /// en: The text displayed on the button that loads the view when the user clicks it.
+    /// </param>
+    /// <param name="encodeUrl">
+    /// de: Gibt an, ob die URL-Parameter URL-kodiert werden sollen. Standardmäßig ist dieser Wert auf true gesetzt.
+    /// en: Indicates whether the URL parameters should be URL encoded. This is true by default.
+    /// </param>
+    /// <returns>
+    /// de: Gibt den generierten HTML-Block mit eingebettetem View und einer Schaltfläche zurück, die den View aufruft.
+    /// en: Returns the generated HTML block with the embedded view and a button that triggers the view to be loaded.
+    /// </returns>
     public object IncludeClickView(
-        [HelpDescription("Gibt die Id des Views in folgender Form an: endpoint-id@query-id@view-id")]
         string id,
-        [HelpDescription("Text der Schaltfläche, der die View hinzulädt")]
         string text,
-        [HelpDescription("Gibt an, die Id urlkodiert werden sollte. Standardmäßig sollte hier immer true übergeben werden")]
         bool encodeUrl = true)
     {
-        return _razor.RawString("<div class='datalinq-include-click' data-source='" + ParseUrl(id, encodeUrl) + "' data-header='" + text + "'></div>");
+        return _razor.RawString(
+                HtmlBuilder.Create()
+                .AppendStyle(style =>
+                    style.Content(_currentDatalinqService.GetViewCss(id).GetAwaiter().GetResult())
+                ).AppendJavaScriptBlock(
+                    _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
+                ).AppendDiv(div =>
+                        div.AddClass("datalinq-include-click")
+                           .AddAttribute("data-source", ParseUrl(id, encodeUrl))
+                           .AddAttribute("data-header", text)
+                    )
+                    .BuildHtmlString()
+             );
     }
 
-    [HelpDescription("Hier werden anstelle einer langen URL die Filter und Sortierungsfelder getrennt eingegeben. Das ist von Bedeutung, wenn im damit eingebundenen View nach Werten gefiltert werden soll, die im übergeordneten View mitgegeben werden.")]
+    /// <summary>
+    /// de: Die Methode bindet einen View ein, der nicht sofort nach dem Aufbau des übergeordneten Views geladen wird, sondern erst, wenn der Benutzer auf eine Schaltfläche klickt. Dabei werden Filter- und Sortierungsparameter an den eingebundenen View übergeben.
+    /// en: The method embeds a view that is not loaded immediately after the parent view is built, but only when the user clicks a button. Filter and sorting parameters are passed to the embedded view.
+    /// </summary>
+    /// <param name="id">
+    /// de: Gibt die ID des Views an, die im Format endpoint-id@query-id@view-id vorliegt, um den richtigen View zu laden.
+    /// en: Specifies the ID of the view in the format endpoint-id@query-id@view-id to load the correct view.
+    /// </param>
+    /// <param name="text">
+    /// de: Der Text, der auf der Schaltfläche angezeigt wird, die den View lädt, wenn der Benutzer darauf klickt.
+    /// en: The text displayed on the button that loads the view when the user clicks it.
+    /// </param>
+    /// <param name="filter">
+    /// de: Ein Filter im Format von URL-Parametern (z.B. NAME=Franz&amp;STRASSE=Eberweg), der auf die abgerufenen Daten im eingebundenen View angewendet wird.
+    /// en: A filter in the format of URL parameters (e.g., NAME=Franz&amp;STRASSE=Eberweg) that is applied to the data retrieved in the embedded view.
+    /// </param>
+    /// <param name="orderby">
+    /// de: Ein optionaler Parameter, der angibt, nach welchen Feldern die Daten im eingebundenen View sortiert werden sollen. Vor einem Feldnamen kann ein Minuszeichen (-) gesetzt werden, um absteigend zu sortieren.
+    /// en: An optional parameter specifying the fields by which the data in the embedded view should be sorted. A minus sign (-) before a field name indicates descending order.
+    /// </param>
+    /// <param name="encodeUrl">
+    /// de: Gibt an, ob die URL-Parameter URL-kodiert werden sollen. Standardmäßig ist dieser Wert auf true gesetzt.
+    /// en: Indicates whether the URL parameters should be URL encoded. This is true by default.
+    /// </param>
+    /// <returns>
+    /// de: Gibt den generierten HTML-Block mit eingebettetem View und einer Schaltfläche zurück, die den View aufruft, nachdem der Benutzer darauf geklickt hat.
+    /// en: Returns the generated HTML block with the embedded view and a button that triggers the view to be loaded when the user clicks it.
+    /// </returns>
     public object IncludeClickView(
-        [HelpDescription("Gibt die Id des Views in folgender Form an: endpoint-id@query-id@view-id")]
         string id,
-        [HelpDescription("Text der Schaltfläche, der die View hinzulädt")]
         string text,
-        [HelpDescription("Feldnamen mit Werten, Übergabe wie bei einem URL-Parameter, bspw ((NAME=Franz&STRASSE=Eberweg))")]
         string filter,
-        [HelpDescription("Feldnamen mit Komma getrennt in der Reihenfolge, in der sortiert werden soll. Um absteigend zu sortieren, kann ein Minus(-) vor den Feldnamen gestellt werden, bspw ((PLZ,STRASSE,-HAUSNR))")]
         string orderby = "",
-        [HelpDescription("Gibt an, die Id urlkodiert werden sollte. Standardmäßig sollte hier immer true übergeben werden")]
         bool encodeUrl = true)
     {
-        return _razor.RawString("<div class='datalinq-include-click' data-source='" + ParseUrl(id, encodeUrl) + "' data-filter='" + ParseUrl(filter, encodeUrl) + "' data-orderby='" + ParseUrl(orderby, encodeUrl) + "' data-header='" + text + "'></div>");
+        return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendStyle(style =>
+                    style.Content(_currentDatalinqService.GetViewCss(id).GetAwaiter().GetResult())
+                    ).AppendJavaScriptBlock(
+                        _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
+                    ).AppendDiv(div =>
+                            div.AddClass("datalinq-include-click")
+                               .AddAttribute("data-source", ParseUrl(id, encodeUrl))
+                               .AddAttribute("data-filter", ParseUrl(filter, encodeUrl))
+                               .AddAttribute("data-orderby", ParseUrl(orderby, encodeUrl))
+                               .AddAttribute("data-header", text)
+                    ).BuildHtmlString()
+             );
     }
 
-    [HelpDescription("Die Methode erzeugt einen Button, mit dem der Anwender den View durch klick aktualisieren kann. Es wird dabei immer nur der View aktualisiert, in dem der Button mit dieser Methode engefügt wurde.")]
+    /// <summary>
+    /// de: Die Methode erzeugt einen Button, mit dem der Anwender den View durch Klick aktualisieren kann. Es wird dabei immer nur der View aktualisiert, in dem der Button mit dieser Methode eingefügt wurde.
+    /// en: The method generates a button that allows the user to refresh the view by clicking. Only the view in which the button was added will be refreshed.
+    /// </summary>
+    /// <param name="label">
+    /// de: Der Text, der auf dem Button angezeigt wird. Standardmäßig ist der Text "Aktualisieren".
+    /// en: The text displayed on the button. By default, the text is "Aktualisieren".
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button. ((z.B.: new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object containing HTML attributes for the button. ((e.g.: new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <returns>
+    /// de: Gibt den generierten HTML-Block für den Button zurück.
+    /// en: Returns the generated HTML block for the button.
+    /// </returns>
     public object RefreshViewClick(
-        [HelpDescription("Der Text für dem Button")]
         string label = "Aktualisieren",
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für diesen Button ((z.B.: new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<button ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-button apply");
-        AppendHtmlAttribute(sb, "onclick", "dataLinq.refresh(this)");
-        sb.Append(">" + label + "</button>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendRefreshViewClickButtton(label, htmlAttributes)
+                    .BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Die Methode erzeugt einen Button, über den ein View automatisch nach einer Zeitspanne aktualisiert wird. Aktualisiert wird abei nur jener View, in dem sich der Button befinden. Der Anwender kann den Button über Checkbox aktiv bzw. inaktiv schalten.")]
+    /// <summary>
+    /// de: Die Methode erzeugt einen Button, über den ein View automatisch nach einer festgelegten Zeitspanne aktualisiert wird. Der Button ermöglicht es dem Benutzer, das automatische Aktualisieren durch ein Checkbox-Symbol zu aktivieren oder zu deaktivieren. Es wird nur der View aktualisiert, in dem sich der Button befindet.
+    /// en: The method creates a button that automatically refreshes a view after a set period of time. The button allows the user to activate or deactivate the auto-refresh feature through a checkbox symbol. Only the view containing the button will be refreshed.
+    /// </summary>
+    /// <param name="label">
+    /// de: Der Text, der auf dem Button angezeigt wird, um die automatische Aktualisierung zu steuern. Standardmäßig ist der Text "Wird aktualisiert in".
+    /// en: The text displayed on the button to control the auto-refresh. By default, the text is "Wird aktualisiert in".
+    /// </param>
+    /// <param name="seconds">
+    /// de: Die Anzahl der Sekunden, nach denen der View automatisch aktualisiert wird.
+    /// en: The number of seconds after which the view will be automatically refreshed.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button. ((z.B.: new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object containing HTML attributes for the button. ((e.g.: new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <param name="isActive">
+    /// de: Gibt an, ob der Timer zu Beginn aktiv ist oder ob er erst durch den Benutzer über das Checkbox-Symbol aktiviert wird.
+    /// en: Indicates whether the timer is active initially or if it is activated by the user through the checkbox symbol.
+    /// </param>
+    /// <returns>
+    /// de: Gibt den generierten HTML-Block für den Button und das zugehörige Kontrollkästchen zurück, mit der Möglichkeit zur Steuerung des automatischen Updates.
+    /// en: Returns the generated HTML block for the button and the associated checkbox, allowing the user to control the automatic update.
+    /// </returns>
     public object RefreshViewTicker(
-        [HelpDescription("Der Text für dem Button")]
         string label = "Wird aktualisiert in",
-        [HelpDescription("Gibt einen Wert in Sekunden an, nach der die View aktualisiert wird.")]
         int seconds = 60,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für diesen Button ((z.B.: new { style=\"width:300px\" @class=\"meine-klasse\" }))")]
         object htmlAttributes = null,
-        [HelpDescription("Gibt an, ob der Timer zu Beginn bereits aktiv ist, oder erst vom Anwender durch Klick auf das Checkbox Symbol aktiv wird.")]
         bool isActive = true)
     {
-        StringBuilder sb = new StringBuilder();
-
         string id = Guid.NewGuid().ToString("N");
+        string label_ = label;
 
-        sb.Append("<div ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-refresh-ticker-container");
-        sb.Append(">");
-        sb.Append("<input ");
-        AppendHtmlAttribute(sb, "class", "datalinq-refresh-ticker");
-        AppendHtmlAttribute(sb, "data-value", seconds.ToString());
-        AppendHtmlAttribute(sb, "data-label", label);
-        AppendHtmlAttribute(sb, "type", "checkbox");
-        AppendHtmlAttribute(sb, "id", id);
-        if (isActive)
-        {
-            AppendHtmlAttribute(sb, "checked", "checked");
-        }
+        return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendDiv(div =>
+                    {
+                        div.AddClass("datalinq-refresh-ticker-container")
+                           .AddAttributes(htmlAttributes)
 
-        sb.Append(">");
-        sb.Append("</input>");
-
-        sb.Append("<label ");
-        AppendHtmlAttribute(sb, "style", "display:inline");
-        AppendHtmlAttribute(sb, "for", id);
-        sb.Append(">");
-        sb.Append("&nbsp;" + label + "&nbsp;" + seconds + "&nbsp;Sekunden");
-        sb.Append("</label>");
-
-        sb.Append("</div>");
-
-        return _razor.RawString(sb.ToString());
+                           .AppendCheckbox(isActive, checkbox =>
+                               checkbox
+                                    .WithId(id)
+                                    .AddClass("datalinq-refresh-ticker")
+                                    .AddAttribute("data-value", seconds.ToString())
+                                    .AddAttribute("data-label", label)
+                           )
+                           .AppendLabelFor(id, label =>
+                               label.AddStyle("display", "inline")
+                                    .Content($"&nbsp;{label_}&nbsp;{seconds}&nbsp;Sekunden")
+                           );
+                    })
+                    .BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Die Methode erzeugt ein Steuerelement zum Sortieren eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Checkboxen bestimmen, nach welchen Eigenschaften sortiert wird bzw. ob auf- oder absteigend sortiert werden soll. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde aktualisiert.")]
+    /// <summary>
+    /// de: Die Methode erzeugt ein Steuerelement zum Sortieren eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Checkboxen bestimmen, nach welchen Eigenschaften sortiert wird bzw. ob auf- oder absteigend sortiert werden soll. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde, aktualisiert.
+    /// en: The method generates a control for sorting a view. The element expands when a button is clicked. The user can then select which properties to sort by and whether the sorting should be ascending or descending. Once the options are confirmed, the view containing the control will be updated.
+    /// </summary>
+    /// <param name="label">
+    /// de: Der Text für den Button, der das Sortier-Steuerelement aufklappen lässt (z.B.: "Sortierung")
+    /// en: The text for the button that expands the sorting control (e.g., "Sorting")
+    /// </param>
+    /// <param name="orderFields">
+    /// de: Ein String-Array mit den Feldern, nach denen sortiert werden kann (z.B.: new string[]{ "ORT","STR" }). Die Felder entsprechen den Feldnamen, die auch innerhalb des Records vorkommen
+    /// en: A string array containing the fields that can be used for sorting (e.g., new string[]{ "CITY", "STREET" }). The fields match the field names as they appear within the record
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button. ((z.B.: new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object containing HTML attributes for the button. ((e.g.: new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <param name="isOpen">
+    /// de: Boolscher Wert, der angibt, ob die Sortieransicht zu Beginn geöffnet (aufgeklappt) sein soll.
+    /// en: A boolean value indicating whether the sorting view should be open (expanded) by default.
+    /// </param>
+    /// <returns>
+    /// de: Gibt das generierte HTML für das Sortier-Steuerelement zurück.
+    /// en: Returns the generated HTML for the sorting control.
+    /// </returns>
     public object SortView(
-        [HelpDescription("Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes (z.B.: \"Sortierung\")")]
         string label,
-        [HelpDescription("Ein String-Array mit Feldern, nach denen sortiert werden kann ((z.B.: new string[]{ \"ORT\",\"STR\" } )). Die Felder entsprechen hier den Feldnamen, wie sie auch innerhalb des Records vorkommen.")]
         string[] orderFields,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für diesen Button ((z.B.: new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null,
-        [HelpDescription("Boolscher Wert, der angibt, ob die Sortierung zu Beginn geöffnet (aufgeklappt) ist")]
         bool isOpen = false)
     {
         if (orderFields == null)
@@ -361,79 +670,199 @@ public class DataLinqHelper : IDataLinqHelper
         return SortView(label, dict, htmlAttributes, isOpen);
     }
 
+
+    /// <summary>
+    /// de: Die Methode erzeugt ein Steuerelement zum Sortieren eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Checkboxen bestimmen, nach welchen Eigenschaften sortiert wird bzw. ob auf- oder absteigend sortiert werden soll. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde, aktualisiert.
+    /// en: The method generates a control for sorting a view. The element expands when a button is clicked. The user can then select which properties to sort by and whether the sorting should be ascending or descending. Once the options are confirmed, the view containing the control will be updated.
+    /// </summary>
+    /// <param name="label">
+    /// de: Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes (z.B.: "Sortierung").
+    /// en: The text for the button that expands the sorting control (e.g., "Sorting").
+    /// </param>
+    /// <param name="orderFields">
+    /// de: Hier wird anstelle von Strings ein Dictionary übergeben. Die Keys entsprechen den Feldnamen von oben. Die Values geben ein anonymes Objekt an, mit dem beispielsweise die Anzeigenamen der Felder bestimmt werden können. ((orderFields: new Dictionary&lt;string, object&gt;() { { "ORT", new { 
+    /// displayname = "Ort/Gemeinde" } }, { "STR", new { displayname = "Strasse" } } }))
+    /// en: Instead of strings, a dictionary is passed. The keys correspond to the field names from above. The values are anonymous objects that can define properties like display names for the fields. ((orderFields: new Dictionary&lt;string, object&gt;() { { "CITY", new { 
+    /// displayname = "City/Village" } }, { "STREET", new { displayname = "Street" } } }))
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button ((z.B.: new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object containing HTML attributes for the button ((e.g.: new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <param name="isOpen">
+    /// de: Boolscher Wert, der angibt, ob die Sortierung zu Beginn geöffnet (aufgeklappt) ist.
+    /// en: A boolean value indicating whether the sorting view should be open (expanded) by default.
+    /// </param>
+    /// <returns>
+    /// de: Gibt das generierte HTML für das Sortier-Steuerelement zurück.
+    /// en: Returns the generated HTML for the sorting control.
+    /// </returns>
     public object SortView(
         string label,
-        //[HelpDescription("Hier wird anstelle des von Strings ein Dictionary übergeben. Die Keys entspechend den Feldnamen von oben. Die Values geben ein anonymes Objekt an, mit dem Bespiesweise die Anzeigenamen der Felder bestimmt werden kann. Außerdem kann die Checkbox angehakt werden, sinnvoll etwa bei einem intialem Order (aus der Query). ((orderFields: new Dictionary&lt;string,object&gt;(){\n   {\"ORT\", new { displayname=\"Ort/Gemeinde\" }},\n   {\"STR\", new { displayname=\"Strasse\", @checked=true, checkedDesc=true} }<br/>}))")]
-        [HelpDescription("Hier wird anstelle von Strings ein Dictionary übergeben. Die Keys entspechend den Feldnamen von oben. Die Values geben ein anonymes Objekt an, mit dem Bespielsweise die Anzeigenamen der Felder bestimmt werden kann. ((orderFields: new Dictionary&lt;string,object&gt;(){\n   {\"ORT\", new { displayname=\"Ort/Gemeinde\" }},\n   {\"STR\", new { displayname=\"Strasse\"} }<br/>}))")]
         Dictionary<string, object> orderFields,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für diesen Button ((z.B.: new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
-        object htmlAttributes=null,
-        [HelpDescription("Boolscher Wert, der angibt, ob die Sortierung zu Beginn geöffnet (aufgeklappt) ist")]
+        object htmlAttributes = null,
         bool isOpen = false)
     {
-        StringBuilder sb = new StringBuilder();
+        return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendDiv(div =>
+                    {
+                        div.AddClass("datalinq-refresh-ordering-container")
+                           .AddClass("collapsed")
+                           .AddAttributes(htmlAttributes)
+                           .AddAttribute("data-isOpen", isOpen.ToString())
+                           .AppendButton(button =>
+                               button.AddClass("datalinq-button menu")
+                                     .AddAttribute("onclick", "$(this).closest('.datalinq-refresh-ordering-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-ordering-body').slideToggle()")
+                                     .Content(label)
+                           )
+                           .AppendDiv(div =>
+                               div.AddClass("datalinq-refresh-ordering-body")
+                                  .AddStyle("display", "none")
+                                  .AppendTable(table =>
+                                  {
+                                      table.AppendTableRow(tr =>
+                                      {
+                                          tr.AppendTableHeaderCell(th => th.Content("Feld"))
+                                            .AppendTableHeaderCell(th => th.Content("Absteigend"));
+                                      });
+                                      foreach (var orderField in orderFields)
+                                      {
+                                          var orderProperties = ToDictionary(orderField.Value);
+                                          bool checkedAsc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checked", false));
+                                          bool checkedDesc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checkedDesc", false));
 
-        sb.Append("<div ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-refresh-ordering-container collapsed");  // Ist unabhängig von isOpen immer collapsed. Wenn isOpen == true wird dann beim rendern onclick des Buttons getriggert und "collapsed" wirder entfernt. 
-        AppendHtmlAttribute(sb, "data-isOpen", isOpen.ToString());
-        sb.Append(">");
-
-        sb.Append("<button ");
-        AppendHtmlAttribute(sb, "class", "datalinq-button menu");
-        AppendHtmlAttribute(sb, "onclick", "$(this).closest('.datalinq-refresh-ordering-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-ordering-body').slideToggle()");
-        sb.Append(">" + label + "</button>");
-
-        sb.Append("<div ");
-        AppendHtmlAttribute(sb, "class", "datalinq-refresh-ordering-body");
-        AppendHtmlAttribute(sb, "style", "display:none");
-        sb.Append(">");
-
-        sb.Append("<table>");
-        sb.Append("<tr><th>Feld</th><th>Absteigend</th></tr>");
-        foreach (string orderField in orderFields.Keys)
-        {
-            var orderProperties = ToDictionary(orderFields[orderField]);
-            bool checkedAsc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checked", false));
-            bool checkedDesc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checkedDesc", false));
-
-            sb.Append("<tr>");
-            sb.Append("<td>");
-            sb.Append("<label>");
-            sb.Append("<input");
-            AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-field");
-            //AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-field" + (checkedAsc ? " initial" : ""));
-            //if (checkedAsc == true)
-            //    sb.Append(" checked ");
-            sb.Append("/>&nbsp;" + GetDefaultValueFromRecord(orderProperties, "displayname", orderField) + "</label>");
-            sb.Append("</td>");
-            sb.Append("<td style='text-align:center'>");
-            sb.Append("<input");
-            AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-desc");
-            //AppendHtmlAttributes(sb, new { type = "checkbox", name = orderField, onclick = "dataLinq.updateViewOrdering(this)" }, "datalinq-ordering-desc" + (checkedAsc ? " initial" : ""));
-            //if (checkedDesc == true)
-            //    sb.Append(" checked ");
-            sb.Append("/>");
-            sb.Append("</td>");
-            sb.Append("</tr>");
-        }
-        sb.Append("</table>");
-        sb.Append(RefreshViewClick("Übernehmen").ToString());
-        sb.Append("</div>");
-
-        sb.Append("</div>");
-
-        return _razor.RawString(sb.ToString());
+                                          table.AppendTableRow(tr =>
+                                          {
+                                              tr.AppendTableCell(td =>
+                                                  td.AppendLabel(label =>
+                                                      label
+                                                        .AppendCheckbox(checkedAsc, checkbox =>
+                                                            checkbox
+                                                                .AddClass("datalinq-ordering-field")
+                                                                .WithName(orderField.Key)
+                                                                .AddAttribute("onclick", "dataLinq.updateViewOrdering(this)")
+                                                        )
+                                                        .AppendSpan(span =>
+                                                            span.Content(GetDefaultValueFromRecord(orderProperties, "displayname", orderField.Key).ToString())
+                                                        )
+                                                     )
+                                                 )
+                                                 .AppendTableCell(td =>
+                                                    td.AppendCheckbox(checkedDesc, checkbox =>
+                                                        checkbox
+                                                           .AddClass("datalinq-ordering-desc")
+                                                           .WithName(orderField.Key)
+                                                           .AddAttribute("onclick", "dataLinq.updateViewOrdering(this)")
+                                                    ).AddStyle("text-align", "center")
+                                              );
+                                          });
+                                      }
+                                  })
+                                  .AppendRefreshViewClickButtton("Übernehmen")
+                           );
+                    })
+                    .BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Die Methode erzeugt ein Steuerelement zum Filtern eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Eingabefelder/Auswahllisten bestimmen, nach welchen Eigenschaften gefiltert wird. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde aktualisiert.")]
-    public object FilterView(
-        [HelpDescription("Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes ((z.B.: \"Filter setzen\"))")]
-        string label,
-        [HelpDescription("Ein String-Array mit Parametern, nach denen gefiltert werden kann ((z.B.: new string[]{ \"ort\",\"strasse\" } )). Die Parameter entsprechen hier jenen Parameternamen, die an die enprechende Abfrage für den View übergeben werden können.")]
-        string[] filterParameters,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für diesen Button ((z.B.: new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
+    /// <summary>
+    /// de: Erstellt eine Schnellsuchleiste zum durchsuchen einer DataLinq Tabelle.
+    /// en: Creates a quick search bar for additional querying of a DataLinq table.
+    /// </summary>
+    /// <param name="columns">
+    /// de: Die zu durchsuchenden Spalten.
+    /// en: The searchable columns.
+    /// </param>
+    /// <param name="placeholder">
+    /// de: Der platzhalter innerhalb der Suchleiste.
+    /// en: The placeholder inside of the searchbar.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button ((z.B.: new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object containing HTML attributes for the button ((e.g., new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <param name="isOpen">
+    /// de: Boolscher Wert, der angibt, ob der Fokus direkt auf das Suchfeld gerichtet sein soll..
+    /// en: A boolean value indicating whether the input field should be focused directly.
+    /// </param>
+    /// <returns>
+    /// de: Gibt das generierte HTML für die Schnellsuchleiste zurück.
+    /// en: Returns the generated HTML for the quick search bar.
+    /// </returns>
+    public object QuickSearch(
+        string[] columns,
+        string placeholder = "Search for anything...",
         object htmlAttributes = null,
-        [HelpDescription("Boolscher Wert, der angibt, ob der Filter zu Beginn geöffnet (aufgeklappt) ist")]
+        bool isOpen = false)
+    {
+        return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendDiv(div =>
+                    {
+                        div.AddAttributes(htmlAttributes);
+                        div.AddClass("datalinq-quicksearch-search-container");
+                        div.AddAttribute("datalinq-quicksearch-columns", String.Join(',', columns));
+                        div.AppendDiv(div2 =>
+                        {
+                            div2.AddClass("datalinq-quicksearch-search-wrapper");
+                            div2.Content("<svg class=\"datalinq-quicksearch-search-icon\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\r\n    //            <circle cx = \"11\" cy=\"11\" r=\"8\"></circle>\r\n    //            <path d = \"m21 21-4.35-4.35\" ></ path >\r\n    //        </ svg >");
+                            div2.AppendInput(input =>
+                            {
+                                input.AddAttribute("type", "text");
+                                input.AddClass("datalinq-quicksearch-search-input");
+                                input.AddAttribute("placeholder", placeholder);
+                                input.AddAttribute("id", "datalinq-quicksearch-searchInput");
+                                input.AddAttribute("oninput", "dataLinq.onSearchInput(this)");
+
+                                if (isOpen)
+                                    input.AddAttribute("autofocus", "autofocus");
+                            });
+                            div2.AppendButton(button =>
+                            {
+                                button.AddClass("datalinq-quicksearch-clear-button");
+                                button.AddAttribute("id", "datalinq-quicksearch-clearButton");
+                                button.AddAttribute("onclick", "dataLinq.deleteQuicksearch(this)");
+                                button.Content("×");
+                            });
+                        });
+                    })
+                    .BuildHtmlString()
+            );
+    }
+
+    /// <summary>
+    /// de: Die Methode erzeugt ein Steuerelement zum Filtern eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Eingabefelder/Auswahllisten bestimmen, nach welchen Eigenschaften gefiltert wird. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde, aktualisiert.
+    /// en: The method generates a control for filtering a view. The element expands when a button is clicked. The user can then select which properties to filter by using input fields or dropdown lists. Once the options are confirmed, the view containing the control will be updated.
+    /// </summary>
+    /// <param name="label">
+    /// de: Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes (z.B.: "Filter setzen").
+    /// en: The text for the button that expands the filtering control (e.g., "Apply Filter").
+    /// </param>
+    /// <param name="filterParameters">
+    /// de: Ein String-Array mit Parametern, nach denen gefiltert werden kann ((z.B.: new string[]{ "ort","strasse" } )) 
+    /// Die Parameter entsprechen hier jenen Parameternamen, die an die entsprechende Abfrage für den View übergeben 
+    /// werden können.
+    /// en: A string array with parameters that can be used for filtering ((e.g., new string[]{ "city","street" })) 
+    /// The parameters correspond to the parameter names that can be passed to the 
+    /// corresponding query for the view.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button ((z.B.: new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object containing HTML attributes for the button ((e.g., new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <param name="isOpen">
+    /// de: Boolscher Wert, der angibt, ob der Filter zu Beginn geöffnet (aufgeklappt) ist.
+    /// en: A boolean value indicating whether the filter view should be open (expanded) by default.
+    /// </param>
+    /// <returns>
+    /// de: Gibt das generierte HTML für das Filter-Steuerelement zurück.
+    /// en: Returns the generated HTML for the filtering control.
+    /// </returns>
+    public object FilterView(
+        string label,
+        string[] filterParameters,
+        object htmlAttributes = null,
         bool isOpen = false)
     {
         if (filterParameters == null)
@@ -453,196 +882,366 @@ public class DataLinqHelper : IDataLinqHelper
         return FilterView(label, dict, htmlAttributes, isOpen);
     }
 
+    /// <summary>
+    /// de: Die Methode erzeugt ein Steuerelement zum Filtern eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Eingabefelder/Auswahllisten bestimmen, nach welchen Eigenschaften gefiltert wird. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde, aktualisiert.
+    /// en: The method generates a control for filtering a view. The element expands when a button is clicked. The user can then select which properties to filter by using input fields or dropdown lists. Once the options are confirmed, the view containing the control will be updated.
+    /// </summary>
+    /// <param name="label">
+    /// de: Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes (z.B.: "Filter setzen").
+    /// en: The text for the button that expands the filtering control (e.g., "Apply Filter").
+    /// </param>
+    /// <param name="filterParameters">
+    /// de: Hier wird anstelle von Strings ein Dictionary übergeben. Die Keys entsprechen den Parametern von oben. 
+    /// Die Values geben ein anonymes Objekt an, mit dem beispielsweise die Anzeigenamen der Parameter bestimmt
+    /// werden können oder auch, dass es ein Datumsfeld ist (siehe TextFor). Außerdem besteht die Möglichkeit, 
+    /// `diaplyName`, `source`, `valueField`, `nameField` und `prependEmpty` anzugeben. Damit wird eine Auswahlliste erzeugt. 
+    /// (( 
+    /// {
+    ///   { "kg", new { 
+    ///     displayname="KG Number", 
+    ///     valueField="kg", 
+    ///     nameField="kg", 
+    ///     source="offline-dkm@lut-kg", 
+    ///     prependEmpty=true 
+    ///     } 
+    ///   },
+    ///   { "gnr", new { 
+    ///     displayname="GR Number", 
+    ///     valueField="gnr", 
+    ///     nameField="gnr", 
+    ///     source="offline-dkm@lut-gnr?kg=[kg]", 
+    ///     prependEmpty=true 
+    ///     } 
+    ///   }
+    /// } ))
+    /// Gibt man bei `source` einen Filter an, der auf auf mindesten ein anderes Feld verweist, wird dieses Feld
+    /// erst geladen, wenn der Filter für das andere Feld gesetzt wurde. Das bedeutet, dass die Abfrage erst
+    /// durchgeführt wird, wenn alle abhängigen Werte eingeben werden. So können Cascading Comboboxen erzeugt werden.
+    /// Um Auswahlmenüs (ComboBox) mit Mehrfach-Auswahl zu ermöglichen, kann das Attribut `multiple='multiple'` 
+    /// mitgegeben werden.
+    /// en: Instead of strings, a dictionary is passed. The keys correspond to the filter parameters from above.
+    /// The values represent an anonymous object that can define display names, data types (e.g., Date), 
+    /// and additional options like 
+    /// `diaplayName`, `source`, `valueField`, `nameField`, and `prependEmpty`. This allows 
+    /// generating a dropdown list. 
+    /// (( 
+    /// {
+    ///   { "kg", new { 
+    ///     displayname="KG Number", 
+    ///     valueField="kg", 
+    ///     nameField="kg", 
+    ///     source="offline-dkm@lut-kg", 
+    ///     prependEmpty=true 
+    ///     } 
+    ///   },
+    ///   { "gnr", new { 
+    ///     displayname="GR Number", 
+    ///     valueField="gnr", 
+    ///     nameField="gnr", 
+    ///     source="offline-dkm@lut-gnr?kg=[kg]", 
+    ///     prependEmpty=true 
+    ///     } 
+    ///   }
+    /// } ))
+    /// If a filter is specified in `source` that references at least one other field, 
+    /// this field will only be loaded once the filter for the other field is set. This means 
+    /// the query will only be executed after all dependent values are provided. 
+    /// This allows for the creation of cascading comboboxes.
+    /// For multi-select dropdowns, the `multiple='multiple'` attribute 
+    /// can be added.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für den Button (z.B.: new { style="width:300px" @class="meine-klasse" }).
+    /// en: An anonymous object containing HTML attributes for the button (e.g., new { style="width:300px" @class="my-class" }).
+    /// </param>
+    /// <param name="isOpen">
+    /// de: Boolscher Wert, der angibt, ob der Filter zu Beginn geöffnet (aufgeklappt) ist.
+    /// en: A boolean value indicating whether the filter should be open (expanded) by default.
+    /// </param>
+    /// <returns>
+    /// de: Gibt das generierte HTML für das Filter-Steuerelement zurück.
+    /// en: Returns the generated HTML for the filtering control.
+    /// </returns>
     public object FilterView(
         string label,
-        [HelpDescription("Hier wird anstelle von Strings ein Dictionary übergeben. Die Keys entsprechen den Parametern von oben. Die Values geben ein anonymes Objekt an, mit dem Beispielsweise die Anzeigenamen der Parameter bestimmt werden können oder auch, dass es ein Datumsfeld ist (siehe TextFor). Außerdem besteht die Möglichkeit source, valueField, nameField und prependEmpty anzugeben. Damit wird eine Auswahllist erzeugt. Die Möglichkeiten könne unter der Methode ComboFor() nachgelesen werden. ((filterParameters: new Dictionary&lt;string,object&gt;(){\n   {\"ort\", new { displayname=\"Ort/Gemeinde\" }},\n     {\"datum\", new { displayname=\"Datum\", dataType=DataType.Date }},\n   {\"str\", new { displayname=\"Strasse\", source=\"endpoint-id@query-id\", valueField=\"STR\", nameField=\"STR_LANGTEXT\", prependEmpty=true  }}<br/>}})) Um Auswahlmenüs (ComboBox) mit Mehrfach-Auswahl zu ermöglich, kann das Attribut ((multipe='multiple')) mitgegeben werden.")]
         Dictionary<string, object> filterParameters,
         object htmlAttributes = null,
-        [HelpDescription("Boolscher Wert, der angibt, ob der Filter zu Beginn geöffnet (aufgeklappt) ist")]
         bool isOpen = false)
     {
-        StringBuilder sb = new StringBuilder();
 
-        sb.Append("<div ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-refresh-filter-container collapsed");
-        AppendHtmlAttribute(sb, "data-isOpen", isOpen.ToString());
-        sb.Append(">");
-
-        sb.Append("<button ");
-        AppendHtmlAttribute(sb, "class", "datalinq-button menu");
-        AppendHtmlAttribute(sb, "onclick", "$(this).closest('.datalinq-refresh-filter-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-filter-body').slideToggle()");
-        sb.Append(">" + label + "</button>");
-
-        sb.Append("<div ");
-        AppendHtmlAttribute(sb, "class", "datalinq-refresh-filter-body");
-        AppendHtmlAttribute(sb, "style", "display:none");
-        sb.Append(">");
-
-        foreach (string filterParameter in filterParameters.Keys)
-        {
-            var filterProperties = ToDictionary(filterParameters[filterParameter]);
-            sb.Append("<div class='datalinq-filter-field-wrapper'>");
-
-            if (filterProperties != null && filterProperties.ContainsKey("source"))
-            {
-                sb.Append("<div class='datalinq-label'>" + GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter) + "</div>");
-
-                var source = GetDefaultValueFromRecord(filterProperties, "source").ToString();
-                var dependsOn = source.KeyParameters();
-
-                var rawString = ComboFor(null, filterParameter,
-                    new
+        return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendDiv(div =>
                     {
-                        @class = "datalinq-filter-parameter",
-                        onchange = "dataLinq.updateViewFilter(this)",
-                        multiple = GetDefaultValueFromRecord(filterProperties, "multiple")
-                    },
-                    new
-                    {
-                        source = source,
-                        valueField = GetDefaultValueFromRecord(filterProperties, "valueField")?.ToString(),
-                        nameField = GetDefaultValueFromRecord(filterProperties, "nameField")?.ToString(),
-                        prependEmpty = GetDefaultValueFromRecord(filterProperties, "prependEmpty"),
-                        dependsOn = dependsOn
-                    },
-                    GetDefaultValueFromRecord(filterProperties, "defaultValue")
+                        div.AddClass("datalinq-refresh-filter-container collapsed");
+                        div.AddAttributes(htmlAttributes);
+                        div.AddAttribute("data-isOpen",isOpen.ToString());
+                        div.AppendButton(button =>
+                        {
+                            button.AddClass("datalinq-button menu");
+                            button.AddAttribute("onclick", "$(this).closest('.datalinq-refresh-filter-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-filter-body').slideToggle()");
+                            button.Content(label);
+                        });
+                        div.AppendDiv(div2 =>
+                        {
+                            div2.AddClass("datalinq-refresh-filter-body");
+                            div2.AddStyle("display", "none");
+
+                            foreach (string filterParameter in filterParameters.Keys)
+                            {
+                                var filterProperties = ToDictionary(filterParameters[filterParameter]);
+                                div2.AppendDiv(div3 =>
+                                {
+                                    div3.AddClass("datalinq-filter-field-wrapper");
+
+                                    if (filterProperties != null && filterProperties.ContainsKey("source"))
+                                    {
+                                        var source = GetDefaultValueFromRecord(filterProperties, "source").ToString();
+                                        var dependsOn = source.KeyParameters();
+
+                                        div3.AppendDiv(div4 =>
+                                        {
+                                            div4.AddClass("datalinq-label");
+                                            div4.Content(GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter).ToString());
+                                        });
+                                        div3.ComboFor(
+                                            GetDefaultValueFromRecord(filterProperties, "defaultValue"), 
+                                            filterParameter,
+                                            new
+                                            {
+                                                @class = "datalinq-filter-parameter",
+                                                onchange = "dataLinq.updateViewFilter(this)",
+                                                multiple = GetDefaultValueFromRecord(filterProperties, "multiple")
+                                            },
+                                            new
+                                            {
+                                                source = source,
+                                                valueField = GetDefaultValueFromRecord(filterProperties, "valueField")?.ToString(),
+                                                nameField = GetDefaultValueFromRecord(filterProperties, "nameField")?.ToString(),
+                                                prependEmpty = GetDefaultValueFromRecord(filterProperties, "prependEmpty"),
+                                                dependsOn = dependsOn
+                                            }
+                                        );
+                                    }
+                                    else if (filterProperties != null && filterProperties.ContainsKey("hidden") && GetDefaultValueFromRecord(filterProperties, "hidden").Equals("true"))
+                                    {
+                                        div3.AppendInput(input =>
+                                        {
+                                            input.AddAttribute("type", "hidden");
+                                            input.AddAttribute("name", filterParameter);
+                                            input.AddClass("datalinq-filter-parameter");
+                                            input.AddAttribute("value", GetDefaultValueFromRecord(filterProperties, "defaultValue")?.ToString() ?? "");
+                                        });
+                                    }
+                                    else
+                                    {
+                                        DataType fieldType = DataType.Text;
+                                        if (filterProperties != null && filterProperties.ContainsKey("dataType"))
+                                        {
+                                            fieldType = (DataType)Enum.Parse(typeof(DataType), GetDefaultValueFromRecord(filterProperties, "dataType")?.ToString());
+                                            // Nur wenn Checkbox ausgewählt ist, soll der FieldType geändert werden; da input type nicht "Date", etc. sein soll.
+                                            if (fieldType != DataType.Checkbox)
+                                            {
+                                                fieldType = DataType.Text;
+                                            }
+                                        }
+
+                                        div3.AppendDiv(div6 =>
+                                        {
+                                            div6.AddClass("datalinq-label");
+                                            div6.Content(GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter).ToString());
+                                        }).AppendInput(input =>
+                                        {
+                                            input.AddClass("datalinq-filter-parameter datalinq-input");
+                                            input.AddAttribute("type", fieldType.ToString().ToLower());
+                                            input.AddAttribute("name", filterParameter);
+                                            input.AddAttribute("onkeyup", "dataLinq.updateViewFilter(this)");
+                                            input.AddAttribute("onchange", "dataLinq.updateViewFilter(this)");
+
+                                            if (filterProperties != null)
+                                            {
+                                                if (filterProperties.ContainsKey("dataType"))
+                                                {
+                                                    input.AddAttribute("data-datatype", GetDefaultValueFromRecord(filterProperties, "dataType")?.ToString());
+                                                }
+                                                if (filterProperties.ContainsKey("dropProperty") && filterProperties.ContainsKey("dropQuery"))
+                                                {
+                                                    input.AddAttribute("data-drop-property", GetDefaultValueFromRecord(filterProperties, "dropProperty")?.ToString());
+                                                    input.AddAttribute("data-drop-query", GetDefaultValueFromRecord(filterProperties, "dropQuery")?.ToString());
+                                                }
+                                            }
+                                        });                                    
+                                    }
+                                });
+                            }
+                            div2.AppendBreak();
+                            div2.AppendDiv(div5 =>
+                            {
+                                div5.AddClass("datalinq-filter-buttongroup");
+                                div5.AppendButton(button2 =>
+                                {
+                                    button2.AddClass("datalinq-button datalinq-filter-clear");
+                                    button2.AddAttribute("onclick", "dataLinq.clearFilter(this)");
+                                    button2.Content("Filter leeren");
+                                });
+                                div5.AppendRefreshViewClickButtton("Übernehmen");
+                            });
+                        });
+                    }).BuildHtmlString()
                 );
-                sb.Append(rawString.ToString());
-            }
-            else if(filterProperties != null && filterProperties.ContainsKey("hidden") && GetDefaultValueFromRecord(filterProperties, "hidden").Equals("true"))
-            {
-                sb.Append($"<input type='hidden' name='{filterParameter}' class='datalinq-filter-parameter' value='{GetDefaultValueFromRecord(filterProperties, "defaultValue") ?? ""}' />");
-            }
-            else
-            {
-                DataType fieldType = DataType.Text;
-                if (filterProperties != null && filterProperties.ContainsKey("dataType"))
-                {
-                    fieldType = (DataType)Enum.Parse(typeof(DataType), GetDefaultValueFromRecord(filterProperties, "dataType")?.ToString());
-                    // Nur wenn Checkbox ausgewählt ist, soll der FieldType geändert werden; da input type nicht "Date", etc. sein soll.
-                    if (fieldType != DataType.Checkbox)
-                    {
-                        fieldType = DataType.Text;
-                    }
-                }
-
-                sb.Append("<div class='datalinq-label'>" + GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter) + "</div>");
-
-                sb.Append("<input");
-                AppendHtmlAttributes(sb, new
-                {
-                    type = fieldType.ToString().ToLower(),
-                    name = filterParameter,
-                    onkeyup = "dataLinq.updateViewFilter(this)",
-                    onchange = "dataLinq.updateViewFilter(this)"
-                }, "datalinq-filter-parameter datalinq-input");
-
-                if (filterProperties != null)
-                {
-                    if (filterProperties.ContainsKey("dataType"))
-                    {
-                        sb.Append(" data-datatype='" + GetDefaultValueFromRecord(filterProperties, "dataType")?.ToString() + "'");
-                    }
-                    if (filterProperties.ContainsKey("dropProperty") && filterProperties.ContainsKey("dropQuery"))
-                    {
-                        sb.Append(" data-drop-property='" + GetDefaultValueFromRecord(filterProperties, "dropProperty")?.ToString() + "'");
-                        sb.Append(" data-drop-query='" + GetDefaultValueFromRecord(filterProperties, "dropQuery")?.ToString() + "'");
-                    }
-                }
-
-                sb.Append("/>");
-            }
-            sb.Append("</div>");
-        }
-
-        sb.Append("<br/>");
-
-        sb.Append("<div ");
-        AppendHtmlAttribute(sb, "class", "datalinq-filter-buttongroup");
-        sb.Append(">");
-        sb.Append("<button class='datalinq-button datalinq-filter-clear' onclick='dataLinq.clearFilter(this)'>Filter leeren</button>");
-        sb.Append(RefreshViewClick("Übernehmen").ToString());
-        sb.Append("</div>");
-
-        sb.Append("</div>");
-
-        sb.Append("</div>");
-
-        return _razor.RawString(sb.ToString());
     }
 
 
-    [HelpDescription("Die Methode erzeugt ein Steuerelement zum Exportieren der Daten des Views in eine CSV-Datei. Dabei wird die aktuell eingestellte Filterung bzw. Sortierung angewendet. Der Export bezieht sich auf die Daten jenes Views, in dem die Schaltfläche eingebunden ist.")]
+    /// <summary>
+    /// de: Die Methode erzeugt ein Steuerelement zum Exportieren der Daten des Views in eine CSV-Datei. Dabei wird die aktuell eingestellte Filterung bzw. Sortierung angewendet. Der Export bezieht sich auf die Daten jenes Views, in dem die Schaltfläche eingebunden ist.
+    /// en: The method generates a control to export the data of the view into a CSV file, applying the current filtering and sorting settings. The export relates to the data of the view in which the button is embedded.
+    /// </summary>
+    /// <param name="label">
+    /// de: Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes (z.B.: "Export").
+    /// en: The text for the button that expands the actual control (e.g., "Export").
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für diesen Button (z.B.: new { style="width:300px" @class="meine-klasse" }).
+    /// en: An anonymous object with HTML attributes for the button (e.g., new { style="width:300px" @class="my-class" }).
+    /// </param>
+    /// <param name="columns">
+    /// de: Die Spalten, die exportiert werden sollen. Wird nichts angegeben, werden alle Spalten exportiert.  
+    /// en: The columns to be exported. If nothing is specified, all columns will be exported.  
+    /// </param>
+    /// <returns>
+    /// de: Gibt das generierte HTML für das Export-Steuerelement zurück.
+    /// en: Returns the generated HTML for the export control.
+    /// </returns>
     public object ExportView(
-        [HelpDescription("Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes (z.B.: \"Export\")")]
         string label = "Export",
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für diesen Button ((z.B.: new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null,
-        [HelpDescription("Die Spalten, die im Export übernommen werden sollten. Wird hier nichts angegeben, werden alle Spalten exportiert.")]
         IEnumerable<string> columns = null)
     {
         string columnsJson = (columns != null && columns.Any())
-        ? System.Text.Json.JsonSerializer.Serialize(columns)
-        : null;
+            ? System.Text.Json.JsonSerializer.Serialize(columns)
+            : null;
 
         string onclickJs = columnsJson != null
             ? $"dataLinq.export(this, {columnsJson})"
             : "dataLinq.export(this)";
 
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<button ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-button apply");
-        AppendHtmlAttribute(sb, "onclick", onclickJs);
-        sb.Append(">" + label + "</button>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b =>
+                {
+                    b.AddClass("datalinq-button apply");
+                    b.AddAttributes(htmlAttributes);
+                    b.AddAttribute("onclick", onclickJs);
+                    b.Content(label);
+                }).BuildHtmlString()
+            );
     }
 
 
-    [HelpDescription("Macht aus einem Text einen Link. Dieser aktualisiert einen Filter einer View, das kann auch ein Filter eines in der Seite eingebauten Include(Click)Views sein")]
+    /// <summary>
+    /// de: Macht aus einem Text einen Link. Dieser aktualisiert einen Filter einer View, das kann auch ein Filter eines in der Seite eingebauten Include(Click)Views sein.
+    /// en: Turns text into a link that updates a filter of a view, which can also be a filter of an included (Click)View embedded on the page.
+    /// </summary>
+    /// <param name="filterName">
+    /// de: Name des Filters, der gesetzt werden soll.
+    /// en: The name of the filter to be set.
+    /// </param>
+    /// <param name="filterValue">
+    /// de: Neuer Wert des Filters.
+    /// en: The new value for the filter.
+    /// </param>
+    /// <param name="buttonText">
+    /// de: Text, der auf der Schaltfläche stehen soll. Ansonsten kann diese über CSS mit einem Symbol versehen werden.
+    /// en: Text to display on the button. Alternatively, this can be styled with a symbol via CSS.
+    /// </param>
+    /// <param name="filterId">
+    /// de: HTML (DOM) Id des zu verändernden Filters. Dieser kann in der Methode 'FilterView' im 'htmlAttributes'-Parameter gesetzt werden. Falls dieser Wert leergelassen wird, wird der erste Filter im aktuellen View verwendet.
+    /// en: HTML (DOM) Id of the filter to be changed. This can be set in the 'htmlAttributes' parameter of the 'FilterView' method. If left empty, the first filter in the current view will be used.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für diesen Button ((z.B.: new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object with HTML attributes for the button ((e.g., new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <returns>
+    /// de: Gibt das generierte HTML für den Filter-Update-Button zurück.
+    /// en: Returns the generated HTML for the filter update button.
+    /// </returns>
     public object UpdateFilterButton(
-        [HelpDescription("Name des Filters, der gesetzt werden soll")]
         string filterName,
-        [HelpDescription("Neuer Wert des Filters")]
         object filterValue,
-        [HelpDescription("Text, der auf der Schaltfläche stehen soll. Ansonsten kann diese über CSS mit einem Symbol versehen werden")]
         string buttonText = "",
-        [HelpDescription("HTML (DOM) Id des zu verändernden Filters. Dieser kann in der Methode 'FilterView' im 'htmlAttributes'-Parameter gesetzt werden. Falls dieser Wert leergelassen wird, wird der erste Filter im aktuellen View verwendet.")]
         string filterId = "",
-        [HelpDescription("Ein anonymes Objekt mit HTML-Attributen für diesen Button ((z.B.: new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        //sb.Append("<button onclick=\"dataLinq.updateFilter(this, '" + filterId + "', '" + filterName + "', '" + filterValue + "')\" ");
-        sb.Append("<button data-filter-id='" + filterId + "' data-filter-name='" + filterName + "' data-filter-value='" + filterValue + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-update-filter");
-        sb.Append(" >");
-        sb.Append(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
-        sb.Append("</button>");
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b =>
+                {
+                    b.AddClass("datalinq-update-filter");
+                    b.AddAttributes(htmlAttributes);
+                    b.AddAttribute("data-filter-id", filterId);
+                    b.AddAttribute("data-filter-name", filterName);
+                    b.AddAttribute("data-filter-value", filterValue.ToString());
+                    b.Content(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
+                }).BuildHtmlString()
+            );
     }
 
     #endregion
 
-    [HelpDescription("Erstellt aus den übergebenen Records eine HTML Tablelle")]
+    /// <summary>
+    /// de: Erstellt aus den übergebenen Records eine HTML-Tabelle.  
+    /// en: Creates an HTML table from the given records.  
+    /// </summary>
+    /// <param name="records">  
+    /// de: Die Records, für die die Tabelle erstellt werden soll.  
+    /// en: The records for which the table should be created.  
+    /// </param>
+    /// <param name="columns">  
+    /// de: Die Spalten, die in der Tabelle angezeigt werden sollen. Wird nichts angegeben, werden alle Spalten verwendet.  
+    /// en: The columns to be displayed in the table. If nothing is specified, all columns will be used.  
+    /// </param>
+    /// <param name="htmlAttributes">  
+    /// de: Ein anonymes Objekt mit HTML-Attributen für das <c>table</c>-Element, z. B. für das Styling.  
+    /// en: An anonymous object containing HTML attributes for the <c>table</c> element, e.g., for styling.  
+    /// </param>
+    /// <param name="row0HtmlAttributes">  
+    /// de: Ein anonymes Objekt mit HTML-Attributen für die Titelzeile der Tabelle.  
+    /// en: An anonymous object containing HTML attributes for the table's title row.  
+    /// </param>
+    /// <param name="row1HtmlAttributes">  
+    /// de: Ein anonymes Objekt mit HTML-Attributen für ungerade Tabellenzeilen (1, 3, 5, ...).  
+    /// en: An anonymous object containing HTML attributes for odd table rows (1, 3, 5, ...).  
+    /// </param>
+    /// <param name="row2HtmlAttributes">  
+    /// de: Ein anonymes Objekt mit HTML-Attributen für gerade Tabellenzeilen (2, 4, 6, ...).  
+    /// en: An anonymous object containing HTML attributes for even table rows (2, 4, 6, ...).  
+    /// </param>
+    /// <param name="cell0HtmlAttributes">  
+    /// de: Ein anonymes Objekt mit HTML-Attributen für die Zellen der Titelzeile.  
+    /// en: An anonymous object containing HTML attributes for the title row cells.  
+    /// </param>
+    /// <param name="cellHtmlAttributes">  
+    /// de: Ein anonymes Objekt mit HTML-Attributen für die Zellen der Tabelle.  
+    /// en: An anonymous object containing HTML attributes for the table cells.  
+    /// </param>
+    /// <param name="max">  
+    /// de: Die maximale Anzahl an Zeilen, die angezeigt werden. Wenn ≤ 0 angegeben wird, werden alle Zeilen dargestellt.  
+    /// en: The maximum number of rows to display. If ≤ 0 is specified, all rows will be displayed.  
+    /// </param>
+    /// <returns>  
+    /// de: Eine HTML-Tabelle als Objekt.  
+    /// en: An HTML table as an object.  
+    /// </returns>
     public object Table(
-        [HelpDescription("Die Records, für die die Tabelle erstellt werden soll.")]
         IEnumerable<IDictionary<string, object>> records,
-        [HelpDescription("Die Spalten, die in der Tabelle übernommen werden sollten. Wird hier nichts angegeben, werden alle Spalten angegeben")]
         IEnumerable<string> columns = null,
-        [HelpDescription("Anonymes Objekt für die HTML-Attribute für die Tabelle (table-Element). zB. zum styling.")]
         object htmlAttributes = null,
-        [HelpDescription("Anonymes Objekt für die HTML-Attribute der Titlezeile der Tabelle")]
         object row0HtmlAttributes = null,
-        [HelpDescription("Anonymes Objekt für die HTML-Attribute für ungerade Tablellenzeilen (1, 3, 5, ...)")]
         object row1HtmlAttributes = null,
-        [HelpDescription("Anonymes Objekt für die HTML-Attribute für gerade Tablellenzeilen (2, 4, 6, ...)")]
         object row2HtmlAttributes = null,
-        [HelpDescription("Anonymes Objekt für die HTML-Attribute die Tabellenzellen der Titlezeile")]
         object cell0HtmlAttributes = null,
-        [HelpDescription("Anonymes Objekt für die HTML-Attribute die Tabellenzellen")]
         object cellHtmlAttributes = null,
-        [HelpDescription("Die maximale Anzahl der Zeilen, die dargestellt werden. Wir ein Wert <= 0 angegeben, werden alle Zeilen dargstellt.")]
         int max = 0)
     {
         if (records == null || records.Count() == 0)
@@ -673,276 +1272,411 @@ public class DataLinqHelper : IDataLinqHelper
             #endregion
         }
 
-        sb.Append("<table ");
-        AppendHtmlAttributes(sb, htmlAttributes ?? new { style = "width:100%;text-align:left;background:#efefef" });
-        sb.Append(" >");
-
-        #region Haeder
-
-        sb.Append("<tr ");
-        AppendHtmlAttributes(sb, row0HtmlAttributes ?? new { style = "background-color:#eee" });
-        sb.Append(" >");
-        foreach (var colum in columns)
-        {
-            sb.Append("<th ");
-            AppendHtmlAttributes(sb, cell0HtmlAttributes ?? new { style = "padding:4px" });
-            sb.Append(" >");
-            sb.Append(ToHtml(colum));
-            sb.Append("</th>");
-        }
-        sb.Append("</tr>");
-
-        #endregion
-
-        #region Body
-
-        int counter = 1;
-        foreach (var record in records)
-        {
-            sb.Append("<tr ");
-            if (counter % 2 == 1)
+        var html = HtmlBuilder.Create()
+            .AppendTable(table =>
             {
-                AppendHtmlAttributes(sb, row1HtmlAttributes ?? new { style = "background-color:#fff" });
-            }
-            else
-            {
-                AppendHtmlAttributes(sb, row2HtmlAttributes ?? new { style = "background-color:#ffd" });
-            }
-            sb.Append(" >");
-            foreach (var colum in columns)
-            {
-                sb.Append("<td ");
-                AppendHtmlAttributes(sb, cellHtmlAttributes ?? new { style = "padding:4px" });
-                sb.Append(" >");
-                sb.Append(record.ContainsKey(colum) ? ToHtml(record[colum]?.ToString()) : String.Empty);
-                sb.Append("</td>");
-            }
-            sb.Append("</tr>");
+                table
+                    .AddAttributes(htmlAttributes ?? new { style = "width:100%;text-align:left;background:#efefef" })
+                    // header row
+                    .AppendTableRow(headerRow =>
+                    {
+                        headerRow.AddAttributes(row0HtmlAttributes ?? new { style = "background-color:#eee" });
 
-            if (max > 0 && counter >= max)
-            {
-                break;
-            }
-            counter++;
-        }
+                        // header cells
+                        foreach (var column in columns)
+                        {
+                            headerRow.AppendTableHeaderCell(headerCell =>
+                                  headerCell
+                                      .Content(ToHtml(column))
+                                      .AddAttributes(cell0HtmlAttributes ?? new { style = "padding:4px" })
+                            );
+                        }
+                    });
 
-        #endregion
+                // data rows
+                int counter = 0;
+                foreach (var record in records.Take(max.Equals(0)?records.Count():max))
+                {
+                    table.AppendTableRow(tableRow =>
+                    {
+                        tableRow.AddAttributes(counter++ % 2 == 1
+                                ? row1HtmlAttributes ?? new { style = "background-color:#ffd" }
+                                : row2HtmlAttributes ?? new { style = "background-color:#fff" });
 
-        sb.Append("</table>");
+                        foreach (var column in columns)
+                        {
+                            tableRow.AppendTableCell(tableCell =>
+                                        tableCell.Content(record.ContainsKey(column)
+                                                        ? ToHtml(record[column]?.ToString())
+                                                        : String.Empty)
+                                        .AddAttributes(cellHtmlAttributes ?? new { style = "padding:4px" })
+                                    );
+                        }
+                    });
+                }
 
-        return _razor.RawString(sb.ToString());
+            })
+        .BuildHtmlString();
+
+        return _razor.RawString(html);
     }
 
     #region Formular
 
-    [HelpDescription("Erstellt den Beginn eines HTML-Formulars zum Abschicken von Daten")]
+    /// <summary>
+    /// de: Erstellt den Beginn eines HTML-Formulars zum Abschicken von Daten.  
+    /// en: Creates the beginning of an HTML form for submitting data.  
+    /// </summary>
+    /// <param name="id">  
+    /// de: Die ID der Query, an die die Formulardaten gesendet werden sollen,  
+    /// im Format (( endpoint-id@query-id ))
+    /// en: The ID of the query to which the form data should be sent,  
+    /// in the format (( endpoint-id@query-id ))
+    /// </param>
+    /// <param name="htmlAttributes">  
+    /// de: Ein anonymes Objekt mit HTML-Attributen für das form-Tag,  
+    /// z. B.: (( new { style="width:300px", @class="meine-klasse" } ))
+    /// en: An anonymous object containing HTML attributes for the form tag,  
+    /// e.g.: (( new { style="width:300px", @class="my-class" } ))
+    /// </param>
+    /// <returns>  
+    /// de: Der HTML-String für den Anfang eines Formulars.  
+    /// en: The HTML string for the beginning of a form.  
+    /// </returns>
     public object BeginForm(
-        [HelpDescription("Gibt die Id der Query, an den die Daten des Formulars geschickt werden sollen, in folgender Form an: ((endpoint-id@query-id))")]
         string id,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für den Formular-Tag, bspw. ((new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<form ");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        return _razor.RawString(sb.ToString() + " action='" + "../ExecuteNonQuery/" + id + "' method='POST'>");
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendForm(f =>
+                {
+                    f.AddAttributes(htmlAttributes);
+                    f.AddAttribute("action", $"../ExecuteNonQuery/{id}");
+                    f.AddAttribute("method", "POST");
+                }, WriteTags.OpenOnly).BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Erstellt das Ende eines HTML-Formulars zum Abschicken von Daten, bei Bedarf mit Schaltflächen")]
+    /// <summary>
+    /// de: Erstellt das Ende eines HTML-Formulars zum Abschicken von Daten,  
+    /// optional mit Schaltflächen zum Senden und Zurücksetzen.  
+    /// en: Creates the end of an HTML form for submitting data,  
+    /// optionally with buttons for submission and reset.  
+    /// </summary>
+    /// <param name="submitText">  
+    /// de: Falls angegeben, wird eine Schaltfläche zum Abschicken des Formulars mit dem angegebenen Text erstellt.  
+    /// en: If provided, a button for submitting the form is created with the given text.  
+    /// </param>
+    /// <param name="cancelText">  
+    /// de: Falls angegeben, wird eine Schaltfläche zum Zurücksetzen des Formulars mit dem angegebenen Text erstellt.  
+    /// en: If provided, a button for resetting the form is created with the given text.  
+    /// </param>
+    /// <returns>  
+    /// de: Der HTML-String für das Ende des Formulars.  
+    /// en: The HTML string for the end of the form.  
+    /// </returns>
     public object EndForm(
-        [HelpDescription("Falls eingeben, wird eine Schaltflächen zum Abschicken des Formulars mit dem angegebenen Text erstellt")]
         string submitText = "",
-        [HelpDescription("Falls eingeben, wird eine Schaltflächen zum Zurücksetzen des Formulars mit dem angegebenen Text erstellt")]
         string cancelText = "")
     {
-        StringBuilder sb = new StringBuilder();
+        var htmlBuilder = HtmlBuilder.Create();
 
-        sb.Append("<br/>");
-
-        if (!String.IsNullOrEmpty(submitText))
+        return _razor.RawString(
+               (submitText.IsNotEmpty(), cancelText.IsNotEmpty()) switch
         {
-            sb.Append("<button type='button', class='datalinq-submit-form' onclick='dataLinq.submitForm(this)' >" + submitText + "</button>");
-        }
-
-        if (!String.IsNullOrEmpty(cancelText))
-        {
-            sb.Append("<button type='reset' class='datalinq-reset-form'>" + cancelText + "</button>");
-        }
-
-        return _razor.RawString(sb.ToString() + "</form>");
+            (true, true) => htmlBuilder
+                                .AppendForm(form =>
+                                {
+                                    form
+                                    .AppendBreak()
+                                    .AppendButton(submitButton =>
+                                    {
+                                        submitButton.AddClass("datalinq-submit-form");
+                                        submitButton.AddAttribute("type", "button");
+                                        submitButton.AddAttribute("onclick", "dataLinq.submitForm(this)");
+                                        submitButton.Content(submitText);
+                                    })
+                                    .AppendButton(cancelButton =>
+                                    {
+                                        cancelButton.AddClass("datalinq-reset-form");
+                                        cancelButton.AddAttribute("type", "reset");
+                                        cancelButton.Content(cancelText);
+                                    });
+                                }, WriteTags.CloseOnly).BuildHtmlString(),
+            (true, false) => htmlBuilder
+                                .AppendForm(form =>
+                                {
+                                    form
+                                    .AppendBreak()
+                                    .AppendButton(submitButton =>
+                                    {
+                                        submitButton.AddClass("datalinq-submit-form");
+                                        submitButton.AddAttribute("type", "button");
+                                        submitButton.AddAttribute("onclick", "dataLinq.submitForm(this)");
+                                        submitButton.Content(submitText);
+                                    });
+                                }, WriteTags.CloseOnly).BuildHtmlString(),
+            (false, true) => htmlBuilder
+                                .AppendForm(form =>
+                                {
+                                    form
+                                    .AppendBreak()
+                                    .AppendButton(resetButton =>
+                                    {
+                                        resetButton.AddClass("datalinq-reset-form");
+                                        resetButton.AddAttribute("type", "reset");
+                                        resetButton.Content(cancelText);
+                                    });
+                                }, WriteTags.CloseOnly).BuildHtmlString(),
+            _ => htmlBuilder
+                    .AppendForm(form =>
+                    {
+                        form.AppendBreak();
+                    }, WriteTags.CloseOnly).BuildHtmlString()
+        });
     }
 
-    [HelpDescription("Erstellt eine Schaltfläche, die eine View in einem Dialogfeld auf der aktuellen Seite öffnet. Darin könnte sich etwa ein Formular zum Bearbeiten oder Erstellen von Datensatzes befinden")]
+    /// <summary>
+    /// de: Erstellt eine Schaltfläche, die eine View in einem Dialogfeld auf der aktuellen Seite öffnet. Darin könnte sich etwa ein Formular zum Bearbeiten oder Erstellen von Datensatzes befinden.
+    /// en: "Creates a button that opens a view in a dialog on the current page. This could be a form for editing or creating a record.
+    /// </summary>
+    /// <param name="id">
+    /// de: Gibt die Id des Views in folgender Form an: endpoint-id@query-id@view-id
+    /// en: Specifies the ID of the view in the following format: endpoint-id@query-id@view-id
+    /// </param>
+    /// <param name="parameter">
+    /// de: Ein anonymes Objekt mit den Parametern, welche die Query erwartet. Falls ein Datensatz bearbeitet werden soll, dessen Primärschlüssel. Falls ein neuer Datensatz eingefügt werden soll (d.h. PK noch nicht vorhanden): Wert als leerer String übergeben, bspw. ((new { PK="''"} ))
+    /// en: An anonymous object with the parameters expected by the query. If a record is to be edited, its primary keys should be provided. If a new record is to be inserted (i.e., PK not yet present): pass an empty string as the value, e.g., ((new { PK="''"} ))
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit Attributen, die für die Schaltfläche relevant sind, bspw. ((new { style="width:300px" @class="meine-klasse" } ))
+    /// en: An anonymous object with attributes relevant to the button, e.g., ((new { style="width:300px" @class="my-class" } ))
+    /// </param>
+    /// <param name="buttonText">
+    /// de: Text, der auf der Schaltfläche stehen soll. Ansonsten kann diese über CSS mit einem Symbol versehen werden.
+    /// en: Text to display on the button. Otherwise, this can be styled with a symbol via CSS.
+    /// </param>
+    /// <param name="dialogAttributes">
+    /// de: Ein anonymes Objekt mit Attributen, die für das Dialogfenster relevant sind oder einen Bestätigungstext enthalten, bspw. ((new { dialogWidth = "'500px'", dialogHeight = "'500px'",
+    /// dialogTitle = "'Gewählte Datensätze bearbeiten'", confirmText = "'sicher?'" } ))
+    /// en: An anonymous object with attributes relevant to the dialog window or containing a confirmation text, e.g., ((new { dialogWidth = "'500px'", dialogHeight = "'500px'",
+    /// dialogTitle = "'Edit Selected Records'", confirmText = "'Are you sure?'" } ))
+    /// </param>
+    /// <returns>
+    /// de: Ein HTML-Button, der beim Klicken das Dialogfeld öffnet und die angegebenen Parameter übergibt.
+    /// en: An HTML button that opens the dialog when clicked and passes the specified parameters.
+    /// </returns>
     public object OpenViewInDialog(
-        [HelpDescription("Gibt die Id des Views in folgender Form an: endpoint-id@query-id@view-id")]
         string id,
-        [HelpDescription("Ein anonymes Objekt mit den Parametern, welche die Query erwartet. Falls ein Datensatz berarbeitet werden soll, dessen Primärschlüsseln. Falls ein neuer Datensatz eingefügt werden soll (d.h. PK noch nicht vorhanden): Wert als leerer String übergeben, bspw. ((new { PK=\"''\"} ))")]
         object parameter,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für die Schaltfläche, bspw. ((new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null,
-        [HelpDescription("Text, der auf der Schaltfläche stehen soll. Ansonsten kann diese über CSS mit einem Symbol versehen werden")]
         string buttonText = "",
-        [HelpDescription("Ein anonymes Ojekt mit Attributen, die für das Dialogfenster relevant sind oder einen Bestätigungstext enthalten, bspw. ((new { dialogWidth = \"'500px'\", dialogHeight = \"'500px'\", dialogTitle = \"'Gewählte Datensätze bearbeiten'\", confirmText = \"'sicher?'\" } ))")]
         object dialogAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        //sb.Append("<button onclick=\"dataLinq.openDialog(this, '" + id + "', " + (parameter != null ? JsonConvert.SerializeObject(parameter).Replace("\"", "") : "{}") + ");\" ");
-        sb.Append("<button data-dialog-id='" + id + "' data-dialog-parameter='" + (parameter != null ? JsonConvert.SerializeObject(parameter) : "{}") + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-open-dialog");
-        sb.Append(" data-dialog-attributes='" + (dialogAttributes != null ? JsonConvert.SerializeObject(dialogAttributes) : "{}") + "' >");
-        sb.Append(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
-        sb.Append("</button>");
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b => {
+                    b.AddClass("datalinq-open-dialog");
+                    b.AddAttributes(htmlAttributes);
+                    b.AddAttribute("data-dialog-id",id);
+                    b.AddAttribute("data-dialog-parameter", parameter != null ? JsonConvert.SerializeObject(parameter) : "{}");
+                    b.AddAttribute("data-dialog-attributes", dialogAttributes != null ? JsonConvert.SerializeObject(dialogAttributes) : "{}");
+                    b.Content(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
+                }).BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Erstellt eine Schaltfläche, die eine Query mit den übergebenen Parametern ausführt. Damit kann bspw. ein Datensatz gelöscht oder eine Wert gesetzt werden.")]
+    /// <summary>
+    /// de: Erstellt eine Schaltfläche, die eine Query mit den übergebenen Parametern ausführt. Damit kann bspw. ein Datensatz gelöscht oder ein Wert gesetzt werden.
+    /// en: Creates a button that executes a query with the passed parameters. This can be used to delete a record or set a value.
+    /// </summary>
+    /// <param name="id">
+    /// de: Gibt die Id des Query in folgender Form an: endpoint-id@query-id
+    /// en: Specifies the ID of the query in the following format: endpoint-id@query-id
+    /// </param>
+    /// <param name="parameter">
+    /// de: Ein anonymes Objekt mit den Parametern, welche die Query erwartet, bspw. ((new { PK=record["PK"} ))
+    /// en: An anonymous object with the parameters expected by the query, e.g., ((new { PK=record["PK"} ))
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für die Schaltfläche, bspw. ((new { style="width:300px" @class="meine-klasse" } ))
+    /// en: An anonymous object with HTML attributes for the button, e.g., ((new { style="width:300px" @class="my-class" } ))
+    /// </param>
+    /// <param name="buttonText">
+    /// de: Text, der auf der Schaltfläche stehen soll. Ansonsten kann diese über CSS mit einem Symbol versehen werden.
+    /// en: Text to display on the button. Otherwise, this can be styled with a symbol via CSS.
+    /// </param>
+    /// <param name="dialogAttributes">
+    /// de: Ein anonymes Objekt mit Attributen, die für das Dialogfenster relevant sind oder einen Bestätigungstext enthalten, bspw. ((new { dialogWidth = "'500px'", dialogHeight = "'500px'",
+    /// confirmText = "'sicher?'" } ))
+    /// en: An anonymous object with attributes relevant to the dialog window or containing a confirmation text, e.g., ((new { dialogWidth = "'500px'", dialogHeight = "'500px'",
+    /// confirmText = "'Are you sure?'" } ))
+    /// </param>
+    /// <returns>
+    /// de: Ein HTML-Button, der beim Klicken die Query ausführt und die angegebenen Parameter übergibt.
+    /// en: An HTML button that executes the query when clicked and passes the specified parameters.
+    /// </returns>
     public object ExecuteNonQuery(
-        [HelpDescription("Gibt die Id des Query in folgender Form an: endpoint-id@query-id")]
         string id,
-        [HelpDescription("Ein anonymes Objekt mit den Parametern, welche die Query erwartet, bspw. ((new { PK=record[\"PK\"} ))")]
         object parameter,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für die Schaltfläche, bspw. ((new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null,
-        [HelpDescription("Text, der auf der Schaltfläche stehen soll. Ansonsten kann diese über CSS mit einem Symbol versehen werden")]
         string buttonText = "",
-        [HelpDescription("Ein anonymes Ojekt mit Attributen, die für das Dialogfenster relevant sind oder einen Bestätigungstext enthalten, bspw. ((new { dialogWidth = \"'500px'\", dialogHeight = \"'500px'\", confirmText = \"'sicher?'\" } ))")]
         object dialogAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        //sb.Append("<button onclick=\"dataLinq.executeNonQuery(this, '" + id + "', " + (parameter != null ? JsonConvert.SerializeObject(parameter).Replace("\"", "") : "{}") + ");\" ");
-        sb.Append("<button data-dialog-id='" + id + "' data-dialog-parameter='" + (parameter != null ? JsonConvert.SerializeObject(parameter) : "{}") + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-execute-non-query");
-        sb.Append(" data-dialog-attributes=\'" + (dialogAttributes != null ? JsonConvert.SerializeObject(dialogAttributes) : "{}") + "\' >");
-        sb.Append(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
-        sb.Append("</button>");
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b =>
+                {
+                    b.AddClass("datalinq-execute-non-query");
+                    b.AddAttributes(htmlAttributes);
+                    b.AddAttribute("data-dialog-id", id);
+                    b.AddAttribute("data-dialog-parameter", parameter != null ? JsonConvert.SerializeObject(parameter) : "{}");
+                    b.AddAttribute("data-dialog-attributes", dialogAttributes != null ? JsonConvert.SerializeObject(dialogAttributes) : "{}");
+                    b.Content(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
+                }).BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Erstellt ein HTML-Auswahlliste (Select), deren Optionen aus einer Abfrage geladen werden")]
+    /// <summary>
+    /// de: Erstellt ein HTML-Auswahlliste (Select), deren Optionen aus einer Abfrage geladen werden
+    /// en: Creates an HTML select dropdown whose options are loaded from a query.
+    /// </summary>
+    /// <param name="id">
+    /// de: Gibt die Id des Querys, der die Optionen bereithält, in folgender Form an: endpoint-id@query-id
+    /// en: Specifies the ID of the query that provides the options in the following format: endpoint-id@query-id
+    /// </param>
+    /// <param name="url">
+    /// de: Die URL des Endpunkts, von dem die Daten geladen werden sollen.
+    /// en: The URL of the endpoint from which the data should be loaded.
+    /// </param>
+    /// <param name="valueField">
+    /// de: Name der Spalte des Abfrage(Query)-Ergebnisses, die die Values für die Select-Option enthält.
+    /// en: The name of the column in the query result that contains the values for the select options.
+    /// </param>
+    /// <param name="nameField">
+    /// de: Name der Spalte des Abfrage(Query)-Ergebnisses, die den Anzeigenamen für die Select-Option enthält.
+    /// en: The name of the column in the query result that contains the display names for the select options.
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Wert (Value), der vorausgewählt sein soll.
+    /// en: The value to be pre-selected.
+    /// </param>
+    /// <param name="prependEmpty">
+    /// de: Gibt an, ob den Auswahloptionen eine leere Option vorangestellt werden soll (damit ist die Auswahl wieder aufhebbar).
+    /// en: Indicates whether an empty option should be prepended to the options (making the selection resettable).
+    /// </param>
+    /// <returns>
+    /// de: Ein HTML-Select-Element, das die Optionen aus der angegebenen Abfrage lädt.
+    /// en: An HTML select element that loads options from the specified query.
+    /// </returns>
     public object IncludeCombo(
-        [HelpDescription("Gibt die Id des Querys, der die Optionen bereithält, in folgender Form an: endpoint-id@query-id")]
         string id, string url,
-        [HelpDescription("Name der Spalte des Abfrage(Query)-Ergebnisses, die die Values für die Select-Option enthält")]
         string valueField,
-        [HelpDescription("Name der Spalte des Abfrage(Query)-Ergebnisses, die den Anzeigenamen für die Select-Option enthält")]
         string nameField,
-        [HelpDescription("Wert (Value), der vorausgewählt sein soll")]
         object defaultValue = null,
-        [HelpDescription("Gibt an, ob den Auswahloptionen eine leere Option vorangestellt werden soll (damit ist die Auswahl wieder aufhebbar)")]
         bool prependEmpty = false)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append($"<select id='{id}' name='{id}' class='datalinq-include-combo' ");
-        sb.Append($" data-url='{url}'");
-        sb.Append($" data-valuefield='{valueField}'");
-        sb.Append($" data-namefield='{nameField}'");
-        sb.Append($" data-defaultvalue='{(defaultValue == null ? "" : defaultValue.ToString())}'");
-        sb.Append($" data-prepend-empty='{prependEmpty.ToString().ToLower()}'");
-        sb.Append("></select>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendSelect(s =>
+                {
+                    s.AddClass("datalinq-include-combo");
+                    s.AddAttribute("id", id);
+                    s.AddAttribute("name",id);
+                    s.AddAttribute("data-url",url);
+                    s.AddAttribute("data-valuefield", valueField);
+                    s.AddAttribute("data-namefield", nameField);
+                    s.AddAttribute("data-defaultvalue", defaultValue == null ? "" : defaultValue.ToString());
+                    s.AddAttribute("data-prepend-empty", prependEmpty.ToString().ToLower());
+                }).BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Erstellt eine HTML-Auswahlliste (Select) für ein Formular, deren Optionen aus einer Abfrage ODER einer Liste geladen werden")]
+    /// <summary>
+    /// de: Erstellt eine HTML-Auswahlliste (Select) für ein Formular, deren Optionen aus einer Abfrage ODER einer Liste geladen werden.
+    /// en: Creates an HTML select dropdown for a form, with options loaded from a query OR a list.
+    /// </summary>
+    /// <param name="record">
+    /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
+    /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
+    /// </param>
+    /// <param name="name">
+    /// de: Name (Attribut) des Formular-Elements.
+    /// en: The name (attribute) of the form element.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style="width:300px" @class="meine-klasse" select2="never" }))... wird select2=never nicht angegeben, wird das Element automatisch in ein Select2 Element (Combo + Eingabeled für die Suche nach Elementen) umgewandelt, wenn mehr als 20 Einträge vorhanden sind.
+    /// en: An anonymous object with HTML attributes for the form element, e.g., ((new { style="width:300px" @class="meine-klasse" select2="never" }))... if select2=never is not provided, the element will automatically be converted into a Select2 element (combo with input field for searching items) if more than 20 entries are present.
+    /// </param>
+    /// <param name="source">
+    /// de: Datenquelle der Auswahloptionen, kann eine Abfrage-URL sein (siehe IncludeCombo, bspw. (( new { source="endpoint-id@query-id@view-id",
+    /// valueField="VALUE", nameField="NAME", prependEmpty=true }) )), oder ein Dictionary mit Werten für Value und Anzeigenname, bspw. (( new { source=new Dictionary&lt;object,string&gt;() { {0,"Nein" },{ 1, "Ja"} }} )), oder eine String-Array, bei dem Value und Anzeigename den selben Wert haben, bspw. (( new { source=new string[]{ "Ja","Nein","Vielleicht"}} ))
+    /// en: Data source for the select options, which can be a query URL (see IncludeCombo, e.g., (( new { source="endpoint-id@query-id@view-id",
+    /// valueField="VALUE", nameField="NAME", prependEmpty=true }) )), or a Dictionary with values for Value and Display Name, e.g., (( new { source=new Dictionary&lt;object,string&gt;() { {0,"No" },{ 1, "Yes"} }} )), or a String Array where Value and Display Name are the same, e.g., (( new { source=new string[]{ "Yes","No","Maybe"}} ))
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Falls noch kein Wert im record-Datensatz vorliegt (null), kann so ein Wert für die Vorauswahl getroffen werden.
+    /// en: If no value exists in the record, a default value can be set for the pre-selection.
+    /// </param>
+    /// <returns>
+    /// de: Ein HTML-Select-Element für das Formular, dessen Optionen aus einer Abfrage oder Liste geladen werden.
+    /// en: An HTML select element for the form, with options loaded from a query or list.
+    /// </returns>
     public object ComboFor(
-        [HelpDescription("DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen")]
         object record,
-        [HelpDescription("Name (Attribut) des Formular-Elements")]
         string name,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style=\"width:300px\" @class=\"meine-klasse\" select2=\"never\" } ))... wird select2=never nicht angegeben, wird das Element automatisch in ein Select2 Element (Combo + Eingabeled für die Suche nach Elementen) umgewandelt, wenn mehr als 20 Einträge vorhanden sind.")]
         object htmlAttributes = null,
-        [HelpDescription(@"Datenquelle der Auswahloptionen, 
-                kann eine Abfrage-URL sein (siehe IncludeCombo, bspw. (( new { source=""endpoint-id@query-id@view-id"", valueField=""VALUE"", nameField=""NAME"", prependEmpty=true }) )), 
-                oder ein Dictionary mit Werten für Value und Anzeigenname, bspw. (( new { source=new Dictionary&lt;object,string&gt;() { {0,""Nein"" },{ 1, ""Ja""} }} )),
-                oder eine String-Array, bei dem Value und Anzeigename den selben Wert haben, bspw. (( new { source=new string[]{ ""Ja"",""Nein"",""Vielleicht""}} ))")]
         object source = null,
-        [HelpDescription("Falls noch kein Wert im record-Datensatz vorliegt (null), kann so ein Wert für die Vorauswahl getroffen werden.")]
         object defaultValue = null)
     {
-        object val = GetDefaultValueFromRecord(record, name, defaultValue);
+        object val = record.GetDefaultValueFromRecord(name, defaultValue);
 
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<select name='" + name + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-include-combo");
-
-        if (source != null && source.GetType().GetProperty("source") != null)
-        {
-            var sourceProperty = source.GetType().GetProperty("source");
-            var sourceValue = sourceProperty.GetValue(source);
-            bool prependEmpty = Convert.ToBoolean(GetDefaultValueFromRecord(ToDictionary(source), "prependEmpty", false));
-            sb.Append(" data-prepend-empty='" + prependEmpty.ToString().ToLower() + "' data-defaultvalue='" + (val == null ? "" : val.ToString()) + "'");
-
-            var dependsOn = GetDefaultValueFromRecord(ToDictionary(source), "dependsOn", null) as string[];
-            if (dependsOn != null && dependsOn.Length > 0)
-            {
-                sb.Append($" data-depends-on='{String.Join(",", dependsOn)}'");
-            }
-
-            if (sourceValue is string[])
-            {
-                sb.Append(">");
-                foreach (var optionValue in (string[])sourceValue)
-                {
-                    sb.Append("<option value='" + optionValue + "' " + (optionValue == val?.ToString() ? "selected" : "") + ">" + optionValue + "</option>");
-                }
-            }
-            else if (sourceValue is Dictionary<object, string>)
-            {
-                sb.Append(">");
-                foreach (var kvp in (Dictionary<object, string>)sourceValue)
-                {
-                    sb.Append("<option value='" + kvp.Key + "' " + (kvp.Key.ToString() == val?.ToString() ? "selected" : "") + ">" + kvp.Value + "</option>");
-                }
-            }
-            else if (sourceValue is string)
-            {
-                var valueFieldProperty = source.GetType().GetProperty("valueField");
-                var nameFieldProperty = source.GetType().GetProperty("nameField");
-
-                if (valueFieldProperty == null || nameFieldProperty == null)
-                {
-                    valueFieldProperty.SetValue(source, "VALUE");
-                    nameFieldProperty.SetValue(source, "NAME");
-                }
-
-                if (valueFieldProperty.PropertyType == typeof(string) && nameFieldProperty.PropertyType == typeof(string))
-                {
-                    sb.Append(" data-url='" + sourceProperty.GetValue(source) + "' data-valuefield='" + valueFieldProperty.GetValue(source) + "' data-namefield='" + nameFieldProperty.GetValue(source) + "' >");
-                }
-                else
-                {
-                    throw new ArgumentException("valueField and nameField have to be typeof(string)");
-                }
-            }
-        }
-
-        sb.Append("</select>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .ComboFor(val, name, htmlAttributes, source)
+                .BuildHtmlString()
+            ); 
     }
 
-    [HelpDescription("Erstellt HTML-Radiobuttons für ein Formular, deren Optionen aus einer Abfrage ODER einer Liste geladen werden")]
+    /// <summary>
+    /// de: Erstellt HTML-Radiobuttons für ein Formular, deren Optionen aus einer Abfrage ODER einer Liste geladen werden.
+    /// en: Creates HTML radio buttons for a form, with options loaded from a query OR a list.
+    /// </summary>
+    /// <param name="record">
+    /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
+    /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
+    /// </param>
+    /// <param name="name">
+    /// de: Name (Attribut) des Formular-Elements.
+    /// en: The name (attribute) of the form element.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object with HTML attributes for the form element, e.g., ((new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <param name="source">
+    /// de: Datenquelle der Auswahloptionen, kann eine Abfrage-URL sein (siehe IncludeCombo, bspw. (( new { source="endpoint-id@query-id@view-id", valueField="VALUE",
+    /// nameField="NAME", prependEmpty=true }) )), oder ein Dictionary mit Werten für Value und Anzeigenname, bspw. (( new { source=new Dictionary&lt;object,string&gt;() { {0,"Nein" },{ 1, "Ja"} }} )), oder eine String-Array, bei dem Value und Anzeigename den selben Wert haben, bspw. (( new { source=new string[]{ "Ja","Nein","Vielleicht"}} ))
+    /// en: Data source for the radio button options, which can be a query URL (see IncludeCombo, e.g., (( new { source="endpoint-id@query-id@view-id", valueField="VALUE",
+    /// nameField="NAME", prependEmpty=true }) )), or a Dictionary with values for Value and Display Name, e.g., (( new { source=new Dictionary&lt;object,string&gt;() { {0,"No" },{ 1, "Yes"} }} )), or a String Array where Value and Display Name are the same, e.g., (( new { source=new string[]{ "Yes","No","Maybe"}} ))
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Falls noch kein Wert im record-Datensatz vorliegt (null oder leeren String), kann so ein Wert für die Vorauswahl getroffen werden.
+    /// en: If no value exists in the record (null or empty string), a default value can be set for the pre-selection.
+    /// </param>
+    /// <returns>
+    /// de: HTML-Radiobuttons für das Formular, deren Optionen aus einer Abfrage oder Liste geladen werden.
+    /// en: HTML radio buttons for the form, with options loaded from a query or list.
+    /// </returns>
     public object RadioFor(
-        [HelpDescription("DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen")]
         object record,
-        [HelpDescription("Name (Attribut) des Formular-Elements")]
         string name,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für das  Formular-Element, bspw. ((new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null,
-        [HelpDescription(@"Datenquelle der Auswahloptionen, 
-                kann eine Abfrage-URL sein (siehe IncludeCombo, bspw. (( new { source=""endpoint-id@query-id@view-id"", valueField=""VALUE"", nameField=""NAME"", prependEmpty=true }) )), 
-                oder ein Dictionary mit Werten für Value und Anzeigenname, bspw. (( new { source=new Dictionary&lt;object,string&gt;() { {0,""Nein"" },{ 1, ""Ja""} }} )),
-                oder eine String-Array, bei dem Value und Anzeigename den selben Wert haben, bspw. (( new { source=new string[]{ ""Ja"",""Nein"",""Vielleicht""}} ))")]
         object source = null,
-        [HelpDescription("Falls noch kein Wert im record-Datensatz vorliegt (null oder leeren String), kann so ein Wert für die Vorauswahl getroffen werden.")]
         object defaultValue = null)
     {
         object val = GetDefaultValueFromRecord(record, name, defaultValue);
-
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<div ");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append(">");
 
         if (source != null && source.GetType().GetProperty("source") != null)
         {
@@ -950,34 +1684,74 @@ public class DataLinqHelper : IDataLinqHelper
 
             if (sourceProperty.PropertyType == typeof(string[]))
             {
-                foreach (var optionValue in (string[])sourceProperty.GetValue(source))
-                {
-                    sb.Append("<input type='radio' name='" + name + "' value='" + optionValue + "' " + (optionValue == val.ToString() ? "checked" : "") + " />" + optionValue + "<br/>");
-                }
+                return _razor.RawString(
+                    HtmlBuilder.Create()
+                        .AppendDiv(d =>
+                        {
+                            d.AddAttributes(htmlAttributes);
+                            foreach (var optionValue in (string[])sourceProperty.GetValue(source))
+                            {
+                                d.AppendInput(i =>
+                                {
+                                    i.AddAttribute("type", "radio");
+                                    i.AddAttribute("name", name);
+                                    i.AddAttribute("value", optionValue);
+                                    if (optionValue == val.ToString())
+                                        i.AddAttribute("checked", "checked");
+                                    i.Content(optionValue);
+                                });
+                            }
+                        }).BuildHtmlString()
+                    );
             }
             else if (sourceProperty.PropertyType == typeof(Dictionary<object, string>))
             {
-                foreach (var kvp in (Dictionary<object, string>)sourceProperty.GetValue(source))
-                {
-                    sb.Append("<input type='radio' name='" + name + "' value='" + kvp.Key + "' " + (kvp.Key.ToString() == val.ToString() ? "checked" : "") + " />" + kvp.Value + "<br/>");
-                }
+                return _razor.RawString(
+                   HtmlBuilder.Create()
+                       .AppendDiv(d =>
+                       {
+                           d.AddAttributes(htmlAttributes);
+                           foreach (var kvp in (Dictionary<object, string>)sourceProperty.GetValue(source))
+                           {
+                               d.AppendInput(i =>
+                               {
+                                   i.AddAttribute("type", "radio");
+                                   i.AddAttribute("name", name);
+                                   i.AddAttribute("value", kvp.Key.ToString());
+                                   if (kvp.Key.ToString() == val.ToString())
+                                       i.AddAttribute("checked", "checked");
+                                   i.Content(kvp.Value);
+                               });
+                           }
+                       }).BuildHtmlString()
+                   );
             }
             else if (sourceProperty.PropertyType == typeof(string))
             {
                 var valueFieldProperty = source.GetType().GetProperty("valueField");
                 var nameFieldProperty = source.GetType().GetProperty("nameField");
-                if (valueFieldProperty == null || nameFieldProperty == null)
-                {
-                    valueFieldProperty.SetValue(source, "VALUE");
-                    nameFieldProperty.SetValue(source, "NAME");
-                }
 
                 if (valueFieldProperty.PropertyType == typeof(string) && nameFieldProperty.PropertyType == typeof(string))
                 {
-                    sb.Clear();
-                    sb.Append("<div ");
-                    AppendHtmlAttributes(sb, htmlAttributes, "datalinq-include-radio");
-                    sb.Append(" data-name='" + name + "' data-url='" + sourceProperty.GetValue(source) + "' data-valuefield='" + valueFieldProperty.GetValue(source) + "' data-namefield='" + nameFieldProperty.GetValue(source) + "' data-defaultvalue='" + (val == null ? "" : val.ToString()) + "' >");
+                    if (valueFieldProperty == null || nameFieldProperty == null)
+                    {
+                        valueFieldProperty.SetValue(source, "VALUE");
+                        nameFieldProperty.SetValue(source, "NAME");
+                    }
+
+                    return _razor.RawString(
+                        HtmlBuilder.Create()
+                            .AppendDiv(d =>
+                            {
+                                d.AddClass("datalinq-include-radio");
+                                d.AddAttributes(htmlAttributes);
+                                d.AddAttribute("data-name", name);
+                                d.AddAttribute("data-url", sourceProperty.GetValue(source).ToString());
+                                d.AddAttribute("data-valuefield", valueFieldProperty.GetValue(source).ToString());
+                                d.AddAttribute("data-namefield", nameFieldProperty.GetValue(source).ToString());
+                                d.AddAttribute("data-defaultvalu", val == null ? "" : val.ToString());
+                            }).BuildHtmlString()
+                        );
                 }
                 else
                 {
@@ -985,224 +1759,508 @@ public class DataLinqHelper : IDataLinqHelper
                 }
             }
         }
+        else
+        {
+            return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendDiv(d =>
+                    {
+                        d.AddAttributes(htmlAttributes);
+                    }).BuildHtmlString()
+                );
+        }
 
-        sb.Append("</select>");
-
-        return _razor.RawString(sb.ToString());
+        throw new ArgumentException("Invalid or unsupported source object passed to RadioFor.");
     }
 
-    [HelpDescription("Erstellt ein HTML-Textfeld für ein Formular")]
+    /// <summary>
+    /// de: Erstellt ein HTML-Textfeld für ein Formular.
+    /// en: Creates an HTML text field for a form.
+    /// </summary>
+    /// <param name="record">
+    /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
+    /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
+    /// </param>
+    /// <param name="name">
+    /// de: Name (Attribut) des Formular-Elements.
+    /// en: The name (attribute) of the form element.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für das Formular-Element; auch reguläre Ausdrücke zum Überprüfen sind möglich., bspw. ((new { style="width:300px" @class="meine-klasse",
+    /// required="required", pattern="[A-Za-z]{3}" }))
+    /// en: An anonymous object with HTML attributes for the form element; regular expressions for validation are also possible, e.g., ((new { style="width:300px" @class="my-class",
+    /// required="required", pattern="[A-Za-z]{3}" }))
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Falls noch kein Wert im record-Datensatz vorliegt (null oder leeren String), kann so ein Wert für die Vorauswahl getroffen werden.
+    /// en: If no value exists in the record (null or empty string), a default value can be set for the pre-selection.
+    /// </param>
+    /// <param name="dataType">
+    /// de: Art des Textfeldes als Enumeration, hier sind Text-(Text), Datum-(Date) oder Datum+Uhrzeit(DateTime) als Typ möglich, bspw. ((DataType.DateTime)). Bei Datumsfeldern muss das voreingestellte Datum folgendes Format haben: DD.MM.YYYY HH:mm, bspw. (("08.11.2017 09:32"))
+    /// en: Type of the text field as an enumeration. Options include Text (Text), Date (Date), or Date+Time (DateTime), e.g., ((DataType.DateTime)). For date fields, the default date must be in the format DD.MM.YYYY HH:mm, e.g., (("08.11.2017 09:32")).
+    /// </param>
+    /// <returns>
+    /// de: Ein HTML-Textfeld für ein Formular.
+    /// en: An HTML text field for a form.
+    /// </returns>
     public object TextFor(
-        [HelpDescription("DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen")]
         object record,
-        [HelpDescription("Name (Attribut) des Formular-Elements")]
         string name,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für das Formular-Element; auch reguläre Ausdrücke zum Überprüfen sind möglich., bspw. ((new { style=\"width:300px\" @class=\"meine-klasse\", required=\"required\", pattern=\"[A-Za-z]{3}\" } ))")]
         object htmlAttributes = null,
-        [HelpDescription("Falls noch kein Wert im record-Datensatz vorliegt (null oder leeren String), kann so ein Wert für die Vorauswahl getroffen werden.")]
         object defaultValue = null,
-        [HelpDescription("Art des Textfeldes als Enumeration, hier sind Text-(Text), Datum-(Date) oder Datum+Uhrzeit(DateTime) als Typ möglich, bspw. ((DataType.DateTime)).\n Bei Datumsfeldern muss das voreingestellte Datum folgendes Format haben: DD.MM.YYYY HH:mm, bspw. ((\"08.11.2017 09:32\")) ")]
         DataType dataType = DataType.Text)
     {
         object val = GetDefaultValueFromRecord(record, name, defaultValue);
 
-        StringBuilder sb = new StringBuilder();
         if (dataType == DataType.DateTime || dataType == DataType.Date)
         {
-            sb.Append("<input type='hidden' name='" + name + "' value='" + (val == null ? "NULL" : val.ToString()) + "' />");
-            name += "_helper";
+            return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendInput(i =>
+                    {
+                        i.AddAttribute("type", "hidden");
+                        i.AddAttribute("name", name);
+                        i.AddAttribute("value", val == null ? "NULL" : val.ToString());
+                    }).AppendInput(i =>
+                    {
+                        i.AddAttributes(htmlAttributes);
+                        i.AddAttribute("type", "text");
+                        i.AddAttribute("name", name+ "_helper");
+                        i.AddAttribute("data-datatype", dataType.ToString());
+                        i.AddAttribute("value", val == null ? "" : val.ToString());
+                    }).BuildHtmlString()
+                );
+        } else
+        {
+            return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendInput(i =>
+                    {
+                        i.AddAttributes(htmlAttributes);
+                        i.AddAttribute("type", "text");
+                        i.AddAttribute("name", name);
+                        i.AddAttribute("data-datatype", dataType.ToString());
+                        i.AddAttribute("value", val == null ? "" : val.ToString());
+                    }).BuildHtmlString()
+                );
         }
-        sb.Append("<input type='text' name='" + name + "' data-datatype='" + dataType.ToString() + "'");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append("value='" + (val == null ? "" : val.ToString()) + "'/>");
-
-        return _razor.RawString(sb.ToString());
     }
 
-    [HelpDescription("Erstellt ein HTML-Checkbox für ein Formular")]
+    /// <summary>
+    /// de: Erstellt ein HTML-Checkbox für ein Formular.
+    /// en: Creates an HTML checkbox for a form.
+    /// </summary>
+    /// <param name="record">
+    /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
+    /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
+    /// </param>
+    /// <param name="name">
+    /// de: Name (Attribut) des Formular-Elements."
+    /// en: The name (attribute) of the form element."
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object with HTML attributes for the form element, e.g., ((new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Falls noch kein Wert im record-Datensatz vorliegt (null oder leeren String), kann so ein Wert für die Vorauswahl getroffen werden.
+    /// en: If no value exists in the record (null or empty string), a default value can be set for the pre-selection.
+    /// </param>
+    /// <returns>
+    /// de: Ein HTML-Checkbox für ein Formular.
+    /// en: An HTML checkbox for a form.
+    /// </returns>
     public object CheckboxFor(
-        [HelpDescription("DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen")]
         object record,
-        [HelpDescription("Name (Attribut) des Formular-Elements")]
         string name,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null,
-        [HelpDescription("Falls noch kein Wert im record-Datensatz vorliegt (null oder leeren String), kann so ein Wert für die Vorauswahl getroffen werden.")]
         object defaultValue = null)
     {
         object val = GetDefaultValueFromRecord(record, name, defaultValue);
-
-        StringBuilder sb = new StringBuilder();
-
-        // Checkbox-Value wird nur übergeben, wenn gecheckt. => Direkt davor ein hidden feld mit gleichem Namen und Guid
         string guid = Guid.NewGuid().ToString();
-        sb.Append("<input type='hidden' name='" + name + "' value='" + (Convert.ToBoolean(val) == true ? "true" : "false") + "' id='" + guid + "' />");
-        sb.Append("<input type='checkbox' data-guid='" + guid + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append("value='True' " + (Convert.ToBoolean(val) == true ? "checked" : ""));
-        sb.Append(" onclick='$(\"#\" + $(this).data(\"guid\")).val(this.checked)' />");
 
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendInput(i =>
+                {
+                    i.AddAttribute("type", "hidden");
+                    i.AddAttribute("name", name);
+                    i.AddAttribute("value", Convert.ToBoolean(val) == true ? "true" : "false");
+                    i.AddAttribute("id", guid);
+                }).AppendInput(i =>
+                {
+                    i.AddAttributes(htmlAttributes);
+                    i.AddAttribute("type", "checkbox");
+                    i.AddAttribute("data-guid", guid);
+                    i.AddAttribute("value", "True");
+                    if ((Convert.ToBoolean(val) == true))
+                        i.AddAttribute("checked", "checked");
+                    i.AddAttribute("onclick", "$(\"#\" + $(this).data(\"guid\")).val(this.checked)");
+                }).BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Erstellt eine HTML-Textarea (Textfeld für mehrzeilige Eingaben) für ein Formular")]
+    /// <summary>
+    /// de: Erstellt eine HTML-Textarea (Textfeld für mehrzeilige Eingaben) für ein Formular.
+    /// en: Creates an HTML textarea (text field for multiline input) for a form.
+    /// </summary>
+    /// <param name="record">
+    /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
+    /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
+    /// </param>
+    /// <param name="name">
+    /// de: Name (Attribut) des Formular-Elements.
+    /// en: The name (attribute) of the form element.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object with HTML attributes for the form element, e.g., ((new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Falls noch kein Wert im record-Datensatz vorliegt (null), kann so ein Wert für die Vorauswahl getroffen werden.
+    /// en: If no value exists in the record (null), a default value can be set for the pre-selection.
+    /// </param>
+    /// <returns>
+    /// de: Ein HTML-Textarea (Textfeld für mehrzeilige Eingaben) für ein Formular.
+    /// en: An HTML textarea (text field for multiline input) for a form.
+    /// </returns>
     public object TextboxFor(
-        [HelpDescription("DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen")]
         object record,
-        [HelpDescription("Name (Attribut) des Formular-Elements")]
         string name,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null,
-        [HelpDescription("Falls noch kein Wert im record-Datensatz vorliegt (null), kann so ein Wert für die Vorauswahl getroffen werden.")]
         object defaultValue = null)
     {
         object val = GetDefaultValueFromRecord(record, name, defaultValue);
 
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<textarea name='" + name + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append(">" + (val == null ? "" : val.ToString()) + "</textarea>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendTextarea(t =>
+                {
+                    t.AddAttributes(htmlAttributes);
+                    t.AddAttribute("name", name);
+                    t.Content(val == null ? "" : val.ToString());
+                }).BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Erstellt ein verstecktes HTML-Feld für ein Formular")]
+    /// <summary>
+    /// de: Erstellt ein verstecktes HTML-Feld für ein Formular.
+    /// en: Creates a hidden HTML field for a form.
+    /// </summary>
+    /// <param name="record">
+    /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
+    /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
+    /// </param>
+    /// <param name="name">
+    /// de: Name (Attribut) des Formular-Elements.
+    /// en: The name (attribute) of the form element.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object with HTML attributes for the form element, e.g., ((new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Falls noch kein Wert im record-Datensatz vorliegt (null oder leeren String), kann so ein Wert für die Vorauswahl getroffen werden.
+    /// en: If no value exists in the record (null or empty string), a default value can be set for the pre-selection.
+    /// </param>
+    /// <returns>
+    /// de: Ein verstecktes HTML-Feld für ein Formular.
+    /// en: A hidden HTML field for a form.
+    /// </returns>
     public object HiddenFor(
-        [HelpDescription("DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen")]
         object record,
-        [HelpDescription("Name (Attribut) des Formular-Elements")]
         string name,
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null,
-        [HelpDescription("Falls noch kein Wert im record-Datensatz vorliegt (null oder leeren String), kann so ein Wert für die Vorauswahl getroffen werden.")]
         object defaultValue = null)
     {
         object val = GetDefaultValueFromRecord(record, name, defaultValue);
 
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<input type='hidden' name='" + name + "' ");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append(" value='" + (val == null ? "" : val.ToString()) + "' />");
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendInput(i =>
+                {
+                    i.AddAttributes(htmlAttributes);
+                    i.AddAttribute("type", "hidden");
+                    i.AddAttribute("name", name);
+                    i.AddAttribute("value", val == null ? "" : val.ToString());
+                }).BuildHtmlString()
+            );
     }
 
-
-    [HelpDescription("Erstellt ein Label for eine Formular Eingabe-Element")]
+    /// <summary>
+    /// de: Erstellt ein Label für eine Formular-Eingabe-Element.
+    /// en: Creates a label for a form input element.
+    /// </summary>
+    /// <param name="label">
+    /// de: Label/Text, der angezeigt werden soll.
+    /// en: The label/text to be displayed.
+    /// </param>
+    /// <param name="name">
+    /// de: Name (Attribut) des Formular-Elements.
+    /// en: The name (attribute) of the form element.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style="width:300px" @class="meine-klasse" }))
+    /// en: An anonymous object with HTML attributes for the form element, e.g., ((new { style="width:300px" @class="my-class" }))
+    /// </param>
+    /// <param name="newLine">
+    /// de: Soll nach dem Label in eine neue Zeile gewechselt werden? (Standardwert: true)
+    /// en: Should a new line be added after the label? (Default: true)
+    /// </param>
+    /// <returns>
+    /// de: Ein Label für das Formular-Eingabe-Element.
+    /// en: A label for the form input element.
+    /// </returns>
     public object LabelFor(
-        [HelpDescription("Label/Text der Angezeigt werden sollte.")]
         string label,
-        [HelpDescription("Name (Attribut) des Formular-Elements")]
         string name = "",
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null,
-        [HelpDescription("Soll nach dem Label in eine neue Zeile gewechselt werden?")]
-        bool newLine=true)
+        bool newLine = true)
     {
-        var sb = new StringBuilder();
-
         if (newLine)
         {
-            sb.Append("<br/>");
-        }
-
-        sb.Append($"<label for='{name}'");
-        AppendHtmlAttributes(sb, htmlAttributes);
-        sb.Append($">{label}</label>");
-
-        if (newLine)
+            return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendBreak()
+                    .AppendLabel(l =>
+                    {
+                        l.AddAttributes(htmlAttributes);
+                        l.AddAttribute("for", name);
+                        l.Content(label);
+                    }).AppendBreak().BuildHtmlString()
+                );
+        } else
         {
-            sb.Append("<br/>");
+            return _razor.RawString(
+                HtmlBuilder.Create()
+                    .AppendLabel(l =>
+                    {
+                        l.AddAttributes(htmlAttributes);
+                        l.AddAttribute("for", name);
+                        l.Content(label);
+                    }).BuildHtmlString()
+                );
         }
-
-        return _razor.RawString(sb.ToString());
     }
 
     #endregion
 
     #region Statistics & Charts
 
-    [HelpDescription("Erstellt ein HTML DIV-Element, dass die Anzahl der Datensätze anzeigt")]
+    /// <summary>
+    /// de: Erstellt ein HTML DIV-Element, das die Anzahl der Datensätze anzeigt.
+    /// en: Creates an HTML DIV element that displays the number of records.
+    /// </summary>
+    /// <param name="records">
+    /// de: DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.
+    /// en: DataLinq records to be counted. These may also be restricted by a C# LINQ condition."
+    /// </param>
+    /// <param name="label">
+    /// de: Der Text, der über der Zahl anzeigt werden soll, bspw. "Anzahl"
+    /// en: The text to be displayed above the number, e.g., "Count".
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für das DIV-Element, bspw. ((new { style="height:300px" @class="meine-klasse" }))
+    /// en: An anonymous object with HTML attributes for the DIV element, e.g., ((new { style="height:300px" @class="my-class" }))
+    /// </param>
+    /// <returns>
+    /// de: Ein HTML DIV-Element, das die Anzahl der Datensätze anzeigt.
+    /// en: An HTML DIV element that displays the number of records.
+    /// </returns>
     public object StatisticsCount(
-        [HelpDescription("DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.")]
         IDictionary<string, object>[] records,
-        [HelpDescription("Der Text, der über der Zahl anzeigt werden soll, bspw. \"Anzahl\"")]
         string label = "",
-        [HelpDescription("Ein anonymes Ojekt mit HTML-Attributen für das DIV-Elment, bspw. ((new { style=\"height:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<div ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-statistics");
-        sb.Append(">");
-        if (!String.IsNullOrWhiteSpace(label))
-        {
-            sb.Append("<strong>" + ToHtml(label) + "</strong>");
-        }
-
-        sb.Append(records != null ? records.Length.ToString() : "0");
-        sb.Append("</div>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                {
+                    d.AddClass("datalinq-statistics");
+                    d.AddAttributes(htmlAttributes);
+                    if (!String.IsNullOrWhiteSpace(label))
+                    {
+                        string labelStrong = $"<strong>{ToHtml(label)}</strong>";
+                        string content = (records != null) ? records.Length.ToString() : "0";
+                        d.Content(labelStrong + content);
+                    }
+                    else
+                    {
+                        d.Content(records != null ? records.Length.ToString() : "0");
+                    }
+                }).BuildHtmlString()
+            );
     }
 
-    [HelpDescription(@"Gruppiert Datensätze auf Basis eines Feldes und gibt dazugehörige Gruppengröße (d.h. Anzahl der Datensätze in der Gruppe) in einer JavaScript Variable im JSON-Format aus.")]
+    /// <summary>
+    /// de: Gibt ein dynamisches Objekt in einer JavaScript-Variablen aus. Das Objekt wird zuvor in JSON serialisiert und als String in jQuery.parseJSON eingebettet, damit es direkt in JavaScript genutzt werden kann.
+    /// en: Outputs a dynamic object into a JavaScript variable. The object is first serialized to JSON and embedded as a string inside jQuery.parseJSON so it can be used directly in JavaScript.
+    /// </summary>
+    /// <param name="record">
+    /// de: Das dynamische Objekt das in der JavaScript-Variable ausgegeben werden sollen. Kann z.B. eine Liste von ExpandoObjects oder anonymen Typen sein.
+    /// en: The dynamic object to output in the JavaScript variable. Can be a list of ExpandoObjects or anonymous types.
+    /// </param>
+    /// <returns>
+    /// de: Gibt eine HTML-Rohzeichenfolge zurück, die ein Skript-Tag enthält, in dem die JavaScript-Variable mit den serialisierten Daten erstellt wird.
+    /// en: Returns a raw HTML string containing a script tag, in which the JavaScript variable with the serialized data is created.
+    /// </returns>
+
+    public object StatisticsSeries(object record)
+    {
+        if (record == null)
+            throw new ArgumentNullException(nameof(record));
+
+        var properties = record switch
+        {
+            ExpandoObject expando => (IDictionary<string, object>)expando,
+            _ => record.GetType()
+                       .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                       .Where(p => p.CanRead)
+                       .ToDictionary(p => p.Name, p => p.GetValue(record))
+        };
+
+        var seriesData = properties.Select(kvp => new { name = kvp.Key, value = kvp.Value });
+
+        var json = JsonConvert.SerializeObject(seriesData, new JsonSerializerSettings
+        {
+            StringEscapeHandling = StringEscapeHandling.EscapeHtml,
+            NullValueHandling = NullValueHandling.Include
+        });
+
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendJavaScriptBlock($"var statisticsSeriesOutput = jQuery.parseJSON('{json}');")
+                .BuildHtmlString()
+        );
+    }
+
+    /// <summary>
+    /// de: Gruppiert Datensätze auf Basis eines Feldes und gibt dazugehörige Gruppengröße (d.h. Anzahl der Datensätze in der Gruppe) in einer JavaScript-Variablen im JSON-Format aus.
+    /// en: Groups records based on a field and outputs the corresponding group size (i.e., number of records in the group) in a JavaScript variable in JSON format.
+    /// </summary>
+    /// <param name="records">
+    /// de: DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.
+    /// en: DataLinq records to be counted. These may also be restricted by a C# LINQ condition.
+    /// </param>
+    /// <param name="jsVariableName">
+    /// de: Name des auszugebenden JavaScript-Objektes, mit folgendem Aufbau: (([ {name: Name / Kategorie / etc, value: Wert},
+    /// {name: Laubbäume, value: 2},
+    /// {name: Nadelbäume, value: 5}, ]))
+    /// en: The name of the JavaScript object to output, with the following structure: (([ {name: Name / Category / etc, value: Value},
+    /// {name: Deciduous Trees, value: 2},
+    /// {name: Coniferous Trees, value: 5}, ]))
+    /// </param>
+    /// <param name="field">
+    /// de: Feldname im DataLinq-Objekt, nach dem gruppiert werden soll.
+    /// en: Field name in the DataLinq object to group by.
+    /// </param>
+    /// <param name="orderField">
+    /// de: Art, nach der das Objekt sortiert werden soll. Es kann auf- und absteigend nach dem Gruppennamen (OrderField.NameAsc, OrderField.NameDesc) oder nach Gruppengröße (OrderField.ValueAsc, OrderField.ValueDesc) sortiert werden.
+    /// en: The way in which the object should be sorted. It can be sorted ascending or descending by group name (OrderField.NameAsc, OrderField.NameDesc) or by group size (OrderField.ValueAsc, OrderField.ValueDesc).
+    /// </param>
+    /// <returns>
+    /// de: Gibt eine JavaScript-Variable im JSON-Format zurück, die die gruppierten Datensätze und deren Größen enthält.
+    /// en: Returns a JavaScript variable in JSON format that contains the grouped records and their sizes.
+    /// </returns>
     public object StatisticsGroupBy(
-        [HelpDescription("DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.")]
         IDictionary<string, object>[] records,
-        [HelpDescription(@"Name des auszugebenden Javascript-Objektes, mit folgendem Aufbau:
-                (([
-                    {name: ""Name / Kategorie / etc"", value: ""Wert""}, 
-                    {name: ""Laubbäume"", value: ""2""},
-                    {name: ""Nadelbäume"", value: ""5""},
-                ]))")]
         string jsVariableName,
-        [HelpDescription("Feldname im DataLinq-Objekt, nach dem gruppiert werden soll.")]
         string field,
-        [HelpDescription(@"Art, nach der das Objekt sortiert werden soll. Es kann auf- und absteigend nach dem Gruppennamen (""OrderField.NameAsc"", ""OrderField.NameDesc"") oder nach Gruppengröße (""OrderField.ValueAsc"", ""OrderField.ValueDesc"") sortiert werden.")]
         OrderField orderField = OrderField.Non)
     {
         return ToParseJson(Stat_GroupBy(records, field, orderField), jsVariableName);
     }
 
-    [HelpDescription(@"Gruppiert Datensätze auf Basis eines Feldes und erzeugt eine JavaScript Variable im JSON-Format für Diagramme.")]
+    /// <summary>
+    /// de: Gruppiert Datensätze auf Basis eines Feldes und erzeugt eine JavaScript-Variable im JSON-Format für Diagramme.
+    /// en: Groups records based on a field and generates a JavaScript variable in JSON format for charts.
+    /// </summary>
+    /// <param name="records">
+    /// de: DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.
+    /// en: DataLinq records to be counted. These may also be restricted by a C# LINQ condition.
+    /// </param>
+    /// <param name="jsVariableName">
+    /// de: Name des auszugebenden JavaScript-Objektes, mit folgendem Aufbau: (([ {name: Name / Kategorie / etc, value: Wert},
+    /// {name: Laubbäume, value: 2},
+    /// {name: Nadelbäume, value: 5}, ]))
+    /// en: The name of the JavaScript object to output, with the following structure: (([ {name: Name / Category / etc, value: Value},
+    /// {name: Deciduous Trees, value: 2},
+    /// {name: Coniferous Trees, value: 5}, ]))
+    /// </param>
+    /// <param name="categoryField">
+    /// de: Feldname im DataLinq-Objekt, das die Kategorie enthält.
+    /// en: Field name in the DataLinq object that contains the category.
+    /// </param>
+    /// <param name="valueField">
+    /// de: Feldname im DataLinq-Objekt, das die Werte enthält.
+    /// en: Field name in the DataLinq object that contains the values.
+    /// </param>
+    /// <param name="statType">
+    /// de: Art, nach der das Wert-Feld abgeleitet werden soll. ((""StatType.Sum", "StatType.Min", "StatType.Max", "StatType.Mean",  "StatType.Count"))
+    /// en: The type by which the value field should be derived. (("StatType.Sum", "StatType.Min", "StatType.Max", "StatType.Mean",  "StatType.Count"))
+    /// </param>
+    /// <param name="orderField">
+    /// de: Art, nach der das Objekt sortiert werden soll. Es kann auf- und absteigend nach dem Gruppennamen (("OrderField.NameAsc", "OrderField.NameDesc")) oder nach Gruppengröße (("OrderField.ValueAsc", "OrderField.ValueDesc")) sortiert werden.
+    /// en: The way in which the object should be sorted. It can be sorted ascending or descending by group name (("OrderField.NameAsc", "OrderField.NameDesc")) or by group size (("OrderField.ValueAsc", "OrderField.ValueDesc"))
+    /// </param>
+    /// <returns>
+    /// de: Gibt eine JavaScript-Variable im JSON-Format zurück, die die gruppierten und abgeleiteten Werte enthält, geeignet für Diagramme.
+    /// en: Returns a JavaScript variable in JSON format that contains the grouped and derived values, suitable for charts.
+    /// </returns>
     public object StatisticsGroupByDerived(
-        [HelpDescription("DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.")]
         IDictionary<string, object>[] records,
-        [HelpDescription(@"Name des auszugebenden Javascript-Objektes, mit folgendem Aufbau:
-                (([
-                    {name: ""Name / Kategorie / etc"", value: ""Wert""}, 
-                    {name: ""Laubbäume"", value: ""2""},
-                    {name: ""Nadelbäume"", value: ""5""},
-                ]))")]
         string jsVariableName,
-        [HelpDescription("Feldname im DataLinq-Objekt, das die Kategorie enthält.")]
         string categoryField,
-        [HelpDescription("Feldname im DataLinq-Objekt, das die Werte enthält.")]
         string valueField,
-        [HelpDescription(@"Art, nach der das Wert-Feld abgeleitet werden soll. (""StatType.Sum"", ""StatType.Min"", ""StatType.Max"", ""StatType.Mean"",  ""StatType.Count"")")]
         StatType statType = StatType.Sum,
-        [HelpDescription(@"Art, nach der das Objekt sortiert werden soll. Es kann auf- und absteigend nach dem Gruppennamen (""OrderField.NameAsc"", ""OrderField.NameDesc"") oder nach Gruppengröße (""OrderField.ValueAsc"", ""OrderField.ValueDesc"") sortiert werden.")]
         OrderField orderField = OrderField.Non)
     {
         return ToParseJson(Stat_GroupByDerived(records, categoryField, valueField, statType, orderField), jsVariableName);
     }
 
-    [HelpDescription(@"Gruppiert Datensätze nach Zeitintervallen gibt dazugehörige Gruppengröße (d.h. Anzahl der Datensätze in der Gruppe) in einer JavaScript Variable im JSON-Format aus. Zusätzlich kann nach einem weiteren Feld gruppiert werden.")]
+    /// <summary>
+    /// de: Gruppiert Datensätze nach Zeitintervallen und gibt dazugehörige Gruppengröße (d.h. Anzahl der Datensätze in der Gruppe) in einer JavaScript Variable im JSON-Format aus. Zusätzlich kann nach einem weiteren Feld gruppiert werden.
+    /// en: Groups records by time intervals and outputs the group size (i.e., the number of records in the group) in a JavaScript variable in JSON format. Additionally, grouping can be done by another field.
+    /// </summary>
+    /// <param name="records">
+    /// de: Datalinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.
+    /// en: Datalinq records to be counted. These can also be restricted by a C# LINQ condition.
+    /// </param>
+    /// <param name="jsVariableName">
+    /// de: Name des auszugebenden Javascript-Objektes.
+    /// en: Name of the JavaScript object to be output.
+    /// </param>
+    /// <param name="datetimeField">
+    /// de: Feldname im DataLinq-Objekt, das den Zeitstempel enthält (DateTime).
+    /// en: Field name in the DataLinq object that contains the timestamp (DateTime).
+    /// </param>
+    /// <param name="categoryField">
+    /// de: Feldname im DataLinq-Objekt, nach dem gruppiert werden soll.
+    /// en: Field name in the DataLinq object to group by.
+    /// </param>
+    /// <param name="secondsInterval">
+    /// de: Zeitintervall in Sekunden, nach dem gruppiert werden soll. Wenn nichts angegeben wird, wird die Zeitspanne der Datensätze (frühestes bis spätestes vorkommendes Datum) berechnet und daraus eine passende Gruppierung erstellt.
+    /// en: Time interval in seconds to group by. If not provided, the time span of the records (earliest to latest date) is calculated and a suitable grouping is created.
+    /// </param>
+    /// <param name="fillMissingDataValue">
+    /// de: Falls Lücken in den Datensätzen mit einem Wert gefüllt werden sollen, kann dieser (Integer) hier angegeben werden.
+    /// en: If gaps in the records should be filled with a value, this (integer) can be specified here.
+    /// </param>
+    /// <param name="orderField">
+    /// de: Art, nach der das Objekt sortiert werden soll. Es kann auf- und absteigend nach dem Gruppennamen (("OrderField.NameAsc", "OrderField.NameDesc")) oder nach Gruppengröße (("OrderField.ValueAsc", "OrderField.ValueDesc")) sortiert werden.
+    /// en: The type of sorting to be applied to the object. It can be sorted ascending or descending by group name (("OrderField.NameAsc", "OrderField.NameDesc")) or by group size (("OrderField.ValueAsc", "OrderField.ValueDesc"))
+    /// </param>
+    /// <returns>
+    /// de: Gibt eine JavaScript-Variable im JSON-Format zurück, die die gruppierten Datensätze und ihre Anzahl enthält.
+    /// en: Returns a JavaScript variable in JSON format containing the grouped records and their count.
+    /// </returns>
     public object StatisticsGroupByTime(
-        [HelpDescription("Datalinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.")]
         IDictionary<string, object>[] records,
-        [HelpDescription(@"Name des auszugebenden Javascript-Objektes")]
         string jsVariableName,
-        [HelpDescription("Feldname im DataLinq-Objekt, dass den Zeitstempel enthält (DateTime).")]
         string datetimeField,
-        [HelpDescription("Feldname im DataLinq-Objekt, nach dem gruppiert werden soll.")]
         string categoryField = "",
-        [HelpDescription(@"Zeitinterval in Sekunden, nach dem gruppiert werden soll. Wenn nichts angegeben wird, wird die Zeitspanne der Datensätze 
-                (frühestes bis spätestes vorkommendes Datum) berechnet und daraus eine passende Gruppierung erstellt.)")]
         int secondsInterval = 0,
-        [HelpDescription("Falls Lücken in den Datensätzen mit einem Wert gefüllt werden soll, kann dieser (Integer) hier angeben werden.")]
         object fillMissingDataValue = null,
-        [HelpDescription(@"Art, nach der das Objekt sortiert werden soll. Es kann auf- und absteigend nach dem Gruppennamen (""OrderField.NameAsc"", ""OrderField.NameDesc"") sortiert werden.")]
         OrderField orderField = OrderField.Non)
     {
         object help = new { label = "", categories = "" };
@@ -1363,17 +2421,39 @@ public class DataLinqHelper : IDataLinqHelper
         return ToParseJson(help, jsVariableName);
     }
 
-    [HelpDescription(@"Gibt eine Zeitreihe in einer JavaScript Variable im JSON-Format aus. Zusätzlich kann nach einem weiteren Feld gruppiert werden.")]
+    /// <summary>
+    /// de: Gibt eine Zeitreihe in einer JavaScript Variable im JSON-Format aus. Zusätzlich kann nach einem weiteren Feld gruppiert werden.
+    /// en: Outputs a time series in a JavaScript variable in JSON format. Additionally, it can be grouped by another field.
+    /// </summary>
+    /// <param name="records">
+    /// de: DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.
+    /// en: DataLinq records to be counted, which could also be filtered by a C# LINQ condition.
+    /// </param>
+    /// <param name="jsVariableName">
+    /// de: Name des auszugebenden Javascript-Objektes.
+    /// en: Name of the JavaScript object to be output.
+    /// </param>
+    /// <param name="datetimeField">
+    /// de: Feldname im DataLinq-Objekt, dass den Zeitstempel enthält (DateTime).
+    /// en: Field name in the DataLinq object that contains the timestamp (DateTime).
+    /// </param>
+    /// <param name="valueField">
+    /// de: Feldname im DataLinq-Objekt, das den Wert enthält (Zahl).
+    /// en: Field name in the DataLinq object that contains the value (number).
+    /// </param>
+    /// <param name="categoryField">
+    /// de: Feldname im DataLinq-Objekt, nach dem gruppiert werden soll.
+    /// en: Field name in the DataLinq object by which grouping should be done.
+    /// </param>
+    /// <returns>
+    /// de: Gibt eine JavaScript-Variable im JSON-Format zurück, die die Zeitreihe und die gruppierten Daten enthält.
+    /// en: Returns a JavaScript variable in JSON format containing the time series and the grouped data.
+    /// </returns>
     public object StatisticsTime(
-        [HelpDescription("DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.")]
         IDictionary<string, object>[] records,
-        [HelpDescription(@"Name des auszugebenden Javascript-Objektes")]
         string jsVariableName,
-        [HelpDescription("Feldname im DataLinq-Objekt, dass den Zeitstempel enthält (DateTime).")]
         string datetimeField,
-        [HelpDescription("Feldname im DataLinq-Objekt, dass den Wert enthält (Zahl).")]
         string valueField,
-        [HelpDescription("Feldname im DataLinq-Objekt, nach dem gruppiert werden soll.")]
         string categoryField = "")
     {
         object help = new { label = "", categories = "" };
@@ -1422,15 +2502,15 @@ public class DataLinqHelper : IDataLinqHelper
     {
         StringBuilder sb = new StringBuilder();
 
-        sb.Append("<script>");
-        sb.Append("var " + name + "=");
+        sb.Append($"var {name}=");
         sb.Append("jQuery.parseJSON('");
         sb.Append(JsonConvert.SerializeObject(obj).Replace("\\", "\\\\"));
         sb.Append("');");
-        //sb.Append("console.log(" + name + ");");
-        sb.Append("</script>");
 
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendJavaScriptBlock(sb.ToString())
+                .BuildHtmlString());
     }
 
     private object Stat_GroupBy(IDictionary<string, object>[] records, string field, OrderField orderField = OrderField.Non)
@@ -1540,72 +2620,97 @@ public class DataLinqHelper : IDataLinqHelper
 
     #endregion
 
-    [HelpDescription(@"Erstellt ein Diagramm mit unterschiedlichen Typen, das auf einem JSON-Objekt im Javascript-Code basiert")]
+    /// <summary>
+    /// de: Erstellt ein Diagramm mit unterschiedlichen Typen, das auf einem JSON-Objekt im Javascript-Code basiert.
+    /// en: Creates a chart with different types based on a JSON object in the JavaScript code.
+    /// </summary>
+    /// <param name="chartType">
+    /// de: Diagrammtyp als Enumeration, hier sind Balken-(Bar), Torten-(Pie), Doughnut oder Linien(Line) als Typ möglich, bspw. ChartType.Bar
+    /// en: Chart type as an enumeration, here bar (Bar), pie (Pie), doughnut, or line (Line) are possible types, e.g. ChartType.Bar
+    /// </param>
+    /// <param name="jsValueVariable">
+    /// de: Name der Javascript-Variable, die das JSON-Datenobjekt enthält. Das JSON-Objekt könnte bspw. von der Methode "StatisticsGroupBy" oder "StatisticsGroupByTime" stammen und muss folgende Struktur haben:
+    /// (([ {name: "Name/Kategorie/etc", value: "Wert"}, {name: "Laubbäume", value: "2"}, {name: "Nadelbäume", value: "5"} ]))
+    /// en: Name of the JavaScript variable containing the JSON data object. The JSON object could come from methods like "StatisticsGroupBy" or "StatisticsGroupByTime" and must have the following structure:
+    /// (([ {name: "Name/category/etc", value: "value"}, {name: "Deciduous trees", value: "2"}, {name: "Coniferous trees", value: "5"} ]))
+    /// </param>
+    /// <param name="label">
+    /// de: Beschriftung des Diagramms.
+    /// en: Label for the chart.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für die Schaltfläche, bspw. ((new { style="width:300px" @class="meine-klasse" } ))
+    /// en: An anonymous object with HTML attributes for the button, e.g. ((new { style="width:300px" @class="my-class" } ))
+    /// </param>
+    /// <param name="chartColorRGB">
+    /// de: Farben, die im Diagramm verwendet werden sollen als R,G,B-String, bspw. ((new string[] {""0,155,20"", ""160,0,25""} ))
+    /// en: Colors to be used in the chart as R,G,B string, e.g. ((new string[] {""0,155,20"", ""160,0,25""} ))
+    /// </param>
+    /// <param name="jsDatasetVariable">
+    /// de: Name der Javascript-Variable, die als JSON-Objekt Einstellungen zur Darstellung der Datensätze enthält. Je nach Diagrammtyp sind unterschiedliche Einstellungen möglich, siehe dazu http://www.chartjs.org/docs/latest/charts/ => Charttypen => Dataset Properties.
+    /// en: Name of the JavaScript variable containing JSON settings for dataset representation. Depending on the chart type, different settings are possible, see http://www.chartjs.org/docs/latest/charts/ => Chart types => Dataset Properties.
+    /// </param>
+    /// /// <param name="locale">
+    /// de: Legt das Zahlenformat für Achsen und Tooltips fest. Mögliche Werte: ChartLocale.None (keine Formatierung), ChartLocale.DE (deutsches Format mit Punkt als Tausendertrennzeichen), ChartLocale.US (US-Format mit Komma als Tausendertrennzeichen).
+    /// en: Specifies number formatting for axes and tooltips. Possible values: ChartLocale.None (no formatting), ChartLocale.DE (German format using dot as thousands separator), ChartLocale.US (US format using comma as thousands separator).
+    /// </param>
+    /// <returns>
+    /// de: Gibt HTML-Code für das Diagramm zurück.
+    /// en: Returns HTML code for the chart.
+    /// </returns>
+
     public object Chart(
-        [HelpDescription(@"Diagrammtyp als Enumeration, hier sind Balken-(Bar), Torten-(Pie), Doughnut oder Linien(Line) als Typ möglich, bspw. ((ChartType.Bar))")]
         ChartType chartType,
-        [HelpDescription(@"Name der Javascript-Variable, die das JSON-Datenobjekt enthält. Das JSON-Objekt könnte bspw. von der Methode ""StatisticsGroupBy"" oder ""StatisticsGroupByTime"" stammen und muss folgende Struktur haben:
-                (([
-                    {name: ""Name/Kategorie/etc"", value: ""Wert""}, 
-                    {name: ""Laubbäume"", value: ""2""},
-                    {name: ""Nadelbäume"", value: ""5""},
-                ]))")]
         string jsValueVariable,
-        [HelpDescription(@"Beschriftung des Diagramms")]
         string label = "",
-        [HelpDescription(@"Ein anonymes Objekt mit HTML-Attributen für die Schaltfläche, bspw. ((new { style=""width:300px"" @class=""meine-klasse"" } )).
-                Das Chartobjekt liegt als data-Attribute ('datalinq-chartobject') auf dem erzeugten DIV, über das mit einem Selektor (id, etc.) zugegriffen werden kann. 
-                Am Chartobjekt können Änderung, bspw. Achsen-MinMax-Werten geändert und mit der 'update()'-Methode des Chartobjekts geändert werden.
-                Siehe dazu: https://www.chartjs.org/docs/latest/developers/updates.html oder bspw:
-                    ((var timeChart = $(""#timechart"").data(""datalinq-chartobject"");
-                    timeChart.options.scales.yAxes[0].ticks.min = 0;
-                    timeChart.update();))")]
         object htmlAttributes = null,
-        [HelpDescription(@"Farben, die im Diagramm verwendet werden sollen als R,G,B-String, bspw. ((new string[] {""0,155,20"", ""160,0,25""} )).
-                Bis maximal 7 Kategorien kann die Farbe für jede einzelne Kategorie angegeben werden. Bei 8 oder mehr Kategorien wird die erste Farbe verwendet.
-                Wird nur ein Wert angegeben, haben alle Balken, etc. Diagramm diese Farbe.
-                Wird nichts angegeben, so wird beim Tortendiagramm immer Zufallsfarbe verwendet, beim Balkendiagramm werden für die ersten 7 Kategorien Zufallsfarben ausgewählt, bei mehr Kategorien eine Standardfarbe herangezogen")]
         string[] chartColorRGB = null,
-        [HelpDescription(@"Name der Javascript-Variable, die als JSON-Objekt Einstellungen zur Darstellung der Datensätze enthält. 
-                Je nach Diagrammtyp sind unterschiedliche Einstellungen möglich, siehe dazu http://www.chartjs.org/docs/latest/charts/ => Charttypen => Dataset Properties, bspw.:
-                (([
-                    {
-                        border: 2, 
-                        lineTension: 0,
-                        steppedLine: true,
-                        ....
-                    }
-                ]))")]
-        string jsDatasetVariable = ""
+        string jsDatasetVariable = "",
+        ChartLocale locale = ChartLocale.None
         //,object chartOptions = null
         )
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<div ");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-chart");
-        sb.Append(" data-chart-label='" + label + "'");
-        sb.Append(" data-chart-data='" + jsValueVariable + "'");
-        sb.Append(" data-chart-type='" + chartType.ToString() + "'");
-        sb.Append(" data-chart-dataset='" + jsDatasetVariable + "'");
-        chartColorRGB = (chartColorRGB == null ? new string[] { } : chartColorRGB);        // "0,155,20"
-        sb.Append(" data-chart-color='" + String.Join("|", chartColorRGB).Replace(" ", "") + "'");
-        //if (chartOptions != null)
-        //{
-        //    sb.Append(" data-chart-options='" + JsonConvert.SerializeObject(chartOptions) + "'");
-        //}
-        sb.Append("></div>");
-
-        return _razor.RawString(sb.ToString());
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                {
+                    d.AddClass("datalinq-chart");
+                    d.AddAttributes(htmlAttributes);
+                    d.AddAttribute("data-chart-label", label);
+                    d.AddAttribute("data-chart-data", jsValueVariable);
+                    d.AddAttribute("data-chart-type", chartType.ToString());
+                    d.AddAttribute("data-chart-dataset", jsDatasetVariable);
+                    chartColorRGB = (chartColorRGB == null ? new string[] { } : chartColorRGB);
+                    d.AddAttribute("data-chart-color", String.Join("|", chartColorRGB).Replace(" ", ""));
+                    d.AddAttribute("data-chart-locale", locale.ToString());
+                }).BuildHtmlString()
+            );
     }
     #endregion
 
-    [HelpDescription("Bei Hover über einen Datensatz wird ein Symbol zum Kopieren angezeigt")]
+    /// <summary>
+    /// de: Bei Hover über einen Datensatz wird ein Symbol zum Kopieren angezeigt.
+    /// en: A copy icon is displayed when hovering over a data entry.
+    /// </summary>
+    /// <param name="copyValue">
+    /// de: Wert, der kopiert werden soll.
+    /// en: Value to be copied.
+    /// </param>
+    /// <param name="copyBaseText">
+    /// de: Text, zu sehen sein soll, kann auch Leerstring sein und damit nichts beinhalten. Wenn kein Wert übergeben wird, wird der Wert des CopyValues herangezogen.
+    /// en: Text to be displayed, can also be an empty string and thus display nothing. If no value is passed, the value of copyValue is used.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für diesen Button ((z.B.: new { style="width:300px" @class="meine-klasse" } ))
+    /// en: An anonymous object with HTML attributes for this button (e.g. new { style="width:300px" @class="my-class" } )
+    /// </param>
+    /// <returns>
+    /// de: Gibt HTML-Code für einen Button zum Kopieren zurück.
+    /// en: Returns HTML code for a copy button.
+    /// </returns>
     public object CopyButton(
-        [HelpDescription("Wert, der kopiert werden soll")]
         object copyValue,
-        [HelpDescription("Text, zu sehen sein soll, kann auch Leerstring sein und damit nichts beinhalten. Wenn kein Wert übergeben wird, wird der Wert des CopyValues herangezogen")]
         object copyBaseText = null,
-        [HelpDescription("Ein anonymes Objekt mit HTML-Attributen für diesen Button ((z.B.: new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null)
     {
         if (String.IsNullOrEmpty(copyValue?.ToString()))
@@ -1623,81 +2728,125 @@ public class DataLinqHelper : IDataLinqHelper
             baseText = copyBaseText.ToString();
         }
 
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<div class='datalinq-copy-helper'>" + baseText);
-        sb.Append("<div data-copy-value='" + copyValue + "'");
-        AppendHtmlAttributes(sb, htmlAttributes, "datalinq-copy-button");
-        sb.Append(" ></div>");
-        sb.Append("</div>");
-        return _razor.RawString(sb.ToString());
+        string innerHTML = baseText + _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d1 =>
+                {
+                    d1.AddClass("datalinq-copy-button");
+                    d1.AddAttributes(htmlAttributes);
+                    d1.AddAttribute("data-copy-value", copyValue.ToString());
+                }).BuildHtmlString()
+            );
+
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                {
+                    d.AddClass("datalinq-copy-helper");
+                    d.Content(innerHTML);
+                }).BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Liefert einen Skalarwert einer Abfrage zurück und gibt das Ergebnis als Inhalt eines HTML-Elementes aus.")]
+    /// <summary>
+    /// de: Liefert einen Skalarwert einer Abfrage zurück und gibt das Ergebnis als Inhalt eines HTML-Elementes aus.
+    /// en: Returns a scalar value from a query and outputs the result as the content of an HTML element.
+    /// </summary>
+    /// <param name="htmlAttributes">
+    /// de: Ein anonymes Objekt mit HTML-Attributen für dieses Element (z.B.: new { style="width:300px" @class="meine-klasse" }).
+    /// en: An anonymous object with HTML attributes for this element (e.g., new { style="width:300px" @class="my-class" }).
+    /// </param>
+    /// <param name="source">
+    /// de: Datenquelle der Abfrage, eine Abfrage-URL die einen Wert liefert bspw. (( new { source="endpoint-id@query-id?id=2", nameField="NAME" })
+    /// en: Data source for the query, a query URL that returns a value, e.g., (( new { source="endpoint-id@query-id?id=2", nameField="NAME" }) 
+    /// </param>
+    /// <param name="htmlTag">
+    /// de: Art des HTML-Elements, dass erzeugt wird.
+    /// en: Type of the HTML element to be created.
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Text, der angezeigt werden soll, falls die Abfrage kein Ergebnis liefert.
+    /// en: Text to display if the query does not return any result.
+    /// </param>
+    /// <returns>
+    /// de: Gibt den HTML-Code für das Element zurück, das den Skalarwert enthält.
+    /// en: Returns the HTML code for the element containing the scalar value.
+    /// </returns>
     public object ExecuteScalar(
-        [HelpDescription("Ein anonymes Objekt mit HTML-Attributen für diesen Button ((z.B.: new { style=\"width:300px\" @class=\"meine-klasse\" } ))")]
         object htmlAttributes = null,
-        [HelpDescription("Datenquelle der Abfrage, eine Abfrage-URL die einen Wert liefert bspw. (( new { source=\"endpoint-id@query-id?id=2\", nameField=\"NAME\"}) ))")]
         object source = null,
-         [HelpDescription(@"Art des HTML-Elements, dass erzeugt wird.")]
         string htmlTag = "span",
-        [HelpDescription("Text, der angezeigt werden soll, falls die Abfrage kein Ergebnis liefert.")]
         string defaultValue = null)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.Append("<" + htmlTag);
-
-        if (source != null && source.GetType().GetProperty("source") != null)
-        {
-            var sourceProperty = source.GetType().GetProperty("source");
-            var sourceValue = sourceProperty.GetValue(source);
-
-            if (sourceValue is string)
-            {
-                var nameFieldProperty = source.GetType().GetProperty("nameField");
-                if (nameFieldProperty == null)
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendHtmlElement(e =>
                 {
-                    nameFieldProperty.SetValue(source, "NAME");
-                }
-
-                if (nameFieldProperty.PropertyType == typeof(string))
-                {
-                    if (htmlAttributes != null)
+                    if (source != null && source.GetType().GetProperty("source") != null)
                     {
-                        foreach (var htmlAttribute in htmlAttributes.GetType().GetProperties())
+                        var sourceProperty = source.GetType().GetProperty("source");
+                        var sourceValue = sourceProperty.GetValue(source);
+
+                        if (sourceValue is string)
                         {
-                            if (htmlAttribute.Name.ToLower() == "class")
+                            var nameFieldProperty = source.GetType().GetProperty("nameField");
+                            if (nameFieldProperty == null)
                             {
-                                sb.Append(htmlAttribute.Name.ToLower() + "='" + (htmlAttribute.GetValue(htmlAttributes) != null ? htmlAttribute.GetValue(htmlAttributes).ToString() : "") + " datalinq-include-scalar' ");
+                                nameFieldProperty.SetValue(source, "NAME");
+                            }
+
+                            if (nameFieldProperty.PropertyType == typeof(string))
+                            {
+                                if (htmlAttributes != null)
+                                {
+                                    foreach (var htmlAttribute in htmlAttributes.GetType().GetProperties())
+                                    {
+                                        if (htmlAttribute.Name.ToLower() == "class")
+                                        {
+                                            e.AddAttribute(htmlAttribute.Name.ToLower(), (htmlAttribute.GetValue(htmlAttributes) != null ? htmlAttribute.GetValue(htmlAttributes).ToString() : "") + " datalinq-include-scalar");
+                                        }
+                                        else
+                                        {
+                                            if (htmlAttribute.GetValue(htmlAttributes) != null)
+                                            {
+                                                e.AddAttribute(htmlAttribute.Name, htmlAttribute.GetValue(htmlAttributes).ToString());
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (!e.ToString().Contains("class="))
+                                {
+                                    e.AddClass("datalinq-include-scalar");
+                                }
+
+                                bool prependEmpty = Convert.ToBoolean(GetDefaultValueFromRecord(ToDictionary(source), "prependEmpty", false));
+                                e.AddAttribute("data-url", sourceProperty.GetValue(source).ToString());
+                                e.AddAttribute("data-namefield", nameFieldProperty.GetValue(source).ToString());
+                                e.AddAttribute("data-defaultvalue", defaultValue.ToString().ToString());
                             }
                             else
                             {
-                                if (htmlAttribute.GetValue(htmlAttributes) != null)
-                                {
-                                    sb.Append(htmlAttribute.Name + "='" + htmlAttribute.GetValue(htmlAttributes).ToString() + "' ");
-                                }
+                                throw new ArgumentException("valueField and nameField have to be typeof(string)");
                             }
                         }
                     }
-
-                    if (!sb.ToString().Contains("class="))
-                    {
-                        sb.Append(" class='datalinq-include-scalar'");
-                    }
-
-                    bool prependEmpty = Convert.ToBoolean(GetDefaultValueFromRecord(ToDictionary(source), "prependEmpty", false));
-                    sb.Append(" data-url='" + sourceProperty.GetValue(source) + "' data-namefield='" + nameFieldProperty.GetValue(source) + "' data-defaultvalue='" + defaultValue.ToString() + "'>");
-                }
-                else
-                {
-                    throw new ArgumentException("valueField and nameField have to be typeof(string)");
-                }
-            }
-            sb.Append("</" + htmlTag + ">");
-        }
-        return _razor.RawString(sb.ToString());
+                },htmlTag).BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Kodiert die Werte eines Objektes, sodass sie URL-tauglich sind")]
+    /// <summary>
+    /// de: Kodiert die Werte eines Objektes, sodass sie URL-tauglich sind.
+    /// en: Encodes the values of an object so that they are URL-safe.
+    /// </summary>
+    /// <param name="parameter">
+    /// de: Das Objekt, dessen Werte URL-kodiert werden sollen.
+    /// en: The object whose values should be URL encoded.
+    /// </param>
+    /// <returns>
+    /// de: Gibt den URL-kodierten Wert des Objekts zurück.
+    /// en: Returns the URL encoded value of the object.
+    /// </returns>
     public object UrlEncode(object parameter)
     {
         if (parameter == null)
@@ -1708,17 +2857,49 @@ public class DataLinqHelper : IDataLinqHelper
         return _razor.RawString(HttpUtility.UrlEncode(parameter.ToString()));
     }
 
-    [HelpDescription("Erstellt eine Schaltfläche, mit der alle DOM-Elemente mit der Klasse \"responsive\" sichtbar geschaltet werden.")]
+    /// <summary>
+    /// de: Erstellt eine Schaltfläche, mit der alle DOM-Elemente mit der Klasse "responsive" sichtbar geschaltet werden.
+    /// en: Creates a button that makes all DOM elements with the "responsive" class visible.
+    /// </summary>
+    /// <returns>
+    /// de: Gibt eine Schaltfläche zurück, die beim Klicken alle DOM-Elemente mit der Klasse "responsive" sichtbar schaltet.
+    /// en: Returns a button that, when clicked, makes all DOM elements with the "responsive" class visible.
+    /// </returns>
     public object ResponsiveSwitcher()
     {
-        return _razor.RawString("<button class='responsive-switch'>Alles anzeigen</button>");
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b =>
+                {
+                    b.AddClass("responsive-switch");
+                    b.Content("Alles anzeigen");
+                }).BuildHtmlString()
+            );
     }
 
-    [HelpDescription("Der Username des atuell angemeldeten Benutzers")]
+    /// <summary>
+    /// de: Der Username des aktuell angemeldeten Benutzers.
+    /// en: The username of the currently logged-in user.
+    /// </summary>
+    /// <returns>
+    /// de: Gibt den Username des aktuell angemeldeten Benutzers zurück, falls verfügbar, ansonsten einen leeren String.
+    /// en: Returns the username of the currently logged-in user, if available, otherwise an empty string.
+    /// </returns>
     public string GetCurrentUsername()
         => _ui?.Username ?? "";
 
-    [HelpDescription("Prüft, ob der aktuelle User Mitglied in der angegeben Rolle ist")]
+    /// <summary>
+    /// de: Prüft, ob der aktuelle User Mitglied in der angegeben Rolle ist.
+    /// en: Checks if the current user is a member of the specified role.
+    /// </summary>
+    /// <param name="roleName">
+    /// de: Der Name der Rolle, die geprüft werden soll.
+    /// en: The name of the role to be checked.
+    /// </param>
+    /// <returns>
+    /// de: Gibt true zurück, wenn der Benutzer Mitglied der angegebenen Rolle ist, andernfalls false.
+    /// en: Returns true if the user is a member of the specified role, otherwise false.
+    /// </returns>
     public bool HasRole(
             [HelpDescription("Rollenname, der geprüft werdens soll")]
             string roleName
@@ -1747,10 +2928,22 @@ public class DataLinqHelper : IDataLinqHelper
     //public IEnumerable<string> GetRequestHeaders()
     //    => _httpContext?.Request?.Headers?.Keys ?? Enumerable.Empty<string>();
 
-    [HelpDescription("Gibt den Wert eines HTTP Request Header zurück")]
+    /// <summary>
+    /// de: Gibt den Wert eines HTTP Request Headers zurück.
+    /// en: Returns the value of an HTTP request header.
+    /// </summary>
+    /// <param name="header">
+    /// de: Der Name des Headers, dessen Wert zurückgegeben werden soll.
+    /// en: The name of the header whose value is to be returned.
+    /// </param>
+    /// <returns>
+    /// de: Gibt den Wert des angegebenen Headers zurück. Falls der Header nicht vorhanden ist, wird ein leerer String zurückgegeben.
+    /// en: Returns the value of the specified header. If the header is not present, an empty string is returned.
+    /// </returns>
     public string GetRequestHeaderValue(string header)
         => _httpContext?.Request?.Headers[header] ?? "";
 
+    [ExcludeFromSnippets]
     private string ParseUrl(string url, bool encodeQueryString)
     {
         if (encodeQueryString && url.Contains("?"))
@@ -1770,6 +2963,7 @@ public class DataLinqHelper : IDataLinqHelper
 
     #region IDataLinqHelper
 
+    [ExcludeFromSnippets]
     public void AppendHtmlAttributes(StringBuilder sb, object htmlAttributes, string addClass = "")
     {
         bool classAdded = false;
@@ -1792,32 +2986,35 @@ public class DataLinqHelper : IDataLinqHelper
         }
     }
 
+    [ExcludeFromSnippets]
     public void AppendHtmlAttribute(StringBuilder sb, string attributeName, string attributeValue)
     {
         if (attributeValue != null)
         {
-            sb.Append(" " + attributeName + "='" + attributeValue.Replace("\n", "<br/>").Replace("\r", "").Replace("'", "\"") + "'");
+            sb.Append($" {attributeName}='{attributeValue.Replace("\n", "<br/>").Replace("\r", "").Replace("'", "\"")}'");
         }
     }
 
+    [ExcludeFromSnippets]
     public object ToRawString(string str)
     {
         return _razor.RawString(str);
     }
 
-    public object ToHtmlEncoded(string str)
-    {
-        return _razor switch
-        {
-            RazorEngineService => str,
-            _ => HttpUtility.HtmlEncode(str)
-        };
-    }
+    //public object ToHtmlEncoded(string str)
+    //{
+    //    return _razor switch
+    //    {
+    //        RazorEngineService => str,
+    //        _ => HttpUtility.HtmlEncode(str)
+    //    };
+    //}
 
     #endregion
 
     #region Helper
 
+    [ExcludeFromSnippets]
     private string ToHtml(string str)
     {
         if (str == null)
@@ -1829,9 +3026,11 @@ public class DataLinqHelper : IDataLinqHelper
         return str;
     }
 
+    [ExcludeFromSnippets]
     private object GetDefaultValueFromRecord(object record, string name, object defaultValue = null)
     {
         object val = defaultValue;
+
         if (record != null)
         {
             if (!(record is IDictionary<string, object>))
@@ -1854,6 +3053,7 @@ public class DataLinqHelper : IDataLinqHelper
         return val;
     }
 
+    [ExcludeFromSnippets]
     private IDictionary<string, object> ToDictionary(object anonymousObject)
     {
         if (anonymousObject == null)

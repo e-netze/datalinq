@@ -7,11 +7,10 @@
 <div class="datalinq-code-body">
     <div class="datalinq-code-ide">
 
-    @{
-          Html.RenderPartial("_Toolbar");     
-          Html.RenderPartial("_Sidebar");   
-          Html.RenderPartial("_Content");   
-    }
+        @{Html.RenderPartial("_Sidebar");}
+        <div class="resize-handle--x" id="sidebar-resize-handle"></div>
+        @{Html.RenderPartial("_Toolbar");}      
+        @{Html.RenderPartial("_Content");}   
 
     </div>
     <div class="datalinq-code-help">
@@ -60,6 +59,66 @@
                                    deleteViews: @Model.AllowCreateAndDeleteViews.ToString().ToLower(),
                                    useAppPrefixFilters: @Model.UseAppPrefixFilters.ToString().ToLower()
                                });
+        });
+    </script>
+
+    <script type="text/javascript">
+        const sidebar = document.getElementById('sidebar');
+        const handle = document.getElementById('sidebar-resize-handle');
+
+        let isDragging = false;
+        let startX = 0;
+        let startWidth = 300;
+
+        const savedWidth = localStorage.getItem('sidebarWidth');
+        if (savedWidth) {
+          startWidth = parseInt(savedWidth, 10) || startWidth;
+        }
+
+        const minWidth = 300;
+        const maxWidth = 500;
+
+        let pendingWidth = null;  // store new width during dragging
+        let rafId = null;
+
+        handle.style.left = startWidth + 'px';
+        document.documentElement.style.setProperty('--sidebar-width', startWidth + 'px');
+
+        handle.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          isDragging = true;
+          startX = e.clientX;
+          startWidth = sidebar.offsetWidth;
+          document.body.style.userSelect = 'none';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          let newWidth = startWidth + (e.clientX - startX);
+          if (newWidth < minWidth) newWidth = minWidth;
+          if (newWidth > maxWidth) newWidth = maxWidth;
+
+          // Save new width and schedule update if not already scheduled
+          pendingWidth = newWidth;
+          if (!rafId) {
+            rafId = requestAnimationFrame(() => {
+              sidebar.style.width = pendingWidth + 'px';
+              handle.style.left = pendingWidth + 'px';
+              document.documentElement.style.setProperty('--sidebar-width', pendingWidth + 'px');
+              rafId = null;
+            });
+          }
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (isDragging) {
+            isDragging = false;
+            document.body.style.userSelect = '';
+            if (rafId) {
+              cancelAnimationFrame(rafId);
+              rafId = null;
+            }
+          }
         });
     </script>
 }

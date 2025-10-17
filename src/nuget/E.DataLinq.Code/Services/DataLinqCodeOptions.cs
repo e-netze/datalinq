@@ -1,7 +1,6 @@
 ﻿using E.DataLinq.Code.Extensions;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Crypto.Abstraction;
-using Microsoft.AspNetCore.Mvc.Routing;
 using System;
 
 namespace E.DataLinq.Code.Services;
@@ -33,7 +32,7 @@ public class DataLinqCodeOptions
     public void Intialize(IHostUrlHelper urlHelper,
                          ICryptoService crypto)
     {
-        if(_intialialized)
+        if (_intialialized)
         {
             return;
         }

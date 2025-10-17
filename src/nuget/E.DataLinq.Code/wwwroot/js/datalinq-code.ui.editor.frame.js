@@ -25,16 +25,44 @@ dataLinqCodeEditor = new function () {
             _editor = monaco.editor.create(document.getElementById('datalinq-code-editor-code'), {
                 language: language || 'text',
                 automaticLayout: true,
-                theme: dataLinqCode.editorTheme()
+                theme: dataLinqCode.editorTheme(),
+                hover: {
+                    enabled: true
+                }
             });
 
             _editor.setValue(value || '');
             _editor.getModel().onDidChangeContent((event) => {
                 dataLinqCodeEditor.events.fire('editor-value-changed', { id: _id, value: _editor.getValue() });
-
                 this.setDirty();
                 this.removeDecoration();
             });
+
+            let cachedCompletions = JSON.parse(localStorage.getItem('dlhCompletions'));
+
+            function loadDLHCompletions(monaco, language) {
+                if (cachedCompletions) {
+                    registerDLHCompletions(monaco, language || 'text', cachedCompletions);
+                    return;
+                }
+
+                const selectedLang = sessionStorage.getItem('selectedLang') || 'en';
+
+                dataLinqCode.api.getMonacoSnippit(function (data) {
+                    try {
+                        const completions = JSON.parse(data);
+                        cachedCompletions = completions;
+                        localStorage.setItem('dlhCompletions', JSON.stringify(completions));
+                        registerDLHCompletions(monaco, language || 'text', completions);
+                    } catch (e) {
+                        console.error("Failed to parse completions JSON", e);
+                    }
+                }, selectedLang);
+
+            }
+
+            loadDLHCompletions(monaco, language || 'text');
+            registerRazorSnippets(monaco, language || 'text');
 
         } else {
             $('.datalinq-code-editor-settings').css('display', 'block');
@@ -70,7 +98,7 @@ dataLinqCodeEditor = new function () {
     };
 
     var _event_save_document = function (channel, args) {
-        if (args.id === _id) {
+        if ((Array.isArray(args.id) && args.id.includes(_id)) || args.id === _id) {
             dataLinqCodeEditor.submitForm();
         }
     };

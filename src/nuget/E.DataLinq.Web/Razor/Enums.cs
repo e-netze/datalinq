@@ -34,3 +34,10 @@ public enum DataType
     DateTime,
     Checkbox
 }
+
+public enum ChartLocale
+{
+    None,   
+    DE,     
+    US      
+}

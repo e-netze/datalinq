@@ -4,11 +4,13 @@ using E.DataLinq.Core.Services.Crypto;
 using E.DataLinq.Core.Services.Persistance;
 using E.DataLinq.Web;
 using E.DataLinq.Web.Extensions.DependencyInjection;
+using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile(Path.Combine("_config", "datalinq.api.json"), optional: false, reloadOnChange: false);
+builder.Configuration.AddUserSecrets<Program>();
 
 builder.AddServiceDefaults();
 builder.Services.AddControllersWithViews();
@@ -48,6 +50,8 @@ builder.Services.AddDataLinqServices<FileSystemPersistanceService, CryptoService
     }
 );
 
+builder.Services.Configure<AiServiceOptions>(builder.Configuration.GetSection(AiServiceOptions.Key));
+builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection(AgentOptions.Key));
 builder.Services.AddDefaultDatalinqEngines(builder.Configuration.GetSection("DataLinq.Api:SelectEngines"));
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.Postgres.DbFactoryProvider>();
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.MsSqlServer.MsSqlClientDbFactoryProvider>();
@@ -66,6 +70,7 @@ if (builder.Configuration.GetSection("DataLinq.CodeApi").Exists())
         config.DataLinqCodeClients = builder
             .Configuration.GetSection("DataLinq.CodeApi:ClientEndpoints")
             .Get<string[]>();
+        config.StoragePath = builder.Configuration["DataLinq.Api:StoragePath"];
     });
 }
 
@@ -76,8 +81,6 @@ builder.Services.AddScoped<IRoutingEndPointReflectionProvider, RoutingEndPointRe
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
-
-
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -101,6 +104,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

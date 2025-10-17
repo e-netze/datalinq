@@ -104,6 +104,19 @@ public class DataLinqController : DataLinqBaseController
 
                     return RawResponse(dataBOM, "text/csv", new NameValueCollection { { "Content-Disposition", "attachment;filename=export.csv" } });
                 }
+                else if (result is object[] arr && arr.Length > 0)
+                {
+                    var first = arr[0];
+
+                    if (first is IDictionary<string, object> dict &&
+                        dict.TryGetValue("IsJsonApiResponse", out var val) &&
+                        val is bool isMarker && isMarker)
+                    {
+                        var newArr = arr.Skip(1).ToArray();
+                        return await JsonObjectNew(newArr, Request.Query["_pjson"] == "true");
+                    }
+                }
+
 
                 return await JsonObject(result, Request.Query["_pjson"] == "true");
             }
@@ -185,8 +198,13 @@ public class DataLinqController : DataLinqBaseController
 
     public IActionResult Help()
     {
+        var language = Request.Query["lang"].ToString().DefaultIfNullOrEmpty("en");
+
         var model = new HelpModel();
-        model.Classes.Add(ClassHelp.FromType(typeof(DataLinqHelper)));
+        model.SelectedLanguage = language;
+
+        //model.Classes.Add(ClassHelp.FromTypeUseAttributes(typeof(DataLinqHelper)));
+        model.Classes.Add(ClassHelp.FromTypeUseXmlDocumentation(typeof(DataLinqHelper), language));
         model.Selected = Request.Query["selected"];
 
         return ViewResult(model);
@@ -197,7 +215,7 @@ public class DataLinqController : DataLinqBaseController
         return await JsonObject(new { success = _datalinq.ClearCachedResults() });
     }
 
-    async public Task<IActionResult> CssProxy(string __dataLinqRoute)
+    async public Task<IActionResult> CssProxyEndpoint(string __dataLinqRoute)
     {
         // ToDo: Wird bei jedem Aufruf geladen
         // Irgend ein Caching/Dot Modified 304 Mechanismus?
@@ -210,7 +228,17 @@ public class DataLinqController : DataLinqBaseController
         return RawResponse(Encoding.UTF8.GetBytes(css ?? String.Empty), "text/css", new NameValueCollection());
     }
 
-    async public Task<IActionResult> JsProxy(string __dataLinqRoute)
+    async public Task<IActionResult> CssProxyView(string __dataLinqRoute)
+    {
+        NameValueCollection parameters = new NameValueCollection();
+        parameters.Add("endpoint", __dataLinqRoute);
+
+        string css = await _datalinq.GetViewCss(__dataLinqRoute);
+
+        return RawResponse(Encoding.UTF8.GetBytes(css ?? String.Empty), "text/css", new NameValueCollection());
+    }
+
+    async public Task<IActionResult> JsProxyEndpoint(string __dataLinqRoute)
     {
         // ToDo: Wird bei jedem Aufruf geladen
         // Irgend ein Caching/Dot Modified 304 Mechanismus?
@@ -219,6 +247,16 @@ public class DataLinqController : DataLinqBaseController
         parameters.Add("endpoint", __dataLinqRoute);
 
         string javascript = await _datalinq.GetEndpointJavascript(__dataLinqRoute);
+
+        return RawResponse(Encoding.UTF8.GetBytes(javascript ?? String.Empty), "text/javascript", new NameValueCollection());
+    }
+
+    async public Task<IActionResult> JsProxyView(string __dataLinqRoute)
+    {
+        NameValueCollection parameters = new NameValueCollection();
+        parameters.Add("endpoint", __dataLinqRoute);
+
+        string javascript = await _datalinq.GetViewJs(__dataLinqRoute);
 
         return RawResponse(Encoding.UTF8.GetBytes(javascript ?? String.Empty), "text/javascript", new NameValueCollection());
     }

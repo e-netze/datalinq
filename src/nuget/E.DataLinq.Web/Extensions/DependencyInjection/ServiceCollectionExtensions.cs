@@ -10,9 +10,12 @@ using E.DataLinq.Core.Services.Crypto;
 using E.DataLinq.Core.Services.Crypto.Abstraction;
 using E.DataLinq.Core.Services.Persistance;
 using E.DataLinq.Core.Services.Persistance.Abstraction;
+using E.DataLinq.Web.Razor;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
+using E.DataLinq.Web.Services.Agents;
 using E.DataLinq.Web.Services.Cache;
+using E.DataLinq.Web.Services.Plugins;
 using E.DataLinq.Web.Services.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,6 +66,7 @@ static public class ServiceCollectionExtensions
                        .AddTransient<DataLinqService>()
                        .AddTransient<DataLinqCompilerService>()
                        .AddTransient<AccessControlService>()
+                       .AddSingleton<IMonacoSnippetService>(provider => new MonacoSnippetService(typeof(DataLinqHelper)))
                        .AddTransient<IDataLinqEnvironmentService, DataLinqEnvironmentService>()
                        .AddTransient<IRazorCompileEngineService, RazorEngineService>()  // classic version
                        .AddTransient<IRazorCompileEngineService, RazorEngineLanguageEngineRazorService>()  // Datalinq version
@@ -71,7 +75,16 @@ static public class ServiceCollectionExtensions
                        .AddTransient<DataLinqInfoService>()
                        .AddSingleton<IBinaryCache, BinaryCacheWrapper>()
                        .AddSingletonIfNotExists<IDataLinqAccessProviderService, DataLinqAccessProviderService>()
-                       .AddHostedService<TimedHostedBackgroundService>();
+                       .AddHostedService<TimedHostedBackgroundService>()
+                       .AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
+                       .AddSingleton<DataLinqHelperFunctionsPlugin>()
+                       .AddSingleton<DataLinqQueryPlugin>()
+                       .AddSingleton<DataLinqEndpointPlugin>()
+                       .AddSingleton<DataLinqViewPlugin>()
+                       .AddSingleton<SemanticKernelService>()
+                       .AddSingleton<IAgent<string[], string>, UserHistorySummarizerAgent>()
+                       .AddSingleton<DataLinqAgentFactory>()
+                       .AddHostedService<CopilotReflectionInitializer>();
     }
 
 
@@ -102,9 +115,9 @@ static public class ServiceCollectionExtensions
                 IConfigurationSection? enginesConfigSection
         )
     {
-        
-        
-       
+
+
+
 
 
         services.AddDataLinqSelectEngine<DatabaseEngine>();
@@ -126,6 +139,7 @@ static public class ServiceCollectionExtensions
 
         services.AddDataLinqSelectEngine<TextFileEngine>();
         services.AddDataLinqSelectEngine<CypherEngine>();
+        services.AddDataLinqSelectEngine<JsonApiEngine>();
 
         #endregion
 
@@ -155,7 +169,8 @@ static public class ServiceCollectionExtensions
             .AddTransient<IDataLinqCodeIdentityProvider, TIdentityProvider>()
             .AddTransient<IDataLinqCodeIdentityService, DataLinqCodeIdentityService>()
             .AddTransient<IDataLinqAccessTokenAuthProvider, DataLinqAuthTokenHttpHeaderProvider>()
-            .AddTransient<IDataLinqAccessTokenAuthProvider, DataLinqAuthTokenCookieProvider>();
+            .AddTransient<IDataLinqAccessTokenAuthProvider, DataLinqAuthTokenCookieProvider>()
+            .AddHostedService<SandboxInitializer>();
     }
 
     #endregion
@@ -192,18 +207,21 @@ static public class ServiceCollectionExtensions
                     Name = JsLibNames.ChartJs_3x_Plugin_DataLabels,
                     Description = " optional ChartJS plugin - DataLabels v2.2.0"
                 },
-
                 new()
                 {
                     Name=JsLibNames.D3_7x,
                     Description = "D3 Charting Library v7.9.0"
                 },
-
                 new()
                 {
                     Name = JsLibNames.Mermaid,
                     Description = "Mermaid"
                 },
+                new()
+                {
+                    Name = JsLibNames.JsonEditor,
+                    Description = "JsonEditor v10.2.0"
+                }
             };
         });
 

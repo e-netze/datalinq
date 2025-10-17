@@ -1,4 +1,4 @@
-using DataLinq.Code.Extensions;
+﻿using DataLinq.Code.Extensions;
 using E.DataLinq.Code.Extensions.DependencyInjection;
 using E.DataLinq.Code.Services;
 
@@ -45,9 +45,9 @@ builder.Services.AddDataLinqCodeService(
     },
     cryptoOptions =>
     {
-        cryptoOptions.DefaultPassword = 
+        cryptoOptions.DefaultPassword =
             builder.Configuration["DataLinq.Code:Crypto:DefaultPasswort"].OrRandomPassword();
-        cryptoOptions.HashBytesSalt = 
+        cryptoOptions.HashBytesSalt =
             Convert.FromBase64String(
                 builder.Configuration["DataLinq.Code:Crypto:SaltBytes"].OrRandomSaltBase64()
             );

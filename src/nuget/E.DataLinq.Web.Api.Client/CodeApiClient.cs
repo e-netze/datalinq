@@ -105,9 +105,35 @@ public class CodeApiClient
         }
     }
 
+    async public Task<string> GetViewCss(string id)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/css/view/{id}"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                return await GetAndCheckHttpResponseAsync(httpResponse);
+            }
+        }
+    }
+
     async public Task<string> GetEndPointJavascript(string endPointId)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/js/{endPointId}"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                return await GetAndCheckHttpResponseAsync(httpResponse);
+            }
+        }
+    }
+
+    async public Task<string> GetViewJs(string id)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/js/view/{id}"))
         {
             ModifyHttpRequest(requestMessage);
 
@@ -194,6 +220,17 @@ public class CodeApiClient
         }
     }
 
+    public async Task<string> GetMonacoSnippit(string lang)
+    {
+        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/monacosnippit?lang={Uri.EscapeDataString(lang)}");
+        ModifyHttpRequest(requestMessage);
+
+        using var httpResponse = await _httpClient.SendAsync(requestMessage);
+        httpResponse.EnsureSuccessStatusCode();
+
+        return await httpResponse.Content.ReadAsStringAsync();
+    }
+
     async public Task<IEnumerable<string>> GetAuthPrefixes()
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/auth/prefixes"))
@@ -216,6 +253,25 @@ public class CodeApiClient
             using (var httpResponse = await _httpClient.SendAsync(requestMessage))
             {
                 return JsonConvert.DeserializeObject<string[]>(await GetAndCheckHttpResponseAsync(httpResponse));
+            }
+        }
+    }
+
+    public async Task<string> AskDataLinqCopilot(string[] questions)
+    {
+        var requestPayload = new { questions = questions };
+        var jsonContent = JsonConvert.SerializeObject(requestPayload);
+
+        using (var content = new StringContent(jsonContent, Encoding.UTF8, "application/json"))
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/askdatalinqcopilot"))
+        {
+            requestMessage.Content = content;
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
+                return responseText;
             }
         }
     }
@@ -271,6 +327,32 @@ public class CodeApiClient
         }
     }
 
+    async public Task<bool> StoreViewCss(string id, string css)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/viewcss"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            requestMessage.Content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("id", id),
+                new KeyValuePair<string, string>("css", css)
+            });
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var result = JsonConvert.DeserializeObject<SuccessModel>(await GetAndCheckHttpResponseAsync(httpResponse, false));
+
+                if (result.Success == false)
+                {
+                    throw new Exception(result.ErrorMessage);
+                }
+
+                return true;
+            }
+        }
+    }
+
     async public Task<bool> StoreEndPointJavascript(string endPointId, string javascript)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/endpointjs"))
@@ -281,6 +363,32 @@ public class CodeApiClient
             {
                 new KeyValuePair<string, string>("endPointId", endPointId),
                 new KeyValuePair<string, string>("js", javascript)
+            });
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var result = JsonConvert.DeserializeObject<SuccessModel>(await GetAndCheckHttpResponseAsync(httpResponse, false));
+
+                if (result.Success == false)
+                {
+                    throw new Exception(result.ErrorMessage);
+                }
+
+                return true;
+            }
+        }
+    }
+
+    async public Task<bool> StoreViewJs(string id, string js)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/viewjs"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            requestMessage.Content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("id", id),
+                new KeyValuePair<string, string>("js", js)
             });
 
             using (var httpResponse = await _httpClient.SendAsync(requestMessage))

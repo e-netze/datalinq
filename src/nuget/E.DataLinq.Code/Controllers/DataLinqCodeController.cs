@@ -64,10 +64,13 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
     public IActionResult Connect(string id, string userDisplayName, string accessToken)
     {
-        return RedirectToAction("Index", new { dl_token = _crypto.ToSessionString(
-                _crypto.DecryptTextDefault(id), 
-                userDisplayName, 
-                accessToken) });
+        return RedirectToAction("Index", new
+        {
+            dl_token = _crypto.ToSessionString(
+                _crypto.DecryptTextDefault(id),
+                userDisplayName,
+                accessToken)
+        });
     }
 
     public IActionResult Logout()
@@ -90,6 +93,22 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     }
 
     #endregion
+
+    public IActionResult Copilot()
+    {
+        return View();
+    }
+
+    public async Task<IActionResult> AskDatalinqCopilot([FromForm] string[] questions)
+    {
+        if (_client == null)
+        {
+            return base.JsonObject(new { answer = "Service unavailable" });
+        }
+
+        var response = await _client.AskDataLinqCopilot(questions);
+        return base.JsonObject(new { answer = response });
+    }
 
     #region Api
 
@@ -119,6 +138,13 @@ public class DataLinqCodeController : DataLinqCodeBaseController
         return base.JsonObject(_client == null ?
             null :
             await _client.GetEndPointQueryViews(endPoint, query));
+    }
+
+    async public Task<IActionResult> GetMonacoSnippit(string lang) 
+    {
+        return base.JsonObject(_client == null ?
+            null :
+            await _client.GetMonacoSnippit(lang));
     }
 
     #endregion
@@ -191,6 +217,37 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     }
 
     [HttpGet]
+    async public Task<IActionResult> EditViewCss(string endpoint,string query,string view)
+    {
+        var id = $"{endpoint}@{query}@{view}";
+        var model = new ViewCssModel()
+        {
+            Id = id,
+            Css = _client != null ? await _client.GetViewCss(id) : null
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> EditViewCss(ViewCssModel model)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return base.JsonObject(new SuccessModel(await _client.StoreViewCss(model.Id, model.Css)));
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    [HttpGet]
     async public Task<IActionResult> EditEndPointJavascript(string endPoint)
     {
         var model = new EndPointJavascriptModel()
@@ -213,6 +270,37 @@ public class DataLinqCodeController : DataLinqCodeBaseController
             }
 
             return base.JsonObject(new SuccessModel(await _client.StoreEndPointJavascript(model.EndPointId, model.Javascript)));
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    [HttpGet]
+    async public Task<IActionResult> EditViewJs(string endpoint, string query, string view)
+    {
+        var id = $"{endpoint}@{query}@{view}";
+        var model = new ViewJsModel()
+        {
+            Id = id,
+            Js = _client != null ? await _client.GetViewJs(id) : null
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> EditViewJs(ViewJsModel model)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return base.JsonObject(new SuccessModel(await _client.StoreViewJs(model.Id, model.Js)));
         }
         catch (Exception ex)
         {

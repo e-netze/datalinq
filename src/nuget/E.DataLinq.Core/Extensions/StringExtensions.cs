@@ -303,8 +303,8 @@ public static class StringExtensions
     {
         return path.AddPathSeparator()
                    .StartsWith(subPath.AddPathSeparator(),
-                            Platform.IsWindows 
-                            ? StringComparison.OrdinalIgnoreCase 
+                            Platform.IsWindows
+                            ? StringComparison.OrdinalIgnoreCase
                             : StringComparison.Ordinal);
     }
 

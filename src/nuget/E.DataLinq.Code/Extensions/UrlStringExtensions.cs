@@ -1,7 +1,5 @@
 ﻿#nullable enable
 
-using System;
-
 namespace E.DataLinq.Code.Extensions;
 static internal class UrlStringExtensions
 {

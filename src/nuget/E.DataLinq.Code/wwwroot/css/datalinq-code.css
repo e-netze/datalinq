@@ -6,6 +6,7 @@ html {
 html {
   position: relative;
   min-height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -19,6 +20,39 @@ body {
     bottom: 0px;
     right: 0px;
 }
+
+.resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    left: 300px; /* start at sidebar width */
+    cursor: ew-resize;
+    background-color: rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.resize-handle--x {
+    position: absolute;
+    top: 0;
+    left: 300px; /* Initial sidebar width */
+    width: 5px;
+    height: 60px; /* Only draggable in the top 60px */
+    cursor: ew-resize;
+    z-index: 10;
+    background-color: transparent;
+}
+
+    .resize-handle--x::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 1px;
+        width: 3px;
+        height: 100%;
+        background-color: #888;
+        opacity: 0.5;
+    }
 
     .datalinq-code-body .datalinq-code-ide {
         position: absolute;
@@ -64,41 +98,43 @@ body {
     }
 
 
-    .datalinq-code-ide .datalinq-code-toolbar {
+.datalinq-code-ide .datalinq-code-toolbar {
+    position: absolute;
+    top: 0;
+    left: var(--sidebar-width, 300px);
+    right: 0;
+    height: 60px;
+}
+
+.datalinq-code-ide .datalinq-code-sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sidebar-width, 300px);
+    min-width: 300px;
+    max-width: 500px;
+}
+
+.datalinq-code-ide .datalinq-code-content {
+    position: absolute;
+    top: 60px;
+    bottom: 0;
+    left: var(--sidebar-width, 300px);
+    right: 0;
+}
+
+    .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs {
         position: absolute;
         top: 0px;
-        left: 300px;
-        height: 60px;
-        right: 0px;
-    }
-
-    .datalinq-code-ide .datalinq-code-sidebar {
-        position: absolute;
-        top:0px;
-        bottom: 0px;
+        height: 40px;
         left: 0px;
-        width: 300px;
+        right: 0px;
+        background-color: #555;
+        white-space: nowrap;
+        box-sizing: border-box;
+        border-bottom: 2px solid #000;
     }
-
-    .datalinq-code-ide .datalinq-code-content {
-        position: absolute;
-        top: 60px;
-        bottom: 0px;
-        left: 300px;
-        right:0px;
-    }
-
-        .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs {
-            position: absolute;
-            top: 0px;
-            height: 40px;
-            left: 0px;
-            right: 0px;
-            background-color:#333;
-            white-space:nowrap;
-            box-sizing: border-box;
-            border-bottom:2px solid #000;
-        }
 
             .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab-selector {
                 position: absolute;
@@ -113,21 +149,31 @@ body {
                 cursor: pointer;
             }
 
-            .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab {
-                position: relative;
-                display: inline-block;
-                background-color: #333;
-                background-repeat: no-repeat;
-                background-position: 4px center;
-                color: #ccc;
-                font-size: 1em;
-                cursor: pointer;
-                padding: 5px 28px 0px 28px;
-                border-right: 1px solid #000;
-                border-radius: 4px 4px 0px 0px;
-                box-sizing: border-box;
-                height: 32px;
-            }
+        .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab {
+            position: relative;
+            display: inline-block;
+            background-color: #333;
+            background-repeat: no-repeat;
+            background-position: 4px center;
+            color: #ccc;
+            font-size: 1em;
+            cursor: pointer;
+            padding: 5px 28px 0px 28px;
+            border-right: 1px solid #000;
+            border-top: 2px solid transparent; /* Reserve space for highlight */
+            box-sizing: border-box;
+            height: 32px;
+            transition: border-top 0.2s ease;
+        }
+
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab:hover {
+                    background-color: #3a3a3a;
+                    color: #eee;
+                }
+
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab:last-child {
+                    border-right: none;
+                }
 
                 .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.start {
                     background-image: url(img/home_16@1.png);
@@ -143,7 +189,15 @@ body {
                     background-size: 16px 16px;
                 }
                 .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.view {
-                    background-image: url(img/code-markup_16@1.png);
+                    background-image: url(img/code_svg@1.svg);
+                    background-size: 16px 16px;
+                }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.viewcss {
+                    background-image: url(img/css_svg@1.svg);
+                    background-size: 16px 16px;
+                }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.viewjs {
+                    background-image: url(img/js_svg@1.svg);
                     background-size: 16px 16px;
                 }
 
@@ -331,10 +385,11 @@ body {
                     background-position: center;
                 }
 
-                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.selected {
-                    background-color: #000;
-                    color: #fff;
-                }
+.datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.selected {
+    background-color: #1e1e1e;
+    color: #fff;
+    border-top: 2px solid #5badff;
+}
 
                 .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.selected .close-button {
                     background-image: url(img/close_16@1.png);
@@ -386,30 +441,46 @@ body {
     }
 }
 
-        .datalinq-code-ide .datalinq-code-content .datalinq-code-editor {
-            position: absolute;
-            top: 30px;
-            bottom: 0px;
-            left: 0px;
-            right: 0px;
-            background-color: #777;
-        }
+.datalinq-code-ide .datalinq-code-content .datalinq-code-editor {
+    display: flex;
+    flex-direction: row;
+    position: absolute;
+    top: 30px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #777;
+}
 
-            .datalinq-code-ide .datalinq-code-content .datalinq-code-editor .datalinq-code-editor-frame {
-                position: absolute;
-                top: 0px;
-                bottom: 0px;
-                left: 0px;
-                right: 0px;
-                display: none;
-                width: 100%;
-                height: 100%;
-                border: none;
-            }
+    .datalinq-code-ide .datalinq-code-content .datalinq-code-editor .datalinq-code-editor-frame {
+        flex: none; 
+        display: none;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
 
                 .datalinq-code-ide .datalinq-code-content .datalinq-code-editor .datalinq-code-editor-frame.selected {
                     display: block;
                 }
+
+.datalinq-separator {
+    background-color: rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.vertical-separator {
+    width: 4px;
+    margin: 0 2px;
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.3);
+}
+
+.horizontal-separator {
+    height: 4px;
+    margin: 2px 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
 
     .datalinq-code-ide .datalinq-code-bar {
         background-color: #222;
@@ -451,7 +522,7 @@ body {
         background-position: center;
         background-image: url(img/triangle-left-up_32@1.png);
         cursor: pointer;
-        z-index:2
+        z-index: 2
     }
     .datalinq-code-ide .datalinq-code-sidebar .datalinq-code-tree-top .datalinq-code-tree-toolbar {
         width: 100%;
@@ -586,6 +657,34 @@ body {
                 border-radius: 4px;
             }
 
+                .datalinq-code-tree .tree-nodes .tree-node .copy-button.css-button {
+                    right: 28px; /* shifted left by 26px from the copy button */
+                    top: 2px;
+                    width: 24px;
+                    height: 24px;
+                    background-position: center;
+                    background-size: 16px 16px;
+                    background-repeat: no-repeat;
+                    background-image: url(img/css_svg@2.svg); /* You need to provide this icon */
+                    cursor: pointer;
+                    display: none;
+                    border-radius: 4px;
+                }
+
+                .datalinq-code-tree .tree-nodes .tree-node .copy-button.js-button {
+                    right: 54px; /* shifted left by 26px from css-button */
+                    top: 2px;
+                    width: 24px;
+                    height: 24px;
+                    background-position: center;
+                    background-size: 16px 16px;
+                    background-repeat: no-repeat;
+                    background-image: url(img/js_svg@2.svg); /* You need to provide this icon */
+                    cursor: pointer;
+                    display: none;
+                    border-radius: 4px;
+                }
+
             .datalinq-code-tree .tree-nodes .tree-node.mouseover > .copy-button {
                 display: block;
             }
@@ -676,13 +775,26 @@ body {
                 }
 
                 .datalinq-code-tree .tree-nodes .tree-node input {
-                    background: transparent;
-                    border: 1px solid #333;
+                    background-color: rgba(255, 255, 255, 0.05);
+                    border: 1px solid #444;
                     border-radius: 4px;
-                    color: #fff;
+                    color: #f0f0f0;
                     font-size: 12px;
-                    padding: 2px 4px;
+                    padding: 3px 6px;
+                    outline: none;
+                    transition: all 0.2s ease-in-out;
+                    width: auto;
+                    max-width: 180px;
+                    vertical-align: middle;
                 }
+
+                    .datalinq-code-tree .tree-nodes .tree-node input:focus {
+                        border-color: #5badff;
+                        background-color: rgba(255, 255, 255, 0.08);
+                        box-shadow: 0 0 0 1px rgba(90, 173, 255, 0.3);
+                    }
+
+
             
 
             .datalinq-code-tree .tree-nodes .tree-node.view {
@@ -711,7 +823,7 @@ body {
 .datalinq-code-editor-switcher {
     position: absolute;
     right: 4px;
-    bottom: 4px;
+    bottom: 40px;
     width: 72px;
     height: 36px;
     box-sizing: border-box;
@@ -1080,7 +1192,7 @@ body {
         }
 
     .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.disabled {
-        opacity: .3;
+        opacity: .6;
         cursor: unset;
         filter: grayscale(100%);
     }
@@ -1107,6 +1219,16 @@ body {
 
     .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.colorscheme {
         background-image: url(img/darkmode_32@1.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.sandbox {
+        background-image: url(img/sandbox_32@1.png);
+        float: right;
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.copilot {
+        background-image: url(img/copilot_32@1.png);
+        float: right;
     }
 
     .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.help {
@@ -1159,7 +1281,6 @@ body {
 .datalinq-code-ide.tree-collapsed .datalinq-code-sidebar {
     overflow: hidden;
     width: 60px;
-    height: 60px;
 }
 
 .datalinq-code-ide.tree-collapsed .datalinq-code-content {
@@ -1167,11 +1288,16 @@ body {
 }
 
 .datalinq-code-ide.tree-collapsed .datalinq-code-toolbar {
-    left: 60px;
+    /*left: 60px;*/
 }
 
 .datalinq-code-ide.tree-collapsed .datalinq-code-sidebar .datalinq-code-tree-top .datalinq-code-tree-collapse-button {
-    background-image:url(img/triangle-right-down_32@1.png)
+    background-color: #bebebe;
+    background-image: url(img/triangle-right-down_32@1.png)
+}
+
+.datalinq-code-ide.tree-collapsed .resize-handle--x {
+    display: none;
 }
 
 /****** Tree Toolbar *****/
@@ -1236,32 +1362,73 @@ body {
 
 .datalinq-code-tiles {
     position: absolute;
-    left: 0px;
-    right: 0px;
-    top: 0px;
+    top: 0;
+    left: 0;
+    right: 0;
     height: 50%;
-    background-color:#777;
-    overflow:auto;
+    background-color: #777;
+    overflow: auto;
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start;
+    align-content: flex-start;
 }
 
     .datalinq-code-tiles .datalinq-code-tile {
-        display: inline-block;
         width: 320px;
-        min-height: 120px;
-        color: #fff;
-        padding: 14px;
-        box-sizing: border-box;
-        margin: 14px 0px 0px 14px;
+        min-height: 160px;
         background-color: #555;
-        border-radius: 12px;
+        color: #fff;
+        padding: 20px;
+        border-radius: 16px;
         cursor: pointer;
-        vertical-align: top;
-        box-shadow: 4px 4px 10px #333;
+        box-sizing: border-box;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+        transition: transform 0.2s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
 
-    .datalinq-code-tiles .datalinq-code-tile h1 {
-       font-size:21px;
+        .datalinq-code-tiles .datalinq-code-tile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(90, 173, 255, 0.4);
+        }
+
+        .datalinq-code-tiles .datalinq-code-tile h1 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #5badff;
+            font-weight: 600;
+        }
+
+        .datalinq-code-tiles .datalinq-code-tile p {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #ddd;
+            flex-grow: 1;
+        }
+
+.progress-placeholder {
+    height: 10px;
+    background: #333;
+    margin-top: 12px;
+    border-radius: 4px;
+}
+
+.datalinq-code-hidden-developer-content {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #ccc;
+}
+
+    .datalinq-code-hidden-developer-content label {
+        margin-left: 6px;
+        cursor: pointer;
     }
+
 
 .datalinq-code-progress {
     display: inline-block;
@@ -1289,46 +1456,67 @@ body {
 
 .datalinq-code-output {
     position: absolute;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     height: 50%;
-    background-color: #888;
+    background: linear-gradient(to bottom, #444, #333);
     overflow: auto;
+    box-shadow: inset 0 6px 12px rgba(0, 0, 0, 0.4);
+    border-top: 2px solid #222;
+    padding: 12px;
+    font-family: "Segoe UI", "Open Sans", sans-serif;
 }
 
     .datalinq-code-output .datalinq-code-compile-item {
-        padding:5px 5px 5px 30px;
-        background-position:4px 5px;
-        background-repeat:no-repeat;
+        padding: 12px 12px 12px 40px;
+        background-position: 12px center;
+        background-repeat: no-repeat;
         background-image: url(img/loader/spinning-line-black-16@1.gif);
-        background-size:16px 16px;
-        box-sizing:border-box;
-        color:#efefef;
+        background-size: 16px 16px;
+        box-sizing: border-box;
+        color: #efefef;
         cursor: pointer;
-        border-bottom:1px solid #aaa;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        background-color: #555;
+        transition: background 0.3s, color 0.3s;
     }
 
         .datalinq-code-output .datalinq-code-compile-item:hover {
-            color: #ccc;
+            background-color: #666;
+            color: #ddd;
         }
 
+        /* SUCCESS STATE */
         .datalinq-code-output .datalinq-code-compile-item.success {
             background-image: url(img/check_16@1.png);
-        }
-        .datalinq-code-output .datalinq-code-compile-item.has-errors {
-            background-color: #600;
-            background-image: url(img/warning_red_16@1.png);
+            background-color: #3a3a3a;
+            border-left: 4px solid #5badff;
         }
 
-        .datalinq-code-output .datalinq-code-compile-item.has-errors ul  {
+        /* ERROR STATE */
+        .datalinq-code-output .datalinq-code-compile-item.has-errors {
+            background-color: #4a1f1f;
+            background-image: url(img/warning_red_16@1.png);
+            border-left: 4px solid #f66;
+            color: #ffdddd;
         }
-            .datalinq-code-output .datalinq-code-compile-item.has-errors ul li {
-                font-size: 13px;
-                border-top: 1px solid #aaa;
-                padding:5px 0px;
+
+            .datalinq-code-output .datalinq-code-compile-item.has-errors ul {
+                padding-left: 20px;
+                margin-top: 8px;
+                list-style-type: disc;
             }
 
+                .datalinq-code-output .datalinq-code-compile-item.has-errors ul li {
+                    font-size: 13px;
+                    padding: 4px 0;
+                    border-top: 1px solid #a66;
+                    color: #ffcaca;
+                }
+
+/* Retina/high-DPI support */
 @media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
     .datalinq-code-output .datalinq-code-compile-item.success {
         background-image: url(img/check_16@2.png);
@@ -1338,6 +1526,7 @@ body {
         background-image: url(img/warning_red_16@2.png);
     }
 }
+
 
 /******* Modal Dialog **************/
 .datalinq-code-modal {
@@ -1515,32 +1704,299 @@ body {
 
 /************* Darkmode, Lightmode ***********************/
 .datalinq-code-ide.colorscheme-light .datalinq-code-toolbar.datalinq-code-bar {
-    background-color: #aaa;
+    background-color: #bebebe; /* light gray */
+    color: #444;
+    border-bottom: 1px solid #ccc;
 }
 
 .datalinq-code-ide.colorscheme-light .datalinq-code-sidebar.datalinq-code-panel {
-
+    background-color: #fafafa; /* very light gray */
+    color: #444;
+    border-right: 1px solid #ddd;
 }
 
     .datalinq-code-ide.colorscheme-light .datalinq-code-sidebar.datalinq-code-panel .datalinq-code-tree-top .datalinq-code-tee-title {
-        background-color: #eee;
+        background-color: #f0f0f0;
+        color: #5badff;
     }
 
     .datalinq-code-ide.colorscheme-light .datalinq-code-sidebar.datalinq-code-panel .datalinq-code-tree-top .datalinq-code-tree-collapse-button,
     .datalinq-code-ide.colorscheme-light .datalinq-code-sidebar.datalinq-code-panel .datalinq-code-tree-top .datalinq-code-tree-toolbar {
-        background-color: #999;
+        background-color: #ddd;
+        color: #555;
     }
+
+        .datalinq-code-ide.colorscheme-light .datalinq-code-sidebar.datalinq-code-panel .datalinq-code-tree-top .datalinq-code-tree-collapse-button:hover,
+        .datalinq-code-ide.colorscheme-light .datalinq-code-sidebar.datalinq-code-panel .datalinq-code-tree-top .datalinq-code-tree-toolbar:hover {
+            background-color: #c7c7c7;
+            cursor: pointer;
+        }
 
     .datalinq-code-ide.colorscheme-light .datalinq-code-sidebar.datalinq-code-panel .datalinq-code-tree-container.datalinq-code-tree-holder {
-        background-color: #999;
-        color:#333;
+        background-color: #f6f6f6;
+        color: #333;
     }
 
-.datalinq-code-ide.colorscheme-light .datalinq-code-content .datalinq-code-tabs {
-    background-color: #ccc;
+.datalinq-code-ide.colorscheme-light .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab {
+    background-color: #f3f3f3;
+    color: #333;
+    border-right: 1px solid #ccc;
+    border-top: 2px solid transparent;
 }
 
-.datalinq-code-ide.colorscheme-light .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.selected {
-    background-color: #999;
-    color:#333;
+.datalinq-code-ide.colorscheme-light .tree-tool.expand-all {
+    background-image: url(img/triangle-up_16@1_light.png);
+}
+
+
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-content .datalinq-code-tabs {
+    background-color: #e8e8e8;
+}
+
+    .datalinq-code-ide.colorscheme-light .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab {
+        background-color: #ddd;
+        color: #444;
+    }
+
+        .datalinq-code-ide.colorscheme-light .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab:hover {
+            background-color: #ccc;
+            color: #222;
+        }
+
+        .datalinq-code-ide.colorscheme-light .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.selected {
+            background-color: #fff;
+            color: #000;
+            font-weight: 600;
+            border-color: #ccc;
+            border-bottom-color: #fff;
+            border-top: 2px solid #5badff;
+            box-shadow: inset 0 -2px 0 #5badff;
+        }
+
+.datalinq-code-ide.colorscheme-light .datalinq-tree-search-input {
+    background-color: #fff; /* white background */
+    border: 1px solid #aaa; /* lighter border */
+    color: #333; /* dark text */
+    background-image: url(img/magnifier_16@1.png);
+    cursor: text; /* better cursor for input */
+}
+
+    .datalinq-code-ide.colorscheme-light .datalinq-tree-search-input.has-value {
+        background-image: url(img/close_16@1.png);
+    }
+
+    .datalinq-code-ide.colorscheme-light .datalinq-tree-search-input:focus {
+        border-color: #5badff;
+        box-shadow: 0 0 5px rgba(90, 173, 255, 0.5);
+        outline: none;
+    }
+
+@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+    .datalinq-code-ide.colorscheme-light .datalinq-tree-search-input {
+        background-image: url(img/magnifier_16@2.png);
+    }
+
+        .datalinq-code-ide.colorscheme-light .datalinq-tree-search-input.has-value {
+            background-image: url(img/close_16@2.png);
+        }
+}
+
+.datalinq-code-ide.colorscheme-light .tree-tool {
+    border: 1px solid #aaa; /* lighter border for light mode */
+    background-color: #f0f0f0; /* light gray background */
+    cursor: pointer;
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton {
+    background-color: #eee; /* light background */
+    border: 1px solid #bbb; /* lighter border */
+    transition: .3s ease-in-out all;
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.start {
+    background-image: url(img/home_16@1_light.png);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.endpoint {
+    background-image: url(img/endpoint_16@1_light.png);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.query {
+    background-image: url(img/query_16@1_light.png);
+}
+
+
+    .datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton .text {
+        color: #555; /* darker text for contrast */
+    }
+
+    .datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton:hover {
+        background-color: #ddd; /* subtle hover effect */
+        background-size: 32px;
+        background-position: center;
+    }
+
+    .datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.logout {
+        background-image: url(img/account_32@1.png); /* ideally a lighter icon variant */
+        color: #555; /* darker text for contrast */
+    }
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node .copy-button {
+    background-image: url(img/copy_16@1_light.png);
+}
+
+    .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node .copy-button.css-button {
+        background-image: url(img/css_svg@2_light.svg);
+    }
+    .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node .copy-button.js-button {
+        background-image: url(img/js_svg@2_light.svg);
+    }
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.add {
+    background-image: url(img/round-plus_16@2_light.png);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.view {
+    background: none;
+    padding-left: 4px;
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.has-children {
+    background-image: url(img/triangle-filled-down_16@2_light.png);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.endpoint > .icon {
+    background-image: url(img/endpoint_16@1_light.png);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.query > .icon {
+    background-image: url(img/query_16@1_light.png);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.view > .icon {
+    background-image: url(img/code-markup_16@1_light.png);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.collapsed {
+    background-image: url(img/triangle-right-down_16@2_light.png);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.has-children.collapsed {
+    background-image: url(img/triangle-filled-right-down_16@_light.png);
+}
+
+body.colorscheme-light .datalinq-code-output {
+    background: linear-gradient(to bottom, #eee, #ddd);
+    box-shadow: inset 0 6px 12px rgba(0, 0, 0, 0.1);
+    border-top: 2px solid #ccc;
+    color: #222;
+}
+
+body.colorscheme-light .datalinq-code-tiles {
+    background-color: #eee; /* lighter background */
+    color: #222; /* darker text for contrast */
+}
+
+
+    body.colorscheme-light .datalinq-code-tiles .datalinq-code-tile {
+        background-color: #fff; /* bright tile background */
+        color: #222; /* dark text */
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1); /* softer shadow */
+        border: 1px solid #ddd; /* subtle border for separation */
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border-radius: 16px;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+        body.colorscheme-light .datalinq-code-tiles .datalinq-code-tile p {
+            color: #000; /* black text for light background */
+        }
+
+body.colorscheme-light .datalinq-code-output .datalinq-code-compile-item.success {
+    background-color: #fff; /* white background in light mode */
+    /* keep the rest the same */
+}
+
+body.colorscheme-light .datalinq-code-output .datalinq-code-compile-item {
+    color: #000; /* black font in light mode */
+}
+
+body.colorscheme-light .datalinq-code-editor-settings {
+    background-color: white;
+    color: #222;
+}
+
+    body.colorscheme-light .datalinq-code-editor-settings .datalinq-input {
+        border: 1px solid #ccc;
+        background: #fff;
+        color: #222;
+    }
+
+body.colorscheme-light .datalinq-autocomplete-multiselect .datalinq-autocomplete-multiselect-value-conatiner .datalinq-autocomplete-multiselect-value-item {
+    border: 1px solid #777;
+    background: white;
+    color: #222;
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.help {
+    background-image: url(img/help_32@1_light.png);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.found {
+    color: #5badff;
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.verify-current {
+    background-image: url(img/checkbox-checked_32@1_light.png);
+}
+.datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.save-current {
+    background-image: url(img/disk-white_32@1_light.png);
+}
+.datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.save-all {
+    background-image: url(img/disks-white_32@1_light.png);
+}
+.datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.run {
+    background-image: url(img/triangle-right_32@1_light.png);
+}
+.datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.run-in-tab {
+    background-image: url(img/round-right_32@1_light.png);
+}
+.datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.colorscheme {
+    background-image: url(img/darkmode_32@1.png);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.logout {
+    background-image: url(img/account_32@1_light.png);
+    background-position: 6px center;
+    color: #555;
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-tree-search-input {
+    background-image: url(img/magnifier_16@1_light.png);
+}
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-app-prefixes .datalinq-code-app-prefix .subtext {
+    color: black;
+}
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-app-prefixes .datalinq-code-app-prefix .text {
+    color: black;
+}
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-app-prefixes .datalinq-code-app-prefix {
+    background-image: url(img/endpoint_16@1_light.png);
+}
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-messagebox-content {
+    color: black;
+}
+
+body.colorscheme-light .datalinq-code-editor-code-panel .datalinq-code-editor-code-statusbar {
+    background: #cfcfcf;
 }

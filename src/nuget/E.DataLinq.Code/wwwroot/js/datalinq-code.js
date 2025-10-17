@@ -24,9 +24,38 @@ var dataLinqCode = new function ($) {
             dataLinqCode.ui.refreshTree();
         });
 
+        if (typeof window.CopilotInitializer === "function") {
+            window.CopilotInitializer(_targetUrl);
+        }
+
         $editor.dataLinqCode_editor('addTab', { title: 'Start', id: '_start', className: 'start', hideCloseButton: true });
 
         this.bindDocumentEvents(window.document);
+
+        window.addEventListener('message', (event) => {
+            if (event.data.lang) {
+                sessionStorage.setItem('selectedLang', event.data.lang);
+            }
+            if (event.data.action === 'expand-copilot')
+            {
+                const copilotTab = document.querySelector('[data-id="copilot"]');
+                if (copilotTab) {
+                    copilotTab.querySelector('.close-button').click();
+                } else {
+                    dataLinqCode.events.fire('open-copilot', {});
+                }
+
+                dataLinqCode.events.fire('toggle-copilot');
+            }
+        });
+
+        function clearSessionData() {
+            sessionStorage.removeItem('currentChatId');
+        }
+
+        window.addEventListener('beforeunload', clearSessionData);
+        window.addEventListener('unload', clearSessionData);
+        window.addEventListener('pagehide', clearSessionData);
 
         dataLinqCode.events.on('refresh-ui', function (channel, args) {
             var args = {
@@ -38,7 +67,7 @@ var dataLinqCode = new function ($) {
         });
 
         dataLinqCode.events.on('save-current-document', function () {
-            var id = $editor.dataLinqCode_editor('currentDoc');
+            var id = $editor.dataLinqCode_editor('toSaveDoc');
             if (id) {
                 dataLinqCode.events.fire('save-document', { id: id });
             }
@@ -129,14 +158,26 @@ var dataLinqCode = new function ($) {
         });
 
         dataLinqCode.events.on('toggle-color-scheme', function (channel) {
-            $('.datalinq-code-ide').toggleClass('colorscheme-light');
-            _editorTheme = $('.datalinq-code-ide').hasClass('colorscheme-light') ? 'vs' : 'vs-dark';
+            const ide = $('.datalinq-code-ide');
+            ide.toggleClass('colorscheme-light');
+            _editorTheme = ide.hasClass('colorscheme-light') ? 'vs' : 'vs-dark';
 
-            dataLinqCode.events.fire('theme-changed',
-                {
-                    theme: _editorTheme
-                });
+            dataLinqCode.events.fire('theme-changed', {
+                theme: _editorTheme
+            });
+
+            sessionStorage.setItem('editorTheme', _editorTheme);
+
+            ide.find('iframe').each(function () {
+                this.contentWindow.postMessage({ theme: _editorTheme }, '*');
+            });
+
+            const helpFrame = document.getElementById('help-frame');
+            if (helpFrame && helpFrame.contentWindow) {
+                helpFrame.contentWindow.postMessage({ theme: _editorTheme }, '*');
+            }
         }, this);
+
 
         dataLinqCode.events.on('toggle-help', function (channel) {
             var $datalinqBody = $('.datalinq-code-body');
@@ -147,6 +188,31 @@ var dataLinqCode = new function ($) {
             }
         });
 
+        var ctrlPressed = false;
+
+        $(document).keydown(function (e) {
+            if (e.key === "Control") ctrlPressed = true;
+        }).keyup(function (e) {
+            if (e.key === "Control") ctrlPressed = false;
+        });
+
+        dataLinqCode.events.on('toggle-copilot', function (channel, args) {
+            if (ctrlPressed) {
+                dataLinqCode.events.fire('open-copilot', {});
+            } else {
+                var $datalinqBody = $('.datalinq-code-body');
+                $datalinqBody.toggleClass('showhelp');
+
+                if ($datalinqBody.hasClass('showhelp')) {
+                    $datalinqBody.find('.datalinq-code-help > #help-frame').attr('src', dataLinqCode.targetUrl() + '/copilot?dl_token=' + window._datalinqCodeAccessToken);
+                }
+            }
+        });
+
+        dataLinqCode.events.on('toggle-sandbox', function (channel) {
+            window.open(_dataLinqEngineUrl + "/report/datalinq-guide@select-all-users@index", "_blank");
+        });
+
         dataLinqCode.events.on('logout', function (channel) {
             document.location = document.location + '/logout';
         });
@@ -155,6 +221,11 @@ var dataLinqCode = new function ($) {
             e.stopPropagation();
             $(this).closest('.datalinq-code-ide').toggleClass('tree-collapsed');
         });
+
+        const savedTheme = localStorage.getItem('editorColorScheme');
+        if (savedTheme === 'vs') {
+            dataLinqCode.events.fire('toggle-color-scheme');
+        } 
 
         $(window).resize(function () {
             dataLinqCode.events.fire('ide-resize');
@@ -179,6 +250,10 @@ var dataLinqCode = new function ($) {
                     callback(result)
                 }
             });
+        };
+
+        this.getMonacoSnippit = function (callback, lang) {
+            this.get('getMonacoSnippit', callback, { lang: lang });
         };
 
         this.getEndPointPrefixes = function (callback) {
@@ -445,5 +520,33 @@ var dataLinqCode = new function ($) {
                 $tree.dataLinqCode_tree('refresh', {});
             }
         };
+
+        window.addEventListener('beforeunload', function () {
+            // save last opened tabs to localstorage to possible restore them on next login
+            const tabs = document.querySelectorAll('.datalinq-code-tab[data-id]');
+            const tabIds = Array.from(tabs)
+                .map(tab => tab.getAttribute('data-id'))
+                .filter(id => id !== '_start');
+            localStorage.setItem('datalinq-open-tabs', JSON.stringify(tabIds));
+
+            // save the individual width of sidebar of user
+            const sidebarWidth = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width').trim();
+            if (sidebarWidth !== '300px') {
+                localStorage.setItem('sidebarWidth', sidebarWidth);
+            } else {
+                localStorage.removeItem('sidebarWidth'); // Optional: clear if default
+            }
+
+            //save current editor theme
+            const ide = document.querySelector('.datalinq-code-ide');
+
+            if (ide && ide.classList.contains('colorscheme-light')) {
+                localStorage.setItem('editorColorScheme', 'vs');
+            } else {
+                localStorage.removeItem('editorColorScheme');
+            }
+
+        });
+
     };
 }(jQuery);

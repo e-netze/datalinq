@@ -9,7 +9,7 @@
     <UserSecretsId>b70acbc5-86a7-4f37-927d-23abaa238c7f</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.2.0" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.3.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\web\DataLinq.Api\DataLinq.Api.csproj" />

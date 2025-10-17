@@ -32,9 +32,9 @@ public class MsSqlClientDbFactoryProvider : IDbFactoryProviderService
     {
         var prefix = connectionString.GetPrefix();
 
-        return 
+        return
             "mssql".Equals(prefix, StringComparison.OrdinalIgnoreCase) ||
-            "sqlserver".Equals(prefix, StringComparison.OrdinalIgnoreCase) || 
+            "sqlserver".Equals(prefix, StringComparison.OrdinalIgnoreCase) ||
             "sql".Equals(prefix, StringComparison.OrdinalIgnoreCase);
     }
 

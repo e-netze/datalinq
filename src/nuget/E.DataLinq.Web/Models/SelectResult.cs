@@ -67,16 +67,46 @@ public class SelectResult
     {
         get
         {
-            List<ExpandoObject> records = new List<ExpandoObject>();
+            var records = new List<IDictionary<string, object>>();
+
             foreach (var record in this.Result)
             {
-                if (record is ExpandoObject)
+                if (record is ExpandoObject expando)
                 {
-                    records.Add((ExpandoObject)record);
+                    records.Add(expando);
+                }
+                else
+                {
+                    var dict = ConvertToExpando(record);
+                    if (dict != null)
+                        records.Add(dict);
                 }
             }
+
             return records.ToArray();
         }
+    }
+
+    private static IDictionary<string, object>? ConvertToExpando(object obj)
+    {
+        if (obj == null) return null;
+
+        if (obj is IDictionary<string, object> dictionary)
+            return dictionary;
+
+        var expando = new ExpandoObject() as IDictionary<string, object>;
+
+        var props = obj.GetType().GetProperties();
+        foreach (var prop in props)
+        {
+            if (prop.GetIndexParameters().Length == 0)
+            {
+                var val = prop.GetValue(obj);
+                expando[prop.Name] = val ?? "";
+            }
+        }
+
+        return expando;
     }
 
     public IEnumerable<string> RecordColumns(bool deepSearch = false)
