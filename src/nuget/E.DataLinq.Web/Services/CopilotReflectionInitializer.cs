@@ -41,9 +41,11 @@ public class CopilotReflectionInitializer : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         var methods = typeof(DataLinqHelper)
-                    .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
-                    .Where(m => m.GetCustomAttribute<ExcludeFromSnippetsAttribute>() == null)
-                    .ToArray();
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
+            .Where(m => m.GetCustomAttribute<ExcludeFromSnippetsAttribute>() == null)
+            .Where(m => m.Name != nameof(DataLinqHelper.GetCypherPath)) // exclude the method
+            .ToArray();
+
 
         var methodInfos = new List<MethodInfoObject>();
 

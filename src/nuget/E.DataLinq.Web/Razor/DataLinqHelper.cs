@@ -297,9 +297,7 @@ public class DataLinqHelper : IDataLinqHelper
         return pathList.ToArray();
     }
 
-    [HelpDescription("Die Methode lädt die Records aus der angegeben Query (endpoint@query). Die Abfrage passiert serverseitig während des Renderns der Seite.")]
-    async public Task<IDictionary<string, object>[]> GetRecordsAsync(
-        [HelpDescription("Gibt die Id der Query in folgender Form an: endpoint-id@query-id")]
+
     /// <summary>
     /// de: Die Methode lädt Records aus einer angegebenen Query (endpoint@query) und gibt diese als Sammlung von Dictionaries zurück. Die Abfrage erfolgt serverseitig während des Renderns der Seite.
     /// en: The method loads records from a specified query (endpoint@query) and returns them as a collection of dictionaries. The query is executed server-side during page rendering.
