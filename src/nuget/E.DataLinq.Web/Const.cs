@@ -19,6 +19,8 @@ internal static class JsLibNames
     public const string RazorEngineClassic = "RazorEngine";
     public const string RazorEngineCore = "RazorEngineCore";
     public const string RazorEngineDataLinqLanguageEngine = "DataLinqLanguageEngine";
+
+    public const string Mermaid = "Mermaid";
 }
 
 public static class RazorEngineIds
