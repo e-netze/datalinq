@@ -69,6 +69,11 @@
 
 }
 
+@if (Model.IncludedJsLibraries.Contains(JsLibNames.Mermaid))
+{
+    <script src="@(ViewData["contentRootUrl"])/lib/mermaid-11_20_0/mermaid.min.js"></script>
+}
+
 @foreach(var jsUrl in Options.CustomReportJavascriptUrls)
 {   
     var keyValues = jsUrl.ToKeyValues("src");

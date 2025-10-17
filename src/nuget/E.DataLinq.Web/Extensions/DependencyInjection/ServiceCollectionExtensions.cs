@@ -138,6 +138,7 @@ static public class ServiceCollectionExtensions
         });
 
         services.AddDataLinqSelectEngine<TextFileEngine>();
+        services.AddDataLinqSelectEngine<CypherEngine>();
         services.AddDataLinqSelectEngine<JsonApiEngine>();
 
         #endregion
@@ -213,7 +214,12 @@ static public class ServiceCollectionExtensions
                 },
                 new()
                 {
-                    Name=JsLibNames.JsonEditor,
+                    Name = JsLibNames.Mermaid,
+                    Description = "Mermaid"
+                },
+                new()
+                {
+                    Name = JsLibNames.JsonEditor,
                     Description = "JsonEditor v10.2.0"
                 }
             };

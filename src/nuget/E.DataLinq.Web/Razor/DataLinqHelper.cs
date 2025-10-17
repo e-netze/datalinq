@@ -15,6 +15,7 @@ using E.DataLinq.Web.Services.Abstraction;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Dynamic;
@@ -240,6 +241,65 @@ public class DataLinqHelper : IDataLinqHelper
         return _razor.RawString(builder.BuildHtmlString());
     }
 
+    public IDictionary<string, object>[] GetCypherPath(string startNode, IDictionary<string, object> endNode, IEnumerable<IDictionary<string, object>> records, bool reverse)
+    {
+        var pathList = new List<IDictionary<string, object>>();
+
+
+        var relsValue = endNode["rels"];
+
+        if (relsValue is IList relsList && relsList.Count > 0)
+        {
+            var nodeDict = new Dictionary<string, IDictionary<string, object>>();
+            foreach (var record in records)
+            {
+                string identity = record["identity"]?.ToString();
+                if (!string.IsNullOrEmpty(identity))
+                {
+                    nodeDict[identity] = record;
+                }
+            }
+
+            var startRecord = nodeDict.Values
+                .FirstOrDefault(r => r.TryGetValue("id", out var v) &&
+                                        v is not null &&
+                                        string.Equals(v.ToString(), startNode, StringComparison.OrdinalIgnoreCase));
+
+            if (startRecord != null)
+            {
+                pathList.Add(startRecord);
+            }
+            
+            foreach (var relObj in relsList)
+            {
+                try
+                {
+                    var endNodeIdProperty = relObj.GetType().GetProperty(reverse ? "StartNodeId" : "EndNodeId");
+                    if (endNodeIdProperty != null)
+                    {
+                        var endNodeIdValue = endNodeIdProperty.GetValue(relObj);
+                        string endNodeId = endNodeIdValue?.ToString();
+
+                        if (!string.IsNullOrEmpty(endNodeId) && nodeDict.ContainsKey(endNodeId))
+                        {
+                            pathList.Add(nodeDict[endNodeId]);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var errorNode = new Dictionary<string, object> { ["error"] = ex.Message };
+                    pathList.Add(errorNode);
+                }
+            }
+        }
+
+        return pathList.ToArray();
+    }
+
+    [HelpDescription("Die Methode lädt die Records aus der angegeben Query (endpoint@query). Die Abfrage passiert serverseitig während des Renderns der Seite.")]
+    async public Task<IDictionary<string, object>[]> GetRecordsAsync(
+        [HelpDescription("Gibt die Id der Query in folgender Form an: endpoint-id@query-id")]
     /// <summary>
     /// de: Die Methode lädt Records aus einer angegebenen Query (endpoint@query) und gibt diese als Sammlung von Dictionaries zurück. Die Abfrage erfolgt serverseitig während des Renderns der Seite.
     /// en: The method loads records from a specified query (endpoint@query) and returns them as a collection of dictionaries. The query is executed server-side during page rendering.
@@ -2846,6 +2906,23 @@ public class DataLinqHelper : IDataLinqHelper
         ) => _ui?
              .Userroles?
              .Any(r => r.Equals(roleName, StringComparison.InvariantCultureIgnoreCase)) == true;
+
+    [HelpDescription("Liefert den Wert eines Rollenparameters zurück, zB GKZ (Gemeindekennzahl). Rollenparameter werden nur in speziellen Authentication Umgebungen wie PVP unterstützt.")]
+    public string GetUserClaim(
+        [HelpDescription("Name des Claims, dessen Wert zurückgegeben werden soll, zB GKZ")]
+        string claimName,
+        [HelpDescription("Gibt an, ob bei der Suche nach dem Claim auf Groß-/Kleinschreibung geachtet werden soll (true) oder nicht (false). Standardwert ist true.")]
+        bool caseSensitiv = true)
+    {
+        var claimValue = _ui?
+            .Claims?
+            .Where(p => p?.StartsWith($"{claimName}=", caseSensitiv ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase) == true)
+            .FirstOrDefault()?
+            .Substring(claimName.Length + 1)
+            .Trim() ?? "";
+
+        return claimValue;
+    }
 
     //[HelpDescription("Gibt alle HTTP Request Header Namen zurück")]
     //public IEnumerable<string> GetRequestHeaders()

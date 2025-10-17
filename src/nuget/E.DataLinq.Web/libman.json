@@ -31,6 +31,10 @@
       "destination": "wwwroot/lib/d3-7x"
     },
     {
+      "library": "mermaid@11.12.0",
+      "destination": "wwwroot/lib/mermaid-11_20_0"
+    },
+    {
       "library": "jsoneditor@10.2.0",
       "destination": "wwwroot/lib/jsoneditor"
     }
