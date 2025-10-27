@@ -447,7 +447,15 @@ var dataLinq = new function () {
             .attr('datalinq-quicksearch-columns')
             .split(',');
 
-        var $table = $(elem).closest('.datalinq-quicksearch-search-container').next('table');
+        var $searchContainer = $(elem).closest('.datalinq-quicksearch-search-container');
+        var tableId = $searchContainer.attr('datalinq-quicksearch-table');
+        var $table;
+
+        if (tableId) {
+            $table = $('#' + tableId);
+        } else {
+            $table = $searchContainer.nextAll('table').first();
+        }
 
         if ($table.length === 0) {
             console.warn('No table found below search container');

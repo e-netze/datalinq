@@ -776,6 +776,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Der platzhalter innerhalb der Suchleiste.
     /// en: The placeholder inside of the searchbar.
     /// </param>
+    /// /// <param name="tableId">
+    /// de: Die ID des Tables der durchsucht werden soll wenn ein bestimmter Table das Ziel ist anstelle des nächsten.
+    /// en: The id of the table to be searched if a specific table should be targeted instead of just the next one.
+    /// </param>
     /// <param name="htmlAttributes">
     /// de: Ein anonymes Objekt mit HTML-Attributen für den Button ((z.B.: new { style="width:300px" @class="meine-klasse" }))
     /// en: An anonymous object containing HTML attributes for the button ((e.g., new { style="width:300px" @class="my-class" }))
@@ -791,6 +795,7 @@ public class DataLinqHelper : IDataLinqHelper
     public object QuickSearch(
         string[] columns,
         string placeholder = "Search for anything...",
+        string tableId = "",
         object htmlAttributes = null,
         bool isOpen = false)
     {
@@ -801,6 +806,7 @@ public class DataLinqHelper : IDataLinqHelper
                         div.AddAttributes(htmlAttributes);
                         div.AddClass("datalinq-quicksearch-search-container");
                         div.AddAttribute("datalinq-quicksearch-columns", String.Join(',', columns));
+                        div.AddAttribute("datalinq-quicksearch-table", tableId);
                         div.AppendDiv(div2 =>
                         {
                             div2.AddClass("datalinq-quicksearch-search-wrapper");
