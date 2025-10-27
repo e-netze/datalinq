@@ -75,8 +75,28 @@ static public class ServiceCollectionExtensions
                        .AddTransient<DataLinqInfoService>()
                        .AddSingleton<IBinaryCache, BinaryCacheWrapper>()
                        .AddSingletonIfNotExists<IDataLinqAccessProviderService, DataLinqAccessProviderService>()
-                       .AddHostedService<TimedHostedBackgroundService>()
-                       .AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
+                       .AddHostedService<TimedHostedBackgroundService>();
+
+                       //.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
+                       //.AddSingleton<DataLinqHelperFunctionsPlugin>()
+                       //.AddSingleton<DataLinqQueryPlugin>()
+                       //.AddSingleton<DataLinqEndpointPlugin>()
+                       //.AddSingleton<DataLinqViewPlugin>()
+                       //.AddSingleton<SemanticKernelService>()
+                       //.AddSingleton<IAgent<string[], string>, UserHistorySummarizerAgent>()
+                       //.AddSingleton<DataLinqAgentFactory>()
+                       //.AddHostedService<CopilotReflectionInitializer>();
+    }
+
+    static public IServiceCollection AddDataLinqAIServices(this IServiceCollection services,
+                                                        Action<AiServiceOptions> aiServiceOptions = null)
+    {
+        if (aiServiceOptions != null)
+        {
+            services.Configure(aiServiceOptions);
+        }
+
+        return services.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
                        .AddSingleton<DataLinqHelperFunctionsPlugin>()
                        .AddSingleton<DataLinqQueryPlugin>()
                        .AddSingleton<DataLinqEndpointPlugin>()

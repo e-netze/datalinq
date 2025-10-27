@@ -6,6 +6,7 @@ using E.DataLinq.Web;
 using E.DataLinq.Web.Extensions.DependencyInjection;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
+using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +53,16 @@ builder.Services.AddDataLinqServices<FileSystemPersistanceService, CryptoService
 
 builder.Services.Configure<AiServiceOptions>(builder.Configuration.GetSection(AiServiceOptions.Key));
 builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection(AgentOptions.Key));
+
+var aiConfig = builder.Configuration.GetSection(AiServiceOptions.Key);
+var azureEndpoint = aiConfig.GetValue<string>("AzureOpenAi:Endpoint");
+var openAiUrl = aiConfig.GetValue<string>("OpenAi:ServiceUrl");
+
+if (!string.IsNullOrWhiteSpace(azureEndpoint) || !string.IsNullOrWhiteSpace(openAiUrl))
+{
+    builder.Services.AddDataLinqAIServices(aiOptions => aiConfig.Bind(aiOptions));
+}
+
 builder.Services.AddDefaultDatalinqEngines(builder.Configuration.GetSection("DataLinq.Api:SelectEngines"));
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.Postgres.DbFactoryProvider>();
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.MsSqlServer.MsSqlClientDbFactoryProvider>();

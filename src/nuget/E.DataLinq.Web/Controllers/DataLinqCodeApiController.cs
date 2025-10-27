@@ -32,7 +32,7 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly DataLinqEndpointTypeService _endpointTypes;
     private readonly JsLibrariesService _jsLibraries;
     private readonly IDataLinqApiNotificationService _notification;
-    private readonly SemanticKernelService _semanticKernelService;
+    private readonly SemanticKernelService? _semanticKernelService;
 
     public DataLinqCodeApiController(ILogger<DataLinqCodeApiController> logger,
                                      IPersistanceProviderService persistanceProvider,
@@ -41,7 +41,7 @@ public class DataLinqCodeApiController : ApiBaseController
                                      IDataLinqCodeIdentityService _identitySerice,
                                      IMonacoSnippetService monacoSnippetService,
                                      JsLibrariesService jsLibraries,
-                                     SemanticKernelService semanticKernelService,
+                                     SemanticKernelService? semanticKernelService = null,
                                      IHostAuthenticationService hostAuthentication = null,
                                      IDataLinqApiNotificationService notification = null)
     {
@@ -197,6 +197,11 @@ public class DataLinqCodeApiController : ApiBaseController
     [Route("askdatalinqcopilot")]
     public async Task<string> AskDataLinqCopilot()
     {
+        if (_semanticKernelService == null)
+        {
+            return "AI services are not configured";
+        }
+
         var requestPayload = await Request.FromBody<AskDataLinqCopilotRequest>();
 
         return await SecureMethodHandler(async () =>
