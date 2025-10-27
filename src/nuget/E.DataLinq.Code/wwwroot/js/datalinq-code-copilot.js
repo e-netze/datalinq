@@ -95,6 +95,10 @@ CopilotInitializer();
                 return;
             }
 
+            if (processMessage(message)) {
+                return;
+            }
+
             hideIntroSection();
             showTopHint();
 
@@ -109,7 +113,7 @@ CopilotInitializer();
 
             await saveChatToIndexedDB(currentChatId, messages);
 
-            const answer = await askCopilot(messages);
+            const answer = await askCopilot(messages.slice(-15));
 
             deleteLastChatMessage();
             createChatMessage(answer, false);
@@ -695,7 +699,27 @@ function scrollChatToBottom() {
 
             throw new Error(`Failed to get response from Copilot: ${error.message}`);
         }
+}
+
+function processMessage(message) {
+    if (!message || typeof message !== 'string') {
+        return false;
     }
+
+    const commandMap = {
+        '/error': currentError,
+        '/explain': explainCurrentCode,
+    };
+
+    for (const [command, func] of Object.entries(commandMap)) {
+        if (message.includes(command)) {
+            func();
+            return true;
+        }
+    }
+
+    return false;
+}
 
     async function explainCurrentCode() {
         try {
