@@ -61,7 +61,7 @@ namespace E.DataLinq.Web.Services
             {
                 string content = File.ReadAllText(blbFilePath);
                 string connectionString = $"DataSource={destDbFile.Replace("\\", "/")}";
-                content = content.Replace("placeholder", connectionString);
+                content = content.Replace("{{connectionstring}}", connectionString);
                 File.WriteAllText(blbFilePath, content);
             }
 
