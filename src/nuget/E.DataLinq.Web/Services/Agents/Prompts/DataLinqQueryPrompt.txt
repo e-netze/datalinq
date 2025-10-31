@@ -74,6 +74,8 @@ Code Editor (Query Text) By Connection Type:
  - Repeated parameters substitute consistently.
  - Conditional Blocks:
  - Format: SELECT * FROM Users WHERE 1=1 #if lastName AND last_name = @lastName #endif
+  - #if paramName has to be in a line alone.
+  - #if lastName\n AND last_name = @lastName\n #endif, has to be formatted like this.
  - Rules:
   - Only existence test (#if paramName) — no else, elsif, comparisons, multiple logical operators, nesting, or multi-param expressions.
   - Place anywhere; user responsible for proper preceding AND/OR tokens.

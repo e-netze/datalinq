@@ -32,19 +32,17 @@ public class DataLinqCopilotOrchestrator : GroupChatManager
 
             Instructions:
             1. First: Direct Answer to the user’s question.
-            2. Then (only if non-trivial): a brief Context Summary section.
-            3. Include any code / query / view snippets exactly as they appeared (label them). Do NOT invent or modify them.
-            4. If a snippet is referenced but not shown, state: "Referenced snippet not present."
-            5. Do not fabricate helpers, queries, features, access rules, or environments not in the history.
-            6. If info is missing, clearly say what is unknown and (optionally) suggest: sandbox, official docs, or mail@xyz.com.
-            7. If the user just greets or gives no real question, respond briefly and friendly—no large summary.
-            8. If ambiguous intent: provide what you can + up to 2 clarifying questions.
-            9. No external knowledge; no hallucination; no execution claims.
-            10. Preserve important constraints (naming rules, agent boundaries, limitations).
+            2. Include any code / query / view snippets exactly as they appeared (label them). Do NOT invent or modify them.
+            3. If a snippet is referenced but not shown, state: "Referenced snippet not present."
+            4. Do not fabricate helpers, queries, features, access rules, or environments not in the history.
+            5. If info is missing, clearly say what is unknown and (optionally) suggest: sandbox, official docs, or mail@xyz.com.
+            6. If the user just greets or gives no real question, respond briefly and friendly—no large summary.
+            7. If ambiguous intent: provide what you can + up to 2 clarifying questions.
+            8. No external knowledge; no hallucination; no execution claims.
+            9. Preserve important constraints (naming rules, agent boundaries, limitations).
 
             Format:
             - Use Markdown.
-            - Sections (if needed): Answer, Context Summary, Snippets, Open Points, Next Steps.
             - End with an invitation for refinement if appropriate.
 
             Output ONLY the answer (no meta commentary about these rules).

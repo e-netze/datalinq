@@ -57,27 +57,4 @@ CompressedHistory:
 [U{n}] {{$lastQuestion}}
 ```
 
-CurrentContext:
-- A 2-3 sentence summary of where we are NOW in the conversation
-- What is the user trying to accomplish at this moment
-- What are the active constraints, unresolved issues, or next steps
-
-FullQuestion:
-- The latest user message with all necessary context incorporated to make it self-contained
-- Include references to specific prior turns if needed: "Referring to the approach in [A3]..."
-- Include essential snippets verbatim using fenced code blocks
-
-Example Compression:
-
-Before (verbose):
-[User] I'm working on a C# application and I need help with dependency injection.
-[Assistant] Certainly! I'd be happy to help you with dependency injection in C#. Dependency injection is a design pattern that helps you write more maintainable and testable code by inverting the control of object creation. In .NET, you typically use the built-in Microsoft.Extensions.DependencyInjection package. Here's a complete example showing how to set it up... [200+ lines of explanation and code]
-
-After (compressed):
-[U1] Need help with dependency injection in C#
-[A1] Use Microsoft.Extensions.DependencyInjection. Example provided:
-```csharp
-services.AddScoped<IMyService, MyService>();
-```
-
 Remember: The orchestrator needs FACTS and CODE, not explanations. Keep every technical detail; compress only the prose.
