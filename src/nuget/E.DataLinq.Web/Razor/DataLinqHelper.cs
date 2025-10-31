@@ -1574,6 +1574,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Ein HTML-Select-Element, das die Optionen aus der angegebenen Abfrage lädt.
     /// en: An HTML select element that loads options from the specified query.
     /// </returns>
+    [ExcludeFromSnippets]
     public object IncludeCombo(
         string id, string url,
         string valueField,
