@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using E.DataLinq.Core.Services.Persistance;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using System;
 using System.IO;
 using System.Threading;
@@ -10,29 +12,33 @@ namespace E.DataLinq.Web.Services
 {
     public class SandboxInitializer : IHostedService
     {
-        private readonly IConfiguration _config;
+        //private readonly IConfiguration _config;
         private readonly IWebHostEnvironment _env;
+        private readonly string _storagePath;
 
-        public SandboxInitializer(IConfiguration config, IWebHostEnvironment env)
+        public SandboxInitializer(
+            //IConfiguration config, 
+            IWebHostEnvironment env,
+            IOptions<PersistanceProviderServiceOptions> options)
         {
-            _config = config;
+            //_config = config;
             _env = env;
+            _storagePath = options.Value.ConnectionString;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            var targetPath = _config.GetValue<string>("DataLinq.Api:StoragePath");
             var sourcePath = Path.Combine(AppContext.BaseDirectory, "Resources", "datalinq-guide");
 
             var sourceVersionFile = Path.Combine(sourcePath, "version.txt");
-            var targetVersionFile = Path.Combine(targetPath, "datalinq-guide", "version.txt");
+            var targetVersionFile = Path.Combine(_storagePath, "datalinq-guide", "version.txt");
 
             Version sourceVersion = ReadVersionOrDefault(sourceVersionFile);
             Version targetVersion = ReadVersionOrDefault(targetVersionFile);
 
             if (sourceVersion > targetVersion)
             {
-                var destinationDir = Path.Combine(targetPath, "datalinq-guide");
+                var destinationDir = Path.Combine(_storagePath, "datalinq-guide");
                 if (Directory.Exists(destinationDir))
                     Directory.Delete(destinationDir, recursive: true);
 
@@ -40,16 +46,16 @@ namespace E.DataLinq.Web.Services
             }
 
             var sourceDbFile = Path.Combine(AppContext.BaseDirectory, "Resources", "datalinq_guide.db");
-            var destDbFile = Path.Combine(targetPath, "datalinq_guide.db");
+            var destDbFile = Path.Combine(_storagePath, "datalinq_guide.db");
 
             if (File.Exists(sourceDbFile))
             {
-                Directory.CreateDirectory(targetPath);
+                Directory.CreateDirectory(_storagePath);
                 File.Copy(sourceDbFile, destDbFile, overwrite: true);
             }
 
             var blbFileName = "datalinq-guide\\datalinq-guide.blb";
-            var blbFilePath = Path.Combine(targetPath, blbFileName);
+            var blbFilePath = Path.Combine(_storagePath, blbFileName);
 
             if (File.Exists(blbFilePath))
             {

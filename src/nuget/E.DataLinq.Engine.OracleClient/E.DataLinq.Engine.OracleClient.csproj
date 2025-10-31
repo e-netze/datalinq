@@ -6,7 +6,7 @@
   </PropertyGroup>
 
 	<PropertyGroup>
-		<Version>7.25.4005</Version>
+		<Version>7.25.4302</Version>
 		<Copyright>2025, Energienetze Steiermark</Copyright>
 		<PackageProjectUrl>https://github.com/e-netze/datalinq</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/e-netze/datalinq</RepositoryUrl>
@@ -18,7 +18,7 @@
 	</PropertyGroup>	
 	
   <ItemGroup>
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.0" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.0" />
   </ItemGroup>	
 	
   <ItemGroup>

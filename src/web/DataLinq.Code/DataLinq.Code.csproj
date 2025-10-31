@@ -6,8 +6,8 @@
     <UserSecretsId>ae62c7b6-127e-49d2-aa28-dca29f1c7a49</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="9.0.3" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.0" />
+    <PackageReference Include="Npgsql" Version="9.0.4" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\aspire\DataLinq.ServiceDefaults\DataLinq.ServiceDefaults.csproj" />
