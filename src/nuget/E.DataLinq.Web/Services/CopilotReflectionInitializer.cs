@@ -72,6 +72,7 @@ public class CopilotReflectionInitializer : IHostedService
                 {
                     Name = p.Name,
                     Type = TypeToString(p.ParameterType),
+                    Description = GetParameterDescriptionFromXML(typeof(DataLinqHelper), p, "en", method, skipper),
                     HasDefaultValue = p.HasDefaultValue,
                     DefaultValue = p.HasDefaultValue ? p.DefaultValue : null,
                     IsOptional = p.IsOptional
@@ -91,7 +92,13 @@ public class CopilotReflectionInitializer : IHostedService
                 methodInfo.SampleOutput = $"Error calling method: {ex.Message}";
             }
 
-            methodInfos.Add(methodInfo);
+            if (methodInfos.Any(m => m.Name == methodInfo.Name))
+            {
+                methodInfo.Name = methodInfo.Name + "(Advanced)";
+                methodInfos.Add(methodInfo);
+            }
+            else
+                methodInfos.Add(methodInfo);
         }
 
         var json = JsonConvert.SerializeObject(methodInfos, Formatting.Indented);
@@ -122,6 +129,40 @@ public class CopilotReflectionInitializer : IHostedService
             .Skip(skipper).FirstOrDefault();
 
         return member?.Element("summary")?.Value.ExtractLanguage(languageCode);
+    }
+
+    private static string GetParameterDescriptionFromXML(Type type, System.Reflection.ParameterInfo parameter, string languageCode, MethodInfo methodInfo, int skipper)
+    {
+        var xmlFilePath = $"{Path.ChangeExtension(type.Assembly.Location, ".XML")}";
+        if (!File.Exists(xmlFilePath))
+        {
+            return "";
+        }
+
+        var xdoc = XDocument.Load(xmlFilePath);
+
+        // Build the member name for the method (same logic as before)
+        var memberName = $"M:{methodInfo.DeclaringType.FullName}.{methodInfo.Name}";
+
+        // Find the correct member node, using skipper for overloads
+        var member = xdoc
+            .Descendants("member")
+            .Where(m => m.Attribute("name")?.Value.StartsWith(memberName) == true)
+            .Skip(skipper).FirstOrDefault();
+
+        if (member == null)
+            return "";
+
+        // Find the <param> node for the parameter
+        var paramElement = member.Elements("param")
+            .FirstOrDefault(e => e.Attribute("name")?.Value == parameter.Name);
+
+        // If not found, return empty
+        if (paramElement == null)
+            return "";
+
+        // If your ExtractLanguage extension method is like before, use it to get the description for the specified language
+        return paramElement.Value.ExtractLanguage(languageCode);
     }
 
     private string GenerateFunctionCallString(System.Reflection.MethodInfo method)
@@ -423,6 +464,7 @@ public class CopilotReflectionInitializer : IHostedService
     {
         public string Name { get; set; }
         public string Type { get; set; }
+        public string Description { get; set; }
         public bool HasDefaultValue { get; set; }
         public object DefaultValue { get; set; }
         public bool IsOptional { get; set; }
