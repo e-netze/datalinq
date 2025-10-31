@@ -48,6 +48,17 @@ namespace E.DataLinq.Web.Services
                 File.Copy(sourceDbFile, destDbFile, overwrite: true);
             }
 
+            var blbFileName = "datalinq-guide\\datalinq-guide.blb";
+            var blbFilePath = Path.Combine(targetPath, blbFileName);
+
+            if (File.Exists(blbFilePath))
+            {
+                string content = File.ReadAllText(blbFilePath);
+                string connectionString = $"DataSource={destDbFile.Replace("\\", "/")}";
+                content = content.Replace("placeholder", connectionString);
+                File.WriteAllText(blbFilePath, content);
+            }
+
             return Task.CompletedTask;
         }
 
