@@ -59,8 +59,9 @@ public class JsonApiEngine : IDataLinqSelectEngine
             }
 
             var fullUrl = BuildUrl(endPoint.ConnectionString, statementWithReplacements, arguments);
+            string cleaned = fullUrl.Replace("\r", "").Replace("\n", "");
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync(fullUrl);
+            var response = await client.GetAsync(cleaned);
 
 
             if (!response.IsSuccessStatusCode)
