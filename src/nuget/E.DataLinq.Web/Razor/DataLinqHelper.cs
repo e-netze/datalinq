@@ -788,6 +788,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Boolscher Wert, der angibt, ob der Fokus direkt auf das Suchfeld gerichtet sein soll..
     /// en: A boolean value indicating whether the input field should be focused directly.
     /// </param>
+    /// <param name="afterFilter">
+    /// de: Boolscher Wert, der angibt, ob die Suchleiste erst nach auswahl eines Filters in FilterView angezeigt werden soll.
+    /// en: A boolean value indicating whether the input field should only be visible after a filter in FilterView has been set.
+    /// </param>
     /// <returns>
     /// de: Gibt das generierte HTML für die Schnellsuchleiste zurück.
     /// en: Returns the generated HTML for the quick search bar.
@@ -797,7 +801,8 @@ public class DataLinqHelper : IDataLinqHelper
         string placeholder = "Search for anything...",
         string tableId = "",
         object htmlAttributes = null,
-        bool isOpen = false)
+        bool isOpen = false,
+        bool afterFilter = false)
     {
         return _razor.RawString(
                 HtmlBuilder.Create()
@@ -830,6 +835,8 @@ public class DataLinqHelper : IDataLinqHelper
                                 button.Content("×");
                             });
                         });
+                        if (afterFilter)
+                            div.AppendJavaScriptBlock("dataLinq.events.on('onpageloaded', function() {\r\n    if ($('.datalinq-refresh-filter-container .datalinq-button.menu.unused').length > 0)\r\n        $('.datalinq-quicksearch-search-container').hide();\r\n});");
                     })
                     .BuildHtmlString()
             );
