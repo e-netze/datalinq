@@ -281,6 +281,26 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         return Task.FromResult<IEnumerable<string>>(Ids.OrderBy(id => id));
     }
 
+    async public Task<string> GetFolderStructure()
+    {
+        FileInfo fi = new FileInfo(FolderStructurePath());
+
+        var structure = await File.ReadAllTextAsync(fi.FullName);
+
+        return string.IsNullOrEmpty(structure) ? "null" : structure;
+    }
+
+    async public Task<bool> SaveFolderStructure(Dictionary<string, List<string>> folderStructure)
+    {
+        FileInfo fi = new FileInfo(FolderStructurePath());
+
+        string jsonData = JsonConvert.SerializeObject(folderStructure);
+
+        await File.WriteAllTextAsync(fi.FullName, jsonData);
+
+        return true;
+    }
+
     async public Task<bool> StoreEndPoint(DataLinqEndPoint endPoint)
     {
         FileInfo fi = new FileInfo(EndPointBlobPath(endPoint.Id));
@@ -435,6 +455,11 @@ public class FileSystemPersistanceService : IPersistanceProviderService
     #endregion
 
     #region Helper
+
+    private string FolderStructurePath()
+    {
+        return Path.Combine(_storagePath,"dataLinqFolderStructure.json");
+    }
 
     private string EndPointBlobPath(string endPointId)
     {

@@ -276,6 +276,39 @@ public class CodeApiClient
         }
     }
 
+    public async Task<string> GetFolderStructure()
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/getFolderStructure"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
+                return responseText;
+            }
+        }
+    }
+
+    async public Task<bool> SaveFolderStructure(Dictionary<string, List<string>> folderStructure)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/saveFolderStructure"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            requestMessage.Content = new StringContent(
+                JsonConvert.SerializeObject(folderStructure),
+                Encoding.UTF8,
+                "application/json");
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
+                return true;
+            }
+        }
+    }
+
     async public Task<bool> StoreEndPoint(DataLinqEndPoint endPoint)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/endpoint"))

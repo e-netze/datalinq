@@ -24,6 +24,9 @@ public interface IPersistanceProviderService
     Task<IEnumerable<string>> GetQueryIds(string endPointId);
     Task<IEnumerable<string>> GetViewIds(string endPointId, string queryId);
 
+    Task<bool> SaveFolderStructure(Dictionary<string, List<string>> folderStructure);
+    Task<string> GetFolderStructure();
+
     Task<bool> StoreEndPoint(DataLinqEndPoint endPoint);
     Task<bool> StoreEndPointQuery(DataLinqEndPointQuery endPointQuery);
     Task<bool> StoreEndPointQueryView(DataLinqEndPointQueryView endPointQueryView);

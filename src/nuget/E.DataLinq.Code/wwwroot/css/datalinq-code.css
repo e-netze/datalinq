@@ -563,6 +563,11 @@ body {
         display: none;
     }
 
+        .datalinq-code-tree .tree-nodes .tree-node.folder {
+            background-image: url(img/new-folder.svg);
+            filter: brightness(0) invert(1);
+        }
+
         .datalinq-code-tree .tree-nodes .tree-node {
             position:relative;
             cursor:pointer;
@@ -594,14 +599,34 @@ body {
             .datalinq-code-tree .tree-nodes .tree-node.add {
                 background-image: url(img/round-plus_16@1.png);
             }
+            .datalinq-code-tree .tree-nodes .tree-node button.new-folder-btn {
+                background-image: url(img/new-folder.svg);
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: contain;
+                filter: brightness(0) invert(1);
+                background-color: transparent;
+                cursor: pointer;
+                border: none;
+                position: absolute;
+                right: 0px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 24px;
+                height: 24px;
+            }
+
+                .datalinq-code-tree .tree-nodes .tree-node button.new-folder-btn.new-folder-active {
+                    filter: brightness(0) saturate(100%) invert(64%) sepia(85%) saturate(2297%) hue-rotate(178deg) brightness(101%) contrast(101%);
+                }
 
             .datalinq-code-tree .tree-nodes .tree-node > .icon {
                 width: 20px;
                 height: 20px;
                 display: inline-block;
                 vertical-align: top;
-                background-repeat:no-repeat;
-                background-position:center;
+                background-repeat: no-repeat;
+                background-position: center;
             }
 
             .datalinq-code-tree .tree-nodes .tree-node.endpoint > .icon {
@@ -612,6 +637,9 @@ body {
             }
             .datalinq-code-tree .tree-nodes .tree-node.view > .icon {
                 background-image: url(img/code-markup_16@1.png);
+            }
+            .datalinq-code-tree .tree-nodes .tree-node.folder > .icon {
+                background-image: url(img/folder-icon.svg);
             }
 
             .datalinq-code-tree .tree-nodes .tree-node .delete {

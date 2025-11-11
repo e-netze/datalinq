@@ -77,7 +77,108 @@
             refreshSilent($parent);
         });
 
+        var $treeHolder = $('.datalinq-code-tree');
+        initDragAndDrop($treeHolder);
+
         refresh($parent);
+    };
+
+    var collectEndpointStructure = function () {
+        var structure = {};
+        var noFolderEndpoints = [];
+
+        var $treeHolder = $('.tree-node.datalinq-code-tree');
+        var $rootUl = $treeHolder.find('> ul.tree-nodes');
+
+        $rootUl.children('li').each(function () {
+            var $li = $(this);
+
+            if ($li.hasClass('endpoint') && !$li.hasClass('add')) {
+                var endpointName = $li.find('> .label').text().trim();
+                noFolderEndpoints.push(endpointName);
+            } 
+            else if ($li.hasClass('folder')) {
+                var folderName = $li.find('> .label').text().trim();
+                var folderEndpoints = [];
+
+                $li.find('> ul.tree-nodes > li.tree-node.endpoint').each(function () {
+                    var endpointName = $(this).find('> .label').text().trim();
+                    folderEndpoints.push(endpointName);
+                });
+
+                structure[folderName] = folderEndpoints;
+            }
+        });
+
+        if (noFolderEndpoints.length > 0) {
+            structure['no folder'] = noFolderEndpoints;
+        }
+
+        return structure;
+    };
+
+    var initDragAndDrop = function ($treeHolder) {
+        var $allTreeNodes = $treeHolder.find('ul.tree-nodes');
+
+        $allTreeNodes.each(function () {
+            var $ul = $(this);
+
+            if ($ul[0].sortable) {
+                $ul[0].sortable.destroy();
+            }
+
+            var isDragEnabled = $('.new-folder-btn').hasClass('new-folder-active');
+
+            var lastDropTarget = null;
+
+            var sortableInstance = new Sortable($ul[0], {
+                group: 'tree-nodes',
+                animation: 150,
+                fallbackOnBody: true,
+                swapThreshold: 0.65,
+                draggable: '.tree-node',
+                disabled: !isDragEnabled,
+
+                onMove: function (evt) {
+                    var dropTarget = evt.related;
+                    var draggedItem = evt.dragged;
+
+                    lastDropTarget = dropTarget;
+
+                    if ($(draggedItem).hasClass('folder')) {
+                        return false;
+                    }
+
+                    if ($(dropTarget).hasClass('folder')) {
+                        return false;
+                    }
+
+                    return true;
+                },
+
+                onEnd: function (evt) {
+                    var draggedItem = evt.item;
+                    var $draggedItem = $(draggedItem);
+
+                    var labelText = $draggedItem.find('> .label').first().text();
+
+                    if (lastDropTarget && $(lastDropTarget).hasClass('folder')) {
+                        if ($draggedItem.hasClass('folder')) {
+                            lastDropTarget = null;
+                            return; 
+                        }
+
+                        var $lastDropTarget = $(lastDropTarget);
+                        addEndPointNode($lastDropTarget, labelText, [])
+                        $draggedItem.remove();
+                    }
+
+                    lastDropTarget = null;
+                }
+            });
+
+            $ul[0].sortable = sortableInstance;
+        });
     };
 
     var setFilter = function ($parent, filter) {
@@ -171,10 +272,206 @@
                 addEndPointNode($tree, null);
             }
 
-            $.each(endPoints, function (i, endPoint) {
-                addEndPointNode($tree, endPoint, collapsedRoutes);
-            });
+            if (prefixes != null) {
+                $('.new-folder-btn')
+                    .prop('disabled', true)
+                    .addClass('disabled')
+                    .css('pointer-events', 'none');
+
+                $.each(endPoints, function (i, endPoint) {
+                    addEndPointNode($tree, endPoint, collapsedRoutes);
+                });
+            } else {
+                dataLinqCode.api.getFolderStructure(function (folderStructure) {
+
+                    if (typeof folderStructure === 'string') {
+                        folderStructure = JSON.parse(folderStructure);
+                    }
+
+                    var foldersMap = {}; 
+
+                    for (var folderName in folderStructure) {
+                        if (!folderStructure.hasOwnProperty(folderName)) continue;
+
+                        var endpoints = folderStructure[folderName];
+
+                        if (folderName === "no folder") {
+                            continue; 
+                        }
+
+                        var $folder = createTreeNodeFolder(folderName)
+                            .data('data-folder', folderName)
+                            .data('data-route', folderName);
+
+                        if ($.inArray($folder.data('data-route'), collapsedRoutes) >= 0) {
+                            $folder.addClass('collapsed');
+                            $folder.data('is_collapsed', true);
+                        }
+
+                        $folder.data('search-text', folderName.toLowerCase());
+                        addToNodes($folder, $tree);
+
+                        attachFolderEventHandlers($folder);
+
+                        foldersMap[folderName] = $folder;
+
+                        for (var i = 0; i < endpoints.length; i++) {
+                            var endpointName = endpoints[i];
+
+                            var endPoint = null;
+                            for (var j = 0; j < endPoints.length; j++) {
+                                if (endPoints[j] === endpointName) {
+                                    endPoint = endPoints[j];
+                                    break;
+                                }
+                            }
+
+                            if (endPoint) {
+                                addEndPointNode($folder, endPoint, []);
+                            }
+                        }
+                    }
+
+                    if (folderStructure["no folder"]) {
+                        var noFolderEndpoints = folderStructure["no folder"];
+                        for (var i = 0; i < noFolderEndpoints.length; i++) {
+                            var endpointName = noFolderEndpoints[i];
+
+                            var endPoint = null;
+                            for (var j = 0; j < endPoints.length; j++) {
+                                if (endPoints[j] === endpointName) {
+                                    endPoint = endPoints[j];
+                                    break;
+                                }
+                            }
+
+                            if (endPoint) {
+                                addEndPointNode($tree, endPoint, collapsedRoutes);
+                            }
+                        }
+                    }
+                });
+            }
         });
+    };
+
+    var attachFolderEventHandlers = function ($folder) {
+        $folder.click(function (e) {
+            e.stopPropagation();
+
+            if (e.originalEvent.layerY < 24) {
+                var $this = $(this);
+                if (e.originalEvent.layerX < 30) {
+                    $this.toggleClass('collapsed');
+                    $this.data('is_collapsed', $this.hasClass('collapsed'));
+                } else {
+
+                    if (!$('.new-folder-btn').hasClass('new-folder-active')) {
+                        return;
+                    }
+
+                    var $label = $this.find('> .label');
+                    var currentName = $label.text();
+
+                    var $input = $('<input type="text"/>')
+                        .val(currentName)
+                        .css({
+                            'width': '100%',
+                            'background': 'transparent',
+                            'border': '1px solid #fff',
+                            'color': 'inherit',
+                            'padding': '2px 4px'
+                        }).on('click', function (e) {
+                            e.stopPropagation();
+                        });
+
+                    $label.hide();
+                    $label.after($input);
+                    $input.focus().select();
+
+                    var saveRename = function () {
+                        var newName = $input.val().trim();
+
+                        if (newName && newName !== currentName) {
+                            $label.text(newName);
+                            $this.data('data-folder', newName);
+                            $this.data('data-route', newName);
+                            $this.data('search-text', newName.toLowerCase());
+                        }
+
+                        $input.remove();
+                        $label.show();
+                    };
+
+                    $input.on('keyup', function (e) {
+                        if (e.which == 13) {
+                            saveRename();
+                        } else if (e.which == 27) {
+                            $input.remove();
+                            $label.show();
+                        }
+                    }).on('blur', function () {
+                        saveRename();
+                    });
+                }
+            }
+        });
+
+        $folder.on('contextmenu', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!$('.new-folder-btn').hasClass('new-folder-active')) {
+                return;
+            }
+
+            var $this = $(this);
+            var folderName = $this.find('> .label').text();
+
+            if (confirm('Delete folder "' + folderName + '" and move all of its content back?')) {
+                var $parentUl = $this.parent('ul.tree-nodes');
+
+                var $endpointsInFolder = $this.find('ul.tree-nodes > .tree-node.endpoint');
+
+                $endpointsInFolder.each(function () {
+                    $(this).appendTo($parentUl);
+                });
+
+                $this.remove();
+            }
+        });
+    };
+
+    var createTreeNodeFolder = function (folderName, element) {
+        var $node = $(element || "<li>")
+            .addClass("tree-node folder has-children");
+
+        var $icon = $("<div>")
+            .addClass('icon')
+            .appendTo($node);
+
+        var $label = $("<div>")
+            .addClass('label')
+            .text(folderName)
+            .appendTo($node);
+
+        var $nestedList = $("<ul>")
+            .addClass('tree-nodes')
+            .appendTo($node);
+
+        $node.on('mousemove', function (e) {
+            $(this).closest('.datalinq-code-tree-holder').find('.tree-node').removeClass('mouseover');
+            e.stopPropagation();
+            if (e.originalEvent.layerY >= 0 && e.originalEvent.layerY <= 32) {
+                $(this).addClass('mouseover');
+            } else {
+                $(this).removeClass('mouseover');
+            }
+        }).on('mouseleave', function (e) {
+            $(this).removeClass('mouseover');
+        });
+
+        return $node;
     };
 
     var createTreeNode = function (label, element, asInput) {
@@ -240,8 +537,13 @@
         if (label) {
             $("<div>").addClass('icon').appendTo($node);
             if (asInput == true) {
+                // Create input
                 $("<input type='text'/>")
                     .attr('placeholder', label)
+                    .appendTo($node);
+
+                $("<button type='button'/>")
+                    .addClass('new-folder-btn') 
                     .appendTo($node);
             } else {
                 var $label = $("<div>").addClass('label').text(label).appendTo($node);
@@ -509,6 +811,58 @@
                         });
                     }
                 });
+
+            $('.new-folder-btn').on('contextmenu', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var $button = $(this);
+                var wasActive = $button.hasClass('new-folder-active');
+
+                $button.toggleClass('new-folder-active');
+
+                var isNowActive = $button.hasClass('new-folder-active');
+
+                if (wasActive && !isNowActive) {
+                    var endpointStructure = collectEndpointStructure();
+                    dataLinqCode.api.saveFolderStructure(endpointStructure, function (result) {
+                        console.log('Structure saved:', result);
+                    });
+                }
+
+                initDragAndDrop($('.datalinq-code-tree'));
+            });
+
+            $('.new-folder-btn').on('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var $button = $(this);
+
+                if (!$button.hasClass('new-folder-active')) {
+                    return;
+                }
+
+                var $folder = createTreeNodeFolder("newFolder")
+                    .data('data-folder', 'newFolder')
+                    .data('data-route', 'newFolder');
+
+                if ($.inArray($folder.data('data-route'), collapsedRoutes) >= 0) {
+                    $folder.addClass('collapsed');
+                    $folder.data('is_collapsed', true);
+                }
+
+                $folder.data('search-text', 'newFolder'.toLowerCase());
+
+                addToNodes($folder, $parent);
+
+                initDragAndDrop($('.datalinq-code-tree'));
+
+                attachFolderEventHandlers($folder);
+
+                e.preventDefault();
+                e.stopPropagation();
+            });
         }
     };
 
@@ -748,8 +1102,6 @@
             .appendTo($content);
 
         $.each(prefixes, function (prefix, endPointIds) {
-
-            console.log(prefix, endPointIds);
 
             var $li = $("<li>")
                 .addClass('datalinq-code-app-prefix')

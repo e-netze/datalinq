@@ -189,6 +189,13 @@ public class DataLinqCodeApiController : ApiBaseController
         }, new[] { endPointId });
     }
 
+    [HttpGet]
+    [Route("getFolderStructure")]
+    async public Task<string> GetFolderStructure()
+    {
+        return await _persistanceProvider.GetFolderStructure();
+    }
+
     #endregion
 
     #region Edit (Post)
@@ -206,6 +213,22 @@ public class DataLinqCodeApiController : ApiBaseController
 
         return await SecureMethodHandler(async () =>
             await _semanticKernelService.ProcessAsync(requestPayload.Questions));
+    }
+
+    [HttpPost]
+    [Route("post/saveFolderStructure")]
+    async public Task<IActionResult> SaveFolderStructure([FromBody] Dictionary<string, List<string>> folderStructure)
+    {
+
+        if (folderStructure == null || !folderStructure.Any())
+        {
+            throw new ArgumentException("Folder structure missing");
+        }
+
+        return base.JsonObject(new SuccessModel(await _persistanceProvider.SaveFolderStructure(folderStructure)).OnSuccess((model) =>
+        {
+
+        }));
     }
 
     [HttpPost]

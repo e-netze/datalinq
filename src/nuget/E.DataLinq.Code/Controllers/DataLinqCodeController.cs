@@ -11,6 +11,7 @@ using E.DataLinq.Core.Services.Crypto.Abstraction;
 using E.DataLinq.Web.Api.Client;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -392,6 +393,27 @@ public class DataLinqCodeController : DataLinqCodeBaseController
         {
             return base.JsonObject(new SuccessModel(ex));
         }
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> SaveFolderStructure([FromBody] Dictionary<string, List<string>> folderStructure)
+    {
+        try
+        {
+            return base.JsonObject(new SuccessModel(await _client.SaveFolderStructure(folderStructure)));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpGet]
+    async public Task<IActionResult> GetFolderStructure()
+    {
+        return base.JsonObject(_client == null ?
+            null :
+            await _client.GetFolderStructure());
     }
 
     #endregion

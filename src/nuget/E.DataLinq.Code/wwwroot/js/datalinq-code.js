@@ -252,6 +252,29 @@ var dataLinqCode = new function ($) {
             });
         };
 
+        this.post = function (route, data, callback) {
+            $.ajax({
+                url: dataLinqCode.targetUrl() + '/' + route,
+                type: 'POST',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer ' + window._datalinqCodeAccessToken
+                },
+                success: function (result) {
+                    callback(result)
+                }
+            });
+        };
+
+        this.saveFolderStructure = function (folderStructure, callback) {
+            this.post('saveFolderStructure', folderStructure, callback);
+        };
+
+        this.getFolderStructure = function (callback) {
+            this.get('getFolderStructure', callback);
+        };
+
         this.getMonacoSnippit = function (callback, lang) {
             this.get('getMonacoSnippit', callback, { lang: lang });
         };
