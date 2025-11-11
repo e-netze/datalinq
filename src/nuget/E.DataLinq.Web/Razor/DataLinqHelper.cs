@@ -1119,6 +1119,14 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Spalten, die exportiert werden sollen. Wird nichts angegeben, werden alle Spalten exportiert.  
     /// en: The columns to be exported. If nothing is specified, all columns will be exported.  
     /// </param>
+    /// <param name="filename">
+    /// de: Der Dateiname der zu exportierenden CSV Datei.  
+    /// en: The filename of the to be exported CSV file.
+    /// </param>
+    /// <param name="exportAsString">
+    /// de: Boolscher Wert der angiebt ob die einzelnen Felder als String exportiert werden sollen (alles in hochkomma).  
+    /// en: Bool value that specifies weather the fields should be exported as string in quotation marks.
+    /// </param>
     /// <returns>
     /// de: Gibt das generierte HTML für das Export-Steuerelement zurück.
     /// en: Returns the generated HTML for the export control.
@@ -1126,7 +1134,9 @@ public class DataLinqHelper : IDataLinqHelper
     public object ExportView(
         string label = "Export",
         object htmlAttributes = null,
-        IEnumerable<string> columns = null)
+        IEnumerable<string> columns = null,
+        string filename = "",
+        bool exportAsString = false)
     {
         string columnsJson = (columns != null && columns.Any())
             ? System.Text.Json.JsonSerializer.Serialize(columns)
@@ -1144,6 +1154,13 @@ public class DataLinqHelper : IDataLinqHelper
                     b.AddAttributes(htmlAttributes);
                     b.AddAttribute("onclick", onclickJs);
                     b.Content(label);
+
+                    if (!string.IsNullOrEmpty(filename))
+                        b.AddAttribute("datalinq-export-filename", filename);
+
+                    if (exportAsString)
+                        b.AddAttribute("datalinq-export-asString", "true");
+
                 }).BuildHtmlString()
             );
     }

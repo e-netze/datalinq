@@ -554,9 +554,11 @@ var dataLinq = new function () {
                         return filteredItem;
                     });
 
-                    const csv = jsonToCsv(filteredData);
+                    const exportAsString = elem.getAttribute('datalinq-export-asString') || "";
 
-                    downloadCsv(csv, 'export.csv');
+                    const csv = jsonToCsv(filteredData, exportAsString);
+
+                    downloadCsv(csv, (elem.getAttribute('datalinq-export-filename') || 'export') + '.csv');
                 })
                 .catch(err => alert("Fehler beim Export: " + err.message));
 
@@ -566,11 +568,15 @@ var dataLinq = new function () {
         }
     };
 
-    function jsonToCsv(items) {
+    function jsonToCsv(items, asString) {
         if (!items.length) return "";
 
         const keys = Object.keys(items[0]);
-        const escapeCsv = (text) => {
+
+        const escapeCsv = (text, asString) => {
+            if (asString) {
+                return '"' + String(text).replace(/"/g, '""') + '"';
+            }
             if (typeof text === "string" && (text.includes(",") || text.includes('"') || text.includes("\n"))) {
                 return '"' + text.replace(/"/g, '""') + '"';
             }
@@ -579,7 +585,7 @@ var dataLinq = new function () {
 
         const header = keys.join(";");
         const rows = items.map(item =>
-            keys.map(k => escapeCsv(item[k] ?? "")).join(";")
+            keys.map(k => escapeCsv(item[k] ?? "", asString === "true")).join(";")
         );
 
         return [header, ...rows].join("\n");
