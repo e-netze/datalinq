@@ -288,7 +288,8 @@
                         folderStructure = JSON.parse(folderStructure);
                     }
 
-                    var foldersMap = {}; 
+                    var foldersMap = {};
+                    var renderedEndpoints = {}; 
 
                     for (var folderName in folderStructure) {
                         if (!folderStructure.hasOwnProperty(folderName)) continue;
@@ -296,7 +297,7 @@
                         var endpoints = folderStructure[folderName];
 
                         if (folderName === "no folder") {
-                            continue; 
+                            continue;
                         }
 
                         var $folder = createTreeNodeFolder(folderName)
@@ -328,6 +329,7 @@
 
                             if (endPoint) {
                                 addEndPointNode($folder, endPoint, []);
+                                renderedEndpoints[endpointName] = true; 
                             }
                         }
                     }
@@ -347,7 +349,16 @@
 
                             if (endPoint) {
                                 addEndPointNode($tree, endPoint, collapsedRoutes);
+                                renderedEndpoints[endpointName] = true; 
                             }
+                        }
+                    }
+
+                    for (var k = 0; k < endPoints.length; k++) {
+                        var endPoint = endPoints[k];
+
+                        if (!renderedEndpoints[endPoint]) {
+                            addEndPointNode($tree, endPoint, collapsedRoutes);
                         }
                     }
                 });
