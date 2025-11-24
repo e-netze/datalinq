@@ -285,6 +285,11 @@ public class FileSystemPersistanceService : IPersistanceProviderService
     {
         FileInfo fi = new FileInfo(FolderStructurePath());
 
+        if (!fi.Exists || fi.Length == 0)
+        {
+            return "null";
+        }
+
         var structure = await File.ReadAllTextAsync(fi.FullName);
 
         return string.IsNullOrEmpty(structure) ? "null" : structure;

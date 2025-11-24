@@ -284,6 +284,13 @@
             } else {
                 dataLinqCode.api.getFolderStructure(function (folderStructure) {
 
+                    if (folderStructure === 'null') {
+                        $.each(endPoints, function (i, endPoint) {
+                            addEndPointNode($tree, endPoint, collapsedRoutes);
+                        });
+                        return;
+                    }
+
                     if (typeof folderStructure === 'string') {
                         folderStructure = JSON.parse(folderStructure);
                     }
