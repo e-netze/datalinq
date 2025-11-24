@@ -21,6 +21,7 @@ using System.Collections.Specialized;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -2907,6 +2908,179 @@ public class DataLinqHelper : IDataLinqHelper
     }
 
     /// <summary>
+    /// de: 
+    /// en: 
+    /// </summary>
+    /// <returns>
+    /// de: 
+    /// en: 
+    /// </returns>
+    public object BeginPdfReport(Dictionary<string, object> pageNumberOptions = null)
+    {
+        pageNumberOptions ??= new Dictionary<string, object>();
+
+        bool usePageNumbers = pageNumberOptions.ContainsKey("UsePageNumbers") && (bool)pageNumberOptions["UsePageNumbers"];
+        int position = pageNumberOptions.ContainsKey("Position") ? Convert.ToInt32(pageNumberOptions["Position"]) : 0;
+        int type = pageNumberOptions.ContainsKey("Type") ? Convert.ToInt32(pageNumberOptions["Type"]) : 0;
+        int skipPages = pageNumberOptions.ContainsKey("SkipPages") ? Convert.ToInt32(pageNumberOptions["SkipPages"]) : 0;
+
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(dOptions =>
+                {
+                    if (usePageNumbers)
+                        dOptions.AppendJavaScriptBlock($"addPageNumbers({{ type: {type}, skipPages: {skipPages}, position: {position} }});");
+
+                })          
+                .AppendDiv(d =>
+                {
+                    d.AddClass("main");
+                    d.AppendDiv(d2 =>
+                    {
+                        d2.AddClass("pages-container");
+                        d2.WithId("pagesContainer");
+
+                    }, WriteTags.OpenOnly);
+                },WriteTags.OpenOnly).BuildHtmlString()
+            );
+    }
+
+    /// <summary>
+    /// de: 
+    /// en: 
+    /// </summary>
+    /// <returns>
+    /// de: 
+    /// en: 
+    /// </returns>
+    public object EndPdfReport()
+    {
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                {
+                    d.AppendDiv(d2 =>
+                    {
+
+                    },WriteTags.CloseOnly);
+                }, WriteTags.CloseOnly).BuildHtmlString()
+            );
+    }
+
+    /// <summary>
+    /// de: 
+    /// en: 
+    /// </summary>
+    /// <returns>
+    /// de: 
+    /// en: 
+    /// </returns>
+    public object NewPage(Dictionary<string, object> pageTemplateOptions = null)
+    {
+        pageTemplateOptions ??= new Dictionary<string, object>();
+
+        bool usePageTemplate = pageTemplateOptions.ContainsKey("UsePageTemplate") && (bool)pageTemplateOptions["UsePageTemplate"];
+        string templateId = pageTemplateOptions.ContainsKey("TemplateId") ? pageTemplateOptions["TemplateId"].ToString() : "";
+
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                {
+                    d.AddClass("page-wrapper");
+                    d.AppendDiv(d2 =>
+                    {
+                        d2.AddClass("page");
+
+                        if(usePageTemplate)
+                        {
+                            d2.AddAttribute("datalinq-pdfreport-template",templateId);
+                        }
+
+                        d2.AppendDiv(divLineVertical =>
+                        {
+                            divLineVertical.AddClass("vertical-middle-line");
+                            divLineVertical.AddClass("report-ignore");
+                        });
+                        d2.AppendDiv(divLineHorizontal =>
+                        {
+                            divLineHorizontal.AddClass("horizontal-middle-line");
+                            divLineHorizontal.AddClass("report-ignore");
+
+                        });
+                    },WriteTags.OpenOnly);
+                },WriteTags.OpenOnly).BuildHtmlString()
+            );
+    }
+
+    /// <summary>
+    /// de: 
+    /// en: 
+    /// </summary>
+    /// <returns>
+    /// de: 
+    /// en: 
+    /// </returns>
+    public object EndPage()
+    {
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                { 
+                }, WriteTags.CloseOnly)
+                .AppendButton(b =>
+                {
+                    b.AddClass("copy-btn");
+                    b.Content("Copy HTML");
+                })
+                .AppendDiv(d =>
+                {
+                }, WriteTags.CloseOnly)
+                .BuildHtmlString()
+            );
+    }
+
+    /// <summary>
+    /// de: 
+    /// en: 
+    /// </summary>
+    /// <returns>
+    /// de: 
+    /// en: 
+    /// </returns>
+    public object PrintPdfButton(string id, string buttonText = "Print", Dictionary<string, string> parameters = null)
+    {
+        var queryString = string.Join("&", parameters.Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value)}"));
+
+        queryString = string.IsNullOrEmpty(queryString) ? "print=true" : $"{queryString}&print=true";
+
+        var buttonId = GenerateUniqueId(id);
+
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendButton(b =>
+                {
+                    b.WithId(buttonId);
+                    b.AddClass("datalinq-button");
+                    b.Content(buttonText);
+                })
+                .AppendJavaScriptBlock
+                (
+                    $"document.getElementById('{buttonId}').addEventListener('click', function() {{ downloadPageAsPDF('/datalinq/report/{id}?{queryString}');}});"
+                )
+                .AppendIFrame(iframe =>
+                {
+                    iframe.WithId("print-frame");
+                    iframe.AddStyle("display", "none");
+                })
+                .AppendJavaScriptBlock
+                (
+                    "function downloadPageAsPDF(pageUrl) { const iframe = document.getElementById('print-frame');  iframe.src = pageUrl;}"
+                ).BuildHtmlString()
+        );
+    }
+
+
+    /// <summary>
     /// de: Der Username des aktuell angemeldeten Benutzers.
     /// en: The username of the currently logged-in user.
     /// </summary>
@@ -2988,6 +3162,12 @@ public class DataLinqHelper : IDataLinqHelper
         }
 
         return url;
+    }
+
+    [ExcludeFromSnippets]
+    public static string GenerateUniqueId(string id)
+    {
+        return $"{id}-{Guid.NewGuid().ToString("N").Substring(0, 8)}";
     }
 
     #region IDataLinqHelper

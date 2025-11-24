@@ -27,6 +27,9 @@ static public class HtmlBuilderExtensions
     static public TBuilder AppendButton<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, Action<IHtmlElementBuilder> action, WriteTags writeTags = WriteTags.OpenClose)
         => builder.Append("button", action, writeTags);
 
+    static public TBuilder AppendIFrame<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, Action<IHtmlElementBuilder> action, WriteTags writeTags = WriteTags.OpenClose)
+        => builder.Append("iframe", action, writeTags);
+
     static public TBuilder AppendInput<TBuilder>(this IHtmlParentElementBuilder<TBuilder> builder, Action<IHtmlElementBuilder> action, WriteTags writeTags = WriteTags.OpenClose)
         => builder.Append("input", action, writeTags);
 

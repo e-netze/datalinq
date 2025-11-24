@@ -48,4 +48,8 @@ public class DataLinqEndPointQueryView
     [JsonProperty("included_js_libs")]
     [Description("Select JavaScript libraries here that should be loaded when the report is accessed. This option is only considered if the view is the main/startpage of the report. For subpages, this option is irrelevant. If a subpage uses JavaScript libraries, they must be included on the startpage.")]
     public string IncludedJsLibraries { get; set; }
+
+    [JsonProperty("pdf_report_mode")]
+    [Description("Should this view be a PDF report?")]
+    public bool PDFReportMode { get; set; }
 }

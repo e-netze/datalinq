@@ -1,0 +1,257 @@
+﻿html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+.main {
+    background-color: #222;
+    width: 100%;
+    min-height: 100vh;
+    padding: 30px;
+    padding-top: 5px;
+    box-sizing: border-box;
+}
+
+.reportModeHeading {
+    text-align: center;
+    color: #5badff;
+    font-family: Verdana,Tahoma,Arial,sans-serif;
+}
+
+.pages-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+    max-width: 100%;
+}
+
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.page {
+    width: 210mm;
+    height: 297mm;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+}
+
+.element {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    padding: 10px;
+    border: 2px solid transparent;
+    box-sizing: border-box; /* Important! */
+    z-index: 3;
+}
+
+    /* Add specific styling for chart containers */
+    .element:has(.datalinq-chart-canvas) {
+        padding: 0; /* Remove padding for chart elements */
+        overflow: hidden; /* Prevent overflow */
+    }
+
+.datalinq-chart-canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.element:hover {
+    border: 2px dashed #5badff;
+}
+
+.element.dragging {
+    opacity: 0.8;
+    border: 2px solid #5badff;
+}
+
+.element.element-snapped {
+    border: 2px solid #5badff;
+}
+
+.element.element-snapped {
+    border: 2px dotted #5badff;
+}
+
+.element.snap-target {
+    border: 2px solid #5badff;
+}
+
+.snap-guide-line-x {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background-color: #5badff;
+    display: none;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.snap-guide-line-y {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: #5badff;
+    display: none;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.copy-btn {
+    background-color: #5badff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+    .copy-btn:hover {
+        background-color: #0056b3;
+    }
+
+    .copy-btn:active {
+        background-color: #004085;
+    }
+
+    .copy-btn.copied {
+        background-color: #28a745;
+    }
+
+.page-number {
+    position: absolute;
+    bottom: 0;
+    padding: 50px;
+    margin: 0;
+}
+
+    .page-number.position-0 {
+        left: 0;
+    }
+
+    .page-number.position-1 {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .page-number.position-2 {
+        right: 0;
+    }
+
+.vertical-middle-line {
+    border-left: 1px solid red;
+    height: 100%;
+    position: absolute;
+    left: 50%;
+    display: none;
+    z-index: 1000;
+}
+
+.horizontal-middle-line {
+    border-top: 1px solid red;
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    display: none;
+    z-index: 1000;
+}
+
+.hidden {
+    display: none;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 0;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 210mm;
+        height: 297mm;
+    }
+
+    body {
+        overflow: hidden;
+    }
+
+    .main {
+        background: none;
+        padding: 0;
+        margin: 0;
+        width: auto;
+        min-height: 0;
+        height: auto;
+    }
+
+    .pages-container {
+        display: block;
+        margin: 0;
+        padding: 0;
+        gap: 0;
+    }
+
+    .page-wrapper {
+        display: block;
+        page-break-after: always;
+        page-break-before: avoid;
+        page-break-inside: avoid;
+    }
+
+        .page-wrapper:last-child {
+            page-break-after: avoid;
+        }
+
+    .page {
+        width: 210mm !important;
+        height: 297mm !important;
+        max-height: 297mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        display: block;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .element {
+        cursor: default;
+        border: none !important;
+    }
+
+        .element:hover {
+            border: none !important;
+        }
+
+    .copy-btn {
+        display: none;
+    }
+
+    .datalinq-splashscreen,
+    .datalinq-splashscreen-text {
+        display: none !important;
+    }
+
+    .horizontal-middle-line,
+    .vertical-middle-line {
+        display: none;
+    }
+}

@@ -10,6 +10,19 @@
     var Options = OptionsMonitor.CurrentValue;
 }
 
+<!--
+
+______      _        _     _
+|  _  \    | |      | |   (_)
+| | | |__ _| |_ __ _| |    _ _ __   __ _
+| | | / _` | __/ _` | |   | | '_ \ / _` |
+| |/ / (_| | || (_| | |___| | | | | (_| |
+|___/ \__,_|\__\__,_\_____/_|_| |_|\__, |
+                                      | |
+                                      |_|
+
+-->
+
 @foreach(var cssUrl in Options.CustomReportCssUrls)
 {
     <link href="@(cssUrl.Replace("~", ViewData["appRootUrl"].ToString()))" rel="stylesheet" />
@@ -90,6 +103,12 @@
 
 <script src="@(ViewData["appRootUrl"])/datalinq/jsproxyendpoint/@(Model.EndpointId)?@(DataLinqVersion.CssVersion)"></script>
 <script src="@(ViewData["appRootUrl"])/datalinq/jsproxyview/@(Model.EndpointId)@@@(Model.QueryId)@@@(Model.ViewId)?@(DataLinqVersion.JsVersion)"></script>
+
+@if (Model.PDFReportMode)
+{
+    <link href="@(ViewData["contentRootUrl"])/css/datalinq/datalinq-pdf-report.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+    <script src="@(ViewData["contentRootUrl"])/js/datalinq-pdf-report.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
+}
 
 <script type="text/javascript">
 

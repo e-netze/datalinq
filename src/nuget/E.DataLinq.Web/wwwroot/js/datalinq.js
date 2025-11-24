@@ -320,6 +320,22 @@ var dataLinq = new function () {
         });
     };
 
+    this.getTemplate = function (url) {
+        if (url.indexOf("http://") !== 0 && url.indexOf("https://") !== 0 && url.indexOf("//") !== 0) {
+            url = this.baseUrl + "/datalinq/select/" + url;
+        }
+        url += (url.indexOf('?') > 0 ? "&" : "?");
+
+        return $.ajax({
+            url: url,
+            data: dataLinq.overrideModifyRequestData({ _f: 'json' }),
+        }).then(function (result) {
+            var $page = $(result.html).find('.page');
+            $page.find('.report-ignore').remove();
+            return $page.html();
+        });
+    }
+
     this.updateViewOrdering = function (sender) {
         var $orderingBody = $(sender).closest('.datalinq-refresh-ordering-body');
         var $view = $orderingBody.closest('.datalinq-include, .datalinq-include-click');

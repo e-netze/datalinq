@@ -163,7 +163,8 @@ public class DataLinqController : DataLinqBaseController
                     OrderBy = _orderby,
                     ClientSideAuthObjectString = !String.IsNullOrEmpty(clientId) ? clientId : "null",
                     AuthIntialText = authIntialText,
-                    IncludedJsLibraries = (endPointQueryView.IncludedJsLibraries ?? JsLibrary.LegacyDefaultNames).Split(',')
+                    IncludedJsLibraries = (endPointQueryView.IncludedJsLibraries ?? JsLibrary.LegacyDefaultNames).Split(','),
+                    PDFReportMode = endPointQueryView.PDFReportMode
                 });
             }
         }

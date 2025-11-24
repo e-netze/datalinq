@@ -15,4 +15,6 @@ public class ReportModel
     public string ViewId { get { return this.Id.Split('@')[2]; } }
 
     public string[] IncludedJsLibraries { get; set; }
+
+    public bool PDFReportMode { get; set; }
 }

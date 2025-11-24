@@ -78,6 +78,17 @@
             }
         </div>
 
+        <h3>PDF Report mode</h3>
+        <div class="hr"></div>
+
+        <div class="datalinq-form-section">
+            @Html.DescriptionFor(m => m.PDFReportMode)
+            <div style="margin:8px 0px">
+                @Html.CheckBoxFor(m => m.PDFReportMode)
+                <div style="display:inline-block">Should this view be a PDF report?</div>
+            </div>
+        </div>
+
         <h3>Info</h3>
         <div class="hr" ></div>
 
