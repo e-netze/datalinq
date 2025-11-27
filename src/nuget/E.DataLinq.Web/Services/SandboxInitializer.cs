@@ -1,10 +1,11 @@
 ﻿using E.DataLinq.Core.Services.Persistance;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,66 +13,97 @@ namespace E.DataLinq.Web.Services
 {
     public class SandboxInitializer : IHostedService
     {
-        //private readonly IConfiguration _config;
-        private readonly IWebHostEnvironment _env;
+        private readonly ILogger<SandboxInitializer> _logger;
+        private readonly bool _initializeSandbox;
         private readonly string _storagePath;
 
         public SandboxInitializer(
-            //IConfiguration config, 
+            ILogger<SandboxInitializer> logger,
             IWebHostEnvironment env,
-            IOptions<PersistanceProviderServiceOptions> options)
+            IOptions<DataLinqCodeApiOptions> codeOptions,
+            IOptions<PersistanceProviderServiceOptions> persistanceOptions)
         {
-            //_config = config;
-            _env = env;
-            _storagePath = options.Value.ConnectionString;
+            _logger = logger;
+            _initializeSandbox = codeOptions.Value.InitializeSandboxOnStartup;
+            _storagePath = persistanceOptions.Value.ConnectionString;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        async public Task StartAsync(CancellationToken cancellationToken)
         {
-            var sourcePath = Path.Combine(AppContext.BaseDirectory, "Resources", "datalinq-guide");
+            if (!_initializeSandbox) return; 
 
-            var sourceVersionFile = Path.Combine(sourcePath, "version.txt");
+            _logger.LogInformation("Initializing DataLinq Guide sandbox...");
+
+            var zipData = E.DataLinq.Web.Properties.Resources.datalinq_guide;
+            var zipFile = new ZipArchive(new MemoryStream(zipData));
+
+            var sourceVersionFile = zipFile.GetEntry("datalinq-guide/version.txt");
             var targetVersionFile = Path.Combine(_storagePath, "datalinq-guide", "version.txt");
 
             Version sourceVersion = ReadVersionOrDefault(sourceVersionFile);
             Version targetVersion = ReadVersionOrDefault(targetVersionFile);
+            _logger.LogDebug("Source version: {SourceVersion}", sourceVersion);
+            _logger.LogDebug("Target version: {TargetVersion}", targetVersion);
 
-            if (sourceVersion > targetVersion)
+            if (sourceVersion <= targetVersion)
             {
-                var destinationDir = Path.Combine(_storagePath, "datalinq-guide");
-                if (Directory.Exists(destinationDir))
-                    Directory.Delete(destinationDir, recursive: true);
-
-                CopyDirectory(sourcePath, destinationDir);
+                _logger.LogInformation("DataLinq Guide sandbox is up to date. No action needed.");
+                return;
             }
 
-            var sourceDbFile = Path.Combine(AppContext.BaseDirectory, "Resources", "datalinq_guide.db");
             var destDbFile = Path.Combine(_storagePath, "datalinq_guide.db");
+            var destinationDir = Path.Combine(_storagePath, "datalinq-guide");
 
-            if (File.Exists(sourceDbFile))
+            if (Directory.Exists(destinationDir))
             {
-                Directory.CreateDirectory(_storagePath);
-                File.Copy(sourceDbFile, destDbFile, overwrite: true);
+                _logger.LogDebug("Deleting existing DataLinq Guide directory at {DestinationDir}", destinationDir);
+                Directory.Delete(destinationDir, recursive: true);
+            }
+            if (File.Exists(destDbFile))
+            {
+                _logger.LogDebug("Deleting existing DataLinq Guide database file at {DestDbFile}", destDbFile);
+                File.Delete(destDbFile);
             }
 
-            var blbFileName = "datalinq-guide\\datalinq-guide.blb";
-            var blbFilePath = Path.Combine(_storagePath, blbFileName);
+            _logger.LogInformation("Extracting DataLinq Guide sandbox to {StoragePath}", _storagePath);
+            await zipFile.ExtractToDirectoryAsync(_storagePath);
+
+            var blbFilePath = Path.Combine(_storagePath, "datalinq-guide", "datalinq-guide.blb");
 
             if (File.Exists(blbFilePath))
             {
                 string content = File.ReadAllText(blbFilePath);
-                string connectionString = $"DataSource={destDbFile.Replace("\\", "/")}";
+                string connectionString = $"sqlite:DataSource={destDbFile.Replace("\\", "/")}";
                 content = content.Replace("{{connectionstring}}", connectionString);
-                File.WriteAllText(blbFilePath, content);
+
+                _logger.LogDebug("Updating connection string in {BlbFilePath} to {ConnectionString}", blbFilePath, connectionString);
+
+                await File.WriteAllTextAsync(blbFilePath, content);
             }
 
-            return Task.CompletedTask;
+            return;
         }
 
         private Version ReadVersionOrDefault(string filePath)
         {
             if (File.Exists(filePath) && Version.TryParse(File.ReadAllText(filePath).Trim(), out var version))
                 return version;
+            return new Version(0, 0, 0);
+        }
+
+        private Version ReadVersionOrDefault(ZipArchiveEntry versionEntry)
+        {
+            if (versionEntry != null)
+            {
+                using (var reader = new StreamReader(versionEntry.Open()))
+                {
+                    var versionText = reader.ReadToEnd().Trim();
+                    if (Version.TryParse(versionText, out var version))
+                    {
+                        return version;
+                    }
+                }
+            }
             return new Version(0, 0, 0);
         }
 

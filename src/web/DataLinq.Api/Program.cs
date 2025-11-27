@@ -1,4 +1,4 @@
-using DataLinq.Api.Extensions;
+﻿using DataLinq.Api.Extensions;
 using DataLinq.Api.Services;
 using E.DataLinq.Core.Services.Crypto;
 using E.DataLinq.Core.Services.Persistance;
@@ -6,7 +6,6 @@ using E.DataLinq.Web;
 using E.DataLinq.Web.Extensions.DependencyInjection;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
-using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,7 +80,8 @@ if (builder.Configuration.GetSection("DataLinq.CodeApi").Exists())
         config.DataLinqCodeClients = builder
             .Configuration.GetSection("DataLinq.CodeApi:ClientEndpoints")
             .Get<string[]>();
-        config.StoragePath = builder.Configuration["DataLinq.Api:StoragePath"];
+        config.InitializeSandboxOnStartup = builder.Configuration
+            .GetValue<bool>("DataLinq.CodeApi:InitializeSandboxOnStartup", true);
     });
 }
 

@@ -6,7 +6,7 @@
   </PropertyGroup>
 	
   <PropertyGroup>
-		<Version>7.25.4302</Version>  
+		<Version>8.25.4801</Version>  
 		<Copyright>2025, Energienetze Steiermark</Copyright>
 		<PackageProjectUrl>https://github.com/e-netze/datalinq</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/e-netze/datalinq</RepositoryUrl>
@@ -18,8 +18,8 @@
 	</PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.2" />
-    <PackageReference Include="Microsoft.SqlServer.Types" Version="160.1000.6" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.3" />
+    <PackageReference Include="Microsoft.SqlServer.Types" Version="170.1000.7" />
   </ItemGroup>
 
   <ItemGroup>

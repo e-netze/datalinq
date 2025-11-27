@@ -8,7 +8,7 @@
   </PropertyGroup>
 
 	<PropertyGroup>
-		<Version>7.25.4302</Version>
+		<Version>8.25.4801</Version>
 		<Copyright>2025, Energienetze Steiermark</Copyright>
 		<PackageProjectUrl>https://github.com/e-netze/datalinq</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/e-netze/datalinq</RepositoryUrl>
@@ -25,8 +25,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="6.0.36" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="5.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
 	 <!-- <PackageReference Include="Microsoft.CodeAnalysis.Razor" Version="6.0.36" />  -->
   </ItemGroup>
 

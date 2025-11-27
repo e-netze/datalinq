@@ -488,13 +488,23 @@ public class ClassHelp
             Name = type.Name
         };
 
-        var xmlFilePath = $"{System.IO.Path.ChangeExtension(type.Assembly.Location, ".XML")}";
-        if (!System.IO.File.Exists(xmlFilePath))
+        XDocument xdoc = null;
+        var xmlFilePath = $"{System.IO.Path.ChangeExtension(type.Assembly.Location, "_.xml")}";
+        if (System.IO.File.Exists(xmlFilePath))
+        {
+            xdoc = XDocument.Load(xmlFilePath);
+        } 
+        else if(E.DataLinq.Web.Properties.Resources.e_datalinq_web_xml?.Any() == true)
+        {
+           xdoc = XDocument.Parse(
+              System.Text.Encoding.UTF8.GetString(
+                 E.DataLinq.Web.Properties.Resources.e_datalinq_web_xml));
+        }
+
+        if (xdoc == null)
         {
             return classHelp;
         }
-
-        var xdoc = XDocument.Load(xmlFilePath);
 
         // read the comment summary for this type
         var typeSummary = GetXmlDocumentation(xdoc, type, languageCode);
