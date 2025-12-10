@@ -12,7 +12,7 @@
   </PropertyGroup>
 
 	<PropertyGroup>
-		<Version>7.25.4007</Version>  
+		<Version>7.25.4008</Version>  
 		<Copyright>2025, Energienetze Steiermark</Copyright>
 		<PackageProjectUrl>https://github.com/e-netze/datalinq</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/e-netze/datalinq</RepositoryUrl>
