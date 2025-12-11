@@ -1,4 +1,4 @@
-(function ($) {
+﻿(function ($) {
     "use strict";
     $.fn.dataLinqCode_tree = function (method) {
         if (methods[method]) {
@@ -560,8 +560,17 @@
                     .attr('placeholder', label)
                     .appendTo($node);
 
+                let $folderModeInfo = $("<ul>").appendTo($("<div>")
+                    .addClass("folder-mode-info")
+                    .appendTo($node));
+                $("<li>").text("Click the button to create a new folder.").appendTo($folderModeInfo);
+                $("<li>").text("Click a folder to rename.").appendTo($folderModeInfo);
+                $("<li>").text("Right click a folder to delete (projects will be moved to root node).").appendTo($folderModeInfo);
+                $("<li>").text("Drag and drop endpoints into folders to organize.").appendTo($folderModeInfo); 
+                $("<li>").text("Right click the button to disable folder mode.").appendTo($folderModeInfo);
                 $("<button type='button'/>")
                     .addClass('new-folder-btn') 
+                    .attr('title', 'Right click to activate folder-mode to organize endpoints.')
                     .appendTo($node);
             } else {
                 var $label = $("<div>").addClass('label').text(label).appendTo($node);
@@ -840,6 +849,11 @@
                 $button.toggleClass('new-folder-active');
 
                 var isNowActive = $button.hasClass('new-folder-active');
+                if (isNowActive) {
+                    $button.closest('.datalinq-code-tree').addClass('new-folder-mode');
+                } else {
+                    $button.closest('.datalinq-code-tree').removeClass('new-folder-mode');
+                }
 
                 if (wasActive && !isNowActive) {
                     var endpointStructure = collectEndpointStructure();

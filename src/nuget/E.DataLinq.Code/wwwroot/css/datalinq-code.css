@@ -1,4 +1,4 @@
-html {
+﻿html {
     font-size: 14px;
     font-family: "Segoe UI", "Open Sans", "Helvetica Neue", sans-serif;
 }
@@ -610,14 +610,16 @@ body {
                 border: none;
                 position: absolute;
                 right: 0px;
-                top: 50%;
+                top: 12px;
                 transform: translateY(-50%);
                 width: 24px;
                 height: 24px;
+                opacity:0.5;
             }
 
                 .datalinq-code-tree .tree-nodes .tree-node button.new-folder-btn.new-folder-active {
                     filter: brightness(0) saturate(100%) invert(64%) sepia(85%) saturate(2297%) hue-rotate(178deg) brightness(101%) contrast(101%);
+                    opacity: 1;
                 }
 
             .datalinq-code-tree .tree-nodes .tree-node > .icon {
@@ -800,6 +802,30 @@ body {
                 }
                 .datalinq-code-tree .tree-nodes .tree-node.add {
                     background-image: url(img/round-plus_16@2.png);
+                }
+
+                .datalinq-code-tree.new-folder-mode .tree-nodes .tree-node.add .icon,
+                .datalinq-code-tree.new-folder-mode .tree-nodes .tree-node.add input {
+                    display: none;
+                }
+
+                .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info {
+                    display: none;
+                }
+
+                .datalinq-code-tree.new-folder-mode .tree-nodes .tree-node.add .folder-mode-info {
+                    display: block;
+                }
+
+                .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info ul {
+                    padding: 5px 15px;
+                    max-width: calc(100% - 59px);
+                    overflow: hidden;
+                    font-size: 0.8em;
+                    white-space: normal;
+                    background-color: #ffa;
+                    color: #000;
+                    border-radius: 5px;
                 }
 
                 .datalinq-code-tree .tree-nodes .tree-node input {
