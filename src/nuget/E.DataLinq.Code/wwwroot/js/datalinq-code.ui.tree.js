@@ -274,9 +274,10 @@
 
             if (prefixes != null) {
                 $('.new-folder-btn')
-                    .prop('disabled', true)
-                    .addClass('disabled')
-                    .css('pointer-events', 'none');
+                    //.prop('disabled', true)
+                    //.addClass('disabled')
+                    //.css('pointer-events', 'none');
+                    .remove();
 
                 $.each(endPoints, function (i, endPoint) {
                     addEndPointNode($tree, endPoint, collapsedRoutes);
