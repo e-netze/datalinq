@@ -20,10 +20,10 @@
 }
 
 .pages-container {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 30px;
-    justify-content: center;
+    justify-items: center;
     max-width: 100%;
 }
 
@@ -45,12 +45,15 @@
     position: relative;
 }
 
+.page.horizontal {
+    width: 297mm;
+    height: 210mm;
+}
+
 .element {
     position: absolute;
     cursor: move;
     user-select: none;
-    padding: 10px;
-    border: 2px solid transparent;
     box-sizing: border-box; /* Important! */
     z-index: 3;
 }
@@ -68,24 +71,24 @@
 }
 
 .element:hover {
-    border: 2px dashed #5badff;
+    /*border: 2px dashed #5badff;*/
 }
 
 .element.dragging {
     opacity: 0.8;
-    border: 2px solid #5badff;
+    /*border: 2px solid #5badff;*/
 }
 
 .element.element-snapped {
-    border: 2px solid #5badff;
+    /*border: 2px solid #5badff;*/
 }
 
 .element.element-snapped {
-    border: 2px dotted #5badff;
+    /*border: 2px dotted #5badff;*/
 }
 
 .element.snap-target {
-    border: 2px solid #5badff;
+    /*border: 2px solid #5badff;*/
 }
 
 .snap-guide-line-x {
@@ -139,6 +142,7 @@
     bottom: 0;
     padding: 50px;
     margin: 0;
+    z-index:10;
 }
 
     .page-number.position-0 {
@@ -216,9 +220,9 @@
         page-break-inside: avoid;
     }
 
-        .page-wrapper:last-child {
-            page-break-after: avoid;
-        }
+    .page-wrapper:last-child {
+        page-break-after: avoid;
+    }
 
     .page {
         width: 210mm !important;
@@ -237,9 +241,9 @@
         border: none !important;
     }
 
-        .element:hover {
-            border: none !important;
-        }
+    .element:hover {
+        border: none !important;
+    }
 
     .copy-btn {
         display: none;
@@ -253,5 +257,11 @@
     .horizontal-middle-line,
     .vertical-middle-line {
         display: none;
+    }
+    #downloadBtn {
+        display:none;
+    }
+    #datalinq-header{
+        display:none;
     }
 }

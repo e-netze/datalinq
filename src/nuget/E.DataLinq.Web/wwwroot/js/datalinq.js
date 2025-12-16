@@ -332,7 +332,52 @@ var dataLinq = new function () {
         }).then(function (result) {
             var $page = $(result.html).find('.page');
             $page.find('.report-ignore').remove();
-            return $page.html();
+            return $page.html();44
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('datalinq-button')) {
+                const button = e.target;
+                const id = button.getAttribute('data-report-id');
+                const queryString = button.getAttribute('data-query-string') || '';
+
+                dataLinq.downloadPDFSilently(id, queryString, button.id);
+            }
+        });
+    });
+
+    this.downloadPDFSilently = function(id, existingQueryString = '', buttonId) {
+        const separator = existingQueryString ? '&' : '';
+        const url = `/datalinq/report/${id}?${existingQueryString}${separator}_autoDownload=true`;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.top = '-9999px';
+        iframe.style.left = '-9999px';
+        iframe.style.width = '1px';
+        iframe.style.height = '1px';
+        iframe.style.opacity = '0';
+        iframe.style.pointerEvents = 'none';
+        iframe.src = url;
+        document.body.appendChild(iframe);
+
+        const buttonText = document.getElementById(buttonId).textContent;
+        const button = document.getElementById(buttonId);
+
+        button.textContent = 'Generating PDF ...';
+        button.disabled = true;
+
+        window.addEventListener("message", (event) => {
+            console.log(`Received message:`, event.data);
+            if (event.data && event.data.type === "pdfDownloadComplete") {
+                if (document.body.contains(iframe)) {
+                    document.body.removeChild(iframe);
+                    button.textContent = buttonText;
+                    button.disabled = false;
+                }
+            }
         });
     }
 

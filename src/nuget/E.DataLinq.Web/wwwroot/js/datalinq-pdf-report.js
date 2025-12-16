@@ -292,46 +292,47 @@ elements.forEach(element => {
 
 const copyButtons = document.querySelectorAll('.copy-btn');
 
-copyButtons.forEach(button => {
-    button.addEventListener('click', async function () {
-        const pageWrapper = this.closest('.page-wrapper');
-        const page = pageWrapper.querySelector('.page');
+    copyButtons.forEach(button => {
+        button.addEventListener('click', async function () {
+            const pageWrapper = this.closest('.page-wrapper');
+            const page = pageWrapper.querySelector('.page');
 
-        const pageClone = page.cloneNode(true);
+            const pageClone = page.cloneNode(true);
 
-        const elements = pageClone.querySelectorAll('.element');
+            const elements = pageClone.querySelectorAll('.element');
 
-        elements.forEach(element => {
-            const commentMatch = element.innerHTML.match(/<!--([\s\S]*?)-->/);
+            let contentToCopy = '';
 
-            if (commentMatch) {
-                const commentText = commentMatch[1].trim();
-                element.innerHTML = `<!--${commentText.replace("@", "@@")}-->\n${commentText}`;
+            elements.forEach(element => {
+                const commentMatch = element.innerHTML.match(/<!--([\s\S]*?)-->/);
+
+                if (commentMatch) {
+                    const commentText = commentMatch[1].trim();
+                    element.innerHTML = `<!--${commentText.replace("@", "@@")}-->\n${commentText}`;
+                }
+
+                contentToCopy += element.outerHTML + '\n';
+            });
+
+            try {
+                await navigator.clipboard.writeText(contentToCopy);
+
+                const originalText = this.textContent;
+                this.textContent = 'Copied!';
+                this.classList.add('copied');
+
+                setTimeout(() => {
+                    this.textContent = originalText;
+                    this.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
             }
         });
-
-        const contentToCopy = pageClone.innerHTML;
-
-        try {
-            await navigator.clipboard.writeText(contentToCopy);
-
-            const originalText = this.textContent;
-            this.textContent = 'Copied!';
-            this.classList.add('copied');
-
-            setTimeout(() => {
-                this.textContent = originalText;
-                this.classList.remove('copied');
-            }, 2000);
-        } catch (err) {
-            console.error('Failed to copy:', err);
-            this.textContent = 'Failed to copy';
-            setTimeout(() => {
-                this.textContent = 'Copy HTML';
-            }, 2000);
-        }
     });
-});
+
+document.getElementById('downloadBtn').addEventListener('click', downloadPDFMethod);
+
 
 $(document).on('keydown', function (e) {
     if (e.ctrlKey && e.key === 'm') {
@@ -339,23 +340,114 @@ $(document).on('keydown', function (e) {
         $('.vertical-middle-line, .horizontal-middle-line').toggle();
     }
 });
+    splitAllTables();
 
     initializeTemplateLoader();
 
-    splitAllTables();
+    addPageNumbers();
 });
 
 const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('print') === 'true') {
-    dataLinq.events.on('onpageloaded', function () {
-        setTimeout(function () {
-            window.print();
-        }, 2000);
-    });
+if (urlParams.get('_autoDownload') === 'true') {
+    document.body.style.opacity = '0';
+
+    setTimeout(async () => {
+        await downloadPDFMethod();
+
+        window.close();
+
+        setTimeout(() => {
+            document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;">PDF download started.  You can close this window.</div>';
+            document.body.style.opacity = '100';
+        }, 100);
+    }, 1000); 
 }
 
-function addPageNumbers(options) {
-    const { type = 0, skipPages = 0, position = 0 } = options;
+async function downloadPDFMethod() {
+    const { jsPDF } = window.jspdf;
+    const pages = document.querySelectorAll('.page');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+
+    for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        const isHorizontal = page.classList.contains('horizontal');
+
+        // Handle canvas elements
+        const canvasElements = page.querySelectorAll('canvas');
+        const canvasData = [];
+
+        canvasElements.forEach((canvas) => {
+            const imgData = canvas.toDataURL('image/png');
+            const img = document.createElement('img');
+            img.src = imgData;
+            img.style.width = canvas.style.width || canvas.width + 'px';
+            img.style.height = canvas.style.height || canvas.height + 'px';
+            img.style.display = canvas.style.display || 'block';
+
+            canvasData.push({
+                canvas: canvas,
+                parent: canvas.parentNode,
+                nextSibling: canvas.nextSibling,
+                img: img
+            });
+
+            canvas.parentNode.replaceChild(img, canvas);
+        });
+
+        // Render page to canvas
+        const pageCanvas = await html2canvas(page, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff'
+        });
+
+        canvasData.forEach(data => {
+            if (data.nextSibling) {
+                data.parent.insertBefore(data.canvas, data.nextSibling);
+            } else {
+                data.parent.appendChild(data.canvas);
+            }
+            data.parent.removeChild(data.img);
+        });
+
+        const imgData = pageCanvas.toDataURL('image/png');
+
+        if (i > 0) {
+            if (isHorizontal) {
+                pdf.addPage('a4', 'landscape');
+            } else {
+                pdf.addPage('a4', 'portrait');
+            }
+        } else {
+            if (isHorizontal) {
+                pdf.deletePage(1);
+                pdf.addPage('a4', 'landscape');
+            }
+        }
+
+        if (isHorizontal) {
+            pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
+        } else {
+            pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+        }
+    }
+
+    pdf.save('dataLinqReport.pdf');
+
+    if (window.parent !== window) {
+        window.parent.postMessage({ type: 'pdfDownloadComplete' }, '*');
+    }
+}
+
+function addPageNumbers() {
+    const optionsDiv = document.querySelector('.pdf-report-options');
+
+    if (!optionsDiv) return;
+
+    const type = parseInt(optionsDiv.getAttribute('data-type')) || 0;
+    const skipPages = parseInt(optionsDiv.getAttribute('data-skipPages')) || 0;
+    const position = parseInt(optionsDiv.getAttribute('data-position')) || 0;
 
     const pages = document.querySelectorAll('.page');
     const total = pages.length;
@@ -432,7 +524,6 @@ function checkForDuplicates(pages, templateName, checkedPages, currentIndex) {
 
 function makeTemplateRequest(pagesArray, templateName) {
     dataLinq.getTemplate(templateName).then(function (data) {
-        console.log('INDIVIDUAL FETCH HAPPENING');
         pagesArray.forEach(function (page) {
             $(page).append(data);
         });
@@ -443,13 +534,14 @@ function makeTemplateRequest(pagesArray, templateName) {
 
 function splitAllTables() {
     const pagesContainer = document.getElementById('pagesContainer');
-    const originalPageWrappers = Array.from(pagesContainer.querySelectorAll('.page-wrapper'));
+    const originalPageWrappers = Array.from(pagesContainer.querySelectorAll('.page-wrapper.dynamic'));
 
     originalPageWrappers.forEach(pageWrapper => {
         const page = pageWrapper.querySelector('.page');
         const tables = page.querySelectorAll('table');
 
         tables.forEach(table => {
+            console.log("FOUND TABLE TO SPLIT");
             splitTable(table, page, pageWrapper);
         });
     });
@@ -504,7 +596,11 @@ function splitTable(table, page, originalPageWrapper) {
 
     const pagePadding = 40;
     const firstPageAvailable = pageHeight - contentBeforeTable - theadHeight - tableMarginTop - tableMarginBottom - pagePadding;
-    const continuationAvailable = pageHeight - theadHeight - topPadding - bottomPadding - pagePadding;
+
+    const optionsDiv = document.querySelector('.dynamic-use-template');
+    const continuationAvailable = optionsDiv
+        ? firstPageAvailable
+        : pageHeight - theadHeight - topPadding - bottomPadding - pagePadding;
 
     const singleRowHeight = dataRows[0].offsetHeight;
 
@@ -539,7 +635,11 @@ function splitTable(table, page, originalPageWrapper) {
         const rowsForThisPage = remainingRows.slice(0, rowsPerContinuation);
         remainingRows = remainingRows.slice(rowsPerContinuation);
 
-        const newPageWrapper = createContinuationPage(rowsForThisPage, table, thead, headerRow, wrapperElements);
+        const template = optionsDiv
+            ? page.getAttribute("datalinq-pdfreport-template")
+            : "";
+
+        const newPageWrapper = createContinuationPage(rowsForThisPage, table, thead, headerRow, wrapperElements, template);
         newPages.push(newPageWrapper);
     }
 
@@ -557,19 +657,19 @@ function splitTable(table, page, originalPageWrapper) {
     });
 }
 
-function createContinuationPage(rows, originalTable, thead, headerRow, wrapperElements) {
-    console.log('Creating continuation page with', wrapperElements.length, 'wrappers');
-
+function createContinuationPage(rows, originalTable, thead, headerRow, wrapperElements, template) {
     const newPageWrapper = document.createElement('div');
     newPageWrapper.className = 'page-wrapper';
 
     const newPage = document.createElement('div');
     newPage.className = 'page';
 
+    if (template)
+        newPage.setAttribute('datalinq-pdfreport-template', template);
+
     let currentParent = newPage;
 
     wrapperElements.forEach((wrapper, index) => {
-        console.log(`Cloning wrapper ${index}:`, wrapper.tagName, wrapper.className);
 
         const clonedWrapper = document.createElement(wrapper.tagName);
 
@@ -580,7 +680,6 @@ function createContinuationPage(rows, originalTable, thead, headerRow, wrapperEl
         const inlineStyle = wrapper.getAttribute('style');
         if (inlineStyle) {
             clonedWrapper.setAttribute('style', inlineStyle);
-            console.log('  - Copied inline style:', inlineStyle);
         }
 
         Array.from(wrapper.attributes).forEach(attr => {
@@ -612,9 +711,17 @@ function createContinuationPage(rows, originalTable, thead, headerRow, wrapperEl
 
     const tableInlineStyle = originalTable.getAttribute('style');
     if (tableInlineStyle) {
-        const styleWithoutMargin = tableInlineStyle.replace(/margin-top\s*:\s*[^;]+;?/gi, '');
-        if (styleWithoutMargin.trim()) {
-            newTable.setAttribute('style', styleWithoutMargin);
+        const optionsDiv = document.querySelector('.dynamic-use-template');
+
+        let finalStyle = tableInlineStyle;
+
+        // Only remove margin-top if the div does NOT exist
+        if (!optionsDiv) {
+            finalStyle = tableInlineStyle.replace(/margin-top\s*:\s*[^;]+;? /gi, '');
+        }
+
+        if (finalStyle.trim()) {
+            newTable.setAttribute('style', finalStyle);
         }
     }
 
@@ -656,8 +763,6 @@ function createContinuationPage(rows, originalTable, thead, headerRow, wrapperEl
     currentParent.appendChild(newTable);
 
     newPageWrapper.appendChild(newPage);
-
-    console.log('Continuation page created, final structure:', newPageWrapper);
 
     return newPageWrapper;
 }
