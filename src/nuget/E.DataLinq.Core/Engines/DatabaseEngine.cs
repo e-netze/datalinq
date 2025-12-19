@@ -85,22 +85,28 @@ public class DatabaseEngine : IDataLinqSelectEngine, IDataLinqExecuteNonQueryEng
                     if (parameterName.ToLower() == "_orderby" && (sql.Contains("@" + parameterName) || sql.Contains(":" + parameterName)))
                     {
                         isOrdered = true;
-                        // Achtung SQL Injektion!!!
-                        string term = GetSqlValue(arguments[parameterName])?.ToString().ParsePro(',');
-                        List<string> orderItems = new List<string>();
-                        foreach (string orderField in term.Split(','))
-                        {
-                            if (orderField.StartsWith("-"))
-                            {
-                                orderItems.Add(orderField.Substring(1) + " DESC");
-                            }
-                            else
-                            {
-                                orderItems.Add(orderField);
-                            }
-                        }
+                        string term = GetSqlValue(arguments[parameterName])?.ToString();
 
-                        sql = sql.Replace("@" + parameterName, String.Join(",", orderItems));
+                        if (!String.IsNullOrWhiteSpace(term))
+                        {
+                            List<string> orderItems = new List<string>();
+
+                            foreach (string orderField in term.Split(','))
+                            {
+                                string validated = orderField.ParseOrderBy();
+
+                                if (validated.StartsWith("-"))
+                                {
+                                    orderItems.Add(validated.Substring(1) + " DESC");
+                                }
+                                else
+                                {
+                                    orderItems.Add(validated);
+                                }
+                            }
+
+                            sql = sql.Replace("@" + parameterName, String.Join(", ", orderItems));
+                        }
                     }
                     else if (sql.Contains("@" + parameterName) || sql.Contains(":" + parameterName))
                     {

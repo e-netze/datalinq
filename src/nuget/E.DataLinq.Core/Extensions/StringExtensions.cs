@@ -204,16 +204,21 @@ public static class StringExtensions
     static public void ParseBlackList(this string term)
     {
         term = term.Trim();
-        foreach (char c in "<>='\"?&*".ToCharArray())
+        foreach (char c in "<>='\"?&*;()".ToCharArray())
         {
             if (term.Contains(c.ToString()))
             {
                 throw new InputValidationException("Invalid character (black list)");
             }
         }
+
+        if (term.Contains("--") || term.Contains("/*") || term.Contains("*/"))
+        {
+            throw new InputValidationException("Invalid character sequence (black list)");
+        }
     }
 
-    static public void ParseWhiteList(this string term, string whiteList = "^[0-9\\p{L} -_.,%/#]{0,120}$")    // \p{L} .... Unicode Letters
+    static public void ParseWhiteList(this string term, string whiteList = "^[0-9\\p{L} -_.,%/#]{0,120}$")
     {
         Regex reWhiteList = new Regex(whiteList);
         if (reWhiteList.IsMatch(term))
@@ -222,17 +227,35 @@ public static class StringExtensions
         }
         else
         {
-            throw new InputValidationException("Invalid character (white list)");// it's not ok, inform user they've entered invalid characters and try again
+            throw new InputValidationException("Invalid character (white list)");
         }
     }
 
-    static public string Parse(string term, string whiteList = "^[0-9\\p{L} -_.,%/#]{0,120}$", bool parse = true)    // \p{L} .... Unicode Letters
+    static public string Parse(string term, string whiteList = "^[0-9\\p{L} -_.,%/#]{0,120}$", bool parse = true)
     {
         if (parse)
         {
             term.ParseBlackList();
             term.ParseWhiteList(whiteList);
         }
+        return term;
+    }
+
+    static public string ParseOrderBy(this string term)
+    {
+        if (string.IsNullOrWhiteSpace(term))
+        {
+            throw new InputValidationException("ORDER BY field cannot be empty");
+        }
+
+        term = term.Trim();
+
+        term.ParseBlackList();
+
+        string orderByWhiteList = @"^-?[a-zA-Z_][a-zA-Z0-9_]{0,63}$";
+
+        term.ParseWhiteList(orderByWhiteList);
+
         return term;
     }
 
