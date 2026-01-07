@@ -417,6 +417,7 @@
 
     var showOrAddEditorFrame = function ($editor, id) {
         let $frame = $editor.children(`.datalinq-code-editor-frame[data-id='${id}']`);
+        // Only create the iframe if it doesn't exist
         if ($frame.length === 0) {
             const src = buildFrameSrc(id);
             $frame = $("<iframe>")
@@ -424,14 +425,40 @@
                 .attr('data-id', id)
                 .attr('src', src)
                 .appendTo($editor);
-        }
 
-        $frame.on('load', function () {
+            // Attach the load event ONLY for new iframes
+            $frame.on('load', function () {
+                try {
+                    const iframeWindow = this.contentWindow;
+                    const theme = sessionStorage.getItem('editorTheme');
+                    const doc = iframeWindow.document;
+
+                    if (theme === 'vs') {
+                        doc.body.classList.add('colorscheme-light');
+                    } else {
+                        doc.body.classList.remove('colorscheme-light');
+                    }
+
+                    iframeWindow.addEventListener('message', function (event) {
+                        const data = event.data;
+                        if (data && typeof data.theme === 'string') {
+                            const doc = iframeWindow.document;
+                            if (data.theme === 'vs') {
+                                doc.body.classList.add('colorscheme-light');
+                            } else {
+                                doc.body.classList.remove('colorscheme-light');
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.warn(`Could not access iframe content for [${id}] due to cross-origin policy. `);
+                }
+            });
+        } else {
+            // If iframe already exists, just update the theme if needed
             try {
-                const iframeWindow = this.contentWindow;
-
+                const iframeWindow = $frame[0].contentWindow;
                 const theme = sessionStorage.getItem('editorTheme');
-
                 const doc = iframeWindow.document;
 
                 if (theme === 'vs') {
@@ -439,22 +466,10 @@
                 } else {
                     doc.body.classList.remove('colorscheme-light');
                 }
-
-                iframeWindow.addEventListener('message', function (event) {
-                    const data = event.data;
-                    if (data && typeof data.theme === 'string') {
-                        const doc = iframeWindow.document;
-                        if (data.theme === 'vs') {
-                            doc.body.classList.add('colorscheme-light');
-                        } else {
-                            doc.body.classList.remove('colorscheme-light');
-                        }
-                    }
-                });
             } catch (e) {
                 console.warn(`Could not access iframe content for [${id}] due to cross-origin policy.`);
             }
-        });
+        }
 
         const isSelected = $frame.hasClass('selected');
         const selectedCount = $editor.children(".datalinq-code-editor-frame.selected").length;
@@ -525,46 +540,80 @@
     }
 
     function layoutFrames($editor, frames) {
-        $editor.find('.datalinq-frame-stack').remove();
-        $editor.find('.datalinq-separator').remove();
-        $editor.children(".datalinq-code-editor-frame").hide().css({ flex: '', width: '', height: '', display: 'none' });
-        $editor.css({ display: 'flex', flexDirection: 'row', width: '100%', height: '100%' });
+    $editor.find('.datalinq-frame-stack').remove();
+    $editor.find('.datalinq-separator').remove();
+    $editor.children(".datalinq-code-editor-frame").hide().css({ flex: '', width: '', height: '', display: 'none' });
+    $editor.css({ display: 'flex', flexDirection: 'row', width: '100%', height: '100%' });
 
-        const count = frames.length;
+    const count = frames.length;
 
-        if (count === 1) {
-            $(frames[0]).css({ flex: '1 1 100%', width: '100%', height: '98%', display: 'block' }).show().appendTo($editor);
-        } else if (count === 2) {
-            $(frames[0]).css({ flex: '1 1 50%', width: '50%', height: '98%', display: 'block' }).show().appendTo($editor);
-
-            $('<div class="datalinq-separator vertical-separator"></div>').appendTo($editor);
-
-            $(frames[1]).css({ flex: '1 1 50%', width: '50%', height: '98%', display: 'block' }).show().appendTo($editor);
-        } else if (count === 3) {
-            const [$left, $topRight, $bottomRight] = frames;
-
-            $($left).css({ flex: '1 1 50%', width: '50%', height: '98%', display: 'block' }).show().appendTo($editor);
-
-            $('<div class="datalinq-separator vertical-separator"></div>').appendTo($editor);
-
-            const $stack = $('<div class="datalinq-frame-stack">').css({
-                display: 'flex',
-                flexDirection: 'column',
-                flex: '1 1 50%',
-                width: '50%',
-                height: '98%',
-                position: 'relative',
-            });
-
-            $(frames[1]).css({ flex: '1 1 50%', width: '100%', height: '50%', display: 'block' }).show().appendTo($stack);
-
-            $('<div class="datalinq-separator horizontal-separator"></div>').appendTo($stack);
-
-            $(frames[2]).css({ flex: '1 1 50%', width: '100%', height: '50%', display: 'block' }).show().appendTo($stack);
-
-            $stack.appendTo($editor);
+    if (count === 1) {
+        const $frame = $(frames[0]);
+        // Detach without triggering reload, then reattach
+        if ($frame.parent().length && ! $frame.parent().is($editor)) {
+            $frame.detach().appendTo($editor);
+        } else if (!$frame.parent().length) {
+            $frame.appendTo($editor);
         }
+        $frame.css({ flex: '1 1 100%', width:  '100%', height: '98%', display: 'block' }).show();
+    } else if (count === 2) {
+        const $frame0 = $(frames[0]);
+        if ($frame0.parent().length && !$frame0.parent().is($editor)) {
+            $frame0.detach().appendTo($editor);
+        } else if (!$frame0.parent().length) {
+            $frame0.appendTo($editor);
+        }
+        $frame0.css({ flex: '1 1 50%', width: '50%', height:  '98%', display: 'block' }).show();
+
+        $('<div class="datalinq-separator vertical-separator"></div>').appendTo($editor);
+
+        const $frame1 = $(frames[1]);
+        if ($frame1.parent().length && !$frame1.parent().is($editor)) {
+            $frame1.detach().appendTo($editor);
+        } else if (!$frame1.parent().length) {
+            $frame1.appendTo($editor);
+        }
+        $frame1.css({ flex: '1 1 50%', width:  '50%', height: '98%', display: 'block' }).show();
+    } else if (count === 3) {
+        const [$left, $topRight, $bottomRight] = frames;
+
+        const $frameLeft = $($left);
+        if ($frameLeft.parent().length && !$frameLeft.parent().is($editor)) {
+            $frameLeft.detach().appendTo($editor);
+        } else if (!$frameLeft.parent().length) {
+            $frameLeft.appendTo($editor);
+        }
+        $frameLeft.css({ flex: '1 1 50%', width: '50%', height:  '98%', display: 'block' }).show();
+
+        $('<div class="datalinq-separator vertical-separator"></div>').appendTo($editor);
+
+        const $stack = $('<div class="datalinq-frame-stack">').css({
+            display: 'flex',
+            flexDirection:  'column',
+            flex:  '1 1 50%',
+            width: '50%',
+            height: '98%',
+            position: 'relative',
+        });
+
+        // For frames going into $stack, use detach() to preserve state
+        const $frame1 = $(frames[1]);
+        if ($frame1.parent().length) {
+            $frame1.detach();
+        }
+        $frame1.css({ flex: '1 1 50%', width: '100%', height: '50%', display: 'block' }).show().appendTo($stack);
+
+        $('<div class="datalinq-separator horizontal-separator"></div>').appendTo($stack);
+
+        const $frame2 = $(frames[2]);
+        if ($frame2.parent().length) {
+            $frame2.detach();
+        }
+        $frame2.css({ flex: '1 1 50%', width: '100%', height: '50%', display: 'block' }).show().appendTo($stack);
+
+        $stack.appendTo($editor);
     }
+}
 
 
 })(jQuery);
