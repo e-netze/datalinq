@@ -164,7 +164,8 @@ public class DataLinqController : DataLinqBaseController
                     ClientSideAuthObjectString = !String.IsNullOrEmpty(clientId) ? clientId : "null",
                     AuthIntialText = authIntialText,
                     IncludedJsLibraries = (endPointQueryView.IncludedJsLibraries ?? JsLibrary.LegacyDefaultNames).Split(','),
-                    PDFReportMode = endPointQueryView.PDFReportMode
+                    PDFReportMode = endPointQueryView.PDFReportMode,
+                    PDFReportEditing = endPointQueryView.PDFReportEditing
                 });
             }
         }

@@ -51,5 +51,11 @@ public class DataLinqEndPointQueryView
 
     [JsonProperty("pdf_report_mode")]
     [Description("Should this view be a PDF report?")]
+    [DisplayName("View report mode")]
     public bool PDFReportMode { get; set; }
+
+    [JsonProperty("pdf_report_editing")]
+    [Description("Should editing (drag & drop & copy) the PDF be possible?")]
+    [DisplayName("Report editing mode")]
+    public bool PDFReportEditing { get; set; }
 }

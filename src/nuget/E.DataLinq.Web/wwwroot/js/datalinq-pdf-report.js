@@ -1,352 +1,49 @@
-﻿dataLinq.events.on('onpageloaded', function () {
+﻿/* WAIT FOR DATALINQ CORE CLIENT SIDE LOGIC TO FINISH */
+dataLinq.events.on('onpageloaded', function () {
 
-const elements = document.querySelectorAll('.element');
+    /* PDF REPORT RENDERING BROWSER ACCEPT MODAL */
+try {
+    const modal = document.getElementById('datalinq-modal');
+    const acceptBtn = document.getElementById('accept-btn');
+    const declineBtn = document.getElementById('decline-btn');
 
-elements.forEach(element => {
-        let isDragging = false;
-        let startX, startY;
-        let initialX = 0, initialY = 0;
+    document.body.classList.add('modal-open');
 
-        const page = element.closest('.page');
-        const snapThreshold = 15;
-
-        let snapLineX = document.createElement('div');
-        snapLineX.className = 'snap-guide-line-x';
-        page.appendChild(snapLineX);
-
-        let snapLineY = document.createElement('div');
-        snapLineY.className = 'snap-guide-line-y';
-        page.appendChild(snapLineY);
-
-        element.addEventListener('mousedown', startDrag);
-
-        function startDrag(e) {
-            isDragging = true;
-            element.classList.add('dragging');
-
-            const style = window.getComputedStyle(element);
-            const matrix = new DOMMatrix(style.transform);
-            initialX = matrix.m41;
-            initialY = matrix.m42;
-
-            startX = e.clientX - initialX;
-            startY = e.clientY - initialY;
-
-            document.addEventListener('mousemove', drag);
-            document.addEventListener('mouseup', stopDrag);
-
-            e.preventDefault();
-        }
-
-        function drag(e) {
-            if (!isDragging) return;
-
-            let newX = e.clientX - startX;
-            let newY = e.clientY - startY;
-
-            const pageRect = page.getBoundingClientRect();
-            const elementRect = element.getBoundingClientRect();
-
-            const maxX = pageRect.width - elementRect.width;
-
-            newX = Math.max(0, Math.min(newX, maxX));
-            newY = Math.max(0, newY); // Only constrain the top (minimum), allow going below
-
-            let isSnapped = false;
-            let snapInfo = null;
-
-            const verticalLine = page.querySelector('.vertical-middle-line');
-            const horizontalLine = page.querySelector('.horizontal-middle-line');
-            const verticalLineVisible = verticalLine && window.getComputedStyle(verticalLine).display === 'block';
-            const horizontalLineVisible = horizontalLine && window.getComputedStyle(horizontalLine).display === 'block';
-            const guideLinesVisible = verticalLineVisible || horizontalLineVisible;
-
-            if (e.ctrlKey && guideLinesVisible) {
-                const snapped = applySnapping(newX, newY, elementRect, pageRect, verticalLineVisible, horizontalLineVisible);
-                newX = snapped.x;
-                newY = snapped.y;
-                isSnapped = snapped.snapped;
-
-                hideSnapGuides();
-            } else if (e.ctrlKey) {
-                const snapped = applyElementSnapping(newX, newY, element, page);
-                newX = snapped.x;
-                newY = snapped.y;
-                isSnapped = snapped.snapped;
-                snapInfo = snapped.snapInfo;
-
-                if (isSnapped && snapInfo) {
-                    showSnapGuides(snapInfo);
-                } else {
-                    hideSnapGuides();
-                }
-            } else {
-                hideSnapGuides();
-            }
-
-            if (isSnapped) {
-                element.classList.add('element-snapped');
-            } else {
-                element.classList.remove('element-snapped');
-            }
-
-            element.style.transform = `translate(${newX}px, ${newY}px)`;
-
-            element.setAttribute('data-x', newX);
-            element.setAttribute('data-y', newY);
-        }
-
-        function applySnapping(x, y, elementRect, pageRect, snapToVerticalLine, snapToHorizontalLine) {
-            const elementWidth = elementRect.width;
-            const elementHeight = elementRect.height;
-
-            const elementLeft = x;
-            const elementRight = x + elementWidth;
-            const elementCenterX = x + elementWidth / 2;
-
-            const elementTop = y;
-            const elementBottom = y + elementHeight;
-            const elementCenterY = y + elementHeight / 2;
-
-            const pageCenterX = pageRect.width / 2;
-            const pageCenterY = pageRect.height / 2;
-
-            let snappedX = x;
-            let snappedY = y;
-            let snapped = false;
-
-            if (snapToVerticalLine) {
-                if (Math.abs(elementLeft - pageCenterX) < snapThreshold) {
-                    snappedX = pageCenterX;
-                    snapped = true;
-                }
-                else if (Math.abs(elementRight - pageCenterX) < snapThreshold) {
-                    snappedX = pageCenterX - elementWidth;
-                    snapped = true;
-                }
-                else if (Math.abs(elementCenterX - pageCenterX) < snapThreshold) {
-                    snappedX = pageCenterX - elementWidth / 2;
-                    snapped = true;
-                }
-            }
-
-            if (snapToHorizontalLine) {
-                if (Math.abs(elementTop - pageCenterY) < snapThreshold) {
-                    snappedY = pageCenterY;
-                    snapped = true;
-                }
-                else if (Math.abs(elementBottom - pageCenterY) < snapThreshold) {
-                    snappedY = pageCenterY - elementHeight;
-                    snapped = true;
-                }
-                else if (Math.abs(elementCenterY - pageCenterY) < snapThreshold) {
-                    snappedY = pageCenterY - elementHeight / 2;
-                    snapped = true;
-                }
-            }
-
-            return { x: snappedX, y: snappedY, snapped: snapped };
-        }
-
-        function applyElementSnapping(x, y, draggedElement, page) {
-            const pageRect = page.getBoundingClientRect();
-            const draggedRect = draggedElement.getBoundingClientRect();
-            const draggedWidth = draggedRect.width;
-            const draggedHeight = draggedRect.height;
-
-            const draggedLeft = x;
-            const draggedRight = x + draggedWidth;
-            const draggedCenterX = x + draggedWidth / 2;
-            const draggedTop = y;
-            const draggedBottom = y + draggedHeight;
-            const draggedCenterY = y + draggedHeight / 2;
-
-            let snappedX = x;
-            let snappedY = y;
-            let snapped = false;
-
-            const otherElements = Array.from(page.querySelectorAll('.element')).filter(el => el !== draggedElement);
-
-            let minXDistance = Infinity;
-            let minYDistance = Infinity;
-            let bestXSnap = x;
-            let bestYSnap = y;
-            let snapXPosition = null;
-            let snapYPosition = null;
-            let snapTargetElement = null;
-
-            otherElements.forEach(otherElement => {
-                const otherRect = otherElement.getBoundingClientRect();
-                const otherX = parseFloat(otherElement.getAttribute('data-x')) || 0;
-                const otherY = parseFloat(otherElement.getAttribute('data-y')) || 0;
-
-                const otherWidth = otherRect.width;
-                const otherHeight = otherRect.height;
-
-                const otherLeft = otherX;
-                const otherRight = otherX + otherWidth;
-                const otherCenterX = otherX + otherWidth / 2;
-                const otherTop = otherY;
-                const otherBottom = otherY + otherHeight;
-                const otherCenterY = otherY + otherHeight / 2;
-
-                const xSnapPoints = [
-                    { distance: Math.abs(draggedLeft - otherLeft), snap: otherLeft, position: otherLeft }, 
-                    { distance: Math.abs(draggedLeft - otherRight), snap: otherRight, position: otherRight }, 
-                    { distance: Math.abs(draggedRight - otherLeft), snap: otherLeft - draggedWidth, position: otherLeft },
-                    { distance: Math.abs(draggedRight - otherRight), snap: otherRight - draggedWidth, position: otherRight }, 
-                    { distance: Math.abs(draggedCenterX - otherCenterX), snap: otherCenterX - draggedWidth / 2, position: otherCenterX }, 
-                ];
-
-                xSnapPoints.forEach(point => {
-                    if (point.distance < minXDistance && point.distance < snapThreshold) {
-                        minXDistance = point.distance;
-                        bestXSnap = point.snap;
-                        snapXPosition = point.position;
-                        snapTargetElement = otherElement;
-                    }
-                });
-
-                const ySnapPoints = [
-                    { distance: Math.abs(draggedTop - otherTop), snap: otherTop, position: otherTop }, 
-                    { distance: Math.abs(draggedTop - otherBottom), snap: otherBottom, position: otherBottom }, 
-                    { distance: Math.abs(draggedBottom - otherTop), snap: otherTop - draggedHeight, position: otherTop }, 
-                    { distance: Math.abs(draggedBottom - otherBottom), snap: otherBottom - draggedHeight, position: otherBottom }, 
-                    { distance: Math.abs(draggedCenterY - otherCenterY), snap: otherCenterY - draggedHeight / 2, position: otherCenterY }, 
-                ];
-
-                ySnapPoints.forEach(point => {
-                    if (point.distance < minYDistance && point.distance < snapThreshold) {
-                        minYDistance = point.distance;
-                        bestYSnap = point.snap;
-                        snapYPosition = point.position;
-                        if (!snapTargetElement) snapTargetElement = otherElement;
-                    }
-                });
-            });
-
-            if (minXDistance < snapThreshold) {
-                snappedX = bestXSnap;
-                snapped = true;
-            }
-
-            if (minYDistance < snapThreshold) {
-                snappedY = bestYSnap;
-                snapped = true;
-            }
-
-            return {
-                x: snappedX,
-                y: snappedY,
-                snapped: snapped,
-                snapInfo: snapped ? {
-                    xPosition: minXDistance < snapThreshold ? snapXPosition : null,
-                    yPosition: minYDistance < snapThreshold ? snapYPosition : null,
-                    targetElement: snapTargetElement
-                } : null
-            };
-        }
-
-        function showSnapGuides(snapInfo) {
-            page.querySelectorAll('.element.snap-target').forEach(el => {
-                el.classList.remove('snap-target');
-            });
-
-            if (snapInfo.xPosition !== null) {
-                snapLineX.style.left = snapInfo.xPosition + 'px';
-                snapLineX.style.display = 'block';
-            } else {
-                snapLineX.style.display = 'none';
-            }
-
-            if (snapInfo.yPosition !== null) {
-                snapLineY.style.top = snapInfo.yPosition + 'px';
-                snapLineY.style.display = 'block';
-            } else {
-                snapLineY.style.display = 'none';
-            }
-
-            if (snapInfo.targetElement) {
-                snapInfo.targetElement.classList.add('snap-target');
-            }
-        }
-
-        function hideSnapGuides() {
-            snapLineX.style.display = 'none';
-            snapLineY.style.display = 'none';
-
-            page.querySelectorAll('.element.snap-target').forEach(el => {
-                el.classList.remove('snap-target');
-            });
-        }
-
-        function stopDrag() {
-            isDragging = false;
-            element.classList.remove('dragging');
-            element.classList.remove('element-snapped');
-            hideSnapGuides();
-            document.removeEventListener('mousemove', drag);
-            document.removeEventListener('mouseup', stopDrag);
-        }
+    acceptBtn.addEventListener('click', function () {
+        modal.classList.add('hidden');
+        localStorage.setItem('datalinq-browser-accepted', 'true');
     });
 
-const copyButtons = document.querySelectorAll('.copy-btn');
-
-    copyButtons.forEach(button => {
-        button.addEventListener('click', async function () {
-            const pageWrapper = this.closest('.page-wrapper');
-            const page = pageWrapper.querySelector('.page');
-
-            const pageClone = page.cloneNode(true);
-
-            const elements = pageClone.querySelectorAll('.element');
-
-            let contentToCopy = '';
-
-            elements.forEach(element => {
-                const commentMatch = element.innerHTML.match(/<!--([\s\S]*?)-->/);
-
-                if (commentMatch) {
-                    const commentText = commentMatch[1].trim();
-                    element.innerHTML = `<!--${commentText.replace("@", "@@")}-->\n${commentText}`;
-                }
-
-                contentToCopy += element.outerHTML + '\n';
-            });
-
-            try {
-                await navigator.clipboard.writeText(contentToCopy);
-
-                const originalText = this.textContent;
-                this.textContent = 'Copied!';
-                this.classList.add('copied');
-
-                setTimeout(() => {
-                    this.textContent = originalText;
-                    this.classList.remove('copied');
-                }, 2000);
-            } catch (err) {
-                console.error('Failed to copy:', err);
-            }
-        });
+    declineBtn.addEventListener('click', function () {
+        if (confirm('Are you sure you want to decline?  The PDF may not render correctly in unsupported browsers.')) {
+            modal.classList.add('hidden');
+        }
     });
-
-document.getElementById('downloadBtn').addEventListener('click', downloadPDFMethod);
-
-
-$(document).on('keydown', function (e) {
-    if (e.ctrlKey && e.key === 'm') {
-        e.preventDefault();
-        $('.vertical-middle-line, .horizontal-middle-line').toggle();
+    } catch (exception)
+    {
+        console.log("Editing Mode!")
     }
+/* PDF REPORT RENDERING BROWSER ACCEPT MODAL*/
+
+
+/* PDF GENERATION BUTTON ON SITE*/
+document.getElementById('downloadBtn').addEventListener('click', function () {
+    this.textContent = 'Generating PDF ...';
+    this.disabled = true;
+    downloadPDFMethod();
 });
+/* PDF GENERATION BUTTON ON SITE*/
+
+    /* CALLS TABLE SPLIT LOGIC */
     splitAllTables();
-
+    /* CALLS TEMPLATE LOADER LOGIC */
     initializeTemplateLoader();
-
+    /* CALLS PAGE NUMBERING LOGIC */
     addPageNumbers();
 });
 
+
+/* AUTODOWNLOAD URL PARAM HANDELING FOR DLH.PrintPDF BUTTON */
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('_autoDownload') === 'true') {
     document.body.style.opacity = '0';
@@ -362,84 +59,122 @@ if (urlParams.get('_autoDownload') === 'true') {
         }, 100);
     }, 1000); 
 }
+/* AUTODOWNLOAD URL PARAM HANDELING FOR DLH.PrintPDF BUTTON */
 
+/* PDF RENDERING */
 async function downloadPDFMethod() {
     const { jsPDF } = window.jspdf;
     const pages = document.querySelectorAll('.page');
-    const pdf = new jsPDF('p', 'mm', 'a4');
 
-    for (let i = 0; i < pages.length; i++) {
-        const page = pages[i];
-        const isHorizontal = page.classList.contains('horizontal');
+    showLoadingOverlay();
 
-        // Handle canvas elements
-        const canvasElements = page.querySelectorAll('canvas');
-        const canvasData = [];
+    try {
+        const pdf = new jsPDF('p', 'mm', 'a4', true);
 
-        canvasElements.forEach((canvas) => {
-            const imgData = canvas.toDataURL('image/png');
-            const img = document.createElement('img');
-            img.src = imgData;
-            img.style.width = canvas.style.width || canvas.width + 'px';
-            img.style.height = canvas.style.height || canvas.height + 'px';
-            img.style.display = canvas.style.display || 'block';
+        for (let i = 0; i < pages.length; i++) {
 
-            canvasData.push({
-                canvas: canvas,
-                parent: canvas.parentNode,
-                nextSibling: canvas.nextSibling,
-                img: img
+            updateLoadingProgress(i + 1, pages.length);
+
+            await new Promise(resolve => setTimeout(resolve, 10));
+
+            const page = pages[i];
+            const isHorizontal = page.classList.contains('horizontal');
+
+            // Handle canvas elements
+            const canvasElements = page.querySelectorAll('canvas');
+            const canvasData = [];
+
+            canvasElements.forEach((canvas) => {
+                const imgData = canvas.toDataURL('image/png');
+                const img = document.createElement('img');
+                img.src = imgData;
+                img.style.width = canvas.style.width || canvas.width + 'px';
+                img.style.height = canvas.style.height || canvas.height + 'px';
+                img.style.display = canvas.style.display || 'block';
+
+                canvasData.push({
+                    canvas: canvas,
+                    parent: canvas.parentNode,
+                    nextSibling: canvas.nextSibling,
+                    img: img
+                });
+
+                canvas.parentNode.replaceChild(img, canvas);
             });
 
-            canvas.parentNode.replaceChild(img, canvas);
-        });
+            // Render page to canvas
+            const pageCanvas = await html2canvas(page, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff'
+            });
 
-        // Render page to canvas
-        const pageCanvas = await html2canvas(page, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff'
-        });
+            // Restore original canvases
+            canvasData.forEach(data => {
+                if (data.nextSibling) {
+                    data.parent.insertBefore(data.canvas, data.nextSibling);
+                } else {
+                    data.parent.appendChild(data.canvas);
+                }
+                data.parent.removeChild(data.img);
+            });
 
-        canvasData.forEach(data => {
-            if (data.nextSibling) {
-                data.parent.insertBefore(data.canvas, data.nextSibling);
+            const imgData = pageCanvas.toDataURL('image/png');
+
+            if (i > 0) {
+                if (isHorizontal) {
+                    pdf.addPage('a4', 'landscape');
+                } else {
+                    pdf.addPage('a4', 'portrait');
+                }
             } else {
-                data.parent.appendChild(data.canvas);
+                if (isHorizontal) {
+                    pdf.deletePage(1);
+                    pdf.addPage('a4', 'landscape');
+                }
             }
-            data.parent.removeChild(data.img);
-        });
 
-        const imgData = pageCanvas.toDataURL('image/png');
-
-        if (i > 0) {
             if (isHorizontal) {
-                pdf.addPage('a4', 'landscape');
+                pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
             } else {
-                pdf.addPage('a4', 'portrait');
-            }
-        } else {
-            if (isHorizontal) {
-                pdf.deletePage(1);
-                pdf.addPage('a4', 'landscape');
+                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
             }
         }
 
-        if (isHorizontal) {
-            pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
+        pdf.setProperties({
+            creator: "DataLinq"
+        });
+
+        pdf.save('dataLinqReport.pdf');
+
+        if (window.parent !== window) {
+            window.parent.postMessage({ type: 'pdfDownloadComplete' }, '*');
         } else {
-            pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+            const btn = document.getElementById('downloadBtn');
+            if (btn) {
+                btn.textContent = 'Download PDF';
+                btn.disabled = false;
+            }
         }
-    }
 
-    pdf.save('dataLinqReport.pdf');
+    } catch (error) {
+        console.error("PDF Generation failed:", error);
+        alert("An error occurred while generating the PDF.");
 
-    if (window.parent !== window) {
-        window.parent.postMessage({ type: 'pdfDownloadComplete' }, '*');
+        const btn = document.getElementById('downloadBtn');
+        if (btn) {
+            btn.textContent = 'Download PDF';
+            btn.disabled = false;
+        }
+
+    } finally {
+        removeLoadingOverlay();
     }
 }
+/* PDF RENDERING */
 
+/* LOGIC FOR ADDING PAGE NUMBERS AUTOMATICALLY */
 function addPageNumbers() {
     const optionsDiv = document.querySelector('.pdf-report-options');
 
@@ -468,7 +203,9 @@ function addPageNumbers() {
         page.appendChild(p);
     });
 }
+/* LOGIC FOR ADDING PAGE NUMBERS AUTOMATICALLY */
 
+/* LOGIC FOR LOADING TEMPLATES FOR PAGES */
 function initializeTemplateLoader() {
     const pages = document.querySelectorAll('.page');
 
@@ -531,7 +268,9 @@ function makeTemplateRequest(pagesArray, templateName) {
         console.error(`Error loading template "${templateName}":`, error);
     });
 }
+/* LOGIC FOR ADDING PAGE NUMBERS AUTOMATICALLY */
 
+/* LOGIC SPLITTING UP TABELS LONGER THAN 1 PAGE */
 function splitAllTables() {
     const pagesContainer = document.getElementById('pagesContainer');
     const originalPageWrappers = Array.from(pagesContainer.querySelectorAll('.page-wrapper.dynamic'));
@@ -765,4 +504,41 @@ function createContinuationPage(rows, originalTable, thead, headerRow, wrapperEl
     newPageWrapper.appendChild(newPage);
 
     return newPageWrapper;
+}
+/* LOGIC SPLITTING UP TABELS LONGER THAN 1 PAGE */
+
+/* LOGIC FOR PDF-GENERATION LOADIN BAR */
+function showLoadingOverlay() {
+    // Prevent creating multiple overlays
+    if (document.getElementById('pdf-loading-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'pdf-loading-overlay';
+
+    overlay.innerHTML = `
+        <div id="pdf-loading-text">Preparing PDF...</div>
+        <div class="pdf-progress-container">
+            <div id="pdf-progress-bar"></div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+}
+
+function updateLoadingProgress(current, total) {
+    const bar = document.getElementById('pdf-progress-bar');
+    const text = document.getElementById('pdf-loading-text');
+
+    if (bar && text) {
+        const percentage = Math.round((current / total) * 100);
+        bar.style.width = percentage + '%';
+        text.innerText = `Processing page ${current} of ${total} (${percentage}%)`;
+    }
+}
+
+function removeLoadingOverlay() {
+    const overlay = document.getElementById('pdf-loading-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
 }

@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -2945,6 +2946,7 @@ public class DataLinqHelper : IDataLinqHelper
                         {
                             button.WithId("downloadBtn");
                             button.Content("Download PDF");
+                            button.AddClass("datalinq-button-pdf");
                         });
                     }
                     d.AddClass("main");
@@ -3058,11 +3060,6 @@ public class DataLinqHelper : IDataLinqHelper
                 .AppendDiv(d =>
                 { 
                 }, WriteTags.CloseOnly)
-                .AppendButton(b =>
-                {
-                    b.AddClass("copy-btn");
-                    b.Content("Copy HTML");
-                })
                 .AppendDiv(d =>
                 {
                 }, WriteTags.CloseOnly)
@@ -3096,6 +3093,37 @@ public class DataLinqHelper : IDataLinqHelper
                 })
                 .BuildHtmlString()
         );
+    }
+
+    public object NewPdfElement(double x = 0, double y = 0)
+    {
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                {
+                    d.AddClass("element");
+                    if (x is not 0 && y is not 0)
+                    {
+                        d.AddAttribute("data-x", x.ToString(CultureInfo.InvariantCulture));
+                        d.AddAttribute("data-y", y.ToString(CultureInfo.InvariantCulture));
+                        d.AddStyle("transform", $"translate({x.ToString(CultureInfo.InvariantCulture)}px, {y.ToString(CultureInfo.InvariantCulture)}px)");
+                    }
+
+                }, WriteTags.OpenOnly)
+                .BuildHtmlString()
+        );
+    }
+
+    public object EndPdfElement()
+    {
+        return _razor.RawString(
+           HtmlBuilder.Create()
+               .AppendDiv(d =>
+               {
+                  
+               }, WriteTags.CloseOnly)
+               .BuildHtmlString()
+       );
     }
 
 
