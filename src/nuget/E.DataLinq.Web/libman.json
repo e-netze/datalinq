@@ -37,6 +37,14 @@
     {
       "library": "jsoneditor@10.2.0",
       "destination": "wwwroot/lib/jsoneditor"
+    },
+    {
+      "library": "jspdf@2.5.1",
+      "destination": "wwwroot/lib/jspdf"
+    },
+    {
+      "library": "html2canvas@1.4.1",
+      "destination": "wwwroot/lib/html2canvas"
     }
   ]
 }
