@@ -146,7 +146,9 @@ async function downloadPDFMethod() {
             creator: "DataLinq"
         });
 
-        pdf.save('dataLinqReport.pdf');
+        var container = document.querySelector('.main');
+        var fileName = container.getAttribute('fileName') || 'dataLinqReport.pdf';
+        pdf.save(fileName);
 
         if (window.parent !== window) {
             window.parent.postMessage({ type: 'pdfDownloadComplete' }, '*');

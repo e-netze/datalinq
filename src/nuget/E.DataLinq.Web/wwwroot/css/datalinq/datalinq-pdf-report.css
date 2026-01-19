@@ -156,88 +156,74 @@
 }
 
 @media print {
+    /* 1. Define the Standard A4 Page */
     @page {
         size: A4 portrait;
         margin: 0;
     }
 
+    /* 2. Define a Named Page for Landscape */
+    @page landscape-page {
+        size: A4 landscape;
+        margin: 0;
+    }
+
+    /* 3. Allow body to grow/change based on page size */
     html, body {
+        width: 100%; /* Changed from fixed 210mm */
+        height: 100%; /* Changed from fixed 297mm */
         margin: 0;
         padding: 0;
-        width: 210mm;
-        height: 297mm;
+        background: white;
     }
 
-    body {
-        overflow: hidden;
-    }
-
-    .main {
-        background: none;
+    /* ... Existing cleanup styles ... */
+    .main, .pages-container {
         padding: 0;
         margin: 0;
-        width: auto;
-        min-height: 0;
-        height: auto;
-    }
-
-    .pages-container {
         display: block;
-        margin: 0;
-        padding: 0;
-        gap: 0;
     }
 
     .page-wrapper {
         display: block;
         page-break-after: always;
-        page-break-before: avoid;
         page-break-inside: avoid;
     }
 
-    .page-wrapper:last-child {
-        page-break-after: avoid;
-    }
+        .page-wrapper:last-child {
+            page-break-after: auto;
+        }
 
+    /* 4. Standard Portrait Page Styling */
     .page {
         width: 210mm !important;
         height: 297mm !important;
-        max-height: 297mm !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-        display: block;
-        position: relative;
         overflow: hidden;
+        margin: 0 auto !important; /* Centers it if preview area is large */
+        position: relative;
+        background: white;
+        /* box-shadow lines removed for print */
+        box-shadow: none !important;
     }
 
+        /* 5. THE MAGIC: Apply the named page and swap dimensions */
+        .page.horizontal {
+            /* Tells the browser this element belongs on a "landscape-page" paper */
+            page: landscape-page;
+            /* Swap the physical dimensions to fill the new paper size */
+            width: 297mm !important;
+            height: 210mm !important;
+        }
+
+    /* Hiding UI elements */
     .element {
-        cursor: default;
         border: none !important;
     }
 
-    .element:hover {
-        border: none !important;
-    }
-
-    .copy-btn {
-        display: none;
-    }
-
-    .datalinq-splashscreen,
-    .datalinq-splashscreen-text {
+    .copy-btn, .datalinq-splashscreen, .datalinq-splashscreen-text,
+    .horizontal-middle-line, .vertical-middle-line,
+    #downloadBtn, #datalinq-header {
         display: none !important;
-    }
-
-    .horizontal-middle-line,
-    .vertical-middle-line {
-        display: none;
-    }
-    #downloadBtn {
-        display:none;
-    }
-    #datalinq-header{
-        display:none;
     }
 }
 

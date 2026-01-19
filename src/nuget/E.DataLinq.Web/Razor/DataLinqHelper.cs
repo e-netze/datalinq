@@ -2916,7 +2916,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: 
     /// en: 
     /// </returns>
-    public object BeginPdfReport(Dictionary<string, object> pageNumberOptions = null, bool download_button = false)
+    public object BeginPdfReport(Dictionary<string, object> pageNumberOptions = null, bool download_button = false, string fileName = "dataLinqPdfReport")
     {
         pageNumberOptions ??= new Dictionary<string, object>();
 
@@ -2949,6 +2949,7 @@ public class DataLinqHelper : IDataLinqHelper
                             button.AddClass("datalinq-button-pdf");
                         });
                     }
+                    d.AddAttribute("fileName", fileName);
                     d.AddClass("main");
                     d.AppendDiv(d2 =>
                     {
