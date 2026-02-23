@@ -598,35 +598,30 @@ var dataLinq = new function () {
         var where = $e.attr("data-filter");
         var order = $e.attr("data-orderby");
 
-        if (Array.isArray(columnsToKeep) && columnsToKeep.length > 0) {
-            var jsonUrl = dataLinq.baseUrl + "/datalinq/select/" + ids[0] + "@" + ids[1] + "?" + where + "&_orderby=" + order + "&_pjson=true";
+        var jsonUrl = dataLinq.baseUrl + "/datalinq/select/" + ids[0] + "@" + ids[1] + "?" + where + "&_orderby=" + order + "&_pjson=true";
 
-            fetch(dataLinq.overrideModifyRequestUrlData(jsonUrl))
-                .then(response => {
-                    if (!response.ok) throw new Error("Network response was not ok");
-                    return response.json();
-                })
-                .then(jsonData => {
-                    const filteredData = jsonData.map(item => {
-                        const filteredItem = {};
+        fetch(dataLinq.overrideModifyRequestUrlData(jsonUrl))
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.json();
+            })
+            .then(jsonData => {
+                var filteredData = jsonData.map(item => {
+                    if (Array.isArray(columnsToKeep) && columnsToKeep.length > 0) {
+                        var filteredItem = {};
                         columnsToKeep.forEach(col => {
                             if (col in item) filteredItem[col] = item[col];
                         });
                         return filteredItem;
-                    });
+                    }
+                    return item;
+                });
 
-                    const exportAsString = elem.getAttribute('datalinq-export-asString') || "";
-
-                    const csv = jsonToCsv(filteredData, exportAsString);
-
-                    downloadCsv(csv, (elem.getAttribute('datalinq-export-filename') || 'export') + '.csv');
-                })
-                .catch(err => alert("Fehler beim Export: " + err.message));
-
-        } else {
-            var exportUrl = dataLinq.baseUrl + "/datalinq/select/" + ids[0] + "@" + ids[1] + "?" + where + "&_orderby=" + order + "&_f=csv";
-            window.open(dataLinq.overrideModifyRequestUrlData(exportUrl));
-        }
+                var exportAsString = elem.getAttribute('datalinq-export-asString') || "";
+                var csv = jsonToCsv(filteredData, exportAsString);
+                downloadCsv(csv, (elem.getAttribute('datalinq-export-filename') || 'export') + '.csv');
+            })
+            .catch(err => alert("Fehler beim Export: " + err.message));
     };
 
     function jsonToCsv(items, asString) {
