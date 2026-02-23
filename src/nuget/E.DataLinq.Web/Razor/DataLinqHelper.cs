@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -2915,7 +2916,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: 
     /// en: 
     /// </returns>
-    public object BeginPdfReport(Dictionary<string, object> pageNumberOptions = null)
+    public object BeginPdfReport(Dictionary<string, object> pageNumberOptions = null, bool download_button = false, string fileName = "dataLinqPdfReport")
     {
         pageNumberOptions ??= new Dictionary<string, object>();
 
@@ -2929,11 +2930,26 @@ public class DataLinqHelper : IDataLinqHelper
                 .AppendDiv(dOptions =>
                 {
                     if (usePageNumbers)
-                        dOptions.AppendJavaScriptBlock($"addPageNumbers({{ type: {type}, skipPages: {skipPages}, position: {position} }});");
+                    {
+                        dOptions.AddClass("pdf-report-options");
+                        dOptions.AddAttribute("data-type", type.ToString());
+                        dOptions.AddAttribute("data-skipPages", skipPages.ToString());
+                        dOptions.AddAttribute("data-position", position.ToString());
+                    }
 
                 })          
                 .AppendDiv(d =>
                 {
+                    if (download_button)
+                    {
+                        d.AppendButton(button =>
+                        {
+                            button.WithId("downloadBtn");
+                            button.Content("Download PDF");
+                            button.AddClass("datalinq-button-pdf");
+                        });
+                    }
+                    d.AddAttribute("fileName", fileName);
                     d.AddClass("main");
                     d.AppendDiv(d2 =>
                     {
@@ -2975,23 +2991,41 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: 
     /// en: 
     /// </returns>
-    public object NewPage(Dictionary<string, object> pageTemplateOptions = null)
+    public object NewPage(Dictionary<string, object> pageTemplateOptions = null, Dictionary<string, object> dynamicTableOptions = null, bool landscape = false)
     {
         pageTemplateOptions ??= new Dictionary<string, object>();
 
         bool usePageTemplate = pageTemplateOptions.ContainsKey("UsePageTemplate") && (bool)pageTemplateOptions["UsePageTemplate"];
         string templateId = pageTemplateOptions.ContainsKey("TemplateId") ? pageTemplateOptions["TemplateId"].ToString() : "";
 
+        dynamicTableOptions ??= new Dictionary<string, object>();
+
+        bool dynamic = dynamicTableOptions.ContainsKey("Dynamic") && (bool)dynamicTableOptions["Dynamic"];
+        bool dynamicUseTemplate = dynamicTableOptions.ContainsKey("DynamicUseTemplate") && (bool)dynamicTableOptions["DynamicUseTemplate"];
+
         return _razor.RawString(
             HtmlBuilder.Create()
                 .AppendDiv(d =>
                 {
                     d.AddClass("page-wrapper");
+
+                    if (dynamic)
+                    { 
+                        d.AddClass("dynamic");
+                        if (dynamicUseTemplate)
+                        {
+                            d.AddClass("dynamic-use-template");
+                        }
+                    }
+
                     d.AppendDiv(d2 =>
                     {
                         d2.AddClass("page");
 
-                        if(usePageTemplate)
+                        if (landscape)
+                            d2.AddClass("horizontal");
+
+                        if (usePageTemplate)
                         {
                             d2.AddAttribute("datalinq-pdfreport-template",templateId);
                         }
@@ -3027,11 +3061,6 @@ public class DataLinqHelper : IDataLinqHelper
                 .AppendDiv(d =>
                 { 
                 }, WriteTags.CloseOnly)
-                .AppendButton(b =>
-                {
-                    b.AddClass("copy-btn");
-                    b.Content("Copy HTML");
-                })
                 .AppendDiv(d =>
                 {
                 }, WriteTags.CloseOnly)
@@ -3051,8 +3080,6 @@ public class DataLinqHelper : IDataLinqHelper
     {
         var queryString = string.Join("&", parameters.Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value)}"));
 
-        queryString = string.IsNullOrEmpty(queryString) ? "print=true" : $"{queryString}&print=true";
-
         var buttonId = GenerateUniqueId(id);
 
         return _razor.RawString(
@@ -3061,22 +3088,43 @@ public class DataLinqHelper : IDataLinqHelper
                 {
                     b.WithId(buttonId);
                     b.AddClass("datalinq-button");
+                    b.AddAttribute("data-report-id", id);
+                    b.AddAttribute("data-query-string", queryString);
                     b.Content(buttonText);
                 })
-                .AppendJavaScriptBlock
-                (
-                    $"document.getElementById('{buttonId}').addEventListener('click', function() {{ downloadPageAsPDF('/datalinq/report/{id}?{queryString}');}});"
-                )
-                .AppendIFrame(iframe =>
-                {
-                    iframe.WithId("print-frame");
-                    iframe.AddStyle("display", "none");
-                })
-                .AppendJavaScriptBlock
-                (
-                    "function downloadPageAsPDF(pageUrl) { const iframe = document.getElementById('print-frame');  iframe.src = pageUrl;}"
-                ).BuildHtmlString()
+                .BuildHtmlString()
         );
+    }
+
+    public object NewPdfElement(double x = 0, double y = 0)
+    {
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                {
+                    d.AddClass("element");
+                    if (x is not 0 && y is not 0)
+                    {
+                        d.AddAttribute("data-x", x.ToString(CultureInfo.InvariantCulture));
+                        d.AddAttribute("data-y", y.ToString(CultureInfo.InvariantCulture));
+                        d.AddStyle("transform", $"translate({x.ToString(CultureInfo.InvariantCulture)}px, {y.ToString(CultureInfo.InvariantCulture)}px)");
+                    }
+
+                }, WriteTags.OpenOnly)
+                .BuildHtmlString()
+        );
+    }
+
+    public object EndPdfElement()
+    {
+        return _razor.RawString(
+           HtmlBuilder.Create()
+               .AppendDiv(d =>
+               {
+                  
+               }, WriteTags.CloseOnly)
+               .BuildHtmlString()
+       );
     }
 
 

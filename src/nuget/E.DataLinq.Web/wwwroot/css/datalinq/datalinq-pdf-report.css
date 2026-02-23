@@ -2,11 +2,10 @@
     margin: 0;
     padding: 0;
     height: 100%;
+    background-color: #222;
 }
 
 .main {
-    background-color: #222;
-    width: 100%;
     min-height: 100vh;
     padding: 30px;
     padding-top: 5px;
@@ -20,10 +19,10 @@
 }
 
 .pages-container {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 30px;
-    justify-content: center;
+    justify-items: center;
     max-width: 100%;
 }
 
@@ -45,12 +44,15 @@
     position: relative;
 }
 
+.page.horizontal {
+    width: 297mm;
+    height: 210mm;
+}
+
 .element {
     position: absolute;
     cursor: move;
     user-select: none;
-    padding: 10px;
-    border: 2px solid transparent;
     box-sizing: border-box; /* Important! */
     z-index: 3;
 }
@@ -68,24 +70,24 @@
 }
 
 .element:hover {
-    border: 2px dashed #5badff;
+    /*border: 2px dashed #5badff;*/
 }
 
 .element.dragging {
     opacity: 0.8;
-    border: 2px solid #5badff;
+    /*border: 2px solid #5badff;*/
 }
 
 .element.element-snapped {
-    border: 2px solid #5badff;
+    /*border: 2px solid #5badff;*/
 }
 
 .element.element-snapped {
-    border: 2px dotted #5badff;
+    /*border: 2px dotted #5badff;*/
 }
 
 .element.snap-target {
-    border: 2px solid #5badff;
+    /*border: 2px solid #5badff;*/
 }
 
 .snap-guide-line-x {
@@ -110,35 +112,12 @@
     z-index: 9999;
 }
 
-.copy-btn {
-    background-color: #5badff;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: background-color 0.3s;
-}
-
-    .copy-btn:hover {
-        background-color: #0056b3;
-    }
-
-    .copy-btn:active {
-        background-color: #004085;
-    }
-
-    .copy-btn.copied {
-        background-color: #28a745;
-    }
-
 .page-number {
     position: absolute;
     bottom: 0;
     padding: 50px;
     margin: 0;
+    z-index:10;
 }
 
     .page-number.position-0 {
@@ -177,81 +156,345 @@
 }
 
 @media print {
+    /* 1. Define the Standard A4 Page */
     @page {
         size: A4 portrait;
         margin: 0;
     }
 
+    /* 2. Define a Named Page for Landscape */
+    @page landscape-page {
+        size: A4 landscape;
+        margin: 0;
+    }
+
+    /* 3. Allow body to grow/change based on page size */
     html, body {
+        width: 100%; /* Changed from fixed 210mm */
+        height: 100%; /* Changed from fixed 297mm */
         margin: 0;
         padding: 0;
-        width: 210mm;
-        height: 297mm;
+        background: white;
     }
 
-    body {
-        overflow: hidden;
-    }
-
-    .main {
-        background: none;
+    /* ... Existing cleanup styles ... */
+    .main, .pages-container {
         padding: 0;
         margin: 0;
-        width: auto;
-        min-height: 0;
-        height: auto;
-    }
-
-    .pages-container {
         display: block;
-        margin: 0;
-        padding: 0;
-        gap: 0;
     }
 
     .page-wrapper {
         display: block;
         page-break-after: always;
-        page-break-before: avoid;
         page-break-inside: avoid;
     }
 
         .page-wrapper:last-child {
-            page-break-after: avoid;
+            page-break-after: auto;
         }
 
+    /* 4. Standard Portrait Page Styling */
     .page {
         width: 210mm !important;
         height: 297mm !important;
-        max-height: 297mm !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-        display: block;
-        position: relative;
         overflow: hidden;
+        margin: 0 auto !important; /* Centers it if preview area is large */
+        position: relative;
+        background: white;
+        /* box-shadow lines removed for print */
+        box-shadow: none !important;
     }
 
+        /* 5. THE MAGIC: Apply the named page and swap dimensions */
+        .page.horizontal {
+            /* Tells the browser this element belongs on a "landscape-page" paper */
+            page: landscape-page;
+            /* Swap the physical dimensions to fill the new paper size */
+            width: 297mm !important;
+            height: 210mm !important;
+        }
+
+    /* Hiding UI elements */
     .element {
-        cursor: default;
         border: none !important;
     }
 
-        .element:hover {
-            border: none !important;
-        }
-
-    .copy-btn {
-        display: none;
-    }
-
-    .datalinq-splashscreen,
-    .datalinq-splashscreen-text {
+    .copy-btn, .datalinq-splashscreen, .datalinq-splashscreen-text,
+    .horizontal-middle-line, .vertical-middle-line,
+    #downloadBtn, #datalinq-header {
         display: none !important;
     }
+}
 
-    .horizontal-middle-line,
-    .vertical-middle-line {
-        display: none;
+body.modal-open {
+    overflow: hidden;
+    height: 100vh;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 999998;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-container {
+    z-index: 999999;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    padding: 0;
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
     }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-logo {
+    background: white url(../img/datalinq-splash-logo.png) no-repeat center center;
+    background-size: contain;
+    height: 100px;
+    border-radius: 8px 8px 0 0;
+    margin-top:25px;
+}
+
+.modal-content {
+    padding: 20px 40px;
+    text-align: center;
+}
+
+    .modal-content h2 {
+        color: #333;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 22px;
+        font-weight: 600;
+        margin: 0 0 15px 0;
+    }
+
+    .modal-content p {
+        color: #555;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0 0 20px 0;
+    }
+
+.browser-list {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+    .browser-list h3 {
+        color: #333;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 15px 0;
+    }
+
+    .browser-list ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        text-align: left;
+        display: inline-block;
+    }
+
+    .browser-list li {
+        color: #444;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 14px;
+        padding: 6px 0;
+        position: relative;
+        padding-left: 20px;
+    }
+
+        .browser-list li:before {
+            content: "✓";
+            color: #5badff;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+.modal-buttons {
+    padding: 0 40px 30px 40px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.modal-button {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 30px;
+    border-radius: 5px;
+    border: 2px solid #5badff;
+    cursor: pointer;
+    min-width: 120px;
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+
+    .modal-button.accept {
+        background: #93c9ff;
+        color: #fff;
+    }
+
+        .modal-button.accept:hover {
+            background: #5badff;
+            box-shadow: 0 4px 12px rgba(91, 173, 255, 0.4);
+            transform: translateY(0) translateZ(0);
+        }
+
+    .modal-button.decline {
+        background: #fff;
+        color: #5badff;
+        transform: translateY(-2px) translateZ(0);
+    }
+
+        .modal-button.decline:hover {
+            background: #f0f8ff;
+        }
+
+.hidden,
+.datalinq-splashscreen,
+.datalinq-splashscreen-text {
+    display: none !important;
+}
+
+#editingHelp {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000; /* Ensures it stays on top of other content */
+}
+
+#editingHelp {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2001;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+    #editingHelp:hover {
+        background-color: #0056b3;
+    }
+
+.modal-overlay-help {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 2000; /* Sit on top of everything, including the button */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+}
+
+.modal-content-help {
+    background-color: #fefefe;
+    margin: 10% auto; /* 10% from the top and centered */
+    padding: 25px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 1500px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    font-family: sans-serif;
+}
+
+    .close-modal-help:hover,
+    .close-modal-help:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+.help-list li {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.help-list code {
+    background-color: #f4f4f4;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+    color: #d63384;
+}
+
+#pdf-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8); /* Dark transparent background */
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px); /* Modern blur effect */
+}
+
+#pdf-loading-text {
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 18px;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.pdf-progress-container {
+    width: 300px;
+    height: 10px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#pdf-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%); 
+    border-radius: 10px;
+    transition: width 0.3s ease-out;
+    box-shadow: 0 0 10px rgba(0, 201, 255, 0.7);
 }

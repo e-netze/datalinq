@@ -182,6 +182,24 @@ input.datalinq-filter-parameter[type='checkbox'] {
     font-size: larger;
 }
 
+.datalinq-button-pdf {
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: #93c9ff;
+    color: #303030;
+    font-size: 16px;
+    padding: 6px 16px;
+    border: 2px solid #5badff;
+    cursor: pointer;
+    box-sizing: border-box;
+    border-radius: 18px;
+    outline: none !important;
+    margin-left: 50%;
+    transform: translateX(-50%);
+    margin-top:10px;
+    margin-bottom:10px;
+}
+
 .datalinq-button {
     background-repeat: no-repeat;
     background-position: center;
