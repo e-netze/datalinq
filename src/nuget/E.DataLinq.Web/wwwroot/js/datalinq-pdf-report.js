@@ -30,10 +30,10 @@ try {
     const downloadBtn = document.getElementById('downloadBtn');
     if (downloadBtn) {
         downloadBtn.addEventListener('click', function () {
-    this.textContent = 'Generating PDF ...';
-    this.disabled = true;
-    downloadPDFMethod();
-});
+            this.textContent = 'Generating PDF ...';
+            this.disabled = true;
+            downloadPDFMethod();
+        });
     }
 /* PDF GENERATION BUTTON ON SITE*/
 
@@ -291,6 +291,23 @@ function splitAllTables() {
     });
 }
 
+function getWrapperSpacing(table) {
+    let totalTop = 0;
+    let totalBottom = 0;
+    let currentElement = table.parentElement;
+
+    while (currentElement && !currentElement.classList.contains('page')) {
+        const styles = window.getComputedStyle(currentElement);
+        totalTop += parseFloat(styles.paddingTop) || 0;
+        totalTop += parseFloat(styles.marginTop) || 0;
+        totalBottom += parseFloat(styles.paddingBottom) || 0;
+        totalBottom += parseFloat(styles.marginBottom) || 0;
+        currentElement = currentElement.parentElement;
+    }
+
+    return { top: totalTop, bottom: totalBottom };
+}
+
 function splitTable(table, page, originalPageWrapper) {
     const tbody = table.querySelector('tbody');
     if (!tbody) return;
@@ -338,12 +355,27 @@ function splitTable(table, page, originalPageWrapper) {
 
     const dataRows = rows.slice(startRowIndex);
 
+    const wrapperSpacing = getWrapperSpacing(table);
+
     const pagePadding = 40;
-    const firstPageAvailable = pageHeight - contentBeforeTable - theadHeight - tableMarginTop - tableMarginBottom - pagePadding;
+    const firstPageAvailable = pageHeight
+        - contentBeforeTable
+        - theadHeight
+        - tableMarginTop
+        - tableMarginBottom
+        - wrapperSpacing.top      
+        - wrapperSpacing.bottom   
+        - pagePadding;
 
     const optionsDiv = document.querySelector('.dynamic-use-template');
+
     const continuationAvailable = optionsDiv
-        ? firstPageAvailable
+        ? pageHeight
+        - theadHeight
+        - tableMarginTop
+        - tableMarginBottom
+        - wrapperSpacing.bottom   
+        - pagePadding
         : pageHeight - theadHeight - topPadding - bottomPadding - pagePadding;
 
     const singleRowHeight = dataRows[0].offsetHeight;
@@ -401,6 +433,14 @@ function splitTable(table, page, originalPageWrapper) {
     });
 }
 
+function removeTopSpacingFromStyle(styleString) {
+    if (!styleString) return '';
+    return styleString
+        .replace(/padding-top\s*:\s*[^;]+;?\s*/gi, '')
+        .replace(/margin-top\s*:\s*[^;]+;?\s*/gi, '')
+        .trim();
+}
+
 function createContinuationPage(rows, originalTable, thead, headerRow, wrapperElements, template) {
     const newPageWrapper = document.createElement('div');
     newPageWrapper.className = 'page-wrapper';
@@ -423,7 +463,10 @@ function createContinuationPage(rows, originalTable, thead, headerRow, wrapperEl
 
         const inlineStyle = wrapper.getAttribute('style');
         if (inlineStyle) {
-            clonedWrapper.setAttribute('style', inlineStyle);
+            const cleanedStyle = removeTopSpacingFromStyle(inlineStyle);
+            if (cleanedStyle) {
+                clonedWrapper.setAttribute('style', cleanedStyle);
+            }
         }
 
         Array.from(wrapper.attributes).forEach(attr => {
@@ -459,10 +502,7 @@ function createContinuationPage(rows, originalTable, thead, headerRow, wrapperEl
 
         let finalStyle = tableInlineStyle;
 
-        // Only remove margin-top if the div does NOT exist
-        if (!optionsDiv) {
-            finalStyle = tableInlineStyle.replace(/margin-top\s*:\s*[^;]+;? /gi, '');
-        }
+        
 
         if (finalStyle.trim()) {
             newTable.setAttribute('style', finalStyle);
