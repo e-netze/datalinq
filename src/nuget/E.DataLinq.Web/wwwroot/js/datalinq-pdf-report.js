@@ -27,11 +27,14 @@ try {
 
 
 /* PDF GENERATION BUTTON ON SITE*/
-document.getElementById('downloadBtn').addEventListener('click', function () {
+    const downloadBtn = document.getElementById('downloadBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function () {
     this.textContent = 'Generating PDF ...';
     this.disabled = true;
     downloadPDFMethod();
 });
+    }
 /* PDF GENERATION BUTTON ON SITE*/
 
     /* CALLS TABLE SPLIT LOGIC */
