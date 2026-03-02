@@ -1,8 +1,10 @@
 ﻿using E.DataLinq.Code.Services;
+using E.DataLinq.Core.Models;
 using E.DataLinq.Core.Services;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Crypto;
 using E.DataLinq.Core.Services.Crypto.Abstraction;
+using E.DataLinq.Core.Services.Localization;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
@@ -34,7 +36,8 @@ static public class ServiceCollectionExtensions
 
         return services.Configure(configAction)
                    .AddTransient<DataLinqCodeService>()
-                   .AddTransient<DataLinqCodeIndentityService>();
+                   .AddTransient<DataLinqCodeIndentityService>()
+                   .AddMarkdownLocalization("en");
     }
 
     //static public IServiceCollection AddDataLinqCodeService<TCryptoService,

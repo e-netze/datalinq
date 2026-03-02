@@ -1,8 +1,14 @@
-﻿using Microsoft.AspNetCore.Html;
+﻿using E.DataLinq.Core.Services.Localization;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace E.DataLinq.Code.Extensions;
 
@@ -33,16 +39,34 @@ static public class HtmlExtensions
         return items;
     }
 
+    public static IHtmlContent DisplayNameLabelFor<TModel, TValue>(this IHtmlHelper<TModel> html, Expression<Func<TModel, TValue>> expression)
+    {
+        var member = (expression?.Body as MemberExpression)?.Member;
+        if (member == null) return HtmlString.Empty;
+
+        var displayNameVar = member.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+
+        string displayName = displayNameVar switch
+        {
+            null or "" => member.Name,                          // No attribute → use property name
+            _ when displayNameVar.StartsWith('#') =>            // "#key" → localize
+                html.ViewContext.HttpContext.RequestServices.GetRequiredService<MarkdownLocalizer>().Get(displayNameVar[1..]),
+            _ => displayNameVar                                 
+        };
+
+        return string.IsNullOrEmpty(displayName) ? HtmlString.Empty : new HtmlString($"<label class='display-name'>{displayName}</label>");
+    }
+
     public static IHtmlContent DescriptionFor<TModel, TValue>(this IHtmlHelper<TModel> html, Expression<Func<TModel, TValue>> expression)
     {
-        string description = (expression?.Body as MemberExpression)?.Member?.GetDescription();
+        var descriptionVar = (expression?.Body as MemberExpression)?.Member?.GetDescription();
 
-        if (!String.IsNullOrEmpty(description))
-        {
-            return new HtmlString($"<p class='description'>{description}</p>");
-        }
+        if (string.IsNullOrEmpty(descriptionVar))
+            return HtmlString.Empty;
 
-        return null;
+        string description = descriptionVar.StartsWith('#') ? html.ViewContext.HttpContext.RequestServices.GetRequiredService<MarkdownLocalizer>().Get(descriptionVar[1..]) : descriptionVar;
+
+        return string.IsNullOrEmpty(description) ? HtmlString.Empty : new HtmlString($"<p class='description'>{description}</p>");
     }
 
     #region Helper

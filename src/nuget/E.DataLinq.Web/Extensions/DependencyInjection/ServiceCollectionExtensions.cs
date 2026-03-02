@@ -8,6 +8,7 @@ using E.DataLinq.Core.Services;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Crypto;
 using E.DataLinq.Core.Services.Crypto.Abstraction;
+using E.DataLinq.Core.Services.Localization;
 using E.DataLinq.Core.Services.Persistance;
 using E.DataLinq.Core.Services.Persistance.Abstraction;
 using E.DataLinq.Web.Razor;
@@ -190,7 +191,8 @@ static public class ServiceCollectionExtensions
             .AddTransient<IDataLinqCodeIdentityService, DataLinqCodeIdentityService>()
             .AddTransient<IDataLinqAccessTokenAuthProvider, DataLinqAuthTokenHttpHeaderProvider>()
             .AddTransient<IDataLinqAccessTokenAuthProvider, DataLinqAuthTokenCookieProvider>()
-            .AddHostedService<SandboxInitializer>();
+            .AddHostedService<SandboxInitializer>()
+            .AddMarkdownLocalization("en");
     }
 
     #endregion

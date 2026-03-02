@@ -96,6 +96,12 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Update="Localization\de.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Localization\en.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\datalinq-guide\datalinq-guide.blb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

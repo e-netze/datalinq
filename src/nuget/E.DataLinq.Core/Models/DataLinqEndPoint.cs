@@ -22,25 +22,26 @@ public enum DefaultEndPointTypes  // NEVER CHANGE VALUES !!!
 public class DataLinqEndPoint : IDataLinqAuthProperties
 {
     [JsonProperty("id")]
-    [DisplayName("EndPoint Id")]
-    [Description("The unique endpoint id (readonly)")]
+    [DisplayName("#endPointId")]
+    [Description("#description_endPointId")]
     public string Id { get; set; }
 
     [JsonProperty("name")]
-    [Description("a meaningful name for the endpoint")]
+    [Description("#description_endPointName")]
     public string Name { get; set; }
 
     [JsonProperty("description")]
-    [Description("Here you can describe the intended use for the endpoint")]
+    [DisplayName("#endPointDescription")]
+    [Description("#description_endPointDescription")]
     public string Description { get; set; }
 
     [JsonProperty("access")]
-    [Description("Add or remove users and roles that can access the endpoint. Use * (Asterisk) as username to make this endpoint accessable for every user.")]
+    [Description("#description_endPointAccess")]
     public string[] Access { get; set; }
 
     [JsonProperty("access-tokens", NullValueHandling = NullValueHandling.Ignore)]
-    [DisplayName("Access Tokens")]
-    [Description("Here you can specify whether the endpoint can be accessed via tokens. Both or no token must be set")]
+    [DisplayName("#accessTokens")]
+    [Description("#description_accessTokens")]
     public string[] AccessTokens { get; set; }
 
     [JsonProperty("created")]
@@ -53,8 +54,8 @@ public class DataLinqEndPoint : IDataLinqAuthProperties
     public string SubscriberId { get; set; }
 
     [JsonProperty("typevalue")]
-    [DisplayName("EndPoint Connection Type")]
-    [Description("Here you can specify whether the endpoint points to a database or a datalinq engine")]
+    [DisplayName("#endPointConnectionTypes")]
+    [Description("#description_endPointConnectionTypes")]
     public int TypeValue
     {
         get;
@@ -69,14 +70,14 @@ public class DataLinqEndPoint : IDataLinqAuthProperties
 
     [SecureString]
     [JsonProperty("connectionstring")]
-    [DisplayName("Connection String (Default/Production)")]
-    [Description("The Connection Sting to a database or an url to an service. For PlainText this this can be empty. This connection string is used, if the DataLinq Environment is 'default' or 'production' or DevTest connection isn't set.")]
+    [DisplayName("#conStringProd")]
+    [Description("#description_conStringProd")]
     public string ConnectionString { get; set; }
 
     [SecureString]
     [JsonProperty("connectionstring_devtest")]
-    [DisplayName("Connection String (Development/Test)")]
-    [Description("The Connection Sting to a database or an url to an service. For PlainText this this can be empty. This connection string is used, if the Datadalinq Environment is 'develpment' or 'test'")]
+    [DisplayName("#conStringProd")]
+    [Description("#description_conStringProd")]
     public string ConnectionString_DevTest { get; set; }
 
     [JsonIgnore]

@@ -71,6 +71,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Localization\" />
     <Folder Include="wwwroot\lib\monaco-editor\min-maps\vs\base\" />
     <Folder Include="wwwroot\lib\monaco-editor\min\vs\language\" />
   </ItemGroup>
@@ -79,5 +80,13 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\E.DataLinq.Web.Api.Client\E.DataLinq.Web.Api.Client.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Localization\de.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Localization\en.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
