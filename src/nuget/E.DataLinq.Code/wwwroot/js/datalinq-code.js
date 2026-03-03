@@ -393,7 +393,7 @@ var dataLinqCode = new function ($) {
     this.allDocuments = function () {
         var documents = [];
 
-        $tree.find('.tree-node').each(function (i, node) {
+        $tree.find('.tree-node').not('.folder').each(function (i, node) {
             var $node = $(node);
             var route = $node.data('data-route');
             if (!$node.hasClass('add') && route) {
