@@ -45,7 +45,7 @@
 
             $("<input>")
                 .addClass('datalinq-tree-search-input')
-                .attr('placeholder', 'Find Endpoint, Query, View...')
+                .attr('placeholder', Localizer.get('searchPlaceholder'))
                 .data('$tree', $parent)
                 .appendTo(options.$toolbar)
                 .click(function (e) {
@@ -242,7 +242,7 @@
         if (dataLinqCode.privileges.useAppPrefixFilters() === true) {
             dataLinqCode.api.getEndPointPrefixes(function (prefixes) {
                 $('body').dataLinq_code_modal({
-                    title: 'Select Application Prefixes...',
+                    title: Localizer.get('endpointModalTitle'),
                     onload: function ($content) {
                         renderEndPointPrefixesList($parent, $content, prefixes);
                     }
@@ -772,7 +772,7 @@
     }
 
     var addEndPointNode = function ($parent, endPoint, collapsedRoutes) {
-        var $node = createTreeNodeEndpoint(endPoint || 'New endpoint...', null, endPoint === null, endPoint)
+        var $node = createTreeNodeEndpoint(endPoint || Localizer.get('newEndpoint'), null, endPoint === null, endPoint)
             .addClass('endpoint')
             .data('data-endpoint', endPoint)
             .data('data-route', endPoint);
@@ -900,7 +900,7 @@
     };
 
     var addQueryNode = function ($parent, endPoint, query, collapsedRoutes) {
-        var $node = createTreeNode(query || 'New query/data...', null, query === null)
+        var $node = createTreeNode(query || Localizer.get('newQuery'), null, query === null)
             .addClass('query')
             .data('data-endpoint', endPoint)
             .data('data-query', query)
@@ -989,7 +989,7 @@
     });
 
     var addViewNode = function ($parent, endPoint, query, view) {
-        var $node = createTreeNodeView(view || 'New view...', null, view === null, endPoint, query, view)
+        var $node = createTreeNodeView(view || Localizer.get('newView'), null, view === null, endPoint, query, view)
             .addClass('view')
             .data('data-endpoint', endPoint)
             .data('data-query', query)
@@ -1170,7 +1170,7 @@
 
         $("<button>")
             .addClass('datalinq-code-button')
-            .text('Open all')
+            .text(Localizer.get('modalOpenAll'))
             .appendTo($buttons)
             .click(function () {
                 $(null).dataLinq_code_modal('close');
@@ -1180,7 +1180,7 @@
 
         $("<button>")
             .addClass('datalinq-code-button cancel')
-            .text('Open selected')
+            .text(Localizer.get('modalOpenSelected'))
             .appendTo($buttons)
             .click(function () {
                 var prefixes = [];

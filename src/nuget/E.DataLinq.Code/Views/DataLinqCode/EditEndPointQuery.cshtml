@@ -1,5 +1,7 @@
 ﻿@using E.DataLinq.Code.Extensions
 @model E.DataLinq.Core.Models.DataLinqEndPointQuery
+@inject E.DataLinq.Core.Services.Localization.MarkdownLocalizer _localizer;
+
 
 @{
     Layout = "~/Views/Shared/_Layout_empty-datalinq-code-frame.cshtml";
@@ -33,19 +35,19 @@
             <input type="text" name="_route" readonly="readonly" />
         </div>
 
-        <h3>General</h3>
+        <h3>@_localizer["general"]</h3>
         <div class="hr" ></div>
 
         <div class="datalinq-form-section">
-            @Html.LabelFor(m => m.QueryId)
+            @Html.DisplayNameLabelFor(m => m.QueryId)
             @Html.DescriptionFor(m => m.QueryId)
             @Html.TextBoxFor(m => m.QueryId, htmlAttributes: new { @readonly = "readonly" })
 
-            @Html.LabelFor(m => m.Name)
+            @Html.DisplayNameLabelFor(m => m.Name)
             @Html.DescriptionFor(m => m.Name)
             @Html.TextBoxFor(m => m.Name)
 
-            @Html.LabelFor(m => m.Description)
+            @Html.DisplayNameLabelFor(m => m.Description)
             @Html.DescriptionFor(m => m.Description)
             @Html.TextAreaFor(m => m.Description)
         </div>
@@ -54,12 +56,12 @@
         <div class="hr" ></div>
 
         <div class = "datalinq-form-section">
-            @Html.LabelFor(m => m.TestParameters)
+            @Html.DisplayNameLabelFor(m => m.TestParameters)
             @Html.DescriptionFor(m => m.TestParameters)
             @Html.TextBoxFor(m => m.TestParameters)
         </div>
 
-        <h3>Security</h3>
+        <h3>@_localizer["security"]</h3>
         <div class="hr" ></div>
 
        <div class = "datalinq-form-section">
@@ -69,22 +71,22 @@
                 <div class="datalinq-access-tree"></div>
             }
             <div style="@(ViewData["AccessTree"] == null ? "" : "display:none")">
-                <span>Authorized Users/Roles:</span>
+                <span>@_localizer["authorizedUsersRoles"]</span>
                 @Html.DescriptionFor(m => m.Access)
                 <div class="datalinq-access-control" data-value="@String.Join(',', Model.Access ?? new string[0])"></div>
             </div>
             <br />
-            @Html.LabelFor(m => m.AccessTokens)
+            @Html.DisplayNameLabelFor(m => m.AccessTokens)
             @Html.DescriptionFor(m => m.AccessTokens)
             <div>
-                <button type="button" onclick='dataLinqCodeEditor.refreshToken(0)'>Refresh</button>
-                <button type="button" onclick="dataLinqCodeEditor.clearToken(0)">Clear</button>
+                <button type="button" onclick='dataLinqCodeEditor.refreshToken(0)'>@_localizer["refresh"]</button>
+                <button type="button" onclick="dataLinqCodeEditor.clearToken(0)">@_localizer["clear"]</button>
                 <br/>
                 <input type="text" readonly="readonly" name="datalinq_token0" value="@(Model.AccessTokens!=null && Model.AccessTokens.Length>0 ? Model.AccessTokens[0] : String.Empty)">
             </div>
             <div>
-                <button type="button" onclick='dataLinqCodeEditor.refreshToken(1)'>Refresh</button>
-                <button type="button" onclick="dataLinqCodeEditor.clearToken(1)">Clear</button>
+                <button type="button" onclick='dataLinqCodeEditor.refreshToken(1)'>@_localizer["refresh"]</button>
+                <button type="button" onclick="dataLinqCodeEditor.clearToken(1)">@_localizer["clear"]</button>
                 <br/>
                 <input type="text" readonly="readonly" name="datalinq_token1" value="@(Model.AccessTokens!=null && Model.AccessTokens.Length>1 ? Model.AccessTokens[1] : String.Empty)">
             </div>
@@ -95,15 +97,15 @@
 
         <div class = "datalinq-form-section">
 
-            @Html.LabelFor(m => m.Domains)
+            @Html.DisplayNameLabelFor(m => m.Domains)
             @Html.DescriptionFor(m => m.Domains)
 
             <table style="width:100%;font-size:10px">
                 <tr>
-                    <th style="width:130px">Destination Field</th>
+                    <th style="width:130px">@_localizer["destinationField"]</th>
                     <th>Query Id</th>
-                    <th style="width:120px">Value Field</th>
-                    <th style="width:120px">Name Field</th>
+                    <th style="width:120px">@_localizer["valueField"]</th>
+                    <th style="width:120px">@_localizer["nameField"]</th>
                 </tr>
                 @for (var i = 0; i < 10; i++)
                 {
@@ -126,11 +128,11 @@
 
         </div>
 
-        <h3>Info</h3>
+        <h3>@_localizer["info"]</h3>
         <div class="hr" ></div>
 
         <div class = "datalinq-form-section">
-            @Html.LabelFor(m => m.Created)
+            @Html.DisplayNameLabelFor(m => m.Created)
             @Html.TextBoxFor(m => m.Created, htmlAttributes: new { @readonly = "readonly" })
         </div>
 
@@ -138,14 +140,14 @@
     }
 
     <div class="privileges-delete">
-        <h3>Delete</h3>
+        <h3>@_localizer["delete"]</h3>
         <div class="hr" ></div>
 
         <div class = "datalinq-form-section">
             <p class='description'>
-                Delete this query (and included and views) permanently
+                @_localizer["description_delete_query"]
             </p>
-            <button onclick='dataLinqCodeEditor.delete();return false;'>Delete</button>
+            <button onclick='dataLinqCodeEditor.delete();return false;'>@_localizer["delete"]</button>
         </div>
     </div>
 </div>

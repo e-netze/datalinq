@@ -13,6 +13,8 @@ namespace E.DataLinq.Core.Services.Localization
             _translations = translations;
         }
 
+        public Dictionary<string, string> All => _translations;
+
         public string this[string key] =>
             _translations.TryGetValue(key, out var value) ? value : $"[{key}]";
 

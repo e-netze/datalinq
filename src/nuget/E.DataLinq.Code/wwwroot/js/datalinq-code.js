@@ -14,6 +14,8 @@ var dataLinqCode = new function ($) {
         _username = username;
         _userPrivileges = userPrivileges || {};
 
+        return Localizer.init(this.api).then(() => {
+
         $tree = $('.datalinq-code-tree-container').dataLinqCode_tree({
             $toolbar: $('.datalinq-code-tree-top > .datalinq-code-tree-toolbar')
         });
@@ -232,6 +234,10 @@ var dataLinqCode = new function ($) {
         });
 
         dataLinqCode.events.fire('refresh-ui');
+
+        }).fail((e) => {
+            console.error('Failed to load translations; starting UI with fallback keys.', e);
+        });
     };
 
     this.implementEventController = function (obj) {
@@ -282,6 +288,11 @@ var dataLinqCode = new function ($) {
         this.getEndPointPrefixes = function (callback) {
             this.get('getEndPointPrefixes', callback);
         };
+
+        this.getTranslations = function (callback) {
+            this.get('getTranslations', callback)
+        }
+
         this.getEndPoints = function (filters, callback) {
             let filtersArg = '';
 

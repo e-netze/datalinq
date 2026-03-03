@@ -7,25 +7,28 @@ namespace E.DataLinq.Core.Models;
 public class DataLinqEndPointQueryView
 {
     [JsonProperty("id")]
-    [DisplayName("View Id")]
-    [Description("The unique view id (readonly)")]
+    [DisplayName("#viewId")]
+    [Description("#description_viewId")]
     public string ViewId { get; set; }
 
     [JsonProperty("name")]
-    [Description("a meaningful name for the query")]
+    [Description("#description_viewName")]
     public string Name { get; set; }
 
     [JsonProperty("description")]
-    [Description("Here you can describe the intended use for the query")]
+    [DisplayName("#viewDescription")]
+    [Description("#description_viewDescription")]
     public string Description { get; set; }
 
     [JsonProperty("code")]
     public string Code { get; set; }
 
     [JsonProperty("created")]
+    [DisplayName("#created")]
     public DateTime Created { get; set; }
 
     [JsonProperty("changed")]
+    [DisplayName("#changed")]
     public DateTime Changed { get; set; }
 
     [JsonIgnore]
@@ -41,21 +44,21 @@ public class DataLinqEndPointQueryView
     public bool ShowCode { get; set; }
 
     [JsonProperty(PropertyName = "test_parameters")]
-    [DisplayName("Test Url Parameters")]
-    [Description("Url parameters can be specified here, which are automatically appended during a test/debug call from the IDE")]
+    [DisplayName("#queryTestParameters")]
+    [Description("#viewTestParameters")]
     public string TestParameters { get; set; }
 
     [JsonProperty("included_js_libs")]
-    [Description("Select JavaScript libraries here that should be loaded when the report is accessed. This option is only considered if the view is the main/startpage of the report. For subpages, this option is irrelevant. If a subpage uses JavaScript libraries, they must be included on the startpage.")]
+    [Description("#description_jslibs")]
     public string IncludedJsLibraries { get; set; }
 
     [JsonProperty("pdf_report_mode")]
-    [Description("Should this view be a PDF report?")]
-    [DisplayName("View report mode")]
+    [Description("#description_pdfReportModeView")]
+    [DisplayName("#pdfReportModeView")]
     public bool PDFReportMode { get; set; }
 
     [JsonProperty("pdf_report_editing")]
-    [Description("Should editing (drag & drop & copy) the PDF be possible?")]
-    [DisplayName("Report editing mode")]
+    [Description("#description_pdfEditingMode")]
+    [DisplayName("#pdfEditingMode")]
     public bool PDFReportEditing { get; set; }
 }

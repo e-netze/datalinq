@@ -25,7 +25,7 @@
     var initUI = function (parent, options) {
         var $parent = $(parent);
 
-        $("<div><div class='text'>Check syntax</div></div>")
+        $(`<div><div class='text'>${Localizer.get('checkSyntax')}</div></div>`)
             .data('event', 'verify-current-document')
             .addClass('datalinq-code-toolbutton verify-current')
             .data('refresh-ui', function (args) {
@@ -33,7 +33,7 @@
             })
             .appendTo($parent);
 
-        $("<div><div class='text'>Save Document</div></div>")
+        $(`<div><div class='text'>${Localizer.get('saveCurrent')}</div></div>`)
             .data('event', 'save-current-document')
             .addClass('datalinq-code-toolbutton save-current')
             .data('refresh-ui', function (args) {
@@ -42,7 +42,7 @@
             })
             .appendTo($parent);
 
-        $("<div><div class='text'>Save all Docs</div></div>")
+        $(`<div><div class='text'>${Localizer.get('saveAll')}</div></div>`)
             .data('event', 'save-all-documents')
             .addClass('datalinq-code-toolbutton save-all')
             .data('refresh-ui', function (args) {
@@ -59,7 +59,7 @@
             })
             .appendTo($parent);
 
-        $("<div><div class='text'>Simple Preview</div></div>")
+        $(`<div><div class='text'>${Localizer.get('simplePreview')}</div></div>`)
             .data('event', 'run-current-document')
             .addClass('datalinq-code-toolbutton run')
             .data('refresh-ui', function (args) {
@@ -69,7 +69,7 @@
             })
             .appendTo($parent);
 
-        $("<div><div class='text'>Preview in tab</div></div>")
+        $(`<div><div class='text'>${Localizer.get('tabPreview')}</div></div>`)
             .data('event', 'run-current-document-in-tab')
             .addClass('datalinq-code-toolbutton run-in-tab')
             .data('refresh-ui', function (args) {
@@ -79,12 +79,12 @@
             })
             .appendTo($parent);
 
-        $("<div><div class='text'>Color scheme</div></div>")
+        $(`<div><div class='text'>${Localizer.get('colorScheme')}</div></div>`)
             .data('event', 'toggle-color-scheme')
             .addClass('datalinq-code-toolbutton colorscheme')
             .appendTo($parent);
 
-        $("<div><div class='text'>Datalinq Helper</div></div>")
+        $(`<div><div class='text'>${Localizer.get('help')}</div></div>`)
             .data('event', 'toggle-help')
             .addClass('datalinq-code-toolbutton help')
             .appendTo($parent);

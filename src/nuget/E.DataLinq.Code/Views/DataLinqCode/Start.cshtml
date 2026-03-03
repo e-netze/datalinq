@@ -4,6 +4,8 @@
 @using E.DataLinq.Core
 @using Microsoft.Extensions.Options
 @inject IOptions<DataLinqCodeOptions> DataLinqOptions
+@inject E.DataLinq.Core.Services.Localization.MarkdownLocalizer _localizer;
+
 
 @{
     var Options = DataLinqOptions.Value;
@@ -20,9 +22,9 @@
     {
         <div class="datalinq-code-tile" >
             <div onclick="window.open('@Options.ProjectWebSite');return false;">
-                <h1>Welcome to DataLinq.Code</h1>
+                <h1>@_localizer["startWelcome"]</h1>
                 <p>
-                    The DataLinq Code Editor
+                    @_localizer["startCodeEditor"]
                 </p>
             </div>
             <div onclick="onVersionClick();return false;">
@@ -34,9 +36,9 @@
     }
 
     <div class="datalinq-code-tile" onclick="compileAllViews();return false;">
-        <h1>Verify All Views</h1>
+        <h1>@_localizer["startVerifyAll"]</h1>
         <p>
-            Compile all views to check for errors.
+            @_localizer["startCompile"]
         </p>
         <div id="compiler-progress">
 
@@ -45,16 +47,16 @@
 
     <div class="datalinq-code-tile" >
         <div onclick ="loadAllViews();return false;">
-            <h1>Try Load All Documents</h1>
+            <h1>@_localizer["startLoadAll"]</h1>
             <p>
-                Verifiy, if all documents are valid and loadable without compiling views
+                @_localizer["startVerify"]
             </p>
             <div id="load-progress">
             </div>
         </div>
         <div class="datalinq-code-hidden-developer-content">
             <input type="checkbox" id="load_all_views_rewrite" />
-            <label for="load_all_views_rewrite">Override after successful reading</label>
+            <label for="load_all_views_rewrite">@_localizer["startOverride"]</label>
         </div>
     </div>
 </div>

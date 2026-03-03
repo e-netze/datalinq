@@ -8,6 +8,7 @@ using E.DataLinq.Core.Extensions;
 using E.DataLinq.Core.Models;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Crypto.Abstraction;
+using E.DataLinq.Core.Services.Localization;
 using E.DataLinq.Web.Api.Client;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -23,16 +24,19 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     private readonly DataLinqCodeService _dataLinqCode;
     private readonly IDataLinqAccessTreeService _accessTree;
     private readonly ICryptoService _crypto;
+    private readonly MarkdownLocalizer _localizer;
 
     public DataLinqCodeController(DataLinqCodeService dataLinqCode,
                                   IDataLinqAccessTreeService accessTree,
-                                  ICryptoService crypto)
+                                  ICryptoService crypto,
+                                  MarkdownLocalizer localizer)
         : base()
     {
         _dataLinqCode = dataLinqCode;
         _client = _dataLinqCode.ApiClient;
         _accessTree = accessTree;
         _crypto = crypto;
+        _localizer = localizer;
     }
 
     public IActionResult Index()
@@ -94,6 +98,11 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     }
 
     #endregion
+
+    public IActionResult GetTranslations()
+    {
+        return Ok(_localizer.All);
+    }
 
     public IActionResult Copilot()
     {

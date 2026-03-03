@@ -1,6 +1,7 @@
 ﻿@using E.DataLinq.Code.Extensions
 @using E.DataLinq.Code.Services
 @model E.DataLinq.Core.Models.DataLinqEndPointQueryView
+@inject E.DataLinq.Core.Services.Localization.MarkdownLocalizer _localizer;
 
 @inject DataLinqCodeService DataLinqCode
 
@@ -37,19 +38,19 @@
             <input type="text" name="_route" readonly="readonly" />
         </div>
 
-        <h3>General</h3>
+        <h3>@_localizer["general"]</h3>
         <div class="hr" ></div>
 
         <div class="datalinq-form-section">           
-            @Html.LabelFor(m => m.ViewId)
+            @Html.DisplayNameLabelFor(m => m.ViewId)
             @Html.DescriptionFor(m => m.ViewId)
             @Html.TextBoxFor(m => m.ViewId, htmlAttributes: new { @readonly = "readonly" })
 
-            @Html.LabelFor(m => m.Name)
+            @Html.DisplayNameLabelFor(m => m.Name)
             @Html.DescriptionFor(m => m.Name)
             @Html.TextBoxFor(m => m.Name)
 
-            @Html.LabelFor(m => m.Description)
+            @Html.DisplayNameLabelFor(m => m.Description)
             @Html.DescriptionFor(m => m.Description)
             @Html.TextAreaFor(m => m.Description)
         </div>
@@ -58,12 +59,12 @@
         <div class="hr" ></div>
 
         <div class = "datalinq-form-section">
-            @Html.LabelFor(m => m.TestParameters)
+            @Html.DisplayNameLabelFor(m => m.TestParameters)
             @Html.DescriptionFor(m => m.TestParameters)
             @Html.TextBoxFor(m => m.TestParameters)
         </div>
 
-        <h3>JS Libraries</h3>
+        <h3>@_localizer["jslibs"]</h3>
         <div class="hr" ></div>
 
         <div class="datalinq-form-section">
@@ -78,26 +79,26 @@
             }
         </div>
 
-        <h3>PDF Report mode</h3>
+        <h3>@_localizer["pdfReportMode"]</h3>
         <div class="hr"></div>
 
         <div class="datalinq-form-section">
-            @Html.LabelFor(m => m.PDFReportMode)
+            @Html.DisplayNameLabelFor(m => m.PDFReportMode)
             @Html.DescriptionFor(m => m.PDFReportMode)
             @Html.CheckBoxFor(m => m.PDFReportMode)
             <br />
-            @Html.LabelFor(m => m.PDFReportEditing)
+            @Html.DisplayNameLabelFor(m => m.PDFReportEditing)
             @Html.DescriptionFor(m => m.PDFReportEditing)
             @Html.CheckBoxFor(m => m.PDFReportEditing)
         </div>
 
-        <h3>Info</h3>
+        <h3>@_localizer["info"]</h3>
         <div class="hr" ></div>
 
         <div class = "datalinq-form-section">
-            @Html.LabelFor(m => m.Created)
+            @Html.DisplayNameLabelFor(m => m.Created)
             @Html.TextBoxFor(m => m.Created, htmlAttributes: new { @readonly = "readonly" })
-            @Html.LabelFor(m => m.Changed)
+            @Html.DisplayNameLabelFor(m => m.Changed)
             @Html.TextBoxFor(m => m.Changed, htmlAttributes: new { @readonly = "readonly" })
         </div>
 
@@ -105,14 +106,14 @@
     }
 
     <div class="privileges-delete">
-        <h3>Delete</h3>
+        <h3>@_localizer["delete"]</h3>
         <div class="hr" ></div>
 
         <div class = "datalinq-form-section">
             <p class='description'>
-                Delete this view permanently
+                @_localizer["description_deleteView"]
             </p>
-            <button onclick='dataLinqCodeEditor.delete();return false;'>Delete</button>
+            <button onclick='dataLinqCodeEditor.delete();return false;'>@_localizer["delete"]</button>
         </div>
     </div>
 </div>

@@ -36,6 +36,7 @@ public class DataLinqEndPoint : IDataLinqAuthProperties
     public string Description { get; set; }
 
     [JsonProperty("access")]
+    [DisplayName("#access")]
     [Description("#description_endPointAccess")]
     public string[] Access { get; set; }
 
@@ -44,6 +45,7 @@ public class DataLinqEndPoint : IDataLinqAuthProperties
     [Description("#description_accessTokens")]
     public string[] AccessTokens { get; set; }
 
+    [DisplayName("#created")]
     [JsonProperty("created")]
     public DateTime Created { get; set; }
 

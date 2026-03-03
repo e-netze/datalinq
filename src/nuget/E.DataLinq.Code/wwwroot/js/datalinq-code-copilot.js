@@ -7,6 +7,10 @@ let currentUser;
 let chatHistories;
 
 async function CopilotInitializer() {
+    const api = (window.parent && window.parent.dataLinqCode && window.parent.dataLinqCode.api);
+
+    await Localizer.init(api);
+
     if (controllerTargetUrl === undefined) {
         controllerTargetUrl = window.location.origin;
 
@@ -199,14 +203,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await loadChatHistories();
             $('body').dataLinq_code_modal({
-                title: 'Chat Verlauf auswählen...',
+                title: Localizer.get('chooseChatHistory'),
                 onload: function ($content) {
                     renderChatHistoryList(null, $content, chatHistories);
                 }
             });
         } catch (error) {
             console.error('Error opening chat history modal:', error);
-            alert('Fehler beim Laden des Chat-Verlaufs');
+            alert(Localizer.get('errorChatHistory'));
         }
     }
 
@@ -260,13 +264,13 @@ async function saveChatToIndexedDB(chatId, messages) {
                         updatedAt: now
                     };
 
-                    if ((!existingChat.title || existingChat.title === 'Neuer Chat') && messages.length > 0) {
+                    if ((!existingChat.title || existingChat.title === Localizer.get('newChat')) && messages.length > 0) {
                         chatData.title = generateChatTitle(messages[0]);
                     }
                 } else {
                     chatData = {
                         id: chatId,
-                        title: messages.length > 0 ? generateChatTitle(messages[0]) : 'Neuer Chat',
+                        title: messages.length > 0 ? generateChatTitle(messages[0]) : Localizer.get('newChat'),
                         messages: [...messages],
                         createdAt: now,
                         updatedAt: now,
@@ -343,7 +347,7 @@ async function loadChatHistories() {
                 .append(
                     $("<div>")
                         .addClass('text')
-                        .text('Keine Chat-Verläufe vorhanden')
+                        .text(Localizer.get("noChatHistoriesFound"))
                 );
             return;
         }
@@ -381,8 +385,8 @@ async function loadChatHistories() {
                 .click(function (e) {
                     e.stopPropagation();
                     dataLinqConfirm(
-                        `Chat "${chat.title}" wirklich löschen?`,
-                        'Chat löschen',
+                        Localizer.get('questionDeleteChat'),
+                        Localizer.get('deleteChat'),
                         function () {
                             deleteChatHistory(chat.id);
                             $li.remove();
@@ -400,7 +404,7 @@ async function loadChatHistories() {
 
         $("<button>")
             .addClass('datalinq-code-button')
-            .text('Neuer Chat')
+            .text(Localizer.get('newChat'))
             .appendTo($buttons)
             .click(function () {
                 $(null).dataLinq_code_modal('close');
@@ -409,12 +413,12 @@ async function loadChatHistories() {
 
         $("<button>")
             .addClass('datalinq-code-button cancel')
-            .text('Alle löschen')
+            .text(Localizer.get('deleteAll'))
             .appendTo($buttons)
             .click(function () {
                 dataLinqConfirm(
-                    'Wirklich alle Chat-Verläufe löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
-                    'Alle Chats löschen',
+                    Localizer.get('questionDeleteAll'),
+                    Localizer.get('actionDeleteAll'),
                     function () {
                         $.each(chatHistories, function (index, chat) {
                             deleteChatHistory(chat.id);
@@ -427,14 +431,14 @@ async function loadChatHistories() {
 
         $("<button>")
             .addClass('datalinq-code-button')
-            .text('Schließen')
+            .text(Localizer.get('close'))
             .appendTo($buttons)
             .click(function () {
                 $(null).dataLinq_code_modal('close');
             });
     };
     function dataLinqConfirm(message, title, onConfirm, onCancel) {
-        title = title || 'Bestätigung';
+        title = title || Localizer.get('confirm');
 
         $('body').dataLinq_code_modal({
             title: title,
@@ -450,7 +454,7 @@ async function loadChatHistories() {
 
                 $("<button>")
                     .addClass("datalinq-code-button cancel")
-                    .text("Nein")
+                    .text(Localizer.get('no'))
                     .appendTo($buttonbar)
                     .click(function () {
                         if (onCancel) {
@@ -461,7 +465,7 @@ async function loadChatHistories() {
 
                 $("<button>")
                     .addClass("datalinq-code-button")
-                    .text("Ja")
+                    .text(Localizer.get('yes'))
                     .appendTo($buttonbar)
                     .click(function () {
                         if (onConfirm) {
@@ -727,21 +731,21 @@ function processMessage(message) {
 
             if (!code || code.trim() === '') {
                 await sendMessageAsync(
-                    "Es ist kein Code in der aktuellen View verfügbar zum Erklären.",
-                    "Erkläre mir den Code des aktuellen Tab"
+                    "There is no code available in the current view to explain it.",
+                    "Explain the code of the current tab to me."
                 );
                 return;
             }
 
-            const message = `Erkläre mir den Code der aktuellen View:\n\n${code}`;
+            const message = `Explain the code of the current view to me:\n\n${code}`;
 
-            await sendMessageAsync(message, "Erkläre mir den Code des aktuellen Tab");
+            await sendMessageAsync(message, "Explain the code of the current tab to me.");
 
         } catch (error) {
             console.error("Error in explainCurrentCode function:", error);
             await sendMessageAsync(
-                `Es gab einen Fehler beim Abrufen des aktuellen Codes: ${error.message}`,
-                "Fehler beim Abrufen des Codes"
+                `There was an error retrieving the current code: ${error.message}`,
+                "Error retrieving the code"
             );
         }
     }
@@ -753,29 +757,29 @@ function processMessage(message) {
 
             if (!code) {
                 await sendMessageAsync(
-                    "Es ist kein Code in der aktuellen View verfügbar.",
-                    "Erkläre mir was der aktuelle Fehler bedeutet"
+                    "No code is available in the current view.",
+                    "Explain to me what the current error means."
                 );
                 return;
             }
 
             if (errors.length === 0) {
                 await sendMessageAsync(
-                    `In der aktuellen View:\n${code}\n\nEs wurden keine Compiler-Fehler gefunden.`,
-                    "Erkläre mir den Code des aktuellen Tab"
+                    `In the current view::\n${code}\n\nNo compiler errors were found.`,
+                    "Explain the code of the current tab to me."
                 );
                 return;
             }
 
-            const message = `Warum bekomme ich in der aktuellen View:\n${code}\n\ndie folgenden Errors:\n${errors.join('\n')}`;
+            const message = `Why am I getting the following in the current view:\n${code}\n\nthe following errors:\n${errors.join('\n')}`;
 
-            await sendMessageAsync(message, "Erkläre mir was der aktuelle Fehler bedeutet");
+            await sendMessageAsync(message, "Explain to me what the current error means.");
 
         } catch (error) {
             console.error("Error in currentError function:", error);
             await sendMessageAsync(
-                `Es gab einen Fehler beim Abrufen der aktuellen Fehler: ${error.message}`,
-                "Fehler beim Abrufen der Daten"
+                `There was an error retrieving the current errors: ${error.message}`,
+                "Error retrieving data"
             );
         }
     }

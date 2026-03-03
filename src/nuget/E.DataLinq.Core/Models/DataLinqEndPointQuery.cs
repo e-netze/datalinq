@@ -9,16 +9,17 @@ namespace E.DataLinq.Core.Models;
 public class DataLinqEndPointQuery : IDataLinqAuthProperties
 {
     [JsonProperty("id")]
-    [DisplayName("Query Id")]
-    [Description("The unique query id (readonly)")]
+    [DisplayName("#queryId")]
+    [Description("#description_queryId")]
     public string QueryId { get; set; }
 
     [JsonProperty("name")]
-    [Description("a meaningful name for the query")]
+    [Description("#description_queryName")]
     public string Name { get; set; }
 
     [JsonProperty("description")]
-    [Description("Here you can describe the intended use for the query")]
+    [DisplayName("#queryDescription")]
+    [Description("#description_queryDescription")]
     public string Description { get; set; }
 
     [SecureString]
@@ -26,14 +27,16 @@ public class DataLinqEndPointQuery : IDataLinqAuthProperties
     public string Statement { get; set; }
 
     [JsonProperty("access")]
-    [Description("Add or remove users and roles that can access the query. Use * (Asterisk) as username to make this query accessable for every user.")]
+    [DisplayName("#access")]
+    [Description("#description_queryAccess")]
     public string[] Access { get; set; }
 
     [JsonProperty("access-tokens", NullValueHandling = NullValueHandling.Ignore)]
-    [DisplayName("Access Tokens")]
-    [Description("Here you can specify whether the query can be accessed via tokens. Both or no token must be set")]
+    [DisplayName("#accessTokens")]
+    [Description("#description_queryAccessTokens")]
     public string[] AccessTokens { get; set; }
 
+    [DisplayName("#created")]
     [JsonProperty("created")]
     public DateTime Created { get; set; }
 
@@ -50,8 +53,8 @@ public class DataLinqEndPointQuery : IDataLinqAuthProperties
     public Domain[] Domains { get; set; }
 
     [JsonProperty(PropertyName = "test_parameters")]
-    [DisplayName("Test Url Parameters")]
-    [Description("Url parameters can be specified here, which are automatically appended during a test/debug call from the IDE")]
+    [DisplayName("#queryTestParameters")]
+    [Description("#description_queryTestParameters")]
     public string TestParameters { get; set; }
 
     [JsonIgnore]
