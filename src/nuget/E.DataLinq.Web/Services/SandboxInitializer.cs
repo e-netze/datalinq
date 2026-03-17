@@ -28,26 +28,34 @@ namespace E.DataLinq.Web.Services
             _storagePath = persistanceOptions.Value.ConnectionString;
         }
 
-        async public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            if (!_initializeSandbox) return; 
+            if (!_initializeSandbox) return;
 
             _logger.LogInformation("Initializing DataLinq Guide sandbox...");
 
-            var zipData = E.DataLinq.Web.Properties.Resources.datalinq_guide;
-            var zipFile = new ZipArchive(new MemoryStream(zipData));
+            var assembly = typeof(SandboxInitializer).Assembly;
+            var resourceStream = assembly.GetManifestResourceStream(
+                "E.DataLinq.Web.datalinq_guide.zip"
+            );
 
-            var sourceVersionFile = zipFile.GetEntry("datalinq-guide/version.txt");
+            if (resourceStream is null)
+            {
+                return;
+            }
+
+            using var zipFile = new ZipArchive(resourceStream, ZipArchiveMode.Read);
+
+            var sourceVersionEntry = zipFile.GetEntry("datalinq-guide/version.txt");
             var targetVersionFile = Path.Combine(_storagePath, "datalinq-guide", "version.txt");
 
-            Version sourceVersion = ReadVersionOrDefault(sourceVersionFile);
-            Version targetVersion = ReadVersionOrDefault(targetVersionFile);
+            Version sourceVersion = ReadVersionFromEntry(sourceVersionEntry);
+            Version targetVersion = ReadVersionFromFile(targetVersionFile);
             _logger.LogDebug("Source version: {SourceVersion}", sourceVersion);
             _logger.LogDebug("Target version: {TargetVersion}", targetVersion);
 
             if (sourceVersion <= targetVersion)
             {
-                _logger.LogInformation("DataLinq Guide sandbox is up to date. No action needed.");
                 return;
             }
 
@@ -56,70 +64,65 @@ namespace E.DataLinq.Web.Services
 
             if (Directory.Exists(destinationDir))
             {
-                _logger.LogDebug("Deleting existing DataLinq Guide directory at {DestinationDir}", destinationDir);
                 Directory.Delete(destinationDir, recursive: true);
             }
             if (File.Exists(destDbFile))
             {
-                _logger.LogDebug("Deleting existing DataLinq Guide database file at {DestDbFile}", destDbFile);
                 File.Delete(destDbFile);
             }
 
-            _logger.LogInformation("Extracting DataLinq Guide sandbox to {StoragePath}", _storagePath);
-            await zipFile.ExtractToDirectoryAsync(_storagePath);
+            foreach (var entry in zipFile.Entries)
+            {
+                if (string.IsNullOrEmpty(entry.Name))
+                    continue;
+
+                var destPath = Path.Combine(_storagePath, entry.FullName);
+                var destDir = Path.GetDirectoryName(destPath)!;
+
+                if (!Directory.Exists(destDir))
+                {
+                    Directory.CreateDirectory(destDir);
+                }
+
+                using var entryStream = entry.Open();
+                using var fileStream = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 81920);
+                await entryStream.CopyToAsync(fileStream, cancellationToken);
+                await fileStream.FlushAsync(cancellationToken);
+            }
 
             var blbFilePath = Path.Combine(_storagePath, "datalinq-guide", "datalinq-guide.blb");
 
             if (File.Exists(blbFilePath))
             {
-                string content = File.ReadAllText(blbFilePath);
+                string content = await File.ReadAllTextAsync(blbFilePath, cancellationToken);
                 string connectionString = $"sqlite:DataSource={destDbFile.Replace("\\", "/")}";
                 content = content.Replace("{{connectionstring}}", connectionString);
-
-                _logger.LogDebug("Updating connection string in {BlbFilePath} to {ConnectionString}", blbFilePath, connectionString);
-
-                await File.WriteAllTextAsync(blbFilePath, content);
+                await File.WriteAllTextAsync(blbFilePath, content, cancellationToken);
             }
-
-            return;
         }
 
-        private Version ReadVersionOrDefault(string filePath)
+        private Version ReadVersionFromFile(string filePath)
         {
-            if (File.Exists(filePath) && Version.TryParse(File.ReadAllText(filePath).Trim(), out var version))
+            if (File.Exists(filePath)
+                && Version.TryParse(File.ReadAllText(filePath).Trim(), out var version))
+            {
                 return version;
+            }
             return new Version(0, 0, 0);
         }
 
-        private Version ReadVersionOrDefault(ZipArchiveEntry versionEntry)
+        private Version ReadVersionFromEntry(ZipArchiveEntry versionEntry)
         {
-            if (versionEntry != null)
+            if (versionEntry is not null)
             {
-                using (var reader = new StreamReader(versionEntry.Open()))
+                using var reader = new StreamReader(versionEntry.Open());
+                var versionText = reader.ReadToEnd().Trim();
+                if (Version.TryParse(versionText, out var version))
                 {
-                    var versionText = reader.ReadToEnd().Trim();
-                    if (Version.TryParse(versionText, out var version))
-                    {
-                        return version;
-                    }
+                    return version;
                 }
             }
             return new Version(0, 0, 0);
-        }
-
-        private void CopyDirectory(string sourceDir, string destDir)
-        {
-            Directory.CreateDirectory(destDir);
-            foreach (var file in Directory.GetFiles(sourceDir))
-            {
-                var destFile = Path.Combine(destDir, Path.GetFileName(file));
-                File.Copy(file, destFile, overwrite: true);
-            }
-
-            foreach (var dir in Directory.GetDirectories(sourceDir))
-            {
-                CopyDirectory(dir, Path.Combine(destDir, Path.GetFileName(dir)));
-            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
