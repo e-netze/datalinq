@@ -165,6 +165,7 @@ public class DataLinqController : DataLinqBaseController
                     AuthIntialText = authIntialText,
                     IncludedJsLibraries = (endPointQueryView.IncludedJsLibraries ?? JsLibrary.LegacyDefaultNames).Split(','),
                     PDFReportMode = endPointQueryView.PDFReportMode,
+                    PDFCompatibilityNotice = endPointQueryView.PDFCompatibilityNotice,
                     PDFReportEditing = endPointQueryView.PDFReportEditing
                 });
             }

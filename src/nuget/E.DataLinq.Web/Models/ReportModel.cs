@@ -17,5 +17,6 @@ public class ReportModel
     public string[] IncludedJsLibraries { get; set; }
 
     public bool PDFReportMode { get; set; }
+    public bool PDFCompatibilityNotice { get; set; }
     public bool PDFReportEditing { get; set; }
 }

@@ -54,6 +54,11 @@ public class DataLinqEndPointQueryView
     [DisplayName("View report mode")]
     public bool PDFReportMode { get; set; }
 
+    [JsonProperty("pdf_compatibility_notice")]
+    [Description("Should this PDF Report include the browser compatibility notice?")]
+    [DisplayName("Browser Compatibility Notice")]
+    public bool PDFCompatibilityNotice { get; set; }
+
     [JsonProperty("pdf_report_editing")]
     [Description("Should editing (drag & drop & copy) the PDF be possible?")]
     [DisplayName("Report editing mode")]

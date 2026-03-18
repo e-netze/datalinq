@@ -112,6 +112,11 @@ ______      _        _     _
     <script src="@(ViewData["contentRootUrl"])/js/datalinq-pdf-report.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
 }
 
+@if(Model.PDFCompatibilityNotice)
+{
+    <script src="@(ViewData["contentRootUrl"])/js/datalinq-pdf-report.compatibilityNotice.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
+}
+
 @if (Model.PDFReportEditing)
 {
     <script src="@(ViewData["contentRootUrl"])/js/datalinq-pdf-report.editing.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
@@ -141,7 +146,7 @@ ______      _        _     _
 
     </div>
 
-    @if (Model.PDFReportMode && !Model.PDFReportEditing)
+    @if (Model.PDFCompatibilityNotice)
     {
         @Html.Partial("_PdfReportingBrowserCompatibilityNotice",Model);
     } 
