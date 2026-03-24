@@ -63,4 +63,16 @@ public class DataLinqEndPointQueryView
     [Description("Should editing (drag & drop & copy) the PDF be possible?")]
     [DisplayName("Report editing mode")]
     public bool PDFReportEditing { get; set; }
+
+    [JsonProperty("cache_token_ttl")]
+    [Description("The Time To Live of a DataLinqCacheToken")]
+    [DisplayName("Cache Token TTL")]
+    public int CacheTokenTTL_days { get; set; }
+    public int CacheTokenTTL_hours { get; set; }
+    public int CacheTokenTTL_minutes { get; set; }
+
+    [JsonProperty("cache_token_maxUsage")]
+    [Description("The max usage of a DataLinqCacheToken")]
+    [DisplayName("Cache Token Max Usage")]
+    public int CacheTokenMaxUsage { get; set; }
 }

@@ -6,6 +6,7 @@ using E.DataLinq.Web;
 using E.DataLinq.Web.Extensions.DependencyInjection;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
+using E.DataLinq.Web.Services.TokenCache;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,10 @@ if (!string.IsNullOrWhiteSpace(azureEndpoint) || !string.IsNullOrWhiteSpace(open
 {
     builder.Services.AddDataLinqAIServices(aiOptions => aiConfig.Bind(aiOptions));
 }
+
+var tokenStoreConfigSection = builder.Configuration.GetSection(TokenStoreOptions.Key);
+builder.Services.Configure<TokenStoreOptions>(tokenStoreConfigSection);
+builder.Services.AddDataLinqCacheTokenStore(tokenStoreConfigSection);
 
 builder.Services.AddDefaultDatalinqEngines(builder.Configuration.GetSection("DataLinq.Api:SelectEngines"));
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.Postgres.DbFactoryProvider>();

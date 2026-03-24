@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using Castle.Core.Configuration;
 using E.DataLinq.Core.Engines;
 using E.DataLinq.Core.Engines.Abstraction;
 using E.DataLinq.Core.Models;
@@ -10,15 +11,18 @@ using E.DataLinq.Core.Services.Crypto;
 using E.DataLinq.Core.Services.Crypto.Abstraction;
 using E.DataLinq.Core.Services.Persistance;
 using E.DataLinq.Core.Services.Persistance.Abstraction;
+using E.DataLinq.Web.Html.Abstractions;
 using E.DataLinq.Web.Razor;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using E.DataLinq.Web.Services.Agents;
 using E.DataLinq.Web.Services.Cache;
 using E.DataLinq.Web.Services.Plugins;
+using E.DataLinq.Web.Services.TokenCache;
 using E.DataLinq.Web.Services.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 using System;
 using System.Linq;
 
@@ -107,6 +111,42 @@ static public class ServiceCollectionExtensions
                        .AddHostedService<CopilotReflectionInitializer>();
     }
 
+
+    public static IServiceCollection AddDataLinqCacheTokenStore(
+        this IServiceCollection services,
+        IConfigurationSection dataLinqCacheTokenConfig)
+    {
+        var storageTypeConfig = dataLinqCacheTokenConfig.GetValue("StorageType", "file");
+
+        if (!Enum.TryParse<DataLinqCacheTokenStorageType>(storageTypeConfig, true, out var storageType))
+        {
+            throw new InvalidOperationException(
+                $"Invalid StorageType in TokenCache configuration: {storageTypeConfig}. " +
+                "Valid values: File, InMemory, Redis");
+        } 
+
+        services.AddScoped<IDataLinqCacheTokenService, DataLinqCacheTokenService>();
+
+        switch (storageType)
+        {
+            case DataLinqCacheTokenStorageType.File:
+                services.AddSingleton<IDataLinqCacheTokenStore, DataLinqFileCacheTokenStore>();
+                if (dataLinqCacheTokenConfig.GetValue("EnableBackgroundCleanup", false))
+                    services.AddHostedService<DataLinqFileCacheTokenStoreCleanupService>();
+                break;
+
+            case DataLinqCacheTokenStorageType.Redis:
+                services.AddSingleton<IDataLinqCacheTokenStore, DataLinqRedisCacheTokenStore>();
+                services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(
+                    dataLinqCacheTokenConfig.GetValue("RedisConnectionString","") ?? throw new InvalidOperationException("Redis Connection string missing!")));
+                break;
+
+            default:
+                throw new ArgumentException($"Unknown storage type: {storageType}");
+        }
+
+        return services;
+    }
 
 
     #region Engines & DbFactories

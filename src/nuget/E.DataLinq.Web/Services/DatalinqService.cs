@@ -3,11 +3,13 @@ using E.DataLinq.Core.Engines.Abstraction;
 using E.DataLinq.Core.Extensions;
 using E.DataLinq.Core.Models;
 using E.DataLinq.Core.Models.Authentication;
+using E.DataLinq.Core.Security.Token.Models;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Persistance.Abstraction;
 using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Models;
 using E.DataLinq.Web.Services.Abstraction;
+using E.DataLinq.Web.Services.TokenCache;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -37,6 +39,7 @@ public class DataLinqService
     private readonly DataLinqEndpointTypeService _endpointTypes;
     private readonly IWebHostEnvironment _environment;
     private readonly IHostAuthenticationService _hostAuthentication;
+    private readonly IDataLinqCacheTokenService _tokenService;
     private readonly IDataLinqCodeIdentityService _dataLinqCodeIdentity;
     private readonly IDataLinqAccessProviderService _dataLinqAccessProvider;
 
@@ -50,6 +53,7 @@ public class DataLinqService
                            DataLinqEndpointTypeService endpointTypes,
                            IWebHostEnvironment environment,
                            IDataLinqAccessProviderService dataLinqAccessProvider,
+                           IDataLinqCacheTokenService tokenService,
                            IHostAuthenticationService hostAuthenication = null,
                            IDataLinqCodeIdentityService dataLinqCodeIdentity = null)
     {
@@ -63,6 +67,7 @@ public class DataLinqService
         _endpointTypes = endpointTypes;
         _environment = environment;
         _hostAuthentication = hostAuthenication;
+        _tokenService = tokenService;
         _dataLinqCodeIdentity = dataLinqCodeIdentity;
         _dataLinqAccessProvider = dataLinqAccessProvider;
     }
@@ -196,6 +201,18 @@ public class DataLinqService
                 }
 
                 #endregion
+
+                if (arguments["dataLinqCacheToken"] != null)
+                {
+                    var token = arguments["dataLinqCacheToken"];
+
+                    var tokenPayload = _tokenService.ResolveTokenAsync(token).Result;
+
+                    if (tokenPayload.Success.Equals(true) && tokenPayload.DataLinqRoute.Equals(routeString))
+                        arguments = tokenPayload.Payload.ParseCacheTokenPayload();
+                    else
+                        throw new ArgumentException($"Select -> Invalid/Expired Cache token: {token}");
+                }
 
                 var queryEngineResult = await datalinqQueryEngine.SelectAsync(endPoint, endPointQuery, arguments);
                 var records = queryEngineResult.records;

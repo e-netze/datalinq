@@ -95,6 +95,35 @@
             @Html.CheckBoxFor(m => m.PDFReportEditing)
         </div>
 
+        <h3>DataLinq Cache Token</h3>
+        <div class="hr"></div>
+
+        <div class="datalinq-form-section">
+            @Html.LabelFor(m => m.CacheTokenTTL_days)
+            @Html.DescriptionFor(m => m.CacheTokenTTL_days)
+            <div class="ttl-picker">
+                <div>
+                    @Html.LabelFor(m => m.CacheTokenTTL_days, "Days")
+                    @Html.TextBoxFor(m => m.CacheTokenTTL_days, new { @class = "datalinq-input", type = "number", min = "0" })
+                </div>
+
+                <div>
+                    @Html.LabelFor(m => m.CacheTokenTTL_hours, "Hours")
+                    @Html.TextBoxFor(m => m.CacheTokenTTL_hours, new { @class = "datalinq-input", type = "number", min = "0", max = "23" })
+                </div>
+
+                <div>
+                    @Html.LabelFor(m => m.CacheTokenTTL_minutes, "Minutes")
+                    @Html.TextBoxFor(m => m.CacheTokenTTL_minutes, new { @class = "datalinq-input", type = "number", min = "0", max = "59" })
+                </div>
+            </div>
+
+            <br />
+            @Html.LabelFor(m => m.CacheTokenMaxUsage)
+            @Html.DescriptionFor(m => m.CacheTokenMaxUsage)
+            @Html.TextBoxFor(m => m.CacheTokenMaxUsage, new { @class= "datalinq-input", type = "number", min = "0", step = "1" })
+        </div>
+
         <h3>Info</h3>
         <div class="hr" ></div>
 

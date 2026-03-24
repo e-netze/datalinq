@@ -3,6 +3,7 @@ using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Razor;
 using E.DataLinq.Web.Services.Abstraction;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using Newtonsoft.Json;
@@ -23,19 +24,23 @@ public class CopilotReflectionInitializer : IHostedService
 {
     private readonly Mock<IRazorCompileEngineService> _razorMock;
     private readonly Mock<IDataLinqUser> _uiMock;
-    private readonly DataLinqService _currentDatalinqService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly Mock<HttpContext> _httpContextMock;
     private static DataLinqHelper _helper;
 
-    public CopilotReflectionInitializer(DataLinqService currentDatalinqService)
+    public CopilotReflectionInitializer(IServiceScopeFactory scopeFactory)
     {
         _razorMock = new Mock<IRazorCompileEngineService>();
         _uiMock = new Mock<IDataLinqUser>();
         _httpContextMock = new Mock<HttpContext>();
         _razorMock.Setup(r => r.RawString(It.IsAny<string>())).Returns((string input) => new RawContentTestable(input));
-        _currentDatalinqService = currentDatalinqService;
+        _scopeFactory = scopeFactory;
 
-        _helper = new DataLinqHelper(_httpContextMock.Object, _currentDatalinqService, _razorMock.Object, _uiMock.Object);
+        using (var scope = _scopeFactory.CreateScope())
+        {
+            var dataLinqService = scope.ServiceProvider.GetRequiredService<DataLinqService>();
+            _helper = new DataLinqHelper(_httpContextMock.Object, dataLinqService, _razorMock.Object, _uiMock.Object);
+        }
     }
 
     public Task StartAsync(CancellationToken cancellationToken)

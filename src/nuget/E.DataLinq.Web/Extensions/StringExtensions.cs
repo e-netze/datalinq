@@ -1,6 +1,12 @@
-﻿using System;
+﻿using E.DataLinq.Core.Services.Persistance.Abstraction;
+using E.DataLinq.Web.Models.TokenCache;
+using E.DataLinq.Web.Services.TokenCache;
+using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Specialized;
+using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace E.DataLinq.Web.Extensions;
 
@@ -146,4 +152,70 @@ internal static class StringExtensions
 
     public static bool IsNotEmpty(this string str)
         => !string.IsNullOrEmpty(str);
+
+    public static TokenMetadata GenerateTokenMetadata(this string token, string payload, string dataLinqRoute, TimeSpan lifeTime, int? maxUsage)
+    {
+        return new TokenMetadata
+        {
+            Token = token,
+            DataLinqRoute = dataLinqRoute,
+            Payload = payload,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.Add(lifeTime),
+            MaxUsage = maxUsage,
+            UsageCount = 0
+        };
+    }
+
+    public static async Task<(TimeSpan lifeTime, int? maxUsage)> ParseDataLinqRouteAsync(
+        this string dataLinqRoute,
+        IPersistanceProviderService persistanceProvider,
+        TokenStoreOptions options)
+    {
+        var parts = dataLinqRoute.Split('@');
+        var endPointQueryView = await persistanceProvider.GetEndPointQueryView(parts[0], parts[1], parts[2]);
+
+        var combinedTTL = TimeSpan.FromDays(endPointQueryView.CacheTokenTTL_days)
+                         + TimeSpan.FromHours(endPointQueryView.CacheTokenTTL_hours)
+                         + TimeSpan.FromMinutes(endPointQueryView.CacheTokenTTL_minutes);
+
+        var lifeTime = combinedTTL == TimeSpan.Zero ? options.DefaultTTL : combinedTTL;
+        var maxUsage = endPointQueryView.CacheTokenMaxUsage == 0 ? options.DefaultMaxUsage : endPointQueryView.CacheTokenMaxUsage;
+
+        return (lifeTime, maxUsage);
+    }
+
+    public static NameValueCollection ParseCacheTokenPayload(this string payload)
+    {
+        var collection = new NameValueCollection();
+
+        if (string.IsNullOrWhiteSpace(payload))
+            return collection;
+
+        var pairs = payload.Split('&');
+
+        foreach (var pair in pairs)
+        {
+            var parts = pair.Split(new[] { '=' }, 2);
+
+            if (parts.Length != 2)
+                continue;
+
+            var key = parts[0].Trim();
+            var valuesPart = parts[1].Trim();
+
+            var values = valuesPart.Split(',');
+
+            foreach (var value in values)
+            {
+                var trimmedValue = value.Trim();
+                if (!string.IsNullOrEmpty(trimmedValue))
+                {
+                    collection.Add(key, trimmedValue);
+                }
+            }
+        }
+
+        return collection;
+    }
 }

@@ -7,3 +7,9 @@ public enum WriteTags
     CloseOnly,
     SelfClose
 }
+
+public enum DataLinqCacheTokenStorageType
+{
+    File,
+    Redis
+}

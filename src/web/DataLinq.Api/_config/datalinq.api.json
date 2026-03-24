@@ -1,6 +1,6 @@
 {
   "DataLinq.Api": {
-    "StoragePath_": "E:\\geonet_sys\\development\\shared\\webgis\\webgis5-storage\\webgis.tools.datalinq.endpoints",
+    "StoragePath_": "",
     "Razor": {
       "Engine": "default" // default, legacy, core
     },
@@ -56,5 +56,14 @@
     "DataLinqEndpointAgent": "../../nuget/E.Datalinq.Web/Services/Agents/Prompts/DataLinqEndpointPrompt.txt",
     "DataLinqGeneralAgent": "../../nuget/E.Datalinq.Web/Services/Agents/Prompts/DataLinqGeneralPrompt.txt",
     "UserHistorySummarizerAgent": "../../nuget/E.Datalinq.Web/Services/Agents/Prompts/UserHistorySummarizerPrompt.txt"
+  },
+  "TokenCache": {
+    "StorageType": "file",
+    "RedisConnectionString": "localhost:6379",
+    "FilePath": "C:\\temp\\datalinq\\Tokens\\",
+    "DefaultTTL": "00:05:00",
+    "DefaultMaxUsage": null,
+    "EnableBackgroundCleanup": false,
+    "CleanupIntervalMinutes": "24:00:00"
   }
 }
