@@ -87,7 +87,7 @@ public class SelectResult
         }
     }
 
-    private static IDictionary<string, object>? ConvertToExpando(object obj)
+    private static IDictionary<string, object> ConvertToExpando(object obj)
     {
         if (obj == null) return null;
 

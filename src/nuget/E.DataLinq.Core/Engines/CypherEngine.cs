@@ -60,7 +60,7 @@ public class CypherEngine : IDataLinqSelectEngine
         {
             throw new ApplicationException("Neo4j query execution error.", ex);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             throw;
         }

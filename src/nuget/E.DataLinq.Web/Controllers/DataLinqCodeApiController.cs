@@ -32,7 +32,7 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly DataLinqEndpointTypeService _endpointTypes;
     private readonly JsLibrariesService _jsLibraries;
     private readonly IDataLinqApiNotificationService _notification;
-    private readonly SemanticKernelService? _semanticKernelService;
+    private readonly SemanticKernelService _semanticKernelService;
 
     public DataLinqCodeApiController(ILogger<DataLinqCodeApiController> logger,
                                      IPersistanceProviderService persistanceProvider,
@@ -41,7 +41,7 @@ public class DataLinqCodeApiController : ApiBaseController
                                      IDataLinqCodeIdentityService _identitySerice,
                                      IMonacoSnippetService monacoSnippetService,
                                      JsLibrariesService jsLibraries,
-                                     SemanticKernelService? semanticKernelService = null,
+                                     SemanticKernelService semanticKernelService = null,
                                      IHostAuthenticationService hostAuthentication = null,
                                      IDataLinqApiNotificationService notification = null)
     {

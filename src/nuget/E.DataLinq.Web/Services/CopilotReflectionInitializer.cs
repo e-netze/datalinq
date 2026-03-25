@@ -486,7 +486,7 @@ public class CopilotReflectionInitializer : IHostedService
 
         public override string ToString() => Value?.ToString() ?? "";
 
-        public override bool Equals(object? obj)
+        public override bool Equals(object obj)
         {
             return obj is RawContentTestable other &&
                    other.ToString() == this.ToString();

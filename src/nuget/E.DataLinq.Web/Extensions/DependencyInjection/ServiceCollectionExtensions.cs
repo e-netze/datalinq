@@ -93,7 +93,7 @@ static public class ServiceCollectionExtensions
     }
 
     static public IServiceCollection AddDataLinqAIServices(this IServiceCollection services,
-                                                        Action<AiServiceOptions> aiServiceOptions = null)
+                                                        Action<AiServiceOptions>? aiServiceOptions = null)
     {
         if (aiServiceOptions != null)
         {

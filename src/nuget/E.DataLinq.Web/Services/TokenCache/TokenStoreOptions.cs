@@ -10,7 +10,7 @@ public class TokenStoreOptions
 {
     public const string Key = "TokenCache";
     public DataLinqCacheTokenStorageType StorageType { get; set; } = DataLinqCacheTokenStorageType.File;
-    public string? FilePath { get; set; }
+    public string FilePath { get; set; } = string.Empty;
     public TimeSpan DefaultTTL { get; set; } = TimeSpan.FromHours(1);
     public int? DefaultMaxUsage { get; set; } = 1;
     public bool EnableBackgroundCleanup { get; set; } = false;

@@ -7,7 +7,7 @@ namespace E.DataLinq.Web.Models.TokenCache;
 public class TokenResolveResponse
 {
     public bool Success { get; set; }
-    public string? Payload { get; set; }
-    public string? DataLinqRoute { get; set; }
-    public string? ErrorMessage { get; set; }
+    public string Payload { get; set; }
+    public string DataLinqRoute { get; set; }
+    public string ErrorMessage { get; set; }
 }

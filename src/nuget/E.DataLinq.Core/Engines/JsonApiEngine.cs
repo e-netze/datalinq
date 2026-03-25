@@ -69,7 +69,7 @@ public class JsonApiEngine : IDataLinqSelectEngine
 
             var content = await response.Content.ReadAsStringAsync();
 
-            JsonNode? rootNode = JsonNode.Parse(content);
+            JsonNode rootNode = JsonNode.Parse(content);
             if (rootNode is null)
                 throw new Exception("Failed to parse JSON response");
 
@@ -118,7 +118,7 @@ public class JsonApiEngine : IDataLinqSelectEngine
         return expando;
     }
 
-    object ConvertJsonNodeValue(JsonNode? node)
+    object ConvertJsonNodeValue(JsonNode node)
     {
         if (node == null)
             return null!;
@@ -155,7 +155,7 @@ public class JsonApiEngine : IDataLinqSelectEngine
             .TrimStart('$', '.')
             .Split('.', StringSplitOptions.RemoveEmptyEntries);
 
-        JsonNode? current = root;
+        JsonNode current = root;
         foreach (var token in tokens)
         {
             if (current is JsonObject obj && obj.TryGetPropertyValue(token, out var next))
