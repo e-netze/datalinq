@@ -1129,6 +1129,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Boolscher Wert der angiebt ob die einzelnen Felder als String exportiert werden sollen (alles in hochkomma).  
     /// en: Bool value that specifies weather the fields should be exported as string in quotation marks.
     /// </param>
+    /// <param name="exportWithBom">
+    /// de: Boolscher Wert der angiebt ob mit einem BOM exportiert wird.  
+    /// en: Bool value that specifies weather the fields should be exported with a BOM.
+    /// </param>
     /// <returns>
     /// de: Gibt das generierte HTML für das Export-Steuerelement zurück.
     /// en: Returns the generated HTML for the export control.
@@ -1138,7 +1142,8 @@ public class DataLinqHelper : IDataLinqHelper
         object htmlAttributes = null,
         IEnumerable<string> columns = null,
         string filename = "",
-        bool exportAsString = false)
+        bool exportAsString = false,
+        bool exportWithBom = false)
     {
         string columnsJson = (columns != null && columns.Any())
             ? System.Text.Json.JsonSerializer.Serialize(columns)
@@ -1156,6 +1161,9 @@ public class DataLinqHelper : IDataLinqHelper
                     b.AddAttributes(htmlAttributes);
                     b.AddAttribute("onclick", onclickJs);
                     b.Content(label);
+
+                    if (exportWithBom)
+                        b.AddAttribute("datalinq-export-bom", "true");
 
                     if (!string.IsNullOrEmpty(filename))
                         b.AddAttribute("datalinq-export-filename", filename);

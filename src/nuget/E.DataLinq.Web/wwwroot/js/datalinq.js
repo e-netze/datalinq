@@ -619,7 +619,8 @@ var dataLinq = new function () {
 
                 var exportAsString = elem.getAttribute('datalinq-export-asString') || "";
                 var csv = jsonToCsv(filteredData, exportAsString);
-                downloadCsv(csv, (elem.getAttribute('datalinq-export-filename') || 'export') + '.csv');
+                var bom = elem.getAttribute("datalinq-export-bom") || "";
+                downloadCsv(csv, (elem.getAttribute('datalinq-export-filename') || 'export') + '.csv', bom);
             })
             .catch(err => alert("Fehler beim Export: " + err.message));
     };
@@ -647,8 +648,9 @@ var dataLinq = new function () {
         return [header, ...rows].join("\n");
     }
 
-    function downloadCsv(csvContent, filename) {
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    function downloadCsv(csvContent, filename, bom) {
+        const content = bom ? '\uFEFF' + csvContent : csvContent;
+        const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         if (navigator.msSaveBlob) { 
             navigator.msSaveBlob(blob, filename);
