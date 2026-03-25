@@ -149,7 +149,10 @@ internal class DataLinqFileCacheTokenStore : IDataLinqCacheTokenStore
     #region Helpers
     private string GetFilePath(string token)
     {
-        return Path.Combine(_tokenOptions.FilePath, $"{token}.token");
+        if(_tokenOptions.FilePath.IsNotEmpty())
+            return Path.Combine(_tokenOptions.FilePath, $"{token}.token");
+
+        throw new ArgumentException("DataLinqCachToken FilePath not specified!");
     }
     #endregion
 }
