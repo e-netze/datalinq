@@ -1,4 +1,5 @@
-﻿using E.DataLinq.Core.Services.Crypto.Abstraction;
+﻿using E.DataLinq.Core;
+using E.DataLinq.Core.Services.Crypto.Abstraction;
 using E.DataLinq.Core.Services.Persistance.Abstraction;
 using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Models.TokenCache;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -39,13 +41,13 @@ internal class DataLinqFileCacheTokenStore : IDataLinqCacheTokenStore
     {
         try
         {
-            var token = Guid.NewGuid().ToString("N");
+            var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(100));
 
             var (lifeTime, maxUsage) = await dataLinqRoute.ParseDataLinqRouteAsync(_persistanceProvider, _tokenOptions);
 
-            var tokenMetadata = token.GenerateTokenMetadata(payload, dataLinqRoute, lifeTime, maxUsage);
+            var tokenMetadata = token.GenerateTokenMetadata(payload, dataLinqRoute, lifeTime, maxUsage,_crypto);
 
-            await File.WriteAllTextAsync(GetFilePath(token), _crypto.EncryptTextDefault(JsonSerializer.Serialize(tokenMetadata)));
+            await File.WriteAllTextAsync(GetFilePath(token), JsonSerializer.Serialize(tokenMetadata));
 
             _logger.LogInformation("Token created: {Token}, at {DateTime}", token, DateTime.Now);
 
@@ -70,37 +72,40 @@ internal class DataLinqFileCacheTokenStore : IDataLinqCacheTokenStore
 
     public async Task<TokenMetadata> GetAsync(string token)
     {
-        var filePath = GetFilePath(token);
-
-        if (!File.Exists(filePath))
-            return null;
-
-        var json = await File.ReadAllTextAsync(filePath);
-
-        var metadata = JsonSerializer.Deserialize<TokenMetadata>(_crypto.DecryptTextDefault(json));
-
-        if (metadata == null)
-            return null;
-
-        if (metadata.ExpiresAt < DateTime.UtcNow)
+        using (await FuzzyMutexAsync.LockAsync(token))
         {
-            _logger.LogInformation("Token expired: {Token}", token);
-            await RevokeAsync(token);
-            return null;
+            var filePath = GetFilePath(token);
+
+            if (!File.Exists(filePath))
+                return null;
+
+            var json = await File.ReadAllTextAsync(filePath);
+
+            var metadata = JsonSerializer.Deserialize<TokenMetadata>(json).DecryptTokenMetadata(_crypto);
+
+            if (metadata == null)
+                return null;
+
+            if (metadata.ExpiresAt < DateTime.UtcNow)
+            {
+                _logger.LogInformation("Token expired: {Token}", token);
+                await RevokeAsync(token);
+                return null;
+            }
+
+            if (metadata.MaxUsage.HasValue && metadata.UsageCount >= metadata.MaxUsage.Value)
+            {
+                _logger.LogInformation("Token exceeded max usage: {Token}", token);
+                await RevokeAsync(token);
+                return null;
+            }
+
+            metadata.UsageCount++;
+
+            await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(metadata.EncryptTokenMetadata(_crypto)));
+
+            return metadata;
         }
-
-        if (metadata.MaxUsage.HasValue && metadata.UsageCount >= metadata.MaxUsage.Value)
-        {
-            _logger.LogInformation("Token exceeded max usage: {Token}", token);
-            await RevokeAsync(token);
-            return null;
-        }
-
-        metadata.UsageCount++;
-
-        await File.WriteAllTextAsync(filePath, _crypto.EncryptTextDefault(JsonSerializer.Serialize(metadata)));
-
-        return metadata;
     }
 
     public async Task<bool> RevokeAsync(string token)

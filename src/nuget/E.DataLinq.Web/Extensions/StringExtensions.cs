@@ -1,4 +1,5 @@
-﻿using E.DataLinq.Core.Services.Persistance.Abstraction;
+﻿using E.DataLinq.Core.Services.Crypto.Abstraction;
+using E.DataLinq.Core.Services.Persistance.Abstraction;
 using E.DataLinq.Web.Models.TokenCache;
 using E.DataLinq.Web.Services.TokenCache;
 using Microsoft.Extensions.Options;
@@ -153,17 +154,45 @@ internal static class StringExtensions
     public static bool IsNotEmpty(this string str)
         => !string.IsNullOrEmpty(str);
 
-    public static TokenMetadata GenerateTokenMetadata(this string token, string payload, string dataLinqRoute, TimeSpan lifeTime, int? maxUsage)
+    public static TokenMetadata GenerateTokenMetadata(this string token, string payload, string dataLinqRoute, TimeSpan lifeTime, int? maxUsage, ICryptoService _crypto)
     {
         return new TokenMetadata
         {
             Token = token,
-            DataLinqRoute = dataLinqRoute,
-            Payload = payload,
+            DataLinqRoute = _crypto.EncryptTextDefault(dataLinqRoute),
+            Payload = _crypto.EncryptTextDefault(payload),
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.Add(lifeTime),
             MaxUsage = maxUsage,
             UsageCount = 0
+        };
+    }
+
+    public static TokenMetadata EncryptTokenMetadata(this TokenMetadata tokenMetadata, ICryptoService _crypto)
+    {
+        return new TokenMetadata
+        {
+            Token = tokenMetadata.Token,
+            DataLinqRoute = _crypto.EncryptTextDefault(tokenMetadata.DataLinqRoute),
+            Payload = _crypto.EncryptTextDefault(tokenMetadata.Payload),
+            CreatedAt = tokenMetadata.CreatedAt,
+            ExpiresAt = tokenMetadata.ExpiresAt,
+            MaxUsage = tokenMetadata.MaxUsage,
+            UsageCount = tokenMetadata.UsageCount
+        };
+    }
+
+    public static TokenMetadata DecryptTokenMetadata(this TokenMetadata tokenMetadata, ICryptoService _crypto)
+    {
+        return new TokenMetadata
+        {
+            Token = tokenMetadata.Token,
+            DataLinqRoute = _crypto.DecryptTextDefault(tokenMetadata.DataLinqRoute),
+            Payload = _crypto.DecryptTextDefault(tokenMetadata.Payload),
+            CreatedAt = tokenMetadata.CreatedAt,
+            ExpiresAt = tokenMetadata.ExpiresAt,
+            MaxUsage = tokenMetadata.MaxUsage,
+            UsageCount = tokenMetadata.UsageCount
         };
     }
 
