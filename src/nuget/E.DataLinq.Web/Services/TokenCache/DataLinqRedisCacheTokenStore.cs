@@ -2,15 +2,10 @@
 using E.DataLinq.Core.Services.Persistance.Abstraction;
 using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Models.TokenCache;
-using Microsoft.CodeAnalysis;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -20,23 +15,27 @@ internal class DataLinqRedisCacheTokenStore : IDataLinqCacheTokenStore
 {
     private readonly IPersistanceProviderService _persistanceProvider;
     private readonly ILogger<DataLinqRedisCacheTokenStore> _logger;
-    private readonly TokenStoreOptions _tokenOptions;
+    private readonly DataLinqTokenStoreOptions _tokenOptions;
     private readonly IDatabase _redisDb;
     private readonly ICryptoService _crypto;
 
+    // static: reuse
+    private static IConnectionMultiplexer _redisConnection = null;
 
     public DataLinqRedisCacheTokenStore(
         IPersistanceProviderService persistanceProvider,
         ILogger<DataLinqRedisCacheTokenStore> logger,
-        IOptions<TokenStoreOptions> tokenOptions,
-        IConnectionMultiplexer redis,
+        IOptions<DataLinqTokenStoreOptions> tokenOptions,
         ICryptoService crypto
         )
     {
+        _tokenOptions = tokenOptions.Value;
+        _redisConnection ??= ConnectionMultiplexer.Connect(tokenOptions.Value.RedisConnectionString ?? throw new InvalidOperationException("Redis Connection string missing!"));
+
         _persistanceProvider = persistanceProvider;
         _logger = logger;
-        _tokenOptions = tokenOptions.Value;
-        _redisDb = redis.GetDatabase();
+
+        _redisDb = _redisConnection.GetDatabase();
         _crypto = crypto;
     }
 
@@ -46,9 +45,9 @@ internal class DataLinqRedisCacheTokenStore : IDataLinqCacheTokenStore
 
         var (lifeTime, maxUsage) = await dataLinqRoute.ParseDataLinqRouteAsync(_persistanceProvider, _tokenOptions);
 
-        var tokenMetadata = token.GenerateTokenMetadata(payload,dataLinqRoute,lifeTime, maxUsage);
+        var tokenMetadata = token.GenerateTokenMetadata(payload, dataLinqRoute, lifeTime, maxUsage);
 
-        var setValue = await _redisDb.StringSetAsync(token,_crypto.EncryptTextDefault(JsonSerializer.Serialize(tokenMetadata)));
+        var setValue = await _redisDb.StringSetAsync(token, _crypto.EncryptTextDefault(JsonSerializer.Serialize(tokenMetadata)));
 
         if (setValue)
         {

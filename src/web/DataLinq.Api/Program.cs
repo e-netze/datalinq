@@ -63,8 +63,8 @@ if (!string.IsNullOrWhiteSpace(azureEndpoint) || !string.IsNullOrWhiteSpace(open
     builder.Services.AddDataLinqAIServices(aiOptions => aiConfig.Bind(aiOptions));
 }
 
-var tokenStoreConfigSection = builder.Configuration.GetSection(TokenStoreOptions.Key);
-builder.Services.Configure<TokenStoreOptions>(tokenStoreConfigSection);
+var tokenStoreConfigSection = builder.Configuration.GetSection(DataLinqTokenStoreOptions.Key);
+builder.Services.Configure<DataLinqTokenStoreOptions>(tokenStoreConfigSection);
 builder.Services.AddDataLinqCacheTokenStore(tokenStoreConfigSection);
 
 builder.Services.AddDefaultDatalinqEngines(builder.Configuration.GetSection("DataLinq.Api:SelectEngines"));

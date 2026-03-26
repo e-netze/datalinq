@@ -20,6 +20,7 @@ using E.DataLinq.Web.Services.Cache;
 using E.DataLinq.Web.Services.Plugins;
 using E.DataLinq.Web.Services.TokenCache;
 using E.DataLinq.Web.Services.Worker;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
@@ -137,8 +138,6 @@ static public class ServiceCollectionExtensions
 
             case DataLinqCacheTokenStorageType.Redis:
                 services.AddSingleton<IDataLinqCacheTokenStore, DataLinqRedisCacheTokenStore>();
-                services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(
-                    dataLinqCacheTokenConfig.GetValue("RedisConnectionString","") ?? throw new InvalidOperationException("Redis Connection string missing!")));
                 break;
 
             default:
@@ -148,6 +147,33 @@ static public class ServiceCollectionExtensions
         return services;
     }
 
+
+    public static IServiceCollection AddDataLinqCacheTokenService(
+        this IServiceCollection services,
+        DataLinqCacheTokenStorageType storageType,
+        Action<DataLinqTokenStoreOptions> setupAction)
+    {
+        services
+            .Configure(setupAction)
+            .AddScoped<IDataLinqCacheTokenService, DataLinqCacheTokenService>();
+
+        switch (storageType)
+        {
+            case DataLinqCacheTokenStorageType.File:
+                services.AddSingleton<IDataLinqCacheTokenStore, DataLinqFileCacheTokenStore>();
+                services.AddHostedService<DataLinqFileCacheTokenStoreCleanupService>();
+                break;
+
+            case DataLinqCacheTokenStorageType.Redis:
+                services.AddSingleton<IDataLinqCacheTokenStore, DataLinqRedisCacheTokenStore>();
+                break;
+
+            default:
+                throw new ArgumentException($"Unknown storage type: {storageType}");
+        }
+
+        return services;
+    }
 
     #region Engines & DbFactories
 

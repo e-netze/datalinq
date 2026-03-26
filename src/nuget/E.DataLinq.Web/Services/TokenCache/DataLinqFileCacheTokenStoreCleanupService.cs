@@ -10,12 +10,12 @@ namespace E.DataLinq.Web.Services.TokenCache;
 
 internal class DataLinqFileCacheTokenStoreCleanupService : BackgroundService
 {
-    private readonly TokenStoreOptions _options;
+    private readonly DataLinqTokenStoreOptions _options;
     private readonly ILogger<DataLinqFileCacheTokenStoreCleanupService> _logger;
     private readonly DataLinqFileCacheTokenStore _fileTokenStore;
 
     public DataLinqFileCacheTokenStoreCleanupService(
-        IOptions<TokenStoreOptions> options,
+        IOptions<DataLinqTokenStoreOptions> options,
         ILogger<DataLinqFileCacheTokenStoreCleanupService> logger,
         IDataLinqCacheTokenStore tokenStore
         )
@@ -26,6 +26,8 @@ internal class DataLinqFileCacheTokenStoreCleanupService : BackgroundService
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (!_options.EnableBackgroundCleanup) return;
+
         while (!stoppingToken.IsCancellationRequested)
         {
             await DoCleanupAsync(stoppingToken);

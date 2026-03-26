@@ -170,7 +170,7 @@ internal static class StringExtensions
     public static async Task<(TimeSpan lifeTime, int? maxUsage)> ParseDataLinqRouteAsync(
         this string dataLinqRoute,
         IPersistanceProviderService persistanceProvider,
-        TokenStoreOptions options)
+        DataLinqTokenStoreOptions options)
     {
         var parts = dataLinqRoute.Split('@');
         var endPointQueryView = await persistanceProvider.GetEndPointQueryView(parts[0], parts[1], parts[2]);

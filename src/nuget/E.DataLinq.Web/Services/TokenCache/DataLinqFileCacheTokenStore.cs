@@ -13,17 +13,16 @@ namespace E.DataLinq.Web.Services.TokenCache;
 
 internal class DataLinqFileCacheTokenStore : IDataLinqCacheTokenStore
 {
-    private readonly TokenStoreOptions _tokenOptions;
+    private readonly DataLinqTokenStoreOptions _tokenOptions;
     private readonly ILogger<DataLinqFileCacheTokenStore> _logger;
     private readonly IPersistanceProviderService _persistanceProvider;
     private readonly ICryptoService _crypto;
 
     public DataLinqFileCacheTokenStore(
-        IOptions<TokenStoreOptions> tokenOptions,
+        IOptions<DataLinqTokenStoreOptions> tokenOptions,
         ILogger<DataLinqFileCacheTokenStore> logger,
         IPersistanceProviderService persistanceProvider,
         ICryptoService crypto
-
         )
     {
         _tokenOptions = tokenOptions.Value;
