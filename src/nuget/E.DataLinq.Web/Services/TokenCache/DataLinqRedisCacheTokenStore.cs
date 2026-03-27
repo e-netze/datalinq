@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -41,13 +42,13 @@ internal class DataLinqRedisCacheTokenStore : IDataLinqCacheTokenStore
 
     public async Task<TokenMetadata> CreateAsync(string payload, string dataLinqRoute)
     {
-        var token = Guid.NewGuid().ToString("N");
+        var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(100));
 
         var (lifeTime, maxUsage) = await dataLinqRoute.ParseDataLinqRouteAsync(_persistanceProvider, _tokenOptions);
 
-        var tokenMetadata = token.GenerateTokenMetadata(payload, dataLinqRoute, lifeTime, maxUsage);
+        var tokenMetadata = token.GenerateTokenMetadata(payload, dataLinqRoute, lifeTime, maxUsage, _crypto);
 
-        var setValue = await _redisDb.StringSetAsync(token, _crypto.EncryptTextDefault(JsonSerializer.Serialize(tokenMetadata)));
+        var setValue = await _redisDb.StringSetAsync(token, JsonSerializer.Serialize(tokenMetadata));
 
         if (setValue)
         {
@@ -63,10 +64,11 @@ internal class DataLinqRedisCacheTokenStore : IDataLinqCacheTokenStore
 
     public async Task<TokenMetadata> GetAsync(string token)
     {
-        var json = _crypto.DecryptTextDefault(await _redisDb.StringGetAsync(token));
+        var json = await _redisDb.StringGetAsync(token);
+        if (!json.HasValue)
+            return null;
 
-        var metadata = JsonSerializer.Deserialize<TokenMetadata>(json);
-
+        var metadata = JsonSerializer.Deserialize<TokenMetadata>(json.ToString()).DecryptTokenMetadata(_crypto);
         if (metadata == null)
             return null;
 
@@ -77,27 +79,19 @@ internal class DataLinqRedisCacheTokenStore : IDataLinqCacheTokenStore
             return null;
         }
 
-        if (metadata.MaxUsage.HasValue && metadata.UsageCount >= metadata.MaxUsage.Value)
+        var usageKey = $"{token}:UsageCount";
+        var currentUsage = await _redisDb.StringIncrementAsync(usageKey);
+
+        if (metadata.MaxUsage.HasValue && currentUsage > metadata.MaxUsage.Value)
         {
             _logger.LogInformation("Token exceeded max usage: {Token}", token);
             await RevokeAsync(token);
             return null;
         }
 
-        metadata.UsageCount++;
-
-        var updateValue = await _redisDb.StringSetAsync(token, _crypto.EncryptTextDefault(JsonSerializer.Serialize(metadata)));
-
-        if (updateValue)
-        {
-            _logger.LogInformation("Token updated: {Token}, at {DateTime}", token, DateTime.Now);
-            return metadata;
-        }
-        else
-        {
-            _logger.LogInformation("Failed to update token: {Token}, at {DateTime}", token, DateTime.Now);
-            return null;
-        }
+        _logger.LogInformation("Token usage incremented: {Token}, UsageCount: {UsageCount}", token, currentUsage);
+        metadata.MaxUsage = (int)currentUsage;
+        return metadata;
     }
 
     public async Task<bool> RevokeAsync(string token)
