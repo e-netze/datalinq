@@ -4,6 +4,7 @@ using E.DataLinq.Core.Models;
 using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Models;
 using E.DataLinq.Web.Services.Abstraction;
+using E.DataLinq.Web.Services.TokenCache;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using System;
@@ -20,12 +21,15 @@ public class DataLinqCompilerService
 {
     private readonly IEnumerable<IRazorCompileEngineService> _razorEngines;
     private readonly DataLinqOptions _options;
+    private readonly IDataLinqCacheTokenService _cacheTokenService;
 
     public DataLinqCompilerService(
             IEnumerable<IRazorCompileEngineService> razorEngines,
+            IDataLinqCacheTokenService cacheTokenService,
             IOptionsMonitor<DataLinqOptions> optionsMonitor)
     {
         _options = optionsMonitor.CurrentValue;
+        _cacheTokenService = cacheTokenService;
         _razorEngines = razorEngines;
     }
 
@@ -69,7 +73,7 @@ public class DataLinqCompilerService
 
         var razorEngineService = _razorEngines.GetRazorEngineService(_options, view.Code);
 
-        var model = new SelectResult(httpContext, razorEngineService, datalinq, httpContext.Request, startTime, records, ui);
+        var model = new SelectResult(httpContext, razorEngineService, datalinq, _cacheTokenService, httpContext.Request, startTime, records, ui);
 
         string htmlResultString = String.Empty;
         string constants = ConfigXmlDocument("datalinq")?

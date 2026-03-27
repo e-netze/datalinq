@@ -11,4 +11,6 @@ public interface IDataLinqCacheTokenService
     Task<TokenCreateResponse> CreateTokenAsync(TokenCreateRequest request);
     Task<TokenResolveResponse> ResolveTokenAsync(string token);
     Task<bool> RevokeTokenAsync(string token);
+
+    string UrlParamterName { get; }
 }

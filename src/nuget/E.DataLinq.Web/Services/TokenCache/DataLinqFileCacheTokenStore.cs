@@ -30,7 +30,7 @@ internal class DataLinqFileCacheTokenStore : IDataLinqCacheTokenStore
         _crypto = crypto;
         _persistanceProvider = persistanceProvider;
 
-        var directory = Path.GetDirectoryName(_tokenOptions.FilePath);
+        var directory = _tokenOptions.FilePath; // Path.GetDirectoryName(_tokenOptions.FilePath);
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             Directory.CreateDirectory(directory);
     }

@@ -202,11 +202,11 @@ public class DataLinqService
 
                 #endregion
 
-                if (arguments["dataLinqCacheToken"] != null)
+                if (arguments[_tokenService.UrlParamterName] != null)
                 {
-                    var token = arguments["dataLinqCacheToken"];
+                    var token = arguments[_tokenService.UrlParamterName];
 
-                    var tokenPayload = _tokenService.ResolveTokenAsync(token).Result;
+                    var tokenPayload = await _tokenService.ResolveTokenAsync(token);
 
                     if (tokenPayload.Success.Equals(true) && tokenPayload.DataLinqRoute.Equals(routeString))
                         arguments = tokenPayload.Payload.ParseCacheTokenPayload();
@@ -284,6 +284,7 @@ public class DataLinqService
                         return (result: JsonConvert.SerializeObject(new SelectResult(httpContext,
                                                                                      _datalinqCompiler.RazorEngine,
                                                                                      this,
+                                                                                     _tokenService,
                                                                                      httpContext.Request,
                                                                                      startTime,
                                                                                      records,

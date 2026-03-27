@@ -3,6 +3,7 @@ using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Razor;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
+using E.DataLinq.Web.Services.TokenCache;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System;
@@ -22,6 +23,7 @@ public class SelectResult
     public SelectResult(HttpContext httpContext,
                         IRazorCompileEngineService razorEngine,
                         DataLinqService datalinq,
+                        IDataLinqCacheTokenService cacheTokenService,
                         HttpRequest request,
                         DateTime startTime,
                         object[] records,
@@ -37,6 +39,13 @@ public class SelectResult
         this.Result = records;
 
         this.QueryString = request.Query.ToCollection();
+        if (!String.IsNullOrEmpty(this.QueryString[cacheTokenService.UrlParamterName]))
+        {
+            // TODO:
+            // hier sollten eigentlich die Parameter aus dem Payload übernommen werden,
+            // falls im View auf den QueryString zugegriffen wird.
+            // Allerdings sollte hier der MaxCounter im Token nicht nach unten gesetzt werden
+        } 
         // nur die Filterparameter aus der URL auslesen
         this.FilterString = this.QueryString
             .Clone(new string[] { "_orderby", "_f", "_id", "hmac", "hmac_pubk", "hmac_ts", "hmac_data", "hmac_hash", "__gdi" })

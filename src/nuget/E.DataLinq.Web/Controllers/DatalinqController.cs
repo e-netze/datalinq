@@ -6,6 +6,7 @@ using E.DataLinq.Web.Razor;
 using E.DataLinq.Web.Reflection;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
+using E.DataLinq.Web.Services.TokenCache;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -26,11 +27,13 @@ public class DataLinqController : DataLinqBaseController
     private readonly IHostAuthenticationService _hostAuthentication;
     private readonly IDataLinqCodeIdentityService _dataLinqCodeIdentity;
     private readonly IDataLinqLogger _datalinqLogger;
+    private readonly IDataLinqCacheTokenService _tokenService;
 
     public DataLinqController(ILogger<DataLinqController> logger,
                               DataLinqService datalinq,
                               IHostUrlHelper hostUrlHelper,
                               IEnumerable<IDataLinqCustomSelectArgumentsProvider> customArgumentProviders,
+                              IDataLinqCacheTokenService tokenService,
                               IHostAuthenticationService hostAuthenication = null,
                               IDataLinqCodeIdentityService dataLinqCodeIdentity = null,
                               IDataLinqLogger datalinqLogger = null)
@@ -39,6 +42,7 @@ public class DataLinqController : DataLinqBaseController
         _logger = logger;
         _datalinq = datalinq;
         _customArgumentProviders = customArgumentProviders;
+        _tokenService = tokenService;
         _hostAuthentication = hostAuthenication;
         _dataLinqCodeIdentity = dataLinqCodeIdentity;
         _datalinqLogger = datalinqLogger ?? new DataLinqNullLogger();

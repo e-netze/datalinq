@@ -1,14 +1,14 @@
 ﻿using E.DataLinq.Web.Models.TokenCache;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace E.DataLinq.Web.Services.TokenCache;
 
 internal class DataLinqCacheTokenService : IDataLinqCacheTokenService
 {
+    private const string _urlParameterName = "dataLinqCacheToken";
+
     private readonly IDataLinqCacheTokenStore _tokenStore;
     private readonly ILogger<DataLinqCacheTokenService> _logger;
 
@@ -18,24 +18,27 @@ internal class DataLinqCacheTokenService : IDataLinqCacheTokenService
         _logger = logger;
     }
 
+    public string UrlParamterName => _urlParameterName; 
     public async Task<TokenCreateResponse> CreateTokenAsync(TokenCreateRequest request)
     {
         try
         {
             var tokenData = await _tokenStore.CreateAsync(request.Payload, request.DataLinqRoute);
 
-            return new TokenCreateResponse 
-            { 
-                Token = tokenData.Token, 
-                ValidFrom = tokenData.CreatedAt, 
-                ValidTo = tokenData.ExpiresAt, 
+            return new TokenCreateResponse
+            {
+                Token = tokenData.Token,
+                ValidFrom = tokenData.CreatedAt,
+                ValidTo = tokenData.ExpiresAt,
                 MaxUsage = tokenData.MaxUsage
             };
-        }catch (ArgumentException ex)
+        }
+        catch (ArgumentException ex)
         {
             _logger.LogWarning(ex, "Invalid argument in token creation");
             throw new InvalidOperationException("Invalid token creation parameters", ex);
-        }catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating token");
             throw;
