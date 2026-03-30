@@ -70,7 +70,7 @@ internal class DataLinqFileCacheTokenStore : IDataLinqCacheTokenStore
         }
     }
 
-    public async Task<TokenMetadata> GetAsync(string token)
+    public async Task<TokenMetadata> GetAsync(string token, bool externalRequest)
     {
         using (await FuzzyMutexAsync.LockAsync(token))
         {
@@ -93,14 +93,15 @@ internal class DataLinqFileCacheTokenStore : IDataLinqCacheTokenStore
                 return null;
             }
 
-            if (metadata.MaxUsage.HasValue && metadata.UsageCount >= metadata.MaxUsage.Value)
+            if (metadata.MaxUsage.HasValue && metadata.UsageCount >= metadata.MaxUsage.Value && externalRequest)
             {
                 _logger.LogInformation("Token exceeded max usage: {Token}", token);
                 await RevokeAsync(token);
                 return null;
             }
 
-            metadata.UsageCount++;
+            if(externalRequest)
+                metadata.UsageCount++;
 
             await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(metadata.EncryptTokenMetadata(_crypto)));
 

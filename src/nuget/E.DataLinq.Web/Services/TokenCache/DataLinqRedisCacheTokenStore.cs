@@ -48,7 +48,7 @@ internal class DataLinqRedisCacheTokenStore : IDataLinqCacheTokenStore
 
         var tokenMetadata = token.GenerateTokenMetadata(payload, dataLinqRoute, lifeTime, maxUsage, _crypto);
 
-        var setValue = await _redisDb.StringSetAsync(token, JsonSerializer.Serialize(tokenMetadata));
+        var setValue = await _redisDb.StringSetAsync(token, JsonSerializer.Serialize(tokenMetadata), lifeTime);
 
         if (setValue)
         {
@@ -62,7 +62,7 @@ internal class DataLinqRedisCacheTokenStore : IDataLinqCacheTokenStore
         }
     }
 
-    public async Task<TokenMetadata> GetAsync(string token)
+    public async Task<TokenMetadata> GetAsync(string token, bool externalRequest)
     {
         var json = await _redisDb.StringGetAsync(token);
         if (!json.HasValue)
@@ -79,10 +79,15 @@ internal class DataLinqRedisCacheTokenStore : IDataLinqCacheTokenStore
             return null;
         }
 
-        var usageKey = $"{token}:UsageCount";
-        var currentUsage = await _redisDb.StringIncrementAsync(usageKey);
+        long currentUsage = metadata.UsageCount;
 
-        if (metadata.MaxUsage.HasValue && currentUsage > metadata.MaxUsage.Value)
+        if (externalRequest)
+        {
+            var usageKey = $"{token}:UsageCount";
+            currentUsage = await _redisDb.StringIncrementAsync(usageKey);
+        }
+
+        if (metadata.MaxUsage.HasValue && currentUsage > metadata.MaxUsage.Value && externalRequest)
         {
             _logger.LogInformation("Token exceeded max usage: {Token}", token);
             await RevokeAsync(token);

@@ -9,7 +9,7 @@ namespace E.DataLinq.Web.Services.TokenCache;
 public interface IDataLinqCacheTokenService
 {
     Task<TokenCreateResponse> CreateTokenAsync(TokenCreateRequest request);
-    Task<TokenResolveResponse> ResolveTokenAsync(string token);
+    Task<TokenResolveResponse> ResolveTokenAsync(string token, bool externalRequest);
     Task<bool> RevokeTokenAsync(string token);
 
     string UrlParamterName { get; }

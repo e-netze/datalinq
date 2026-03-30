@@ -206,7 +206,7 @@ public class DataLinqService
                 {
                     var token = arguments[_tokenService.UrlParamterName];
 
-                    var tokenPayload = await _tokenService.ResolveTokenAsync(token);
+                    var tokenPayload = await _tokenService.ResolveTokenAsync(token,true);
 
                     if (tokenPayload.Success.Equals(true) && tokenPayload.DataLinqRoute.Equals(routeString))
                         arguments = tokenPayload.Payload.ParseCacheTokenPayload();
@@ -281,7 +281,7 @@ public class DataLinqService
                         //return (result: Base.JsonObject(new SelectResult(httpContext.Request, startTime, records, ui)), contentType: contentType, succeeded: succeeded);
 
                         // Neu: gib einen String zurück
-                        return (result: JsonConvert.SerializeObject(new SelectResult(httpContext,
+                        return (result: JsonConvert.SerializeObject(await SelectResult.CreateAsync(httpContext,
                                                                                      _datalinqCompiler.RazorEngine,
                                                                                      this,
                                                                                      _tokenService,

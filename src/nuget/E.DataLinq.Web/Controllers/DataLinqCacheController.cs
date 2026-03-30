@@ -33,7 +33,7 @@ public class DataLinqCacheController : ApiBaseController
     [HttpGet("test")]
     public async Task<IActionResult> TestToken(string token)
     {
-        var meta = await _tokenService.ResolveTokenAsync(token);
+        var meta = await _tokenService.ResolveTokenAsync(token,true);
         return JsonObject(new { success = meta.Success });
     }
 }

@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Dynamic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace E.DataLinq.Web.Models;
 
@@ -20,43 +21,69 @@ public class SelectResult
     private readonly IRazorCompileEngineService _razorEngine;
     private readonly DataLinqService _datalinq;
 
-    public SelectResult(HttpContext httpContext,
-                        IRazorCompileEngineService razorEngine,
-                        DataLinqService datalinq,
-                        IDataLinqCacheTokenService cacheTokenService,
-                        HttpRequest request,
-                        DateTime startTime,
-                        object[] records,
-                        IDataLinqUser ui)
+    private SelectResult(HttpContext httpContext,
+                         IRazorCompileEngineService razorEngine,
+                         DataLinqService datalinq,
+                         HttpRequest request,
+                         DateTime startTime,
+                         object[] records,
+                         IDataLinqUser ui)
     {
         _httpContext = httpContext;
         _razorEngine = razorEngine;
         _datalinq = datalinq;
 
-        this.ElapsedMillisconds = Convert.ToInt32((DateTime.Now - startTime).TotalMilliseconds);
-        this.Success = true;
-        this.CountRecords = records != null ? records.Length : 0;
-        this.Result = records;
+        ElapsedMillisconds = Convert.ToInt32((DateTime.Now - startTime).TotalMilliseconds);
+        Success = true;
+        CountRecords = records?.Length ?? 0;
+        Result = records;
 
-        this.QueryString = request.Query.ToCollection();
-        if (!String.IsNullOrEmpty(this.QueryString[cacheTokenService.UrlParamterName]))
-        {
-            // TODO:
-            // hier sollten eigentlich die Parameter aus dem Payload übernommen werden,
-            // falls im View auf den QueryString zugegriffen wird.
-            // Allerdings sollte hier der MaxCounter im Token nicht nach unten gesetzt werden
-        } 
-        // nur die Filterparameter aus der URL auslesen
-        this.FilterString = this.QueryString
-            .Clone(new string[] { "_orderby", "_f", "_id", "hmac", "hmac_pubk", "hmac_ts", "hmac_data", "hmac_hash", "__gdi" })
-            .ToFilterString();
+        QueryString = request.Query.ToCollection();
 
-        this.Environment = new SelectEnvironment()
+        Environment = new SelectEnvironment
         {
             CurrentUser = ui?.Username ?? String.Empty
         };
 
-        this.UserInformation = ui;
+        UserInformation = ui;
+    }
+
+    public static async Task<SelectResult> CreateAsync(
+        HttpContext httpContext,
+        IRazorCompileEngineService razorEngine,
+        DataLinqService datalinq,
+        IDataLinqCacheTokenService cacheTokenService,
+        HttpRequest request,
+        DateTime startTime,
+        object[] records,
+        IDataLinqUser ui)
+    {
+        var result = new SelectResult(
+            httpContext,
+            razorEngine,
+            datalinq,
+            request,
+            startTime,
+            records,
+            ui);
+
+        var paramName = cacheTokenService.UrlParamterName;
+        var paramValue = result.QueryString[paramName];
+
+        if (!string.IsNullOrEmpty(paramValue))
+        {
+            var tokenResolveResponse = await cacheTokenService.ResolveTokenAsync(paramValue, false);
+            if (tokenResolveResponse.Success)
+            {
+                result.QueryString = tokenResolveResponse.Payload.ParseCacheTokenPayload();
+            }
+        }
+
+        result.FilterString = result.QueryString
+            .Clone(new[] { "_orderby", "_f", "_id", "hmac", "hmac_pubk", "hmac_ts", "hmac_data", "hmac_hash", "__gdi" })
+            .ToFilterString();
+
+        return result;
     }
 
     [JsonProperty(PropertyName = "success")]

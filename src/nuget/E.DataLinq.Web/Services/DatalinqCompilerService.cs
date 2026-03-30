@@ -73,7 +73,7 @@ public class DataLinqCompilerService
 
         var razorEngineService = _razorEngines.GetRazorEngineService(_options, view.Code);
 
-        var model = new SelectResult(httpContext, razorEngineService, datalinq, _cacheTokenService, httpContext.Request, startTime, records, ui);
+        var model = await SelectResult.CreateAsync(httpContext, razorEngineService, datalinq, _cacheTokenService, httpContext.Request, startTime, records, ui);
 
         string htmlResultString = String.Empty;
         string constants = ConfigXmlDocument("datalinq")?

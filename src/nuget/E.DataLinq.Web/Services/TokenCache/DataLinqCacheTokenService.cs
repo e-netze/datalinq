@@ -45,9 +45,9 @@ internal class DataLinqCacheTokenService : IDataLinqCacheTokenService
         }
     }
 
-    public async Task<TokenResolveResponse> ResolveTokenAsync(string token)
+    public async Task<TokenResolveResponse> ResolveTokenAsync(string token, bool externalRequest)
     {
-        var tokenMetadata = await _tokenStore.GetAsync(token);
+        var tokenMetadata = await _tokenStore.GetAsync(token, externalRequest);
 
         if (tokenMetadata == null)
         {
