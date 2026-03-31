@@ -327,6 +327,10 @@ dataLinqCode.implementEventController(dataLinqCodeEditor);
             .change(function (e) {
                 dataLinqCodeEditor.setDirty();
             });
+        $parent.find("input[type=number]")
+            .change(function (e) {
+                dataLinqCodeEditor.setDirty();
+            });
         $parent.find('select')
             .addClass('datalinq-input')
             .change(function (e) {
