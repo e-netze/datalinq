@@ -3090,15 +3090,16 @@ public class DataLinqHelper : IDataLinqHelper
 
         var buttonId = GenerateUniqueId(id);
 
+        var onClickJs = $"dataLinq.downloadPDFSilently('{id}', '{queryString}', '{buttonId}')";
+
         return _razor.RawString(
             HtmlBuilder.Create()
                 .AppendButton(b =>
                 {
                     b.WithId(buttonId);
                     b.AddClass("datalinq-button");
-                    b.AddAttribute("data-report-id", id);
-                    b.AddAttribute("data-query-string", queryString);
                     b.Content(buttonText);
+                    b.AddAttribute("onclick", onClickJs);
                 })
                 .BuildHtmlString()
         );

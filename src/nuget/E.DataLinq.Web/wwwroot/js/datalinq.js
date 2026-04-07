@@ -336,19 +336,7 @@ var dataLinq = new function () {
         });
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        document.addEventListener('click', function (e) {
-            if (e.target.classList.contains('datalinq-button')) {
-                const button = e.target;
-                const id = button.getAttribute('data-report-id');
-                const queryString = button.getAttribute('data-query-string') || '';
-
-                dataLinq.downloadPDFSilently(id, queryString, button.id);
-            }
-        });
-    });
-
-    this.downloadPDFSilently = function(id, existingQueryString = '', buttonId) {
+    this.downloadPDFSilently = function (id, existingQueryString = '', buttonId) {
         const separator = existingQueryString ? '&' : '';
         const url = `/datalinq/report/${id}?${existingQueryString}${separator}_autoDownload=true`;
 
