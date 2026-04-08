@@ -40,13 +40,17 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
         {
             foreach (var style in value.Split(';'))
             {
-                var parts = style.Split(':');
+                var colonIndex = style.IndexOf(':');
 
-                if (parts.Length == 2
-                    && !String.IsNullOrEmpty(parts[0])
-                    && !String.IsNullOrEmpty(parts[1]))
+                if (colonIndex > 0)
                 {
-                    AddStyle(parts[0], parts[1]);
+                    var styleName = style.Substring(0, colonIndex).Trim();
+                    var styleValue = style.Substring(colonIndex + 1).Trim();
+
+                    if (!String.IsNullOrEmpty(styleName) && !String.IsNullOrEmpty(styleValue))
+                    {
+                        AddStyle(styleName, styleValue);
+                    }
                 }
             }
             return this;
