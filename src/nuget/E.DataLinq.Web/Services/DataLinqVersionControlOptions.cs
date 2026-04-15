@@ -18,8 +18,8 @@ public class DataLinqVersionControlOptions
     public string Password { get; set; } = string.Empty; 
     public string PersonalAccessToken { get; set; } = string.Empty;
 
-    public string DefaultAuthorName { get; set; } = "DataLinq Service";
-    public string DefaultAuthorEmail { get; set; } = "service@example.com";
+    public string DefaultAuthorName { get; set; } = "DataLinq Bot";
+    public string DefaultAuthorEmail { get; set; } = "bot@datalinq.com";
 
     public bool AutoCreateRepository { get; set; } = true;
     public bool AutoPush { get; set; } = false;

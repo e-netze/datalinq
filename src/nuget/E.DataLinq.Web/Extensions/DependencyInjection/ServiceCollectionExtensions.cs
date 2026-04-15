@@ -155,6 +155,7 @@ static public class ServiceCollectionExtensions
         services.Configure(setupAction);
 
         services.AddScoped<IGitService, GitService>();
+        services.AddHostedService<GitInitializer>();
 
         return services;
     }
