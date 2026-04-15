@@ -396,6 +396,23 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     }
 
     [HttpPost]
+    async public Task<IActionResult> CommitAndPushChanges([FromBody] GitCommitChangesRequest details)
+    {
+        try
+        {
+            var request = await _client.CommitAndPushChanges(details);
+            if (request == null || request.Success.Equals(false))
+                return base.JsonObject(new GitCommitChangesResult() { Error = "GitCommitChangesResult is either empty or faulty" });
+
+            return base.JsonObject(request);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpPost]
     async public Task<IActionResult> SaveFolderStructure([FromBody] Dictionary<string, List<string>> folderStructure)
     {
         try

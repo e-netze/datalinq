@@ -309,6 +309,30 @@ public class CodeApiClient
         }
     }
 
+    async public Task<GitCommitChangesResult> CommitAndPushChanges(GitCommitChangesRequest details)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/commitAndPushChanges"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            requestMessage.Content = new StringContent(
+                JsonConvert.SerializeObject(details),
+                Encoding.UTF8,
+                "application/json");
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
+
+                var result = JsonConvert.DeserializeObject<GitCommitChangesResult>(responseText);
+                if(result == null || result.Success.Equals(false))
+                    return new GitCommitChangesResult() { Error = "GitCommitChangesResult is either empty or faulty" };
+
+                return result;
+            }
+        }
+    }
+
     async public Task<bool> StoreEndPoint(DataLinqEndPoint endPoint)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/endpoint"))

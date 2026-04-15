@@ -57,13 +57,21 @@ var dataLinqCode = new function ($) {
         window.addEventListener('unload', clearSessionData);
         window.addEventListener('pagehide', clearSessionData);
 
+        var _gitStatuses = {};
+
         dataLinqCode.events.on('refresh-ui', function (channel, args) {
             var args = {
                 currentDoc: $editor.dataLinqCode_editor('currentDoc'),
-                dirtyDocs: $editor.dataLinqCode_editor('dirtyDocs')
+                dirtyDocs: $editor.dataLinqCode_editor('dirtyDocs'),
+                gitStatuses: _gitStatuses
             };
 
             dataLinqCode.events.fire('refresh-ui-elements', args);
+        });
+
+        dataLinqCode.events.on('git-status-changed', function (channel, args) {
+            _gitStatuses[args.id] = args.status;
+            dataLinqCode.events.fire('refresh-ui');
         });
 
         dataLinqCode.events.on('save-current-document', function () {
@@ -188,6 +196,45 @@ var dataLinqCode = new function ($) {
             }
         });
 
+        dataLinqCode.events.on('push-snapshot', function (channel) {
+            var id = $editor.dataLinqCode_editor('currentDoc');
+            var gitStatus = _gitStatuses[id];
+
+            if (gitStatus == "up-to-date")
+                dataLinqCode.ui.Accept('Version Control', 'The file ' + id + ' already is up to date');
+
+            if (gitStatus == "outdated")
+                dataLinqCode.ui.pushMenu('Version Control', id,
+                    function (name, message) {
+
+                        var details = {
+                            id: id,
+                            name: name,
+                            message: message
+                        }
+
+                        dataLinqCode.api.commitAndPushChanges(details, function (result) {
+                            $('body').dataLinq_code_modal('close', { id: 'datalinq-code-alert' });
+
+                            dataLinqCode.ui.Accept(
+                                "Version Control",
+                                result.Success ? result.Message : result.Error
+                            );
+
+                            if (result.Success) {
+                                dataLinqCode.events.fire('git-status-changed', {
+                                    id: id,
+                                    status: 'up-to-date'
+                                }); 
+                            }
+                        });
+                    },
+                    function () {
+                        $('body').dataLinq_code_modal('close', { id: 'datalinq-code-alert' });
+                        dataLinqCode.ui.Accept('Version Control', 'The commit and push process got canceled');
+                    });
+        });
+
         var ctrlPressed = false;
 
         $(document).keydown(function (e) {
@@ -269,6 +316,10 @@ var dataLinqCode = new function ($) {
 
         this.saveFolderStructure = function (folderStructure, callback) {
             this.post('saveFolderStructure', folderStructure, callback);
+        };
+
+        this.commitAndPushChanges = function (details, callback) {
+            this.post('commitAndPushChanges', details, callback);
         };
 
         this.getFolderStructure = function (callback) {
@@ -537,6 +588,108 @@ var dataLinqCode = new function ($) {
                 }
             });
         }
+
+        this.Accept = function (title, message) {
+            $('body').dataLinq_code_modal({
+                title: title,
+                height: '200px',
+                width: '640px',
+                id: 'datalinq-code-alert',
+                onload: function ($content) {
+                    $("<p>")
+                        .text(message)
+                        .appendTo($content.addClass('datalinq-code-messagebox-content'));
+
+                    var $buttonbar = $("<div>").addClass("button-bar").appendTo($content);
+
+                    $("<button>")
+                        .addClass("datalinq-code-button")
+                        .text("Ok")
+                        .appendTo($buttonbar)
+                        .click(function () {                      
+                            $('body').dataLinq_code_modal('close', { id: 'datalinq-code-alert' });
+                        });
+                }
+            });
+        }
+
+        this.pushMenu = function (title, message, onConfirm, onDecline) {
+            $('body').dataLinq_code_modal({
+                title: title,
+                height: '400px',
+                width: '500px',
+                id: 'datalinq-code-alert',
+                onload: function ($content) {
+                    var $formDiv = $("<div>").addClass('datalinq-code-modal-commit-form');
+
+                    $("<p>")
+                        .text('File: ' + message)
+                        .appendTo($formDiv);
+
+                    $("<label>")
+                        .attr('for', 'username-input')
+                        .text('Username:')
+                        .appendTo($formDiv);
+
+                    $("<input>")
+                        .attr({
+                            type: 'text',
+                            placeholder: 'Username',
+                            id: 'username-input',
+                            value: dataLinqCode.loginUsername() || '???'
+                        })
+                        .addClass('datalinq-code-modal-input')
+                        .appendTo($formDiv);
+
+                    $("<br>")
+                        .appendTo($formDiv);
+
+                    $("<label>")
+                        .attr('for', 'commit-message-input')
+                        .text('Commit message:')
+                        .appendTo($formDiv);
+
+                    $("<textarea>")
+                        .attr({
+                            placeholder: 'Commit message',
+                            id: 'commit-message-input',
+                            rows: 6
+                        })
+                        .css('resize', 'none')
+                        .addClass('datalinq-code-modal-input')
+                        .appendTo($formDiv);
+
+                    $formDiv.appendTo($content.addClass('datalinq-code-messagebox-content'));
+
+                    var $buttonbar = $("<div>").addClass("button-bar").appendTo($content);
+
+                    $("<button>")
+                        .addClass("datalinq-code-button cancel")
+                        .text("Cancle")
+                        .appendTo($buttonbar)
+                        .click(function () {
+                            if (onDecline) {
+                                onDecline();
+                            }
+                        });
+
+                    $("<button>")
+                        .addClass("datalinq-code-button")
+                        .text("Commit & Push")
+                        .appendTo($buttonbar)
+                        .click(function () {
+                            if (onConfirm) {
+                                var username = $('#username-input').val();
+                                var commitMessage = $('#commit-message-input').val();
+                                if (username && commitMessage) {
+                                    onConfirm(username, commitMessage);
+                                }     
+                            } 
+                        });
+                }
+            }); 
+        }
+
 
         this.refreshTree = function () {
             if ($tree) {

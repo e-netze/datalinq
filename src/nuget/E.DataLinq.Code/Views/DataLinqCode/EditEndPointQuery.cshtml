@@ -154,6 +154,10 @@
 
 </div>
 
+@{
+    var outdated = Model.Changed.Equals(Model.ChangedGit) ? "up-to-date" : "outdated";
+}
+
 @section scripts {
     <script type="text/javascript">
         $(function () {
@@ -167,7 +171,9 @@
             $("input[name='_route']").val(id);
 
             var value = "@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(Model.Statement))";
-            
+
+            var gitStatus = "@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(outdated))";
+
             //console.log(value);
 
             $(".datalinq-access-tree")
@@ -184,6 +190,20 @@
             dataLinqCodeEditor.events.on('editor-value-changed', function(channel, args) {
                 if(args.id === id) {
                     $("input[name='Statement']").val(args.value);
+                }
+            });
+
+            dataLinqCode.events.fire('git-status-changed', {
+               id: id,
+               status: '@outdated'
+            });
+
+            dataLinqCode.events.on(['document-saved'], function (channel, args) {
+                if (args.id === id) {
+                    parent.dataLinqCode.events.fire('git-status-changed', {
+                        id: id,
+                        status: 'outdated'
+                    });
                 }
             });
         });

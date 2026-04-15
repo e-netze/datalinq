@@ -221,6 +221,11 @@ public class FileSystemPersistanceService : IPersistanceProviderService
                     continue;
                 }
 
+                if (endPointDir.Name.Equals(".git"))  // git folder
+                {
+                    continue;
+                }
+
                 string id = endPointDir.Name;
                 FileInfo fi = new FileInfo(EndPointBlobPath(endPointDir.Name));
 
@@ -390,6 +395,59 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         return true;
     }
 
+    async public Task<bool> StoreCode(string id, string code)
+    {
+        FileInfo fi = new FileInfo(CodeBloblPath(id));
+
+        try
+        {
+            Directory.CreateDirectory(fi.DirectoryName!);
+            await File.WriteAllTextAsync(fi.FullName, code);
+            return true;  
+        }
+        catch (Exception)
+        {
+            return false;  
+        }
+    }
+
+    async public Task<bool> UpdateGitStatus(string id)
+    {
+        FileInfo fi;
+        var parts = id.Split('@');
+        try
+        {
+            if (parts.Length.Equals(2))
+            {
+                fi = new FileInfo(EndPointQueryBlobPath(parts[0], parts[1]));
+                var query = await GetEndPointQuery(parts[0], parts[1]); 
+                if(query.Changed.Equals(query.ChangedGit))
+                    query.ChangedGit = null;
+                else
+                    query.ChangedGit = query.Changed;
+                await StoreEndPointQuery(query);
+                return true;
+            }
+            else if (parts.Length.Equals(3))
+            {
+                fi = new FileInfo(EndPointQueryViewPath(parts[0], parts[1], parts[2]));
+                var view = await GetEndPointQueryView(parts[0], parts[1], parts[2]);
+                if (view.Changed.Equals(view.ChangedGit))
+                    view.ChangedGit = null;
+                else
+                    view.ChangedGit = view.Changed;
+                await StoreEndPointQueryView(view);
+                return true;
+            }
+            else
+                throw new ArgumentException($"Invalid DataLinq-Id");
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     async public Task<bool> DeleteEndPoint(string endPointId)
     {
         await DeleteEndpointIndex(endPointId);
@@ -467,7 +525,7 @@ public class FileSystemPersistanceService : IPersistanceProviderService
     }
 
     private string EndPointBlobPath(string endPointId)
-    {
+    {            
         if (!endPointId.IsValidDataLinqRouteId())
         {
             throw new Exception($"Invalid endpoint id {endPointId}");
@@ -551,6 +609,23 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         }
 
         return Path.Combine(_storagePath, ids[0], "queries", $"{ids[1]}-views", $"_{ids[2]}_js.blb");
+    }
+
+    private string CodeBloblPath(string id)
+    {
+        var ids = id.Split('@');
+        if (!ids[0].IsValidDataLinqRouteId())
+        {
+            throw new Exception($"Invalid endpoint id {id}");
+        }
+
+        if(ids.Length.Equals(2))
+            return Path.Combine(_storagePath, "_git", ids[0], "queries", $"{ids[1]}.sql");
+
+        if (ids.Length.Equals(3))
+            return Path.Combine(_storagePath, "_git", ids[0], "queries", $"{ids[1]}-views", $"{ids[2]}.razor");
+        else
+            throw new Exception($"Invalid DataLinq-Id {id}");
     }
 
     async private Task CreateEndpointIndex(string endPointId)

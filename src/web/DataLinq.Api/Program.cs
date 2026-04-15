@@ -73,6 +73,11 @@ builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.MsSqlServer.MsSq
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.SQLite.DbFactoryProvider>();
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.OracleClient.DbFactoryProvider>();
 
+builder.Services.AddDataLinqVersionControlServices(config =>
+{
+    builder.Configuration.GetSection(DataLinqVersionControlOptions.Key).Bind(config);
+});
+
 #endregion
 
 #region E.DataLinq.Web Code.Api Services

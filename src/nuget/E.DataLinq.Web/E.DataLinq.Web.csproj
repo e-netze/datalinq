@@ -40,6 +40,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+	<PackageReference Include="LibGit2Sharp" Version="0.31.0" />
 	<PackageReference Include="Microsoft.SemanticKernel.Agents.Core" Version="1.73.0" />
 	<PackageReference Include="Microsoft.SemanticKernel.Agents.Orchestration" Version="1.72.0-preview" />
 	<PackageReference Include="Microsoft.SemanticKernel.Agents.Runtime.InProcess" Version="1.72.0-preview" />

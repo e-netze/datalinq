@@ -35,6 +35,9 @@ public interface IPersistanceProviderService
     Task<bool> StoreEndPointJavascript(string endPointId, string css);
     Task<bool> StoreViewJs(string id, string js);
 
+    Task<bool> StoreCode(string id, string code);
+    Task<bool> UpdateGitStatus(string id);
+
     Task<string> EndPointCreator(string endPointId);
 
     DataLinqCodeIdentity CurrentCodeIdentity { get; }

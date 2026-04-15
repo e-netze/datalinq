@@ -65,5 +65,15 @@
     "DefaultMaxUsage": null,
     "EnableBackgroundCleanup": false,
     "CleanupIntervalMinutes": "24:00:00"
+  },
+  "VersionControl": {
+    "UseVersionControl": false,
+    "LocalRepositoryPath": "",
+    "RemoteUrl": "http://localhost:3000/admin/datalinq-repo",
+    "DefaultBranch": "main",
+    "CredentialType": "Token",
+    "PersonalAccessToken": "",
+    "DefaultAuthorName": "",
+    "DefaultAuthorEmail": ""
   }
 }

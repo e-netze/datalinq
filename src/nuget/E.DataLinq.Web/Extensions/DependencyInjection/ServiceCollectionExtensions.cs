@@ -23,6 +23,7 @@ using E.DataLinq.Web.Services.Worker;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.SemanticKernel.Services;
 using StackExchange.Redis;
 using System;
 using System.Linq;
@@ -143,6 +144,17 @@ static public class ServiceCollectionExtensions
             default:
                 throw new ArgumentException($"Unknown storage type: {storageType}");
         }
+
+        return services;
+    }
+
+    public static IServiceCollection AddDataLinqVersionControlServices(
+        this IServiceCollection services,
+        Action<DataLinqVersionControlOptions> setupAction)
+    {
+        services.Configure(setupAction);
+
+        services.AddScoped<IGitService, GitService>();
 
         return services;
     }

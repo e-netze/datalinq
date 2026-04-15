@@ -14,24 +14,25 @@
 }
 
 <script src="~/_content/E.DataLinq.Code/js/datalinq-code-compile.js?@(DataLinqVersion.JsVersion)"></script>
+<script src="~/_content/E.DataLinq.Code/js/datalinq-code-version-control.js?@(DataLinqVersion.JsVersion)"></script>
+<script src="~/_content/E.DataLinq.Code/js/datalinq-code.ui.modal.js?@(DataLinqVersion.JsVersion)"></script>
+
+
+@if (!String.IsNullOrEmpty(Options.ProjectWebSite))
+{
+    <div class="datalinq-code-heading">
+        <h1 onclick="window.open('@Options.ProjectWebSite');return false;">Welcome to DataLinq.Code</h1>
+        <p>
+            The DataLinq Code Editor
+        </p>
+
+        <p onclick="onVersionClick();return false;">
+            Version: @version
+        </p>
+    </div>
+}
 
 <div class="datalinq-code-tiles">
-    @if (!String.IsNullOrEmpty(Options.ProjectWebSite))
-    {
-        <div class="datalinq-code-tile" >
-            <div onclick="window.open('@Options.ProjectWebSite');return false;">
-                <h1>Welcome to DataLinq.Code</h1>
-                <p>
-                    The DataLinq Code Editor
-                </p>
-            </div>
-            <div onclick="onVersionClick();return false;">
-                <p>
-                    Version: @version
-                </p>
-            </div>
-        </div>
-    }
 
     <div class="datalinq-code-tile" onclick="compileAllViews();return false;">
         <h1>Verify All Views</h1>
@@ -57,6 +58,16 @@
             <label for="load_all_views_rewrite">Override after successful reading</label>
         </div>
     </div>
+
+    <div class="datalinq-code-tile" >
+        <div onclick ="loadVersionControl();return false;">
+            <h1>DataLinq Version Control</h1>
+            <p>
+                Review your commits and push the changes to the repository.
+            </p>
+        </div>
+    </div>
+
 </div>
 
 <div class="datalinq-code-output">

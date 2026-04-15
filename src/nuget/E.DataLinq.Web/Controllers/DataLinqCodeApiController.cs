@@ -2,6 +2,7 @@
 using E.DataLinq.Core.Exceptions;
 using E.DataLinq.Core.Extensions;
 using E.DataLinq.Core.Models;
+using E.DataLinq.Core.Models.Abstraction;
 using E.DataLinq.Core.Models.Authentication;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Persistance.Abstraction;
@@ -33,6 +34,7 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly JsLibrariesService _jsLibraries;
     private readonly IDataLinqApiNotificationService _notification;
     private readonly SemanticKernelService _semanticKernelService;
+    private readonly IGitService _gitService;
 
     public DataLinqCodeApiController(ILogger<DataLinqCodeApiController> logger,
                                      IPersistanceProviderService persistanceProvider,
@@ -41,6 +43,7 @@ public class DataLinqCodeApiController : ApiBaseController
                                      IDataLinqCodeIdentityService _identitySerice,
                                      IMonacoSnippetService monacoSnippetService,
                                      JsLibrariesService jsLibraries,
+                                     IGitService gitService,
                                      SemanticKernelService semanticKernelService = null,
                                      IHostAuthenticationService hostAuthentication = null,
                                      IDataLinqApiNotificationService notification = null)
@@ -55,6 +58,7 @@ public class DataLinqCodeApiController : ApiBaseController
         _hostAuthentication = hostAuthentication;
         _notification = notification;
         _semanticKernelService = semanticKernelService;
+        _gitService = gitService;
     }
 
     #region Get
@@ -232,6 +236,47 @@ public class DataLinqCodeApiController : ApiBaseController
     }
 
     [HttpPost]
+    [Route("post/commitAndPushChanges")]
+    async public Task<IActionResult> CommitAndPushChanges([FromBody] GitCommitChangesRequest details)
+    {
+        string code;
+        var parts = details.Id.Split('@');
+
+        switch(parts.Length)
+        {
+            case 2:
+                var query = await _persistanceProvider.GetEndPointQuery(parts[0], parts[1]);
+                code = query.Statement;
+                break;
+
+            case 3:
+                var view = await _persistanceProvider.GetEndPointQueryView(parts[0], parts[1], parts[2]);
+                code = view.Code;
+                break;
+
+             default:
+                return base.JsonObject(new GitCommitChangesResult { Error = "Invalid DataLinq-Id!"});
+        }
+
+        var savedCode = await _persistanceProvider.StoreCode(details.Id, code);
+        if(!savedCode)
+            return base.JsonObject(new GitCommitChangesResult { Error = "Code could not be saved!" });
+
+        var gitStatusChange = await _persistanceProvider.UpdateGitStatus(details.Id);
+        if (!gitStatusChange)
+            return base.JsonObject(new GitCommitChangesResult { Error = "Git status change failed!" });
+
+        var gitAction = await _gitService.CommitAndPushAsync(details.Message, details.Name);
+        if (!gitAction.Success)
+        {
+            await _persistanceProvider.UpdateGitStatus(details.Id);
+            return base.JsonObject(new GitCommitChangesResult { Error = gitAction.Error.Details });
+        }
+
+        return base.JsonObject(new GitCommitChangesResult { Success = true, Message = gitAction.Message });
+    }
+
+    [HttpPost]
     [Route("post/endpoint")]
     async public Task<IActionResult> StoreEndPoint()
     {
@@ -349,6 +394,7 @@ public class DataLinqCodeApiController : ApiBaseController
             var query = await Request.FromBody<DataLinqEndPointQuery>();
 
             query.EndPointId = endPointId;
+            query.Changed = DateTime.UtcNow;
 
             return base.JsonObject(new SuccessModel(await _persistanceProvider.StoreEndPointQuery(query)).OnSuccess((model) =>
             {
@@ -366,7 +412,7 @@ public class DataLinqCodeApiController : ApiBaseController
             var view = await Request.FromBody<DataLinqEndPointQueryView>();
 
             view.EndPointId = endPointId;
-            view.QueryId = queryId;
+            view.QueryId = queryId;      
             view.Changed = DateTime.UtcNow;
 
             await _compiler.ValidateRazorCode(view);
@@ -446,7 +492,8 @@ public class DataLinqCodeApiController : ApiBaseController
                 EndPointId = endPointId,
                 QueryId = queryId,
                 Access = new[] { this.User.GetUsername() },
-                Created = DateTime.UtcNow
+                Created = DateTime.UtcNow,
+                Changed = DateTime.Now
             };
 
             return base.JsonObject(new SuccessCreatedModel(await _persistanceProvider.StoreEndPointQuery(query))
