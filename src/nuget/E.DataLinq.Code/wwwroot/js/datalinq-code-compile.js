@@ -1,4 +1,133 @@
-window.dataLinqCode = window.dataLinqCode || window.parent.dataLinqCode;
+﻿window.dataLinqCode = window.dataLinqCode || window.parent.dataLinqCode;
+
+datalinqChangedDateChecker = function () {
+    this.transmitter = {};
+    dataLinqCode.implementEventController(this.transmitter);
+
+    let documents = dataLinqCode.allDocuments();
+
+    let viewDocuments = [];
+    $.each(documents, function (i, doc) {
+        var ids = doc.id.split('@');
+        if (ids.length === 3) {
+            viewDocuments.push({
+                endpoint: ids[0],
+                query: ids[1],
+                view: ids[2],
+            });
+        }
+        if (ids.length === 2) {
+            viewDocuments.push({
+                endpoint: ids[0],
+                query: ids[1],
+                view: "_isQuery",
+            });
+        }
+    });
+
+    let me = this;
+    let viewIndex = 0;
+
+    var checkNext = function () {
+        if (viewIndex >= viewDocuments.length) {
+            me.transmitter.events.fire('finished-progress');
+            return;
+        }
+
+        let viewDocument = viewDocuments[viewIndex];
+        var id = viewDocument.view == "" ? viewDocument.endpoint + '@' + viewDocument.query : viewDocument.endpoint + '@' + viewDocument.query + '@' + viewDocument.view;
+        me.transmitter.events.fire('start-check', {
+            id: id.replace(/@_isQuery$/, '')
+        });
+
+        dataLinqCode.api.checkGitStatus(viewDocument.endpoint, viewDocument.query, viewDocument.view, function (result) {
+
+            me.transmitter.events.fire('check-finished', {
+                id: id.replace(/@_isQuery$/, ''),
+                result: result.Success
+            });
+
+            viewIndex++;
+            checkNext();
+        });
+    };
+
+    this.run = function ($output) {
+        $output.empty();
+
+        var $successContainer = $("<div>").addClass('datalinq-success-container');
+        var $errorContainer = $("<div>").addClass('datalinq-error-container');
+
+        $output.append($errorContainer).append($successContainer);
+
+        $successContainer.css('width', '50%');
+        $errorContainer.css('width', '50%');
+
+        this.transmitter.events.on('start-check', function (channel, args) {
+            var $item = $("<div>")
+                .addClass('datalinq-code-compile-item datalinq-pending')
+                .attr('data-id', args.id)
+                .text(args.id)
+                .appendTo($errorContainer) 
+                .click(function () {
+                    var ids = $(this).attr('data-id').split('@');
+                    if (ids.length == 2)
+                        dataLinqCode.events.fire('open-query', { endpoint: ids[0], query: ids[1] });
+                    else
+                        dataLinqCode.events.fire('open-view', { endpoint: ids[0], query: ids[1], view: ids[2] });
+                });
+
+            me.transmitter.events.fire('progress-change', { pos: viewIndex, text: args.id });
+        });
+
+        this.transmitter.events.on('check-finished', function (channel, args) {
+            var $item = $output.find(".datalinq-code-compile-item[data-id='" + args.id + "']");
+
+            $item.removeClass('datalinq-pending');
+
+            if (args.result === true) {
+                $item.addClass('success');
+                $item.append($("<div>").addClass('status-info').text('Up to date'));
+                $item.appendTo($successContainer); 
+            } else {
+                $item.addClass('has-errors');
+
+                var $ul = $("<ul>").appendTo($item);
+
+                if (!args.result) {
+                    $("<li>")
+                        .text(("Outdated"))
+                        .appendTo($ul);
+                }
+            }
+
+            updateContainerLayout();
+
+            me.transmitter.events.fire('progress-change', { pos: viewIndex, text: '' });
+        });
+
+        function updateContainerLayout() {
+            var hasSuccess = $successContainer.children().length > 0;
+            var hasErrors = $errorContainer.children().length > 0;
+
+            if (hasSuccess && hasErrors) {
+                $successContainer.css('width', '50%').show();
+                $errorContainer.css('width', '50%').show();
+            } else if (hasSuccess) {
+                $successContainer.css('width', '100%').show();
+                $errorContainer.hide();
+            } else if (hasErrors) {
+                $errorContainer.css('width', '100%').show();
+                $successContainer.hide();
+            }
+        }
+
+        this.transmitter.events.fire('start-progress', { max: viewDocuments.length });
+
+        viewIndex = 0;
+        checkNext();
+    };
+};
 
 datalinqCodeCompiler = function () {
 

@@ -65,6 +65,8 @@
             <p>
                 Review your commits and push the changes to the repository.
             </p>
+            <button class="datalinq-code-button" onclick="initializeGit();return false;">Initialize</button>
+            <button class="datalinq-code-button" onclick="checkGitStatus();return false;">Check GIT Status</button>
         </div>
     </div>
 
@@ -91,6 +93,18 @@
             $("#load-progress").dataLinqCode_compile_progress({ transmitter: compiler.transmitter });
             compiler.run($('.datalinq-code-output'));
         };
+
+        function initializeGit()
+        {
+            console.log("Initializing GIT");
+        }
+
+        function checkGitStatus()
+        {
+            var checker = new datalinqChangedDateChecker();
+            $("#changed-check-progress").dataLinqCode_compile_progress({ transmitter: checker.transmitter });
+            checker.run($('.datalinq-code-output'));
+        }
 
         let _versionClicks=0;
         function onVersionClick() {

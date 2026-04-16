@@ -376,6 +376,10 @@ var dataLinqCode = new function ($) {
             this.get('verifyEndPointQueryView', callback, { endPoint: endPoint, query: query, view: view });
         };
 
+        this.checkGitStatus = function (endPoint, query, view, callback) {
+            this.get('checkGitStatus', callback, { endPoint: endPoint, query: query, view: view });
+        };
+
         this.docInfo = function (endPoint, query, view, rewrite, callback) {
             this.get('docInfo', callback, { endPoint: endPoint, query: query || '', view: view || '', rewrite: rewrite });
         }

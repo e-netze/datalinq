@@ -1545,6 +1545,31 @@ body {
     border-top: 2px solid #222;
     padding: 12px;
     font-family: "Segoe UI", "Open Sans", sans-serif;
+    display: flex;
+}
+
+.datalinq-success-container,
+.datalinq-error-container {
+    display: inline-block;
+    vertical-align: top;
+    overflow: auto;
+    padding: 0 6px;
+}
+
+.datalinq-error-container {
+    border-right: 1px solid #555;
+}
+
+.datalinq-code-compile-item.datalinq-pending {
+    opacity: 0.6;
+}
+
+.datalinq-success-container .datalinq-code-compile-item {
+    border-left: 3px solid #4CAF50;
+}
+
+.datalinq-error-container .datalinq-code-compile-item {
+    border-left: 3px solid #f44336;
 }
 
     .datalinq-code-output .datalinq-code-compile-item {

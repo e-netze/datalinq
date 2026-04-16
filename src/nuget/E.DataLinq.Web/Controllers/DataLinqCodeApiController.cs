@@ -12,7 +12,9 @@ using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Neo4j.Driver;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -645,6 +647,33 @@ For more information, see Help (?).
 
             return base.JsonObject(new SuccessModel());
         }, new[] { endPointId });
+    }
+
+    [HttpGet]
+    [Route("checkGitStatus/{endPointId}/{queryId}/{viewId}")]
+    public async Task<GitCommitChangesResult> CheckGitStatus(string endPointId, string queryId, string viewId)
+    {
+        return await SecureMethodHandler(async () =>
+        {
+            bool isQuery = viewId.Equals("_isQuery");
+            dynamic entity = isQuery
+                ? await _persistanceProvider.GetEndPointQuery(endPointId, queryId)
+                : await _persistanceProvider.GetEndPointQueryView(endPointId, queryId, viewId);
+
+            string entityType = isQuery ? "Query" : "View";
+
+            if (entity == null || entity.Changed == null)
+                return new GitCommitChangesResult { Error = $"{entityType} or changed date is null" };
+
+            if (!entity.Changed.Equals(entity.ChangedGit))
+                return new GitCommitChangesResult { Error = "Changed date and Git date dont match" };
+
+            return new GitCommitChangesResult
+            {
+                Success = true,
+                Message = $"{entityType} is up to date"
+            };
+        });
     }
 
     [HttpGet]

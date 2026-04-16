@@ -577,6 +577,22 @@ public class DataLinqCodeController : DataLinqCodeBaseController
         }
     }
 
+    async public Task<IActionResult> CheckGitStatus(string endPoint, string query, string view)
+    {
+        try
+        {
+            var request = await _client.CheckGitStatus(endPoint, query, view);
+            if (request == null || request.Success.Equals(false))
+                return base.JsonObject(new GitCommitChangesResult() { Error = "GitStatus is either empty or faulty" });
+
+            return base.JsonObject(request);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
     async public Task<IActionResult> DocInfo(string endPoint, string query, string view, bool rewrite = true)
     {
         try

@@ -540,6 +540,25 @@ public class CodeApiClient
         }
     }
 
+    async public Task<GitCommitChangesResult> CheckGitStatus(string endPointId, string queryId, string viewId)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/checkGitStatus/{endPointId}/{queryId}/{viewId}"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
+
+                var result = JsonConvert.DeserializeObject<GitCommitChangesResult>(responseText);
+                if (result == null || result.Success.Equals(false))
+                    return new GitCommitChangesResult() { Error = "GitCommitChangesResult is either empty or faulty" };
+
+                return result;
+            }
+        }
+    }
+
     async public Task<SuccessCreatedModel> CreateEndPoint(string endPointId)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/create/{endPointId}"))
