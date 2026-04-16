@@ -448,6 +448,38 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         }
     }
 
+    public async Task<bool> DeleteLocalGitFolder()
+    {
+        var gitFolderPath = Path.Combine(_storagePath, "_git");
+
+        if (!Directory.Exists(gitFolderPath))
+            return false;
+
+        if (File.Exists(Path.Combine(gitFolderPath, "_dataLinq_initialized.txt")))
+            return false;
+
+        await Task.Run(() =>
+        {
+            foreach (var directory in Directory.GetDirectories(gitFolderPath))
+            {
+                var dirName = Path.GetFileName(directory);
+                if (!dirName.Equals(".git", StringComparison.OrdinalIgnoreCase))
+                {
+                    Directory.Delete(directory, true);
+                }
+            }        
+        });
+
+        return true;
+    }
+
+    public async Task<bool> CreateGitInitializedFile()
+    {
+        await File.WriteAllTextAsync(Path.Combine(Path.Combine(_storagePath, "_git"), "_dataLinq_initialized.txt"), DateTime.Now.ToString("o"));
+
+        return true;
+    }
+
     async public Task<bool> DeleteEndPoint(string endPointId)
     {
         await DeleteEndpointIndex(endPointId);

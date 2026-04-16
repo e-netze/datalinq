@@ -96,7 +96,7 @@
 
         function initializeGit()
         {
-            console.log("Initializing GIT");
+            parent.dataLinqCode.events.fire('initialize-git-push', {});
         }
 
         function checkGitStatus()

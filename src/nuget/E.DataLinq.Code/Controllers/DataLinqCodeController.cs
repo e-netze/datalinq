@@ -593,6 +593,22 @@ public class DataLinqCodeController : DataLinqCodeBaseController
         }
     }
 
+    async public Task<IActionResult> InitializeGitRepository()
+    {
+        try
+        {
+            var request = await _client.InitializeGitRepository();
+            if (request == null)
+                return base.JsonObject(new GitCommitChangesResult() { Error = "Git Repository initialization response is either empty or faulty" }); 
+
+            return base.JsonObject(request);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
     async public Task<IActionResult> DocInfo(string endPoint, string query, string view, bool rewrite = true)
     {
         try

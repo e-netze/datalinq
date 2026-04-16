@@ -40,5 +40,9 @@ public interface IPersistanceProviderService
 
     Task<string> EndPointCreator(string endPointId);
 
+    Task<bool> DeleteLocalGitFolder();
+    Task<bool> CreateGitInitializedFile();
+
+
     DataLinqCodeIdentity CurrentCodeIdentity { get; }
 }

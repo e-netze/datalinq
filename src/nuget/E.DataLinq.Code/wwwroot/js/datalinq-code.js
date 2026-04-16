@@ -196,6 +196,25 @@ var dataLinqCode = new function ($) {
             }
         });
 
+        dataLinqCode.events.on('initialize-git-push', function (channel) {
+            dataLinqCode.ui.confirmPromised(
+                "Initializing Git",
+                "This can only be done once. Are you sure?",
+                function () {
+
+                    dataLinqCode.api.initializeGitRepository(function (result) {
+
+                        $('body').dataLinq_code_modal('close', { id: 'datalinq-code-alert' });
+
+                        dataLinqCode.ui.Accept(
+                            "Version Control",
+                            result.Success ? result.Message : result.Error
+                        );
+                    });
+                }
+            );
+        });
+
         dataLinqCode.events.on('push-snapshot', function (channel) {
             var id = $editor.dataLinqCode_editor('currentDoc');
             var gitStatus = _gitStatuses[id];
@@ -378,6 +397,10 @@ var dataLinqCode = new function ($) {
 
         this.checkGitStatus = function (endPoint, query, view, callback) {
             this.get('checkGitStatus', callback, { endPoint: endPoint, query: query, view: view });
+        };
+
+        this.initializeGitRepository = function (callback) {
+            this.get('initializeGitRepository', callback);
         };
 
         this.docInfo = function (endPoint, query, view, rewrite, callback) {
@@ -693,6 +716,44 @@ var dataLinqCode = new function ($) {
                 }
             }); 
         }
+
+        this.confirmPromised = function (title, message, onConfirm, onDecline) {
+            $('body').dataLinq_code_modal({
+                title: title,
+                height: '200px',
+                width: '640px',
+                id: 'datalinq-code-alert',
+                onload: function ($content) {
+
+                    $("<p>")
+                        .text(message)
+                        .appendTo($content.addClass('datalinq-code-messagebox-content'));
+
+                    var $buttonbar = $("<div>").addClass("button-bar").appendTo($content);
+
+                    $("<button>")
+                        .addClass("datalinq-code-button cancel")
+                        .text("No")
+                        .appendTo($buttonbar)
+                        .click(function () {
+                            if (onDecline) {
+                                onDecline();
+                            }
+                            $('body').dataLinq_code_modal('close', { id: 'datalinq-code-alert' });
+                        });
+
+                    $("<button>")
+                        .addClass("datalinq-code-button")
+                        .text("Yes")
+                        .appendTo($buttonbar)
+                        .click(function () {
+                            if (onConfirm) {
+                                onConfirm(); 
+                            }
+                        });
+                }
+            });
+        };
 
 
         this.refreshTree = function () {

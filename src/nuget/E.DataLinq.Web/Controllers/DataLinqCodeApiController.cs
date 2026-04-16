@@ -16,6 +16,7 @@ using Neo4j.Driver;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -673,6 +674,86 @@ For more information, see Help (?).
                 Success = true,
                 Message = $"{entityType} is up to date"
             };
+        });
+    }
+
+    [HttpGet]
+    [Route("initializeGitRepository")]
+    public async Task<GitCommitChangesResult> InitializeGitRepository()
+    {
+        return await SecureMethodHandler(async () =>
+        {
+            var deleteAction = await _persistanceProvider.DeleteLocalGitFolder();
+            if (!deleteAction)
+                return new GitCommitChangesResult() { Error = "_gitFolder not found or already initialized" };
+
+            var endpoints = await _persistanceProvider.GetEndPointIds(null);
+
+            var allData = (await Task.WhenAll(
+                endpoints.Select(async endpointId =>
+                {
+                    var queryIds = await _persistanceProvider.GetQueryIds(endpointId);
+                    return await Task.WhenAll(
+                        queryIds.Select(async queryId => new
+                        {
+                            EndpointId = endpointId,
+                            QueryId = queryId,
+                            Views = await _persistanceProvider.GetViewIds(endpointId, queryId)
+                        })
+                    );
+                })
+            )).SelectMany(x => x).ToList();
+
+            var files = allData
+                .Select(x => $"{x.EndpointId}@{x.QueryId}")
+                .Distinct()
+                .Concat(allData.SelectMany(x => x.Views.Select(v => $"{x.EndpointId}@{x.QueryId}@{v}")))
+                .ToList();
+
+            string code;
+            foreach (var file in files)
+            {
+                var parts = file.Split('@');
+
+                switch (parts.Length)
+                {
+                    case 2:
+                        var query = await _persistanceProvider.GetEndPointQuery(parts[0], parts[1]);
+                        code = query.Statement;
+                        break;
+
+                    case 3:
+                        var view = await _persistanceProvider.GetEndPointQueryView(parts[0], parts[1], parts[2]);
+                        code = view.Code;
+                        break;
+
+                    default:
+                        return new GitCommitChangesResult { Error = "Invalid DataLinq-Id!" };
+                }
+
+                var savedCode = await _persistanceProvider.StoreCode(file, code);
+                if (!savedCode)
+                    return new GitCommitChangesResult { Error = "Code could not be saved!" };
+
+                var gitStatusChange = await _persistanceProvider.UpdateGitStatus(file);
+                if (!gitStatusChange)
+                    return new GitCommitChangesResult { Error = "Git status change failed!" };
+            }
+
+
+            var gitAction = await _gitService.CommitAndPushAsync("Init DataLinq", "DataLinq Bot");
+            if (!gitAction.Success)
+            {
+                foreach (var file in files)
+                {
+                    await _persistanceProvider.UpdateGitStatus(file);
+                }
+                return new GitCommitChangesResult { Error = gitAction.Error.Details };
+            }
+
+            await _persistanceProvider.CreateGitInitializedFile();
+
+            return new GitCommitChangesResult { Success = true, Message = "Completed initializing push" };
         });
     }
 
