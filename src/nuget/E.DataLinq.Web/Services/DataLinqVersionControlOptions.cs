@@ -22,8 +22,6 @@ public class DataLinqVersionControlOptions
     public string DefaultAuthorEmail { get; set; } = "bot@datalinq.com";
 
     public bool AutoCreateRepository { get; set; } = true;
-    public bool AutoPush { get; set; } = false;
-    public int PushInterval { get; set; } = 300;
 
     public enum GitCredentialType
     {

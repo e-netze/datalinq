@@ -401,7 +401,7 @@ public class DataLinqCodeController : DataLinqCodeBaseController
         try
         {
             var request = await _client.CommitAndPushChanges(details);
-            if (request == null || request.Success.Equals(false))
+            if (request == null)
                 return base.JsonObject(new GitCommitChangesResult() { Error = "GitCommitChangesResult is either empty or faulty" });
 
             return base.JsonObject(request);

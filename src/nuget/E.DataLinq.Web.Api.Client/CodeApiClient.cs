@@ -325,7 +325,7 @@ public class CodeApiClient
                 var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
 
                 var result = JsonConvert.DeserializeObject<GitCommitChangesResult>(responseText);
-                if(result == null || result.Success.Equals(false))
+                if(result == null)
                     return new GitCommitChangesResult() { Error = "GitCommitChangesResult is either empty or faulty" };
 
                 return result;

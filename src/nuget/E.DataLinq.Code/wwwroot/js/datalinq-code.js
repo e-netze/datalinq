@@ -199,7 +199,7 @@ var dataLinqCode = new function ($) {
         dataLinqCode.events.on('initialize-git-push', function (channel) {
             dataLinqCode.ui.confirmPromised(
                 "Initializing Git",
-                "This can only be done once. Are you sure?",
+                "This should only be done once. Are you sure?",
                 function () {
 
                     dataLinqCode.api.initializeGitRepository(function (result) {

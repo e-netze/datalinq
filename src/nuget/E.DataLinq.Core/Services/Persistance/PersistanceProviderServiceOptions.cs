@@ -4,5 +4,7 @@ public class PersistanceProviderServiceOptions
 {
     public string ConnectionString { get; set; }
 
+    public string RepoPath { get; set; }
+
     public EncryptionLevel SecureStringEncryptionLevel { get; set; } = EncryptionLevel.DefaultStaticEncryption;
 }

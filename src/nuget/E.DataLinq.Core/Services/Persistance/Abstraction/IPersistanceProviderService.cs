@@ -36,13 +36,13 @@ public interface IPersistanceProviderService
     Task<bool> StoreViewJs(string id, string js);
 
     Task<bool> StoreCode(string id, string code);
-    Task<bool> UpdateGitStatus(string id);
+    Task<bool> DeleteCode(string id);
+
+    Task<bool> UpdateGitStatus(string id, bool upToDate);
 
     Task<string> EndPointCreator(string endPointId);
 
     Task<bool> DeleteLocalGitFolder();
-    Task<bool> CreateGitInitializedFile();
-
 
     DataLinqCodeIdentity CurrentCodeIdentity { get; }
 }

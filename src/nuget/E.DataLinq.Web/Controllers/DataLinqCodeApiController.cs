@@ -242,6 +242,9 @@ public class DataLinqCodeApiController : ApiBaseController
     [Route("post/commitAndPushChanges")]
     async public Task<IActionResult> CommitAndPushChanges([FromBody] GitCommitChangesRequest details)
     {
+        if (!_gitService.IsEnabled)
+            return base.JsonObject(new GitCommitChangesResult() { Error = "Version Control is not configured" });
+
         string code;
         var parts = details.Id.Split('@');
 
@@ -265,14 +268,14 @@ public class DataLinqCodeApiController : ApiBaseController
         if(!savedCode)
             return base.JsonObject(new GitCommitChangesResult { Error = "Code could not be saved!" });
 
-        var gitStatusChange = await _persistanceProvider.UpdateGitStatus(details.Id);
+        var gitStatusChange = await _persistanceProvider.UpdateGitStatus(details.Id, true);
         if (!gitStatusChange)
             return base.JsonObject(new GitCommitChangesResult { Error = "Git status change failed!" });
 
         var gitAction = await _gitService.CommitAndPushAsync(details.Message, details.Name);
         if (!gitAction.Success)
         {
-            await _persistanceProvider.UpdateGitStatus(details.Id);
+            await _persistanceProvider.UpdateGitStatus(details.Id, false);
             return base.JsonObject(new GitCommitChangesResult { Error = gitAction.Error.Details });
         }
 
@@ -595,6 +598,12 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
+            if (_gitService.IsEnabled)
+            {
+                await _persistanceProvider.DeleteCode(endPointId);
+                await _gitService.CommitAndPushAsync($"Endpoint deleted: {endPointId}",_identity.Name);
+            }
+
             return base.JsonObject(new SuccessModel(await _persistanceProvider.DeleteEndPoint(endPointId)).OnSuccess((action) =>
             {
                 _notification?.ItemDeleted(endPointId);
@@ -608,6 +617,12 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
+            if (_gitService.IsEnabled)
+            {
+                await _persistanceProvider.DeleteCode($"{endPointId}@{queryId}");
+                await _gitService.CommitAndPushAsync($"Query deleted: {endPointId}@{queryId}", _identity.Name);
+            }
+
             return base.JsonObject(new SuccessModel(await _persistanceProvider.DeleteEndPointQuery(endPointId, queryId)).OnSuccess((action) =>
             {
                 _notification?.ItemDeleted($"{endPointId}@{queryId}");
@@ -621,6 +636,12 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
+            if (_gitService.IsEnabled)
+            {
+                await _persistanceProvider.DeleteCode($"{endPointId}@{queryId}@{viewId}");
+                await _gitService.CommitAndPushAsync($"View deleted: {endPointId}@{queryId}@{viewId}", _identity.Name);
+            }
+
             return base.JsonObject(new SuccessModel(await _persistanceProvider.DeleteEndPointQueryView(endPointId, queryId, viewId)).OnSuccess((action) =>
             {
                 _notification?.ItemDeleted($"{endPointId}@{queryId}@{viewId}");
@@ -656,6 +677,9 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
+            if (!_gitService.IsEnabled)
+                return new GitCommitChangesResult() { Error = "Version Control is not configured" };
+
             bool isQuery = viewId.Equals("_isQuery");
             dynamic entity = isQuery
                 ? await _persistanceProvider.GetEndPointQuery(endPointId, queryId)
@@ -683,9 +707,12 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
+            if (!_gitService.IsEnabled)
+                return new GitCommitChangesResult() { Error = "Version Control is not configured" };
+
             var deleteAction = await _persistanceProvider.DeleteLocalGitFolder();
             if (!deleteAction)
-                return new GitCommitChangesResult() { Error = "_gitFolder not found or already initialized" };
+                return new GitCommitChangesResult() { Error = "_gitFolder not found" };
 
             var endpoints = await _persistanceProvider.GetEndPointIds(null);
 
@@ -735,23 +762,20 @@ For more information, see Help (?).
                 if (!savedCode)
                     return new GitCommitChangesResult { Error = "Code could not be saved!" };
 
-                var gitStatusChange = await _persistanceProvider.UpdateGitStatus(file);
+                var gitStatusChange = await _persistanceProvider.UpdateGitStatus(file, true);
                 if (!gitStatusChange)
                     return new GitCommitChangesResult { Error = "Git status change failed!" };
             }
-
 
             var gitAction = await _gitService.CommitAndPushAsync("Init DataLinq", "DataLinq Bot");
             if (!gitAction.Success)
             {
                 foreach (var file in files)
                 {
-                    await _persistanceProvider.UpdateGitStatus(file);
+                    await _persistanceProvider.UpdateGitStatus(file, false);
                 }
                 return new GitCommitChangesResult { Error = gitAction.Error.Details };
             }
-
-            await _persistanceProvider.CreateGitInitializedFile();
 
             return new GitCommitChangesResult { Success = true, Message = "Completed initializing push" };
         });

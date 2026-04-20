@@ -19,6 +19,7 @@ public class FileSystemPersistanceService : IPersistanceProviderService
     private readonly ICryptoService _crypto;
     private readonly PersistanceProviderServiceOptions _options;
     private readonly string _storagePath;
+    private readonly string _repoPath;
 
 
     public FileSystemPersistanceService(ICryptoService crypto,
@@ -28,6 +29,7 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         _crypto = crypto;
         _options = optionsMonitor.CurrentValue;
         _storagePath = _options.ConnectionString;
+        _repoPath = _options.RepoPath;
 
         this.CurrentCodeIdentity = _identitySerice?.CurrentIdentity();
     }
@@ -411,7 +413,42 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         }
     }
 
-    async public Task<bool> UpdateGitStatus(string id)
+    public async Task<bool> DeleteCode(string id)
+    {
+        var idParts = ParseAndValidateId(id);
+
+        try
+        {
+            string targetPath = GetDeletionTargetPath(idParts);
+
+            switch (idParts.Length)
+            {
+                case 1: 
+                    Directory.Delete(targetPath, recursive: true);
+                    break;
+
+                case 2: 
+                    File.Delete($"{targetPath}.sql");
+                    Directory.Delete($"{targetPath}-views", recursive: true);
+                    break;
+
+                case 3: 
+                    File.Delete(targetPath);
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"Invalid DataLinq-Id format: {id}");
+            }
+
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    async public Task<bool> UpdateGitStatus(string id, bool upToDate)
     {
         FileInfo fi;
         var parts = id.Split('@');
@@ -420,11 +457,11 @@ public class FileSystemPersistanceService : IPersistanceProviderService
             if (parts.Length.Equals(2))
             {
                 fi = new FileInfo(EndPointQueryBlobPath(parts[0], parts[1]));
-                var query = await GetEndPointQuery(parts[0], parts[1]); 
-                if(query.Changed.Equals(query.ChangedGit))
-                    query.ChangedGit = null;
-                else
+                var query = await GetEndPointQuery(parts[0], parts[1]);
+                if (upToDate)
                     query.ChangedGit = query.Changed;
+                else
+                    query.ChangedGit = null;
                 await StoreEndPointQuery(query);
                 return true;
             }
@@ -432,10 +469,10 @@ public class FileSystemPersistanceService : IPersistanceProviderService
             {
                 fi = new FileInfo(EndPointQueryViewPath(parts[0], parts[1], parts[2]));
                 var view = await GetEndPointQueryView(parts[0], parts[1], parts[2]);
-                if (view.Changed.Equals(view.ChangedGit))
-                    view.ChangedGit = null;
-                else
+                if (upToDate)
                     view.ChangedGit = view.Changed;
+                else
+                    view.ChangedGit = null;
                 await StoreEndPointQueryView(view);
                 return true;
             }
@@ -450,12 +487,9 @@ public class FileSystemPersistanceService : IPersistanceProviderService
 
     public async Task<bool> DeleteLocalGitFolder()
     {
-        var gitFolderPath = Path.Combine(_storagePath, "_git");
+        var gitFolderPath = _repoPath;
 
         if (!Directory.Exists(gitFolderPath))
-            return false;
-
-        if (File.Exists(Path.Combine(gitFolderPath, "_dataLinq_initialized.txt")))
             return false;
 
         await Task.Run(() =>
@@ -469,13 +503,6 @@ public class FileSystemPersistanceService : IPersistanceProviderService
                 }
             }        
         });
-
-        return true;
-    }
-
-    public async Task<bool> CreateGitInitializedFile()
-    {
-        await File.WriteAllTextAsync(Path.Combine(Path.Combine(_storagePath, "_git"), "_dataLinq_initialized.txt"), DateTime.Now.ToString("o"));
 
         return true;
     }
@@ -652,12 +679,39 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         }
 
         if(ids.Length.Equals(2))
-            return Path.Combine(_storagePath, "_git", ids[0], "queries", $"{ids[1]}.sql");
+            return Path.Combine(_repoPath, ids[0], "queries", $"{ids[1]}.sql");
 
         if (ids.Length.Equals(3))
-            return Path.Combine(_storagePath, "_git", ids[0], "queries", $"{ids[1]}-views", $"{ids[2]}.razor");
+            return Path.Combine(_repoPath, ids[0], "queries", $"{ids[1]}-views", $"{ids[2]}.razor");
         else
             throw new Exception($"Invalid DataLinq-Id {id}");
+    }
+
+    private string GetDeletionTargetPath(string[] idParts)
+    {
+        return idParts.Length switch
+        {
+            1 => Path.Combine(_repoPath, idParts[0]),
+            2 => Path.Combine(_repoPath, idParts[0], "queries", idParts[1]),
+            3 => Path.Combine(_repoPath, idParts[0], "queries", $"{idParts[1]}-views", $"{idParts[2]}.razor"),
+            _ => throw new InvalidOperationException($"Invalid DataLinq-Id with {idParts.Length} parts")
+        };
+    }
+
+    private string[] ParseAndValidateId(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("ID cannot be null or empty", nameof(id));
+
+        var idParts = id.Split('@');
+
+        if (idParts.Length < 1 || idParts.Length > 3)
+            throw new ArgumentException($"Invalid DataLinq-Id format: {id}. Expected 1-3 parts separated by '@'", nameof(id));
+
+        if (!idParts[0].IsValidDataLinqRouteId())
+            throw new ArgumentException($"Invalid endpoint id: {idParts[0]}", nameof(id));
+
+        return idParts;
     }
 
     async private Task CreateEndpointIndex(string endPointId)

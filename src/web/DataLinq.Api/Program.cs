@@ -32,6 +32,7 @@ builder.Services.AddDataLinqServices<FileSystemPersistanceService, CryptoService
     persistanceOptions: options =>
     {
         options.ConnectionString = builder.Configuration["DataLinq.Api:StoragePath"];
+        options.RepoPath = builder.Configuration["VersionControl:LocalRepositoryPath"];
         if (
             Enum.TryParse<EncryptionLevel>(
                 builder.Configuration["DataLinq.Api:Crypto:SecureStringEncryptionLevel"],
