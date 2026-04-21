@@ -41,3 +41,12 @@ public enum ChartLocale
     DE,     
     US      
 }
+
+public enum PdfQuality
+{
+    Best,
+    High,
+    Medium,
+    Low,
+    Preview
+}

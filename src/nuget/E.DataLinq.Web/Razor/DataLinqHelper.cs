@@ -2924,14 +2924,14 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: 
     /// en: 
     /// </returns>
-    public object BeginPdfReport(Dictionary<string, object> pageNumberOptions = null, bool download_button = false, string fileName = "dataLinqPdfReport")
+    public object BeginPdfReport(PageNumberOptions pageNumberOptions = null, PdfQuality quality = PdfQuality.High, bool download_button = false, string fileName = "dataLinqPdfReport")
     {
-        pageNumberOptions ??= new Dictionary<string, object>();
+        pageNumberOptions ??= new PageNumberOptions();
 
-        bool usePageNumbers = pageNumberOptions.ContainsKey("UsePageNumbers") && (bool)pageNumberOptions["UsePageNumbers"];
-        int position = pageNumberOptions.ContainsKey("Position") ? Convert.ToInt32(pageNumberOptions["Position"]) : 0;
-        int type = pageNumberOptions.ContainsKey("Type") ? Convert.ToInt32(pageNumberOptions["Type"]) : 0;
-        int skipPages = pageNumberOptions.ContainsKey("SkipPages") ? Convert.ToInt32(pageNumberOptions["SkipPages"]) : 0;
+        bool usePageNumbers = pageNumberOptions.UsePageNumbers;
+        int position = pageNumberOptions.Position;
+        int type = pageNumberOptions.Type;
+        int skipPages = pageNumberOptions.SkipPages;
 
         return _razor.RawString(
             HtmlBuilder.Create()
@@ -2958,6 +2958,7 @@ public class DataLinqHelper : IDataLinqHelper
                         });
                     }
                     d.AddAttribute("fileName", fileName);
+                    d.AddAttribute("quality", quality.ToString());
                     d.AddClass("main");
                     d.AppendDiv(d2 =>
                     {
@@ -2999,17 +3000,19 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: 
     /// en: 
     /// </returns>
-    public object NewPage(Dictionary<string, object> pageTemplateOptions = null, Dictionary<string, object> dynamicTableOptions = null, bool landscape = false)
+    public object NewPage(
+        PageTemplateOptions pageTemplateOptions = null,
+        DynamicTableOptions dynamicTableOptions = null, 
+        bool landscape = false)
     {
-        pageTemplateOptions ??= new Dictionary<string, object>();
+        pageTemplateOptions ??= new PageTemplateOptions();
+        dynamicTableOptions ??= new DynamicTableOptions();
 
-        bool usePageTemplate = pageTemplateOptions.ContainsKey("UsePageTemplate") && (bool)pageTemplateOptions["UsePageTemplate"];
-        string templateId = pageTemplateOptions.ContainsKey("TemplateId") ? pageTemplateOptions["TemplateId"].ToString() : "";
+        bool usePageTemplate = pageTemplateOptions.UsePageTemplate;
+        string templateId = pageTemplateOptions.TemplateId;
 
-        dynamicTableOptions ??= new Dictionary<string, object>();
-
-        bool dynamic = dynamicTableOptions.ContainsKey("Dynamic") && (bool)dynamicTableOptions["Dynamic"];
-        bool dynamicUseTemplate = dynamicTableOptions.ContainsKey("DynamicUseTemplate") && (bool)dynamicTableOptions["DynamicUseTemplate"];
+        bool dynamic = dynamicTableOptions.Dynamic;
+        bool dynamicUseTemplate = dynamicTableOptions.DynamicUseTemplate;
 
         return _razor.RawString(
             HtmlBuilder.Create()

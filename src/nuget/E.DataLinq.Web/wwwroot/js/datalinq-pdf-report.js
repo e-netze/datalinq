@@ -53,11 +53,22 @@ async function downloadPDFMethod() {
     try {
         let completed = 0;
 
+        const qualityMap = {
+            Best: { pixelRatio: 2, quality: 1 },
+            High: { pixelRatio: 2, quality: 0.92 },
+            Medium: { pixelRatio: 1.5, quality: 0.85 },
+            Low: { pixelRatio: 1.5, quality: 0.75 },
+            Preview: { pixelRatio: 1, quality: 0.80 },
+        };
+
+        const qualityKey = document.querySelector('.main')?.getAttribute('quality') ?? 'High';
+        const { pixelRatio, quality } = qualityMap[qualityKey] ?? qualityMap.High;
+
         const pageImages = await Promise.all(
             pages.map(async (page) => {
                 const dataUrl = await htmlToImage.toJpeg(page, {
-                    pixelRatio: 1.5,
-                    quality: 0.85,
+                    pixelRatio: pixelRatio,
+                    quality: quality,
                     backgroundColor: '#ffffff',
                     skipFonts: false,
                     onclone: (clonedDoc) => {
