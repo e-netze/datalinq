@@ -9,7 +9,6 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -318,7 +317,7 @@ public class GitService : IGitService, IDisposable
             try
             {
                 EnsureRepository();
-                
+
                 var localBranch = _repository.Head;
                 if (localBranch.Tip == null)
                 {

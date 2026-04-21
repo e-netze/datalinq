@@ -51,7 +51,7 @@ namespace E.DataLinq.Web.Services
                 bool remoteHasContent = false;
                 try
                 {
-                    var fetchOptions = new FetchOptions { CredentialsProvider = GetCredentialsHandler()};
+                    var fetchOptions = new FetchOptions { CredentialsProvider = GetCredentialsHandler() };
                     Commands.Fetch(repo, "origin", Array.Empty<string>(), fetchOptions, null);
 
                     var remoteBranch = repo.Branches["origin/main"];

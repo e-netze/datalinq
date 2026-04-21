@@ -448,36 +448,31 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         }
     }
 
-    async public Task<bool> UpdateGitStatus(string id, bool upToDate)
+    public async Task<bool> UpdateGitStatus(string id, bool upToDate)
     {
-        FileInfo fi;
         var parts = id.Split('@');
+
         try
         {
-            if (parts.Length.Equals(2))
+            switch (parts.Length)
             {
-                fi = new FileInfo(EndPointQueryBlobPath(parts[0], parts[1]));
-                var query = await GetEndPointQuery(parts[0], parts[1]);
-                if (upToDate)
-                    query.ChangedGit = query.Changed;
-                else
-                    query.ChangedGit = null;
-                await StoreEndPointQuery(query);
-                return true;
+                case 2:
+                    var query = await GetEndPointQuery(parts[0], parts[1]);
+                    query.ChangedGit = upToDate ? query.Changed : null;
+                    await StoreEndPointQuery(query);
+                    break;
+
+                case 3:
+                    var view = await GetEndPointQueryView(parts[0], parts[1], parts[2]);
+                    view.ChangedGit = upToDate ? view.Changed : null;
+                    await StoreEndPointQueryView(view);
+                    break;
+
+                default:
+                    throw new ArgumentException("Invalid DataLinq-Id");
             }
-            else if (parts.Length.Equals(3))
-            {
-                fi = new FileInfo(EndPointQueryViewPath(parts[0], parts[1], parts[2]));
-                var view = await GetEndPointQueryView(parts[0], parts[1], parts[2]);
-                if (upToDate)
-                    view.ChangedGit = view.Changed;
-                else
-                    view.ChangedGit = null;
-                await StoreEndPointQueryView(view);
-                return true;
-            }
-            else
-                throw new ArgumentException($"Invalid DataLinq-Id");
+
+            return true;
         }
         catch (Exception)
         {

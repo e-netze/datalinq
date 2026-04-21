@@ -226,60 +226,56 @@ public class DataLinqCodeApiController : ApiBaseController
     [Route("post/saveFolderStructure")]
     async public Task<IActionResult> SaveFolderStructure([FromBody] Dictionary<string, List<string>> folderStructure)
     {
-
-        if (folderStructure == null || !folderStructure.Any())
+        return await SecureMethodHandler(async () =>
         {
-            throw new ArgumentException("Folder structure missing");
-        }
+            if (folderStructure == null || !folderStructure.Any())
+            {
+                throw new ArgumentException("Folder structure missing");
+            }
 
-        return base.JsonObject(new SuccessModel(await _persistanceProvider.SaveFolderStructure(folderStructure)).OnSuccess((model) =>
-        {
+            return base.JsonObject(new SuccessModel(await _persistanceProvider.SaveFolderStructure(folderStructure)).OnSuccess((model) =>
+            {
 
-        }));
+            }));
+        });
     }
 
     [HttpPost]
     [Route("post/commitAndPushChanges")]
-    async public Task<IActionResult> CommitAndPushChanges([FromBody] GitCommitChangesRequest details)
+    public async Task<GitCommitChangesResult> CommitAndPushChanges([FromBody] GitCommitChangesRequest details)
     {
-        if (!_gitService.IsEnabled)
-            return base.JsonObject(new GitCommitChangesResult() { Error = "Version Control is not configured" });
-
-        string code;
-        var parts = details.Id.Split('@');
-
-        switch(parts.Length)
+        return await SecureMethodHandler(async () =>
         {
-            case 2:
-                var query = await _persistanceProvider.GetEndPointQuery(parts[0], parts[1]);
-                code = query.Statement;
-                break;
+            if (!_gitService.IsEnabled)
+                return new GitCommitChangesResult { Error = "Version Control is not configured" };
 
-            case 3:
-                var view = await _persistanceProvider.GetEndPointQueryView(parts[0], parts[1], parts[2]);
-                code = view.Code;
-                break;
+            var parts = details.Id.Split('@');
 
-             default:
-                return base.JsonObject(new GitCommitChangesResult { Error = "Invalid DataLinq-Id!"});
-        }
+            var code = parts.Length switch
+            {
+                2 => (await _persistanceProvider.GetEndPointQuery(parts[0], parts[1])).Statement,
+                3 => (await _persistanceProvider.GetEndPointQueryView(parts[0], parts[1], parts[2])).Code,
+                _ => null
+            };
 
-        var savedCode = await _persistanceProvider.StoreCode(details.Id, code);
-        if(!savedCode)
-            return base.JsonObject(new GitCommitChangesResult { Error = "Code could not be saved!" });
+            if (code is null)
+                code = "";
 
-        var gitStatusChange = await _persistanceProvider.UpdateGitStatus(details.Id, true);
-        if (!gitStatusChange)
-            return base.JsonObject(new GitCommitChangesResult { Error = "Git status change failed!" });
+            if (!await _persistanceProvider.StoreCode(details.Id, code))
+                return new GitCommitChangesResult { Error = "Code could not be saved!" };
 
-        var gitAction = await _gitService.CommitAndPushAsync(details.Message, details.Name);
-        if (!gitAction.Success)
-        {
-            await _persistanceProvider.UpdateGitStatus(details.Id, false);
-            return base.JsonObject(new GitCommitChangesResult { Error = gitAction.Error.Details });
-        }
+            if (!await _persistanceProvider.UpdateGitStatus(details.Id, true))
+                return new GitCommitChangesResult { Error = "Git status change failed!" };
 
-        return base.JsonObject(new GitCommitChangesResult { Success = true, Message = gitAction.Message });
+            var gitAction = await _gitService.CommitAndPushAsync(details.Message, details.Name);
+            if (!gitAction.Success)
+            {
+                await _persistanceProvider.UpdateGitStatus(details.Id, false);
+                return new GitCommitChangesResult { Error = gitAction.Error.Details };
+            }
+
+            return new GitCommitChangesResult { Success = true, Message = gitAction.Message };
+        });
     }
 
     [HttpPost]
@@ -708,28 +704,23 @@ For more information, see Help (?).
         return await SecureMethodHandler(async () =>
         {
             if (!_gitService.IsEnabled)
-                return new GitCommitChangesResult() { Error = "Version Control is not configured" };
+                return new GitCommitChangesResult { Error = "Version Control is not configured" };
 
-            var deleteAction = await _persistanceProvider.DeleteLocalGitFolder();
-            if (!deleteAction)
-                return new GitCommitChangesResult() { Error = "_gitFolder not found" };
+            if (!await _persistanceProvider.DeleteLocalGitFolder())
+                return new GitCommitChangesResult { Error = "_gitFolder not found" };
 
             var endpoints = await _persistanceProvider.GetEndPointIds(null);
 
-            var allData = (await Task.WhenAll(
-                endpoints.Select(async endpointId =>
+            var allData = (await Task.WhenAll(endpoints.Select(async endpointId =>
+            {
+                var queryIds = await _persistanceProvider.GetQueryIds(endpointId);
+                return await Task.WhenAll(queryIds.Select(async queryId => new
                 {
-                    var queryIds = await _persistanceProvider.GetQueryIds(endpointId);
-                    return await Task.WhenAll(
-                        queryIds.Select(async queryId => new
-                        {
-                            EndpointId = endpointId,
-                            QueryId = queryId,
-                            Views = await _persistanceProvider.GetViewIds(endpointId, queryId)
-                        })
-                    );
-                })
-            )).SelectMany(x => x).ToList();
+                    EndpointId = endpointId,
+                    QueryId = queryId,
+                    Views = await _persistanceProvider.GetViewIds(endpointId, queryId)
+                }));
+            }))).SelectMany(x => x).ToList();
 
             var files = allData
                 .Select(x => $"{x.EndpointId}@{x.QueryId}")
@@ -737,43 +728,33 @@ For more information, see Help (?).
                 .Concat(allData.SelectMany(x => x.Views.Select(v => $"{x.EndpointId}@{x.QueryId}@{v}")))
                 .ToList();
 
-            string code;
             foreach (var file in files)
             {
                 var parts = file.Split('@');
 
-                switch (parts.Length)
+                if (parts.Length is not 2 and not 3)
+                    continue;
+
+                var code = parts.Length switch
                 {
-                    case 2:
-                        var query = await _persistanceProvider.GetEndPointQuery(parts[0], parts[1]);
-                        code = query.Statement;
-                        break;
+                    2 => (await _persistanceProvider.GetEndPointQuery(parts[0], parts[1])).Statement,
+                    _ => (await _persistanceProvider.GetEndPointQueryView(parts[0], parts[1], parts[2])).Code
+                };
 
-                    case 3:
-                        var view = await _persistanceProvider.GetEndPointQueryView(parts[0], parts[1], parts[2]);
-                        code = view.Code;
-                        break;
+                if (code is null)
+                    code = "";
 
-                    default:
-                        return new GitCommitChangesResult { Error = "Invalid DataLinq-Id!" };
-                }
-
-                var savedCode = await _persistanceProvider.StoreCode(file, code);
-                if (!savedCode)
+                if (!await _persistanceProvider.StoreCode(file, code))
                     return new GitCommitChangesResult { Error = "Code could not be saved!" };
 
-                var gitStatusChange = await _persistanceProvider.UpdateGitStatus(file, true);
-                if (!gitStatusChange)
+                if (!await _persistanceProvider.UpdateGitStatus(file, true))
                     return new GitCommitChangesResult { Error = "Git status change failed!" };
             }
 
             var gitAction = await _gitService.CommitAndPushAsync("Init DataLinq", "DataLinq Bot");
             if (!gitAction.Success)
             {
-                foreach (var file in files)
-                {
-                    await _persistanceProvider.UpdateGitStatus(file, false);
-                }
+                await Task.WhenAll(files.Select(f => _persistanceProvider.UpdateGitStatus(f, false)));
                 return new GitCommitChangesResult { Error = gitAction.Error.Details };
             }
 
