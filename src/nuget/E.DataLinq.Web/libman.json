@@ -13,7 +13,7 @@
     {
       "library": "moment.js@2.29.1",
       "destination": "wwwroot/lib/momentjs"
-    }, 
+    },
     {
       "library": "Chart.js@3.9.1",
       "destination": "wwwroot/lib/chartjs-3x"
@@ -39,12 +39,14 @@
       "destination": "wwwroot/lib/jsoneditor"
     },
     {
-      "library": "jspdf@2.5.1",
-      "destination": "wwwroot/lib/jspdf"
+      "library": "html-to-image@1.11.11",
+      "destination": "wwwroot/lib/html-to-image/",
+      "files": [ "html-to-image.js" ]
     },
     {
-      "library": "html2canvas@1.4.1",
-      "destination": "wwwroot/lib/html2canvas"
+      "library": "pdf-lib@1.17.1",
+      "destination": "wwwroot/lib/pdf-lib/",
+      "files": [ "pdf-lib.min.js" ]
     }
   ]
 }

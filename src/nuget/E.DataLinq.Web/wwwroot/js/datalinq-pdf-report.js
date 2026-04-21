@@ -4,9 +4,16 @@ dataLinq.events.on('onpageloaded', function () {
 /* PDF GENERATION BUTTON ON SITE*/
     const downloadBtn = document.getElementById('downloadBtn');
     if (downloadBtn) {
-        downloadBtn.addEventListener('click', function () {
+        downloadBtn.addEventListener('click', async function () {
             this.textContent = 'Generating PDF ...';
             this.disabled = true;
+
+            showLoadingOverlay();
+
+            await new Promise(resolve => requestAnimationFrame(() =>
+                requestAnimationFrame(resolve)
+            ));
+
             downloadPDFMethod();
         });
     }
@@ -41,115 +48,79 @@ if (urlParams.get('_autoDownload') === 'true') {
 
 /* PDF RENDERING */
 async function downloadPDFMethod() {
-    const { jsPDF } = window.jspdf;
-    const pages = document.querySelectorAll('.page');
-
-    showLoadingOverlay();
+    const pages = [...document.querySelectorAll('.page')];
 
     try {
-        const pdf = new jsPDF('p', 'mm', 'a4', true);
+        let completed = 0;
 
-        for (let i = 0; i < pages.length; i++) {
-
-            updateLoadingProgress(i + 1, pages.length);
-
-            await new Promise(resolve => setTimeout(resolve, 10));
-
-            const page = pages[i];
-            const isHorizontal = page.classList.contains('horizontal');
-
-            // Handle canvas elements
-            const canvasElements = page.querySelectorAll('canvas');
-            const canvasData = [];
-
-            canvasElements.forEach((canvas) => {
-                const imgData = canvas.toDataURL('image/png');
-                const img = document.createElement('img');
-                img.src = imgData;
-                img.style.width = canvas.style.width || canvas.width + 'px';
-                img.style.height = canvas.style.height || canvas.height + 'px';
-                img.style.display = canvas.style.display || 'block';
-
-                canvasData.push({
-                    canvas: canvas,
-                    parent: canvas.parentNode,
-                    nextSibling: canvas.nextSibling,
-                    img: img
+        const pageImages = await Promise.all(
+            pages.map(async (page) => {
+                const dataUrl = await htmlToImage.toJpeg(page, {
+                    pixelRatio: 1.5,
+                    quality: 0.85,
+                    backgroundColor: '#ffffff',
+                    skipFonts: false,
+                    onclone: (clonedDoc) => {
+                        //CORS zu CSS wenn z.B. leaflet eingebunden wird
+                        const links = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
+                        links.forEach(link => {
+                            try {
+                                const sheet = [...document.styleSheets]
+                                    .find(s => s.href === link.href);
+                                if (sheet) void sheet.cssRules;
+                            } catch {
+                                link.remove();
+                            }
+                        });
+                    }
                 });
+                updateLoadingProgress(++completed, pages.length);
+                return { dataUrl, isHorizontal: page.classList.contains('horizontal') };
+            })
+        );
 
-                canvas.parentNode.replaceChild(img, canvas);
-            });
+        const pdfDoc = await PDFLib.PDFDocument.create();
+        pdfDoc.setCreator('DataLinq');
 
-            // Render page to canvas
-            const pageCanvas = await html2canvas(page, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#ffffff'
-            });
+        const A4 = { portrait: [595.28, 841.89], landscape: [841.89, 595.28] };
 
-            // Restore original canvases
-            canvasData.forEach(data => {
-                if (data.nextSibling) {
-                    data.parent.insertBefore(data.canvas, data.nextSibling);
-                } else {
-                    data.parent.appendChild(data.canvas);
-                }
-                data.parent.removeChild(data.img);
-            });
+        for (const { dataUrl, isHorizontal } of pageImages) {
+            const [w, h] = isHorizontal ? A4.landscape : A4.portrait;
 
-            const imgData = pageCanvas.toDataURL('image/png');
+            const pngBytes = Uint8Array.from(
+                atob(dataUrl.slice(dataUrl.indexOf(',') + 1)),
+                c => c.charCodeAt(0)
+            );
 
-            if (i > 0) {
-                if (isHorizontal) {
-                    pdf.addPage('a4', 'landscape');
-                } else {
-                    pdf.addPage('a4', 'portrait');
-                }
-            } else {
-                if (isHorizontal) {
-                    pdf.deletePage(1);
-                    pdf.addPage('a4', 'landscape');
-                }
-            }
-
-            if (isHorizontal) {
-                pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
-            } else {
-                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
-            }
+            const pngImage = await pdfDoc.embedJpg(pngBytes);
+            const page = pdfDoc.addPage([w, h]);
+            page.drawImage(pngImage, { x: 0, y: 0, width: w, height: h });
         }
 
-        pdf.setProperties({
-            creator: "DataLinq"
-        });
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
 
-        var container = document.querySelector('.main');
-        var fileName = container.getAttribute('fileName') || 'dataLinqReport.pdf';
-        pdf.save(fileName);
+        const fileName = document.querySelector('.main')?.getAttribute('fileName')
+            ?? 'dataLinqReport.pdf';
+
+        Object.assign(document.createElement('a'), {
+            href: blobUrl,
+            download: fileName
+        }).click();
+
+        URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+        console.error('PDF generation failed:', error);
+    } finally {
+        removeLoadingOverlay();
 
         if (window.parent !== window) {
             window.parent.postMessage({ type: 'pdfDownloadComplete' }, '*');
         } else {
             const btn = document.getElementById('downloadBtn');
-            if (btn) {
-                btn.textContent = 'Download PDF';
-                btn.disabled = false;
-            }
+            if (btn) { btn.textContent = 'Download PDF'; btn.disabled = false; }
         }
-
-    } catch (error) {
-        console.error("PDF Generation failed:", error);
-        alert("An error occurred while generating the PDF.");
-
-        const btn = document.getElementById('downloadBtn');
-        if (btn) {
-            btn.textContent = 'Download PDF';
-            btn.disabled = false;
-        }
-
-    } finally {
-        removeLoadingOverlay();
     }
 }
 /* PDF RENDERING */
