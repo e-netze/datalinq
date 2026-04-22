@@ -25,6 +25,8 @@
     var initUI = function (parent, options) {
         var $parent = $(parent);
 
+        var features = window.datalinqFeatures ?? {};
+
         $("<div><div class='text'>Check syntax</div></div>")
             .data('event', 'verify-current-document')
             .addClass('datalinq-code-toolbutton verify-current')
@@ -79,23 +81,25 @@
             })
             .appendTo($parent);
 
-        $("<div><div class='text'>Push Snapshot</div></div>")
-            .data('event', 'push-snapshot')
-            .addClass('datalinq-code-toolbutton push-snapshot disabled')
-            .data('base-image', '_content/E.DataLinq.Code/css/img/git_32')
-            .data('refresh-ui', function (args) {
-                if (!args.currentDoc || ![2, 3].includes(args.currentDoc.split('@').length)) {
+        if (features.VersionControl) {
+            $("<div><div class='text'>Push Snapshot</div></div>")
+                .data('event', 'push-snapshot')
+                .addClass('datalinq-code-toolbutton push-snapshot disabled')
+                .data('base-image', '_content/E.DataLinq.Code/css/img/git_32')
+                .data('refresh-ui', function (args) {
+                    if (!args.currentDoc || ![2, 3].includes(args.currentDoc.split('@').length)) {
+                        return false;
+                    }
+
+                    if (args.gitStatuses && args.gitStatuses[args.currentDoc]) {
+                        var status = args.gitStatuses[args.currentDoc];
+                        return status === "up-to-date" || status === "outdated";
+                    }
+
                     return false;
-                }
-
-                if (args.gitStatuses && args.gitStatuses[args.currentDoc]) {
-                    var status = args.gitStatuses[args.currentDoc];
-                    return status === "up-to-date" || status === "outdated";
-                }
-
-                return false;
-            })
-            .appendTo($parent);
+                })
+                .appendTo($parent);
+        }
 
         $("<div><div class='text'>Color scheme</div></div>")
             .data('event', 'toggle-color-scheme')
@@ -107,15 +111,19 @@
             .addClass('datalinq-code-toolbutton help')
             .appendTo($parent);
 
-        $("<div><div class='text'>Datalinq Sandbox</div></div>")
-            .data('event', 'toggle-sandbox')
-            .addClass('datalinq-code-toolbutton sandbox')
-            .appendTo($parent);
+        if (features.Sandbox) {
+            $("<div><div class='text'>Datalinq Sandbox</div></div>")
+                .data('event', 'toggle-sandbox')
+                .addClass('datalinq-code-toolbutton sandbox')
+                .appendTo($parent);
+        }
 
-        $("<div><div class='text'>Datalinq Copilot</div></div>")
-            .data('event', 'toggle-copilot')
-            .addClass('datalinq-code-toolbutton copilot')
-            .appendTo($parent);
+        if (features.Copilot) {
+            $("<div><div class='text'>Datalinq Copilot</div></div>")
+                .data('event', 'toggle-copilot')
+                .addClass('datalinq-code-toolbutton copilot')
+                .appendTo($parent);
+        }
 
         var $logout = $("<div>")
             .data('event', 'logout')

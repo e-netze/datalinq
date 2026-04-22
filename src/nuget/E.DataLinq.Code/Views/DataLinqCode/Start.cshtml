@@ -11,6 +11,8 @@
 
     Layout = "~/Views/Shared/_Layout_empty-datalinq-code-nocode-frame.cshtml";
     ViewBag.Title = "DataLinq Code";
+
+    var features = ViewData["Features"] as FeaturesResult ?? new FeaturesResult();
 }
 
 <script src="~/_content/E.DataLinq.Code/js/datalinq-code-compile.js?@(DataLinqVersion.JsVersion)"></script>
@@ -59,8 +61,10 @@
         </div>
     </div>
 
-    <div class="datalinq-code-tile" >
-        <div onclick ="loadVersionControl();return false;">
+    @if (features.VersionControl)
+    {
+        <div class="datalinq-code-tile" >
+            <div onclick ="loadVersionControl();return false;">
             <h1>DataLinq Version Control</h1>
             <p>
                 Review your commits and push the changes to the repository.
@@ -71,6 +75,7 @@
             <button class="datalinq-code-button" onclick="checkGitStatus();return false;">Snapshot Status</button>
         </div>
     </div>
+    }
 
 </div>
 

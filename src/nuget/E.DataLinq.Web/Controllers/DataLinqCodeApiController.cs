@@ -38,6 +38,7 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly IDataLinqApiNotificationService _notification;
     private readonly SemanticKernelService _semanticKernelService;
     private readonly IGitService _gitService;
+    private readonly FeaturesService _featuresService;
 
     public DataLinqCodeApiController(ILogger<DataLinqCodeApiController> logger,
                                      IPersistanceProviderService persistanceProvider,
@@ -47,6 +48,7 @@ public class DataLinqCodeApiController : ApiBaseController
                                      IMonacoSnippetService monacoSnippetService,
                                      JsLibrariesService jsLibraries,
                                      IGitService gitService,
+                                     FeaturesService featuresService,
                                      SemanticKernelService semanticKernelService = null,
                                      IHostAuthenticationService hostAuthentication = null,
                                      IDataLinqApiNotificationService notification = null)
@@ -62,6 +64,7 @@ public class DataLinqCodeApiController : ApiBaseController
         _notification = notification;
         _semanticKernelService = semanticKernelService;
         _gitService = gitService;
+        _featuresService = featuresService;
     }
 
     #region Get
@@ -200,7 +203,20 @@ public class DataLinqCodeApiController : ApiBaseController
     [Route("getFolderStructure")]
     async public Task<string> GetFolderStructure()
     {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
         return await _persistanceProvider.GetFolderStructure();
+    }
+
+    [HttpGet]
+    [Route("capabilities/features")]
+    public IActionResult GetFeatures()
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        return base.JsonObject(_featuresService.GetFeatures());
     }
 
     #endregion

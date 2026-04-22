@@ -25,6 +25,7 @@
     }
   },
   "DataLinq.CodeApi": {
+    "InitializeSandboxOnStartup": true,
     "ClientEndpoints_": [
       "http://localhost"
     ],
@@ -67,13 +68,9 @@
     "CleanupIntervalMinutes": "24:00:00"
   },
   "VersionControl": {
-    "UseVersionControl": false,
-    "LocalRepositoryPath": "",
-    "RemoteUrl": "http://localhost:3000/admin/datalinq-repo",
-    "DefaultBranch": "main",
-    "CredentialType": "Token",
-    "PersonalAccessToken": "",
-    "DefaultAuthorName": "",
-    "DefaultAuthorEmail": ""
+    "UseVersionControl": true,
+    "LocalRepositoryPath": "C:\\temp\\datalinq\\repo",
+    "RemoteUrl": "http://localhost:3000/admin/datalinq-repo.git",
+    "CredentialType": "Token"
   }
 }

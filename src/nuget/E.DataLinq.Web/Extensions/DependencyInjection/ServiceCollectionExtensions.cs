@@ -81,17 +81,19 @@ static public class ServiceCollectionExtensions
                        .AddTransient<DataLinqInfoService>()
                        .AddSingleton<IBinaryCache, BinaryCacheWrapper>()
                        .AddSingletonIfNotExists<IDataLinqAccessProviderService, DataLinqAccessProviderService>()
-                       .AddHostedService<TimedHostedBackgroundService>();
+                       .AddHostedService<TimedHostedBackgroundService>()
+                       .AddTransient<FeaturesService>();
 
-                       //.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
-                       //.AddSingleton<DataLinqHelperFunctionsPlugin>()
-                       //.AddSingleton<DataLinqQueryPlugin>()
-                       //.AddSingleton<DataLinqEndpointPlugin>()
-                       //.AddSingleton<DataLinqViewPlugin>()
-                       //.AddSingleton<SemanticKernelService>()
-                       //.AddSingleton<IAgent<string[], string>, UserHistorySummarizerAgent>()
-                       //.AddSingleton<DataLinqAgentFactory>()
-                       //.AddHostedService<CopilotReflectionInitializer>();
+
+        //.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
+        //.AddSingleton<DataLinqHelperFunctionsPlugin>()
+        //.AddSingleton<DataLinqQueryPlugin>()
+        //.AddSingleton<DataLinqEndpointPlugin>()
+        //.AddSingleton<DataLinqViewPlugin>()
+        //.AddSingleton<SemanticKernelService>()
+        //.AddSingleton<IAgent<string[], string>, UserHistorySummarizerAgent>()
+        //.AddSingleton<DataLinqAgentFactory>()
+        //.AddHostedService<CopilotReflectionInitializer>();
     }
 
     static public IServiceCollection AddDataLinqAIServices(this IServiceCollection services,
@@ -99,7 +101,7 @@ static public class ServiceCollectionExtensions
     {
         if (aiServiceOptions != null)
         {
-            services.Configure(aiServiceOptions);
+        services.Configure(aiServiceOptions);
         }
 
         return services.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()

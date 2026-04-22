@@ -290,6 +290,21 @@ public class CodeApiClient
         }
     }
 
+    async public Task<FeaturesResult> GetFeatures()
+    {
+        using (var requestMessage = new HttpRequestMessage(
+            HttpMethod.Get, $"{_targetUrl}/{_apiPath}/capabilities/features"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                return JsonConvert.DeserializeObject<FeaturesResult>(
+                    await GetAndCheckHttpResponseAsync(httpResponse));
+            }
+        }
+    }
+
     async public Task<bool> SaveFolderStructure(Dictionary<string, List<string>> folderStructure)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/saveFolderStructure"))
