@@ -363,6 +363,7 @@ function splitTable(table, page, originalPageWrapper) {
 
     let remainingRows = dataRows.slice(rowsInFirstPage);
     const newPages = [];
+    const hasLandscape = page.classList.contains('horizontal');
 
     while (remainingRows.length > 0) {
         const rowsForThisPage = remainingRows.slice(0, rowsPerContinuation);
@@ -372,7 +373,7 @@ function splitTable(table, page, originalPageWrapper) {
             ? page.getAttribute("datalinq-pdfreport-template")
             : "";
 
-        const newPageWrapper = createContinuationPage(rowsForThisPage, table, thead, headerRow, wrapperElements, template);
+        const newPageWrapper = createContinuationPage(rowsForThisPage, table, thead, headerRow, wrapperElements, template, hasLandscape);
         newPages.push(newPageWrapper);
     }
 
@@ -398,12 +399,15 @@ function removeTopSpacingFromStyle(styleString) {
         .trim();
 }
 
-function createContinuationPage(rows, originalTable, thead, headerRow, wrapperElements, template) {
+function createContinuationPage(rows, originalTable, thead, headerRow, wrapperElements, template, landscape) {
     const newPageWrapper = document.createElement('div');
     newPageWrapper.className = 'page-wrapper';
 
     const newPage = document.createElement('div');
     newPage.className = 'page';
+
+    if (landscape)
+        newPage.classList.add('horizontal');
 
     if (template)
         newPage.setAttribute('datalinq-pdfreport-template', template);
