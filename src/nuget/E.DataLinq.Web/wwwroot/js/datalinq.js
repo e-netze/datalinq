@@ -583,8 +583,8 @@ var dataLinq = new function () {
             alert("Ids für Export können nicht ausgelesen werden");
             return false;
         }
-        var where = $e.attr("data-filter");
-        var order = $e.attr("data-orderby");
+        var where = $e.attr("data-filter") ?? "";
+        var order = $e.attr("data-orderby") ?? "";
 
         var jsonUrl = dataLinq.baseUrl + "/datalinq/select/" + ids[0] + "@" + ids[1] + "?" + where + "&_orderby=" + order + "&_pjson=true";
 
