@@ -351,23 +351,51 @@ var dataLinq = new function () {
         iframe.src = url;
         document.body.appendChild(iframe);
 
-        const buttonText = document.getElementById(buttonId).textContent;
         const button = document.getElementById(buttonId);
+        const buttonText = button.textContent;
 
-        button.textContent = 'Generating PDF ...';
-        button.disabled = true;
+        button.innerHTML =
+            'Generating PDF ' +
+            "<img src='" + dataLinq.baseUrl + "/_content/E.DataLinq.Web/css/img/hourglass/loader1.gif' " +
+            "alt='Loading' style='height:1em;width:1em;vertical-align:middle;margin-left:.4em;' />";
 
-        window.addEventListener("message", (event) => {
-            console.log(`Received message:`, event.data);
-            if (event.data && event.data.type === "pdfDownloadComplete") {
-                if (document.body.contains(iframe)) {
-                    document.body.removeChild(iframe);
-                    button.textContent = buttonText;
-                    button.disabled = false;
-                }
-            }
+        document.querySelectorAll(".datalinq-button").forEach(btn => {
+            btn.disabled = true;
         });
-    }
+
+        let finished = false;
+
+        const cleanup = (reason) => {
+            if (finished) return;
+            finished = true;
+
+            window.removeEventListener("message", onMessage);
+            clearTimeout(timeoutId);
+
+            if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+            }
+
+            button.textContent = buttonText; 
+            document.querySelectorAll(".datalinq-button").forEach(btn => {
+                btn.disabled = false;
+            });
+
+            if (reason) console.warn(reason);
+        };
+
+        const onMessage = (event) => {
+            if (event.data && event.data.type === "pdfDownloadComplete") {
+                cleanup(); 
+            }
+        };
+
+        window.addEventListener("message", onMessage);
+
+        const timeoutId = setTimeout(() => {
+            cleanup("pdf download timeout");
+        }, 60000);
+    };
 
     this.updateViewOrdering = function (sender) {
         var $orderingBody = $(sender).closest('.datalinq-refresh-ordering-body');
