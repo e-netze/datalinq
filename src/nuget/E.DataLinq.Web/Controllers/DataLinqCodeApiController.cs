@@ -37,7 +37,7 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly JsLibrariesService _jsLibraries;
     private readonly IDataLinqApiNotificationService _notification;
     private readonly SemanticKernelService _semanticKernelService;
-    private readonly IGitService _gitService;
+    private readonly IGitService? _gitService;
     private readonly FeaturesService _featuresService;
 
     public DataLinqCodeApiController(ILogger<DataLinqCodeApiController> logger,
@@ -47,8 +47,8 @@ public class DataLinqCodeApiController : ApiBaseController
                                      IDataLinqCodeIdentityService _identitySerice,
                                      IMonacoSnippetService monacoSnippetService,
                                      JsLibrariesService jsLibraries,
-                                     IGitService gitService,
                                      FeaturesService featuresService,
+                                     IGitService gitService = null,
                                      SemanticKernelService semanticKernelService = null,
                                      IHostAuthenticationService hostAuthentication = null,
                                      IDataLinqApiNotificationService notification = null)

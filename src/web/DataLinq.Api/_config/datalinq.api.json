@@ -66,11 +66,5 @@
     "DefaultMaxUsage": null,
     "EnableBackgroundCleanup": false,
     "CleanupIntervalMinutes": "24:00:00"
-  },
-  "VersionControl": {
-    "UseVersionControl": true,
-    "LocalRepositoryPath": "C:\\temp\\datalinq\\repo",
-    "RemoteUrl": "http://localhost:3000/admin/datalinq-repo.git",
-    "CredentialType": "Token"
   }
 }

@@ -32,7 +32,7 @@ builder.Services.AddDataLinqServices<FileSystemPersistanceService, CryptoService
     persistanceOptions: options =>
     {
         options.ConnectionString = builder.Configuration["DataLinq.Api:StoragePath"];
-        options.RepoPath = builder.Configuration["VersionControl:LocalRepositoryPath"];
+        options.RepoPath = "C:\\temp\\datalinq\\repo";
         if (
             Enum.TryParse<EncryptionLevel>(
                 builder.Configuration["DataLinq.Api:Crypto:SecureStringEncryptionLevel"],
@@ -74,9 +74,13 @@ builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.MsSqlServer.MsSq
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.SQLite.DbFactoryProvider>();
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.OracleClient.DbFactoryProvider>();
 
-builder.Services.AddDataLinqVersionControlServices(config =>
+builder.Services.AddDataLinqVersionControlServices(options =>
 {
-    builder.Configuration.GetSection(DataLinqVersionControlOptions.Key).Bind(config);
+    options.UseVersionControl = true;
+    options.RemoteUrl = "http://localhost:3000/admin/datalinq-repo.git";
+    options.LocalRepositoryPath = "C:\\temp\\datalinq\\repo";
+    options.CredentialType = DataLinqVersionControlOptions.GitCredentialType.Token;
+    options.PersonalAccessToken = "";
 });
 
 #endregion
