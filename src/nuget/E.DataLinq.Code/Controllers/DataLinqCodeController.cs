@@ -23,19 +23,23 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     private readonly DataLinqCodeService _dataLinqCode;
     private readonly IDataLinqAccessTreeService _accessTree;
     private readonly ICryptoService _crypto;
+    private readonly DataLinqFeatureStore _featureStore;
+
 
     public DataLinqCodeController(DataLinqCodeService dataLinqCode,
                                   IDataLinqAccessTreeService accessTree,
-                                  ICryptoService crypto)
+                                  ICryptoService crypto,
+                                  DataLinqFeatureStore featureStore)
         : base()
     {
         _dataLinqCode = dataLinqCode;
         _client = _dataLinqCode.ApiClient;
         _accessTree = accessTree;
         _crypto = crypto;
+        _featureStore = featureStore;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         if (_client == null || String.IsNullOrEmpty(_dataLinqCode.DataLinqEngineUrl))
         {
@@ -44,6 +48,8 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
         var currentUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase.ToUriComponent()}{Request.Path}";
         var userRoleParameters = _dataLinqCode.AccessTokenPayload?.roles.DataLinqCodeRoleParameters();
+        var features = await _dataLinqCode.GetFeaturesAsync();
+        _featureStore.SetFeatures(features);
 
         return View(new IndexModel()
         {
@@ -57,7 +63,9 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
             AllowCreateAndDeleteEndpoints = userRoleParameters.Contains("_*") || userRoleParameters.Contains(Const.CreateEndpointRoleParameter),
             ALlowCreateAndDeleteQueries = userRoleParameters.Contains("_*") || userRoleParameters.Contains(Const.CreateQueryRoleParameter),
-            AllowCreateAndDeleteViews = userRoleParameters.Contains("_*") || userRoleParameters.Contains(Const.CreateViewRoleParameter)
+            AllowCreateAndDeleteViews = userRoleParameters.Contains("_*") || userRoleParameters.Contains(Const.CreateViewRoleParameter),
+
+            Features = features
         });
     }
 
@@ -88,8 +96,10 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
     #region Start Page
 
-    public IActionResult Start()
+    public async Task<IActionResult> Start()
     {
+        var features = _featureStore.Features;
+        ViewData["Features"] = features;
         return View();
     }
 
@@ -396,6 +406,23 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     }
 
     [HttpPost]
+    async public Task<IActionResult> CommitAndPushChanges([FromBody] GitCommitChangesRequest details)
+    {
+        try
+        {
+            var request = await _client.CommitAndPushChanges(details);
+            if (request == null)
+                return base.JsonObject(new GitCommitChangesResult() { Error = "GitCommitChangesResult is either empty or faulty" });
+
+            return base.JsonObject(request);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpPost]
     async public Task<IActionResult> SaveFolderStructure([FromBody] Dictionary<string, List<string>> folderStructure)
     {
         try
@@ -557,6 +584,38 @@ public class DataLinqCodeController : DataLinqCodeBaseController
         catch (Exception ex)
         {
             return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    async public Task<IActionResult> CheckGitStatus(string endPoint, string query, string view)
+    {
+        try
+        {
+            var request = await _client.CheckGitStatus(endPoint, query, view);
+            if (request == null || request.Success.Equals(false))
+                return base.JsonObject(new GitCommitChangesResult() { Error = "GitStatus is either empty or faulty" });
+
+            return base.JsonObject(request);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    async public Task<IActionResult> InitializeGitRepository()
+    {
+        try
+        {
+            var request = await _client.InitializeGitRepository();
+            if (request == null)
+                return base.JsonObject(new GitCommitChangesResult() { Error = "Git Repository initialization response is either empty or faulty" }); 
+
+            return base.JsonObject(request);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
         }
     }
 

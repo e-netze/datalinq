@@ -32,6 +32,7 @@ builder.Services.AddDataLinqServices<FileSystemPersistanceService, CryptoService
     persistanceOptions: options =>
     {
         options.ConnectionString = builder.Configuration["DataLinq.Api:StoragePath"];
+        options.RepoPath = builder.Configuration["VersionControl:LocalRepositoryPath"];
         if (
             Enum.TryParse<EncryptionLevel>(
                 builder.Configuration["DataLinq.Api:Crypto:SecureStringEncryptionLevel"],
@@ -72,6 +73,11 @@ builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.Postgres.DbFacto
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.MsSqlServer.MsSqlClientDbFactoryProvider>();
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.SQLite.DbFactoryProvider>();
 builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.OracleClient.DbFactoryProvider>();
+
+builder.Services.AddDataLinqVersionControlServices(config =>
+{
+    builder.Configuration.GetSection(DataLinqVersionControlOptions.Key).Bind(config);
+});
 
 #endregion
 

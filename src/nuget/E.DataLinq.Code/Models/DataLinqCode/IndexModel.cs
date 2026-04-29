@@ -1,4 +1,6 @@
-﻿namespace E.DataLinq.Code.Models.DataLinqCode;
+﻿using E.DataLinq.Core.Models;
+
+namespace E.DataLinq.Code.Models.DataLinqCode;
 
 public class IndexModel
 {
@@ -13,4 +15,7 @@ public class IndexModel
     public bool AllowCreateAndDeleteEndpoints { get; set; }
     public bool ALlowCreateAndDeleteQueries { get; set; }
     public bool AllowCreateAndDeleteViews { get; set; }
+
+    public FeaturesResult Features { get; set; }
+
 }

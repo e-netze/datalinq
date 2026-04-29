@@ -23,6 +23,7 @@ using E.DataLinq.Web.Services.Worker;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.SemanticKernel.Services;
 using StackExchange.Redis;
 using System;
 using System.Linq;
@@ -80,17 +81,19 @@ static public class ServiceCollectionExtensions
                        .AddTransient<DataLinqInfoService>()
                        .AddSingleton<IBinaryCache, BinaryCacheWrapper>()
                        .AddSingletonIfNotExists<IDataLinqAccessProviderService, DataLinqAccessProviderService>()
-                       .AddHostedService<TimedHostedBackgroundService>();
+                       .AddHostedService<TimedHostedBackgroundService>()
+                       .AddTransient<FeaturesService>();
 
-                       //.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
-                       //.AddSingleton<DataLinqHelperFunctionsPlugin>()
-                       //.AddSingleton<DataLinqQueryPlugin>()
-                       //.AddSingleton<DataLinqEndpointPlugin>()
-                       //.AddSingleton<DataLinqViewPlugin>()
-                       //.AddSingleton<SemanticKernelService>()
-                       //.AddSingleton<IAgent<string[], string>, UserHistorySummarizerAgent>()
-                       //.AddSingleton<DataLinqAgentFactory>()
-                       //.AddHostedService<CopilotReflectionInitializer>();
+
+        //.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
+        //.AddSingleton<DataLinqHelperFunctionsPlugin>()
+        //.AddSingleton<DataLinqQueryPlugin>()
+        //.AddSingleton<DataLinqEndpointPlugin>()
+        //.AddSingleton<DataLinqViewPlugin>()
+        //.AddSingleton<SemanticKernelService>()
+        //.AddSingleton<IAgent<string[], string>, UserHistorySummarizerAgent>()
+        //.AddSingleton<DataLinqAgentFactory>()
+        //.AddHostedService<CopilotReflectionInitializer>();
     }
 
     static public IServiceCollection AddDataLinqAIServices(this IServiceCollection services,
@@ -98,7 +101,7 @@ static public class ServiceCollectionExtensions
     {
         if (aiServiceOptions != null)
         {
-            services.Configure(aiServiceOptions);
+        services.Configure(aiServiceOptions);
         }
 
         return services.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
@@ -143,6 +146,18 @@ static public class ServiceCollectionExtensions
             default:
                 throw new ArgumentException($"Unknown storage type: {storageType}");
         }
+
+        return services;
+    }
+
+    public static IServiceCollection AddDataLinqVersionControlServices(
+        this IServiceCollection services,
+        Action<DataLinqVersionControlOptions> setupAction)
+    {
+        services.Configure(setupAction);
+
+        services.AddScoped<IGitService, GitService>();
+        services.AddHostedService<GitInitializer>();
 
         return services;
     }

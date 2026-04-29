@@ -290,6 +290,21 @@ public class CodeApiClient
         }
     }
 
+    async public Task<FeaturesResult> GetFeatures()
+    {
+        using (var requestMessage = new HttpRequestMessage(
+            HttpMethod.Get, $"{_targetUrl}/{_apiPath}/capabilities/features"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                return JsonConvert.DeserializeObject<FeaturesResult>(
+                    await GetAndCheckHttpResponseAsync(httpResponse));
+            }
+        }
+    }
+
     async public Task<bool> SaveFolderStructure(Dictionary<string, List<string>> folderStructure)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/saveFolderStructure"))
@@ -305,6 +320,30 @@ public class CodeApiClient
             {
                 var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
                 return true;
+            }
+        }
+    }
+
+    async public Task<GitCommitChangesResult> CommitAndPushChanges(GitCommitChangesRequest details)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/commitAndPushChanges"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            requestMessage.Content = new StringContent(
+                JsonConvert.SerializeObject(details),
+                Encoding.UTF8,
+                "application/json");
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
+
+                var result = JsonConvert.DeserializeObject<GitCommitChangesResult>(responseText);
+                if(result == null)
+                    return new GitCommitChangesResult() { Error = "GitCommitChangesResult is either empty or faulty" };
+
+                return result;
             }
         }
     }
@@ -512,6 +551,44 @@ public class CodeApiClient
                 }
 
                 return true;
+            }
+        }
+    }
+
+    async public Task<GitCommitChangesResult> CheckGitStatus(string endPointId, string queryId, string viewId)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/checkGitStatus/{endPointId}/{queryId}/{viewId}"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
+
+                var result = JsonConvert.DeserializeObject<GitCommitChangesResult>(responseText);
+                if (result == null || result.Success.Equals(false))
+                    return new GitCommitChangesResult() { Error = "GitStatus is either empty or faulty" };
+
+                return result;
+            }
+        }
+    }
+
+    async public Task<GitCommitChangesResult> InitializeGitRepository()
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/initializeGitRepository"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
+
+                var result = JsonConvert.DeserializeObject<GitCommitChangesResult>(responseText);
+                if (result == null)
+                    return new GitCommitChangesResult() { Error = "Git Repository initialization response is either empty or faulty" };
+
+                return result;
             }
         }
     }

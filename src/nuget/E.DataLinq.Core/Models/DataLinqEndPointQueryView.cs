@@ -28,6 +28,9 @@ public class DataLinqEndPointQueryView
     [JsonProperty("changed")]
     public DateTime Changed { get; set; }
 
+    [JsonProperty("changedGit")]
+    public DateTime? ChangedGit { get; set; }
+
     [JsonIgnore]
     public string ErrorMessage { get; set; }
 

@@ -22,6 +22,9 @@
 
 @section scripts {
     <script type="text/javascript">
+        window.datalinqFeatures = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Features));
+    </script>
+    <script type="text/javascript">
         function removeURLParameter(parameter) {
             var url = window.location.href;
 

@@ -1,4 +1,5 @@
 ﻿using E.DataLinq.Code.Extensions;
+using E.DataLinq.Core.Models;
 using E.DataLinq.Core.Security.Token.Models;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Crypto.Abstraction;
@@ -9,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace E.DataLinq.Code.Services;
 
@@ -24,6 +26,8 @@ public class DataLinqCodeService
     private readonly string _userDisplayName = null;
     private readonly string _accessToken = null;
     private readonly ICryptoService _crypto;
+
+    private FeaturesResult _features;
 
     public DataLinqCodeService(IHostUrlHelper urlHelper,
                                ICryptoService crypto,
@@ -95,5 +99,13 @@ public class DataLinqCodeService
 
             return JsonConvert.DeserializeObject<Payload>(Encoding.UTF8.GetString(Convert.FromBase64String(_accessToken.Split('.')[1])));
         }
+    }
+
+    public async Task<FeaturesResult> GetFeaturesAsync()
+    {
+        if (_client == null)
+            return new FeaturesResult(); 
+
+        return _features ??= await _client.GetFeatures();
     }
 }

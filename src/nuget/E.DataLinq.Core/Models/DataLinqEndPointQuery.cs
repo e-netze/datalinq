@@ -37,6 +37,12 @@ public class DataLinqEndPointQuery : IDataLinqAuthProperties
     [JsonProperty("created")]
     public DateTime Created { get; set; }
 
+    [JsonProperty("changed")]
+    public DateTime Changed { get; set; }
+
+    [JsonProperty("changedGit")]
+    public DateTime? ChangedGit { get; set; }
+
     [JsonIgnore]
     public string ErrorMessage { get; set; }
 

@@ -2,6 +2,7 @@
 using E.DataLinq.Core.Exceptions;
 using E.DataLinq.Core.Extensions;
 using E.DataLinq.Core.Models;
+using E.DataLinq.Core.Models.Abstraction;
 using E.DataLinq.Core.Models.Authentication;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Persistance.Abstraction;
@@ -11,8 +12,11 @@ using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Neo4j.Driver;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -33,6 +37,8 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly JsLibrariesService _jsLibraries;
     private readonly IDataLinqApiNotificationService _notification;
     private readonly SemanticKernelService _semanticKernelService;
+    private readonly IGitService _gitService;
+    private readonly FeaturesService _featuresService;
 
     public DataLinqCodeApiController(ILogger<DataLinqCodeApiController> logger,
                                      IPersistanceProviderService persistanceProvider,
@@ -41,6 +47,8 @@ public class DataLinqCodeApiController : ApiBaseController
                                      IDataLinqCodeIdentityService _identitySerice,
                                      IMonacoSnippetService monacoSnippetService,
                                      JsLibrariesService jsLibraries,
+                                     IGitService gitService,
+                                     FeaturesService featuresService,
                                      SemanticKernelService semanticKernelService = null,
                                      IHostAuthenticationService hostAuthentication = null,
                                      IDataLinqApiNotificationService notification = null)
@@ -55,6 +63,8 @@ public class DataLinqCodeApiController : ApiBaseController
         _hostAuthentication = hostAuthentication;
         _notification = notification;
         _semanticKernelService = semanticKernelService;
+        _gitService = gitService;
+        _featuresService = featuresService;
     }
 
     #region Get
@@ -193,7 +203,20 @@ public class DataLinqCodeApiController : ApiBaseController
     [Route("getFolderStructure")]
     async public Task<string> GetFolderStructure()
     {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
         return await _persistanceProvider.GetFolderStructure();
+    }
+
+    [HttpGet]
+    [Route("capabilities/features")]
+    public IActionResult GetFeatures()
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        return base.JsonObject(_featuresService.GetFeatures());
     }
 
     #endregion
@@ -219,16 +242,56 @@ public class DataLinqCodeApiController : ApiBaseController
     [Route("post/saveFolderStructure")]
     async public Task<IActionResult> SaveFolderStructure([FromBody] Dictionary<string, List<string>> folderStructure)
     {
-
-        if (folderStructure == null || !folderStructure.Any())
+        return await SecureMethodHandler(async () =>
         {
-            throw new ArgumentException("Folder structure missing");
-        }
+            if (folderStructure == null || !folderStructure.Any())
+            {
+                throw new ArgumentException("Folder structure missing");
+            }
 
-        return base.JsonObject(new SuccessModel(await _persistanceProvider.SaveFolderStructure(folderStructure)).OnSuccess((model) =>
+            return base.JsonObject(new SuccessModel(await _persistanceProvider.SaveFolderStructure(folderStructure)).OnSuccess((model) =>
+            {
+
+            }));
+        });
+    }
+
+    [HttpPost]
+    [Route("post/commitAndPushChanges")]
+    public async Task<GitCommitChangesResult> CommitAndPushChanges([FromBody] GitCommitChangesRequest details)
+    {
+        return await SecureMethodHandler(async () =>
         {
+            if (!_gitService.IsEnabled)
+                return new GitCommitChangesResult { Error = "Version Control is not configured" };
 
-        }));
+            var parts = details.Id.Split('@');
+
+            var code = parts.Length switch
+            {
+                2 => (await _persistanceProvider.GetEndPointQuery(parts[0], parts[1])).Statement,
+                3 => (await _persistanceProvider.GetEndPointQueryView(parts[0], parts[1], parts[2])).Code,
+                _ => null
+            };
+
+            if (code is null)
+                code = "";
+
+            if (!await _persistanceProvider.StoreCode(details.Id, code))
+                return new GitCommitChangesResult { Error = "Code could not be saved!" };
+
+            if (!await _persistanceProvider.UpdateGitStatus(details.Id, true))
+                return new GitCommitChangesResult { Error = "Git status change failed!" };
+
+            var gitAction = await _gitService.CommitAndPushAsync(details.Message, details.Name);
+            if (!gitAction.Success)
+            {
+                await _persistanceProvider.UpdateGitStatus(details.Id, false);
+                return new GitCommitChangesResult { Error = gitAction.Error.Details };
+            }
+
+            return new GitCommitChangesResult { Success = true, Message = gitAction.Message };
+        });
     }
 
     [HttpPost]
@@ -349,6 +412,7 @@ public class DataLinqCodeApiController : ApiBaseController
             var query = await Request.FromBody<DataLinqEndPointQuery>();
 
             query.EndPointId = endPointId;
+            query.Changed = DateTime.UtcNow;
 
             return base.JsonObject(new SuccessModel(await _persistanceProvider.StoreEndPointQuery(query)).OnSuccess((model) =>
             {
@@ -366,7 +430,7 @@ public class DataLinqCodeApiController : ApiBaseController
             var view = await Request.FromBody<DataLinqEndPointQueryView>();
 
             view.EndPointId = endPointId;
-            view.QueryId = queryId;
+            view.QueryId = queryId;      
             view.Changed = DateTime.UtcNow;
 
             await _compiler.ValidateRazorCode(view);
@@ -446,7 +510,8 @@ public class DataLinqCodeApiController : ApiBaseController
                 EndPointId = endPointId,
                 QueryId = queryId,
                 Access = new[] { this.User.GetUsername() },
-                Created = DateTime.UtcNow
+                Created = DateTime.UtcNow,
+                Changed = DateTime.Now
             };
 
             return base.JsonObject(new SuccessCreatedModel(await _persistanceProvider.StoreEndPointQuery(query))
@@ -545,6 +610,12 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
+            if (_gitService.IsEnabled)
+            {
+                await _persistanceProvider.DeleteCode(endPointId);
+                await _gitService.CommitAndPushAsync($"Endpoint deleted: {endPointId}",_identity.Name);
+            }
+
             return base.JsonObject(new SuccessModel(await _persistanceProvider.DeleteEndPoint(endPointId)).OnSuccess((action) =>
             {
                 _notification?.ItemDeleted(endPointId);
@@ -558,6 +629,12 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
+            if (_gitService.IsEnabled)
+            {
+                await _persistanceProvider.DeleteCode($"{endPointId}@{queryId}");
+                await _gitService.CommitAndPushAsync($"Query deleted: {endPointId}@{queryId}", _identity.Name);
+            }
+
             return base.JsonObject(new SuccessModel(await _persistanceProvider.DeleteEndPointQuery(endPointId, queryId)).OnSuccess((action) =>
             {
                 _notification?.ItemDeleted($"{endPointId}@{queryId}");
@@ -571,6 +648,12 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
+            if (_gitService.IsEnabled)
+            {
+                await _persistanceProvider.DeleteCode($"{endPointId}@{queryId}@{viewId}");
+                await _gitService.CommitAndPushAsync($"View deleted: {endPointId}@{queryId}@{viewId}", _identity.Name);
+            }
+
             return base.JsonObject(new SuccessModel(await _persistanceProvider.DeleteEndPointQueryView(endPointId, queryId, viewId)).OnSuccess((action) =>
             {
                 _notification?.ItemDeleted($"{endPointId}@{queryId}@{viewId}");
@@ -598,6 +681,101 @@ For more information, see Help (?).
 
             return base.JsonObject(new SuccessModel());
         }, new[] { endPointId });
+    }
+
+    [HttpGet]
+    [Route("checkGitStatus/{endPointId}/{queryId}/{viewId}")]
+    public async Task<GitCommitChangesResult> CheckGitStatus(string endPointId, string queryId, string viewId)
+    {
+        return await SecureMethodHandler(async () =>
+        {
+            if (!_gitService.IsEnabled)
+                return new GitCommitChangesResult() { Error = "Version Control is not configured" };
+
+            bool isQuery = viewId.Equals("_isQuery");
+            dynamic entity = isQuery
+                ? await _persistanceProvider.GetEndPointQuery(endPointId, queryId)
+                : await _persistanceProvider.GetEndPointQueryView(endPointId, queryId, viewId);
+
+            string entityType = isQuery ? "Query" : "View";
+
+            if (entity == null || entity.Changed == null)
+                return new GitCommitChangesResult { Error = $"{entityType} or changed date is null" };
+
+            if (!entity.Changed.Equals(entity.ChangedGit))
+                return new GitCommitChangesResult { Error = "Changed date and Git date dont match" };
+
+            return new GitCommitChangesResult
+            {
+                Success = true,
+                Message = $"{entityType} is up to date"
+            };
+        });
+    }
+
+    [HttpGet]
+    [Route("initializeGitRepository")]
+    public async Task<GitCommitChangesResult> InitializeGitRepository()
+    {
+        return await SecureMethodHandler(async () =>
+        {
+            if (!_gitService.IsEnabled)
+                return new GitCommitChangesResult { Error = "Version Control is not configured" };
+
+            if (!await _persistanceProvider.DeleteLocalGitFolder())
+                return new GitCommitChangesResult { Error = "_gitFolder not found" };
+
+            var endpoints = await _persistanceProvider.GetEndPointIds(null);
+
+            var allData = (await Task.WhenAll(endpoints.Select(async endpointId =>
+            {
+                var queryIds = await _persistanceProvider.GetQueryIds(endpointId);
+                return await Task.WhenAll(queryIds.Select(async queryId => new
+                {
+                    EndpointId = endpointId,
+                    QueryId = queryId,
+                    Views = await _persistanceProvider.GetViewIds(endpointId, queryId)
+                }));
+            }))).SelectMany(x => x).ToList();
+
+            var files = allData
+                .Select(x => $"{x.EndpointId}@{x.QueryId}")
+                .Distinct()
+                .Concat(allData.SelectMany(x => x.Views.Select(v => $"{x.EndpointId}@{x.QueryId}@{v}")))
+                .ToList();
+
+            foreach (var file in files)
+            {
+                var parts = file.Split('@');
+
+                if (parts.Length is not 2 and not 3)
+                    continue;
+
+                var code = parts.Length switch
+                {
+                    2 => (await _persistanceProvider.GetEndPointQuery(parts[0], parts[1])).Statement,
+                    _ => (await _persistanceProvider.GetEndPointQueryView(parts[0], parts[1], parts[2])).Code
+                };
+
+                if (code is null)
+                    code = "";
+
+                if (!await _persistanceProvider.StoreCode(file, code))
+                    return new GitCommitChangesResult { Error = "Code could not be saved!" };
+
+                if (!await _persistanceProvider.UpdateGitStatus(file, true))
+                    return new GitCommitChangesResult { Error = "Git status change failed!" };
+            }
+
+            var gitAction = await _gitService.CommitAndPushAsync("Init DataLinq", "DataLinq Bot");
+            if (!gitAction.Success)
+            {
+                await Task.WhenAll(files.Select(f => _persistanceProvider.UpdateGitStatus(f, false)));
+                return new GitCommitChangesResult { Error = gitAction.Error.Details };
+            }
+
+            return new GitCommitChangesResult { Success = true, Message = "Completed initializing push" };
+        });
     }
 
     [HttpGet]
