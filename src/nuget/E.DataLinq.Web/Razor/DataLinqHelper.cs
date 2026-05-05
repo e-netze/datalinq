@@ -2924,7 +2924,12 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: 
     /// en: 
     /// </returns>
-    public object BeginPdfReport(PageNumberOptions pageNumberOptions = null, PdfQuality quality = PdfQuality.High, bool download_button = false, string fileName = "dataLinqPdfReport")
+    public object BeginPdfReport(
+        PageNumberOptions pageNumberOptions = null, 
+        PdfQuality quality = PdfQuality.High,  
+        bool download_button = false, 
+        string fileName = "dataLinqPdfReport"
+        )
     {
         pageNumberOptions ??= new PageNumberOptions();
 
@@ -3002,7 +3007,8 @@ public class DataLinqHelper : IDataLinqHelper
     /// </returns>
     public object NewPage(
         PageTemplateOptions pageTemplateOptions = null,
-        DynamicTableOptions dynamicTableOptions = null, 
+        DynamicTableOptions dynamicTableOptions = null,
+        PaperSize paperSize = PaperSize.A4,
         bool landscape = false)
     {
         pageTemplateOptions ??= new PageTemplateOptions();
@@ -3032,6 +3038,28 @@ public class DataLinqHelper : IDataLinqHelper
                     d.AppendDiv(d2 =>
                     {
                         d2.AddClass("page");
+
+                        switch (paperSize)
+                        {
+                            case PaperSize.A1:
+                                d2.AddClass("size-A1");
+                                break;
+                            case PaperSize.A2:
+                                d2.AddClass("size-A2");
+                                break;
+                            case PaperSize.A3:
+                                d2.AddClass("size-A3");
+                                break;
+                            case PaperSize.A4:
+                                d2.AddClass("size-A4");
+                                break;
+                            case PaperSize.A5:
+                                d2.AddClass("size-A5");
+                                break;
+                            case PaperSize.A6:
+                                d2.AddClass("size-A6");
+                                break;
+                        }
 
                         if (landscape)
                             d2.AddClass("horizontal");

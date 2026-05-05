@@ -34,8 +34,12 @@
 }
 
 .page {
-    width: 210mm;
-    height: 297mm;
+    --w: 210mm;
+    --h: 297mm;
+
+    width: var(--w);
+    height: var(--h);
+
     background-color: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     flex-shrink: 0;
@@ -44,9 +48,39 @@
     position: relative;
 }
 
+.page.size-A1 {
+    --w: 594mm;
+    --h: 841mm;
+}
+
+.page.size-A2 {
+    --w: 420mm;
+    --h: 594mm;
+}
+
+.page.size-A3 {
+    --w: 297mm;
+    --h: 420mm;
+}
+
+.page.size-A4 {
+    --w: 210mm;
+    --h: 297mm;
+}
+
+.page.size-A5 {
+    --w: 148mm;
+    --h: 210mm;
+}
+
+.page.size-A6 {
+    --w: 105mm;
+    --h: 148mm;
+}
+
 .page.horizontal {
-    width: 297mm;
-    height: 210mm;
+    width: var(--h);
+    height: var(--w);
 }
 
 .element {
@@ -498,3 +532,24 @@ body.modal-open {
     transition: width 0.3s ease-out;
     box-shadow: 0 0 10px rgba(0, 201, 255, 0.7);
 }
+
+#pdf-loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #FFF;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+} 

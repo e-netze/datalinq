@@ -53,16 +53,7 @@ async function downloadPDFMethod() {
     try {
         let completed = 0;
 
-        const qualityMap = {
-            Best: { pixelRatio: 2, quality: 1 },
-            High: { pixelRatio: 2, quality: 0.92 },
-            Medium: { pixelRatio: 1.5, quality: 0.85 },
-            Low: { pixelRatio: 1.5, quality: 0.75 },
-            Preview: { pixelRatio: 1, quality: 0.80 },
-        };
-
-        const qualityKey = document.querySelector('.main')?.getAttribute('quality') ?? 'High';
-        const { pixelRatio, quality } = qualityMap[qualityKey] ?? qualityMap.High;
+        const { pixelRatio, quality } = getQuality();
 
         const pageImages = await Promise.all(
             pages.map(async (page) => {
@@ -86,17 +77,19 @@ async function downloadPDFMethod() {
                     }
                 });
                 updateLoadingProgress(++completed, pages.length);
-                return { dataUrl, isHorizontal: page.classList.contains('horizontal') };
+
+                const sizeClass = [...page.classList].find(c => /^size-a[1-6]$/i.test(c));
+                const paperSize = sizeClass ? sizeClass.replace(/^size-/i, '').toUpperCase() : "A4";
+                return { dataUrl, isHorizontal: page.classList.contains('horizontal'), paperSize: paperSize };
             })
         );
 
         const pdfDoc = await PDFLib.PDFDocument.create();
         pdfDoc.setCreator('DataLinq');
 
-        const A4 = { portrait: [595.28, 841.89], landscape: [841.89, 595.28] };
-
-        for (const { dataUrl, isHorizontal } of pageImages) {
-            const [w, h] = isHorizontal ? A4.landscape : A4.portrait;
+        for (const { dataUrl, isHorizontal, paperSize } of pageImages) {
+            const paperDimensions = getPaperDimensions(paperSize);
+            const [w, h] = isHorizontal ? paperDimensions.landscape : paperDimensions.portrait;
 
             const pngBytes = Uint8Array.from(
                 atob(dataUrl.slice(dataUrl.indexOf(',') + 1)),
@@ -133,6 +126,32 @@ async function downloadPDFMethod() {
             if (btn) { btn.textContent = 'Download PDF'; btn.disabled = false; }
         }
     }
+}
+
+const getQuality = () => {
+    const qualityMap = {
+        Best: { pixelRatio: 2, quality: 1 },
+        High: { pixelRatio: 2, quality: 0.92 },
+        Medium: { pixelRatio: 1.5, quality: 0.85 },
+        Low: { pixelRatio: 1.5, quality: 0.75 },
+        Preview: { pixelRatio: 1, quality: 0.80 },
+    };
+
+    const qualityKey = document.querySelector('.main')?.getAttribute('quality') ?? 'High';
+    return qualityMap[qualityKey] ?? qualityMap.High;
+};
+
+const getPaperDimensions = (size) => {
+    const paperSizeMap = {
+        A1: { portrait: [1683.78, 2383.94], landscape: [2383.94, 1683.78] },
+        A2: { portrait: [1190.55, 1683.78], landscape: [1683.78, 1190.55] },
+        A3: { portrait: [841.89, 1190.55], landscape: [1190.55, 841.89] },
+        A4: { portrait: [595.28, 841.89], landscape: [841.89, 595.28] },
+        A5: { portrait: [419.53, 595.28], landscape: [595.28, 419.53] },
+        A6: { portrait: [297.64, 419.53], landscape: [419.53, 297.64] },
+    };
+
+    return paperSizeMap[size];
 }
 /* PDF RENDERING */
 
@@ -364,6 +383,7 @@ function splitTable(table, page, originalPageWrapper) {
     let remainingRows = dataRows.slice(rowsInFirstPage);
     const newPages = [];
     const hasLandscape = page.classList.contains('horizontal');
+    const paperSizeClass = [...page.classList].find(c => /^size-a[1-6]$/i.test(c));
 
     while (remainingRows.length > 0) {
         const rowsForThisPage = remainingRows.slice(0, rowsPerContinuation);
@@ -373,7 +393,7 @@ function splitTable(table, page, originalPageWrapper) {
             ? page.getAttribute("datalinq-pdfreport-template")
             : "";
 
-        const newPageWrapper = createContinuationPage(rowsForThisPage, table, thead, headerRow, wrapperElements, template, hasLandscape);
+        const newPageWrapper = createContinuationPage(rowsForThisPage, table, thead, headerRow, wrapperElements, template, hasLandscape, paperSizeClass);
         newPages.push(newPageWrapper);
     }
 
@@ -399,7 +419,7 @@ function removeTopSpacingFromStyle(styleString) {
         .trim();
 }
 
-function createContinuationPage(rows, originalTable, thead, headerRow, wrapperElements, template, landscape) {
+function createContinuationPage(rows, originalTable, thead, headerRow, wrapperElements, template, landscape, paperSizeClass) {
     const newPageWrapper = document.createElement('div');
     newPageWrapper.className = 'page-wrapper';
 
@@ -408,6 +428,9 @@ function createContinuationPage(rows, originalTable, thead, headerRow, wrapperEl
 
     if (landscape)
         newPage.classList.add('horizontal');
+
+    if (paperSizeClass)
+        newPage.classList.add(paperSizeClass);
 
     if (template)
         newPage.setAttribute('datalinq-pdfreport-template', template);
@@ -522,6 +545,7 @@ function showLoadingOverlay() {
     overlay.id = 'pdf-loading-overlay';
 
     overlay.innerHTML = `
+        <span id="pdf-loader"></span>
         <div id="pdf-loading-text">Preparing PDF...</div>
         <div class="pdf-progress-container">
             <div id="pdf-progress-bar"></div>
@@ -534,6 +558,9 @@ function showLoadingOverlay() {
 function updateLoadingProgress(current, total) {
     const bar = document.getElementById('pdf-progress-bar');
     const text = document.getElementById('pdf-loading-text');
+    const loader = document.getElementById('pdf-loader');
+
+    if (loader) loader.remove();
 
     if (bar && text) {
         const percentage = Math.round((current / total) * 100);
