@@ -14,7 +14,7 @@
   </PropertyGroup>
 
 	<PropertyGroup>
-		<Version>8.26.1502</Version>
+		<Version>8.26.1802</Version>
 		<Copyright>2026, Energienetze Steiermark</Copyright>
 		<PackageProjectUrl>https://github.com/e-netze/datalinq</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/e-netze/datalinq</RepositoryUrl>
