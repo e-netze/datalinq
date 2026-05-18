@@ -7,6 +7,8 @@ using E.DataLinq.Web.Extensions.DependencyInjection;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using E.DataLinq.Web.Services.TokenCache;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,7 +78,7 @@ builder.Services.AddDataLinqDbFactoryProvider<E.DataLinq.Engine.OracleClient.DbF
 
 builder.Services.AddDataLinqVersionControlServices(options =>
 {
-    options.UseVersionControl = true;
+    options.UseVersionControl = false;
     options.RemoteUrl = "http://localhost:3000/admin/datalinq-repo.git";
     options.LocalRepositoryPath = "C:\\temp\\datalinq\\repo";
     options.CredentialType = DataLinqVersionControlOptions.GitCredentialType.Token;
@@ -104,6 +106,19 @@ if (builder.Configuration.GetSection("DataLinq.CodeApi").Exists())
 
 builder.Services.AddScoped<IRoutingEndPointReflectionProvider, RoutingEndPointReflectionService>();
 
+#if !DEBUG
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto |
+        ForwardedHeaders.XForwardedHost;
+
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+#endif
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
@@ -118,6 +133,15 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAntiforgery();
+
+#if !DEBUG
+var pathBase = builder.Configuration["ASPNETCORE_PATHBASE"];
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    app.UsePathBase(pathBase);
+}
+#endif
+
 app.UseRouting();
 
 app.UseAuthorization();

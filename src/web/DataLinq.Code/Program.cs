@@ -1,6 +1,7 @@
 ﻿using DataLinq.Code.Extensions;
 using E.DataLinq.Code.Extensions.DependencyInjection;
 using E.DataLinq.Code.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +59,19 @@ builder.Services.AddDataLinqCodeService(
 
 builder.Services.AddControllersWithViews();
 
+#if !DEBUG
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto |
+        ForwardedHeaders.XForwardedHost;
+
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+#endif
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
@@ -72,6 +86,15 @@ if (!app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection();
 app.UseAntiforgery();
+
+#if !DEBUG
+var pathBase = builder.Configuration["ASPNETCORE_PATHBASE"];
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    app.UsePathBase(pathBase);
+}
+#endif
+
 app.UseStaticFiles();
 
 app.UseRouting();
