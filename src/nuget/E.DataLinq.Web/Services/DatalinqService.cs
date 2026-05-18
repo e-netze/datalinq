@@ -360,7 +360,7 @@ public class DataLinqService
 #if DEBUG
                 showStackTrace = true;
 #endif
-                sb.Append("<div style='background-color:#efefaa;display:inline-block;margin:5px;padding:10px;border:1px solid red'>");
+                sb.Append("<div id='datalinq-services-error' style='background-color:#efefaa;display:inline-block;margin:5px;padding:10px;border:1px solid red'>");
                 sb.Append(ex.Message);
 
                 if (showStackTrace || ex is NullReferenceException)
