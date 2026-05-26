@@ -372,3 +372,4 @@ FodyWeavers.xsd
 /src/web/DataLinq.Api/datalinq_helpers_for_copilot.json
 /src/nuget/E.DataLinq.Web/wwwroot/css/img/e-netze.svg
 /src/k6-quick-test.js
+/src/docker-compose.yml
