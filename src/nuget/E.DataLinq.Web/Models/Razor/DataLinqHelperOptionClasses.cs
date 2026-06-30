@@ -44,6 +44,8 @@ public class DynamicTableOptions
 {
     public bool Dynamic { get; set; } = false;
     public bool DynamicUseTemplate { get; set; } = false;
+    public double DefaultMarginTop { get; set; } = 10;
+    public double DefaultMarginBottom { get; set; } = 10;
 
     public static implicit operator DynamicTableOptions(Dictionary<string, object> d)
     {
@@ -52,6 +54,8 @@ public class DynamicTableOptions
         {
             Dynamic = d.ContainsKey("Dynamic") && (bool)d["Dynamic"],
             DynamicUseTemplate = d.ContainsKey("DynamicUseTemplate") && (bool)d["DynamicUseTemplate"],
+            DefaultMarginTop = d.ContainsKey("DefaultMarginTop") ? Convert.ToDouble(d["DefaultMarginTop"]) : 10,
+            DefaultMarginBottom = d.ContainsKey("DefaultMarginBottom") ? Convert.ToDouble(d["DefaultMarginBottom"]) : 10,
         };
     }
 }

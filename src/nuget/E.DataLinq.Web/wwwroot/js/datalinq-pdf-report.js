@@ -254,63 +254,59 @@ function makeTemplateRequest(pagesArray, templateName) {
 /* LOGIC SPLITTING UP TABELS LONGER THAN 1 PAGE */
 function splitAllTables() {
     const pagesContainer = document.getElementById('pagesContainer');
+    if (!pagesContainer) return;
+
     const originalPageWrappers = Array.from(pagesContainer.querySelectorAll('.page-wrapper.dynamic'));
-
-    originalPageWrappers.forEach(pageWrapper => {
-        const page = pageWrapper.querySelector('.page');
-        const tables = page.querySelectorAll('table');
-
-        tables.forEach(table => {
-            console.log("FOUND TABLE TO SPLIT");
-            splitTable(table, page, pageWrapper);
-        });
-    });
+    originalPageWrappers.forEach(pageWrapper => paginateDynamicPage(pageWrapper, pagesContainer));
 }
 
-function getWrapperSpacing(table) {
-    let totalTop = 0;
-    let totalBottom = 0;
-    let currentElement = table.parentElement;
+function paginateDynamicPage(startWrapper, pagesContainer) {
+    let currentWrapper = startWrapper;
+    let guard = 0;
 
-    while (currentElement && !currentElement.classList.contains('page')) {
-        const styles = window.getComputedStyle(currentElement);
-        totalTop += parseFloat(styles.paddingTop) || 0;
-        totalTop += parseFloat(styles.marginTop) || 0;
-        totalBottom += parseFloat(styles.paddingBottom) || 0;
-        totalBottom += parseFloat(styles.marginBottom) || 0;
-        currentElement = currentElement.parentElement;
+    while (currentWrapper && guard++ < 100) {
+        const page = currentWrapper.querySelector('.page');
+        if (!page) return;
+
+        const margins = getDynamicMargins(currentWrapper);
+        const overflowElement = getFirstOverflowElement(page, margins.defaultMarginBottom);
+        if (!overflowElement) return;
+
+        const isTable = overflowElement.tagName.toLowerCase() === 'table';
+        const nextWrapper = isTable
+            ? splitOverflowingTable(overflowElement, page, currentWrapper, pagesContainer, margins)
+            : moveOverflowingElementsToNextPage(overflowElement, page, currentWrapper, pagesContainer);
+
+        if (!nextWrapper || nextWrapper === currentWrapper) {
+            return;
+        }
+
+        currentWrapper = nextWrapper;
+    }
+}
+
+function getFirstOverflowElement(page, bottomMargin = 0) {
+    const pageRect = page.getBoundingClientRect();
+    const maxBottom = pageRect.top + pageRect.height - bottomMargin;
+
+    return Array.from(page.children)
+        .filter(child => !child.classList.contains('report-ignore'))
+        .find(child => child.getBoundingClientRect().bottom > maxBottom + 0.5);
+}
+
+function splitOverflowingTable(table, page, currentWrapper, pagesContainer, margins) {
+    const tbody = table.querySelector('tbody');
+    if (!tbody) {
+        return moveOverflowingElementsToNextPage(table, page, currentWrapper, pagesContainer);
     }
 
-    return { top: totalTop, bottom: totalBottom };
-}
-
-function splitTable(table, page, originalPageWrapper) {
-    const tbody = table.querySelector('tbody');
-    if (!tbody) return;
-
     const rows = Array.from(tbody.querySelectorAll('tr'));
-    if (rows.length === 0) return;
-
-    if (table.dataset.processed === 'true') return;
-    table.dataset.processed = 'true';
-
-    const pageHeight = page.offsetHeight;
-    const topPadding = 30;
-    const bottomPadding = 20;
-
-    let contentBeforeTable = 0;
-    let sibling = table.previousElementSibling;
-    while (sibling) {
-        contentBeforeTable += sibling.offsetHeight;
-        const siblingStyles = window.getComputedStyle(sibling);
-        contentBeforeTable += parseFloat(siblingStyles.marginTop) || 0;
-        contentBeforeTable += parseFloat(siblingStyles.marginBottom) || 0;
-        sibling = sibling.previousElementSibling;
+    if (rows.length === 0) {
+        return moveOverflowingElementsToNextPage(table, page, currentWrapper, pagesContainer);
     }
 
     const tableStyles = window.getComputedStyle(table);
-    const tableMarginTop = parseFloat(tableStyles.marginTop) || 0;
-    const tableMarginBottom = parseFloat(tableStyles.marginBottom) || 0;
+    const bottomMargin = margins.defaultMarginBottom;
 
     let thead = table.querySelector('thead');
     let headerRow = null;
@@ -318,221 +314,228 @@ function splitTable(table, page, originalPageWrapper) {
     let startRowIndex = 0;
 
     if (thead) {
-        theadHeight = thead.offsetHeight;
+        theadHeight = thead.getBoundingClientRect().height;
     } else {
         const firstRow = rows[0];
         if (firstRow && firstRow.querySelector('th')) {
             headerRow = firstRow;
-            theadHeight = headerRow.offsetHeight;
+            theadHeight = firstRow.getBoundingClientRect().height;
             startRowIndex = 1;
-            headerRow.dataset.isHeader = 'true';
         }
     }
 
     const dataRows = rows.slice(startRowIndex);
-
-    const wrapperSpacing = getWrapperSpacing(table);
-
-    const pagePadding = 40;
-    const firstPageAvailable = pageHeight
-        - contentBeforeTable
-        - theadHeight
-        - tableMarginTop
-        - tableMarginBottom
-        - wrapperSpacing.top      
-        - wrapperSpacing.bottom   
-        - pagePadding;
-
-    const optionsDiv = document.querySelector('.dynamic-use-template');
-
-    const continuationAvailable = optionsDiv
-        ? pageHeight
-        - theadHeight
-        - tableMarginTop
-        - tableMarginBottom
-        - wrapperSpacing.bottom   
-        - pagePadding
-        : pageHeight - theadHeight - topPadding - bottomPadding - pagePadding;
-
-    const singleRowHeight = dataRows[0].offsetHeight;
-
-    const rowsInFirstPage = Math.floor(firstPageAvailable / singleRowHeight);
-    const rowsPerContinuation = Math.floor(continuationAvailable / singleRowHeight);
-
-    if (rowsInFirstPage >= dataRows.length) {
-        return;
+    if (dataRows.length === 0) {
+        return moveOverflowingElementsToNextPage(table, page, currentWrapper, pagesContainer);
     }
 
-    for (let i = rowsInFirstPage; i < dataRows.length; i++) {
-        dataRows[i].classList.add('hidden');
+    const rowGap = getRowGap(tableStyles.borderSpacing);
+    const pageRect = page.getBoundingClientRect();
+    const tableTop = table.getBoundingClientRect().top - pageRect.top;
+    const availableHeight = pageRect.height - tableTop - bottomMargin - theadHeight - rowGap;
+
+    const rowsInCurrentPage = countRowsThatFit(dataRows, 0, availableHeight, rowGap, 0);
+
+    if (rowsInCurrentPage <= 0) {
+        return moveOverflowingElementsToNextPage(table, page, currentWrapper, pagesContainer);
     }
 
-    const wrapperElements = [];
-    let currentElement = table.parentElement;
-
-    console.log('Starting wrapper collection from table parent:', currentElement);
-
-    while (currentElement && !currentElement.classList.contains('page')) {
-        console.log('Found wrapper:', currentElement.tagName, currentElement.className, currentElement.getAttribute('style'));
-        wrapperElements.unshift(currentElement);
-        currentElement = currentElement.parentElement;
+    if (rowsInCurrentPage >= dataRows.length) {
+        return moveOverflowingElementsToNextPage(table, page, currentWrapper, pagesContainer);
     }
 
-    console.log('Total wrappers found:', wrapperElements.length);
+    const overflowRows = dataRows.slice(rowsInCurrentPage);
+    overflowRows.forEach(row => row.remove());
 
-    let remainingRows = dataRows.slice(rowsInFirstPage);
-    const newPages = [];
-    const hasLandscape = page.classList.contains('horizontal');
-    const paperSizeClass = [...page.classList].find(c => /^size-a[1-6]$/i.test(c));
+    const nextWrapper = createContinuationPageWrapper(page, currentWrapper);
+    const nextPage = nextWrapper.querySelector('.page');
 
-    while (remainingRows.length > 0) {
-        const rowsForThisPage = remainingRows.slice(0, rowsPerContinuation);
-        remainingRows = remainingRows.slice(rowsPerContinuation);
+    const continuationTable = createContinuationTable(table, thead, headerRow, overflowRows);
+    normalizeFirstMovedElement(continuationTable);
+    nextPage.appendChild(continuationTable);
+    moveFollowingSiblings(table, nextPage);
 
-        const template = optionsDiv
-            ? page.getAttribute("datalinq-pdfreport-template")
-            : "";
+    insertPageAfter(currentWrapper, nextWrapper, pagesContainer);
+    return nextWrapper;
+}
 
-        const newPageWrapper = createContinuationPage(rowsForThisPage, table, thead, headerRow, wrapperElements, template, hasLandscape, paperSizeClass);
-        newPages.push(newPageWrapper);
-    }
+function moveOverflowingElementsToNextPage(startElement, page, currentWrapper, pagesContainer) {
+    const nextWrapper = createContinuationPageWrapper(page, currentWrapper);
+    const nextPage = nextWrapper.querySelector('.page');
 
-    const pagesContainer = document.getElementById('pagesContainer');
-    let insertAfter = originalPageWrapper;
+    let current = startElement;
+    let firstMovedElement = null;
 
-    newPages.forEach(newPageWrapper => {
-        const nextElement = insertAfter.nextElementSibling;
-        if (nextElement) {
-            pagesContainer.insertBefore(newPageWrapper, nextElement);
-        } else {
-            pagesContainer.appendChild(newPageWrapper);
+    while (current) {
+        const next = current.nextElementSibling;
+        nextPage.appendChild(current);
+
+        if (!firstMovedElement) {
+            firstMovedElement = current;
         }
-        insertAfter = newPageWrapper;
-    });
+
+        current = next;
+    }
+
+    normalizeFirstMovedElement(firstMovedElement);
+
+    insertPageAfter(currentWrapper, nextWrapper, pagesContainer);
+    return nextWrapper;
 }
 
-function removeTopSpacingFromStyle(styleString) {
-    if (!styleString) return '';
-    return styleString
-        .replace(/padding-top\s*:\s*[^;]+;?\s*/gi, '')
-        .replace(/margin-top\s*:\s*[^;]+;?\s*/gi, '')
-        .trim();
-}
-
-function createContinuationPage(rows, originalTable, thead, headerRow, wrapperElements, template, landscape, paperSizeClass) {
+function createContinuationPageWrapper(sourcePage, sourceWrapper) {
     const newPageWrapper = document.createElement('div');
     newPageWrapper.className = 'page-wrapper';
+
+    if (sourceWrapper.classList.contains('dynamic')) {
+        newPageWrapper.classList.add('dynamic');
+    }
+
+    if (sourceWrapper.classList.contains('dynamic-use-template')) {
+        newPageWrapper.classList.add('dynamic-use-template');
+    }
+
+    const margins = getDynamicMargins(sourceWrapper);
+    newPageWrapper.setAttribute('data-dynamic-margin-top', margins.defaultMarginTop.toString());
+    newPageWrapper.setAttribute('data-dynamic-margin-bottom', margins.defaultMarginBottom.toString());
 
     const newPage = document.createElement('div');
     newPage.className = 'page';
 
-    if (landscape)
+    if (sourcePage.classList.contains('horizontal')) {
         newPage.classList.add('horizontal');
-
-    if (paperSizeClass)
-        newPage.classList.add(paperSizeClass);
-
-    if (template)
-        newPage.setAttribute('datalinq-pdfreport-template', template);
-
-    let currentParent = newPage;
-
-    wrapperElements.forEach((wrapper, index) => {
-
-        const clonedWrapper = document.createElement(wrapper.tagName);
-
-        if (wrapper.className) {
-            clonedWrapper.className = wrapper.className;
-        }
-
-        const inlineStyle = wrapper.getAttribute('style');
-        if (inlineStyle) {
-            const cleanedStyle = removeTopSpacingFromStyle(inlineStyle);
-            if (cleanedStyle) {
-                clonedWrapper.setAttribute('style', cleanedStyle);
-            }
-        }
-
-        Array.from(wrapper.attributes).forEach(attr => {
-            if (attr.name === 'class' || attr.name === 'style') {
-                return;
-            }
-
-            if (attr.name.startsWith('data-')) {
-                clonedWrapper.setAttribute(attr.name, attr.value);
-            }
-
-            if (attr.name === 'id') {
-
-            }
-        });
-
-        currentParent.appendChild(clonedWrapper);
-        currentParent = clonedWrapper;
-    });
-
-    const newTable = document.createElement('table');
-    newTable.dataset.processed = 'true';
-
-    Array.from(originalTable.classList).forEach(cls => {
-        if (cls !== 'first-table') {
-            newTable.classList.add(cls);
-        }
-    });
-
-    const tableInlineStyle = originalTable.getAttribute('style');
-    if (tableInlineStyle) {
-        const optionsDiv = document.querySelector('.dynamic-use-template');
-
-        let finalStyle = tableInlineStyle;
-
-        
-
-        if (finalStyle.trim()) {
-            newTable.setAttribute('style', finalStyle);
-        }
     }
 
+    const paperSizeClass = [...sourcePage.classList].find(c => /^size-a[1-6]$/i.test(c));
+    if (paperSizeClass) {
+        newPage.classList.add(paperSizeClass);
+    }
+
+    const template = sourcePage.getAttribute('datalinq-pdfreport-template');
+    if (template) {
+        newPage.setAttribute('datalinq-pdfreport-template', template);
+    }
+
+    Array.from(sourcePage.children)
+        .filter(child => child.classList.contains('report-ignore') && !child.classList.contains('dynamic-top-margin-spacer'))
+        .forEach(child => newPage.appendChild(child.cloneNode(true)));
+
+    if (margins.defaultMarginTop > 0) {
+        const topSpacer = document.createElement('div');
+        topSpacer.className = 'report-ignore dynamic-top-margin-spacer';
+        topSpacer.style.height = `${margins.defaultMarginTop}px`;
+        newPage.appendChild(topSpacer);
+    }
+
+    newPageWrapper.appendChild(newPage);
+    return newPageWrapper;
+}
+
+function createContinuationTable(originalTable, thead, headerRow, rows) {
+    const newTable = document.createElement('table');
+
     Array.from(originalTable.attributes).forEach(attr => {
-        if (attr.name !== 'class' &&
-            attr.name !== 'style' &&
-            attr.name !== 'id' &&
-            !attr.name.startsWith('data-')) {
+        if (attr.name !== 'id') {
             newTable.setAttribute(attr.name, attr.value);
         }
     });
 
     if (thead) {
-        const newThead = thead.cloneNode(true);
-        newTable.appendChild(newThead);
+        newTable.appendChild(thead.cloneNode(true));
     }
 
-    const tbody = document.createElement('tbody');
+    const newTbody = document.createElement('tbody');
 
     if (headerRow && !thead) {
-        const clonedHeaderRow = headerRow.cloneNode(true);
-        clonedHeaderRow.classList.remove('hidden');
-        clonedHeaderRow.removeAttribute('data-is-header');
-        tbody.appendChild(clonedHeaderRow);
+        newTbody.appendChild(headerRow.cloneNode(true));
     }
 
     rows.forEach(row => {
-        if (row.dataset.isHeader === 'true') {
-            return;
-        }
-
-        const clonedRow = row.cloneNode(true);
-        clonedRow.classList.remove('hidden');
-        tbody.appendChild(clonedRow);
+        row.classList.remove('hidden');
+        newTbody.appendChild(row);
     });
 
-    newTable.appendChild(tbody);
+    newTable.appendChild(newTbody);
+    return newTable;
+}
 
-    currentParent.appendChild(newTable);
+function moveFollowingSiblings(referenceElement, targetPage) {
+    let current = referenceElement.nextElementSibling;
+    let firstMovedElement = null;
 
-    newPageWrapper.appendChild(newPage);
+    while (current) {
+        const next = current.nextElementSibling;
+        targetPage.appendChild(current);
 
-    return newPageWrapper;
+        if (!firstMovedElement) {
+            firstMovedElement = current;
+        }
+
+        current = next;
+    }
+
+    normalizeFirstMovedElement(firstMovedElement);
+}
+
+function insertPageAfter(currentWrapper, newPageWrapper, pagesContainer) {
+    const nextElement = currentWrapper.nextElementSibling;
+    if (nextElement) {
+        pagesContainer.insertBefore(newPageWrapper, nextElement);
+    } else {
+        pagesContainer.appendChild(newPageWrapper);
+    }
+}
+
+function countRowsThatFit(rows, startIndex, availableHeight, rowGap, minRows = 1) {
+    let usedHeight = 0;
+    let count = 0;
+
+    for (let i = startIndex; i < rows.length; i++) {
+        const rowHeight = getRowOuterHeight(rows[i]) + rowGap;
+
+        if (usedHeight + rowHeight > availableHeight) {
+            break;
+        }
+
+        usedHeight += rowHeight;
+        count++;
+    }
+
+    return Math.max(count, minRows);
+}
+
+function getRowOuterHeight(row) {
+    const styles = window.getComputedStyle(row);
+    return row.getBoundingClientRect().height
+        + (parseFloat(styles.marginTop) || 0)
+        + (parseFloat(styles.marginBottom) || 0);
+}
+
+function getRowGap(borderSpacing) {
+    if (!borderSpacing) return 0;
+
+    const spacing = borderSpacing.toString().trim().split(/\s+/);
+    if (spacing.length === 0) return 0;
+
+    const verticalSpacing = spacing.length > 1 ? spacing[1] : spacing[0];
+    return parseFloat(verticalSpacing) || 0;
+}
+
+function getDynamicMargins(pageWrapper) {
+    const defaultMarginTop = parseFloat(pageWrapper.getAttribute('data-dynamic-margin-top'));
+    const defaultMarginBottom = parseFloat(pageWrapper.getAttribute('data-dynamic-margin-bottom'));
+
+    return {
+        defaultMarginTop: Number.isFinite(defaultMarginTop) ? defaultMarginTop : 10,
+        defaultMarginBottom: Number.isFinite(defaultMarginBottom) ? defaultMarginBottom : 10,
+    };
+}
+
+function normalizeFirstMovedElement(element) {
+    if (!element) return;
+
+    element.style.marginTop = '0';
+    element.style.paddingTop = '0';
 }
 /* LOGIC SPLITTING UP TABELS LONGER THAN 1 PAGE */
 

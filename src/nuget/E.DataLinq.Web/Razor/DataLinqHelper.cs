@@ -3019,6 +3019,8 @@ public class DataLinqHelper : IDataLinqHelper
 
         bool dynamic = dynamicTableOptions.Dynamic;
         bool dynamicUseTemplate = dynamicTableOptions.DynamicUseTemplate;
+        double defaultMarginTop = dynamicTableOptions.DefaultMarginTop;
+        double defaultMarginBottom = dynamicTableOptions.DefaultMarginBottom;
 
         return _razor.RawString(
             HtmlBuilder.Create()
@@ -3027,8 +3029,10 @@ public class DataLinqHelper : IDataLinqHelper
                     d.AddClass("page-wrapper");
 
                     if (dynamic)
-                    { 
+                    {
                         d.AddClass("dynamic");
+                        d.AddAttribute("data-dynamic-margin-top", defaultMarginTop.ToString(CultureInfo.InvariantCulture));
+                        d.AddAttribute("data-dynamic-margin-bottom", defaultMarginBottom.ToString(CultureInfo.InvariantCulture));
                         if (dynamicUseTemplate)
                         {
                             d.AddClass("dynamic-use-template");
