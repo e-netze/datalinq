@@ -19,6 +19,8 @@ dataLinq.events.on('onpageloaded', function () {
     }
 /* PDF GENERATION BUTTON ON SITE*/
 
+    /* FLATTEN FINISHED INCLUDE WRAPPERS BEFORE PAGINATION */
+    unwrapFinishedIncludes();
     /* CALLS TABLE SPLIT LOGIC */
     splitAllTables();
     /* CALLS TEMPLATE LOADER LOGIC */
@@ -252,6 +254,25 @@ function makeTemplateRequest(pagesArray, templateName) {
 /* LOGIC FOR ADDING PAGE NUMBERS AUTOMATICALLY */
 
 /* LOGIC SPLITTING UP TABELS LONGER THAN 1 PAGE */
+function unwrapFinishedIncludes() {
+    const pages = Array.from(document.querySelectorAll('.page'));
+
+    pages.forEach(page => {
+        const wrappers = Array.from(page.querySelectorAll('div.datalinq-include.finished'));
+
+        wrappers.forEach(wrapper => {
+            const parent = wrapper.parentNode;
+            if (!parent) return;
+
+            while (wrapper.firstChild) {
+                parent.insertBefore(wrapper.firstChild, wrapper);
+            }
+
+            parent.removeChild(wrapper);
+        });
+    });
+}
+
 function splitAllTables() {
     const pagesContainer = document.getElementById('pagesContainer');
     if (!pagesContainer) return;
