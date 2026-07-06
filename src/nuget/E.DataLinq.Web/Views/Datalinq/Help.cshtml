@@ -46,6 +46,36 @@
         border-color: #007bff;
     }
 
+    .class-switcher {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0;
+    }
+
+    .class-switcher button {
+        font-size: 14px;
+        padding: 8px 14px;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+        color: #333;
+    }
+
+    .class-switcher button.active {
+        background-color: #e0e0e0;
+        border-color: #999;
+    }
+
+    .class-panel {
+        display: none;
+    }
+
+    .class-panel.active {
+        display: block;
+    }
+
 </style>
 
 <link href="@(ViewData["contentRootUrl"])/css/datalinq/help.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
@@ -63,43 +93,33 @@
     </div>
     <br />
 
+    <div class="class-switcher" id="classSwitcher">
+        @{ var classIndex = 0; }
+        @foreach (var classHelp in Model.Classes)
+        {
+            <button type="button" class="class-toggle @(classIndex == 0 ? "active" : "")" data-class-index="@classIndex">
+                @@@classHelp.Alias
+            </button>
+            classIndex++;
+        }
+    </div>
+
     <input type='text' class='content-search' placeholder='Search...' />
 
-    foreach (var classHelp in Model.Classes)
+    var panelIndex = 0;
+    @foreach (var classHelp in Model.Classes)
     {
-        <h3>@classHelp.Name <small>(@@@classHelp.Alias)</small></h3>
-        <p class="searchable-content">
-            @classHelp.Description
-        </p>
+        <div class="class-panel @(panelIndex == 0 ? "active" : "")" data-class-index="@panelIndex">
+            <h3>@classHelp.Name <small>(@@@classHelp.Alias)</small></h3>
+            <p class="searchable-content">
+                @classHelp.Description
+            </p>
 
-        <h4>Methods</h4>
-        <table width="100%">
-            @foreach (var methodName in classHelp.MethodNames.OrderBy(m => m))
-            {
-                var method = classHelp.Methods.Where(m => m.Name == methodName).FirstOrDefault();
-                if (!String.IsNullOrWhiteSpace(method.Description))
-                {
-                    <tr class="searchable-content">
-                        <td>
-                            <a href="help?selected=@(classHelp.Name + "." + methodName)&lang=@currentLang">@methodName</a>
-                        </td>
-                        <td>
-                            <p>@method.Description.Split('.')[0]</p>
-                        </td>
-                    </tr>
-                }
-            }
-        </table>
-
-        @if (classHelp.ExtensionMethodNames.Count > 0)
-        {
-            <br />
-            <br />
-            <h4>Extended Methods</h4>
+            <h4>Methods</h4>
             <table width="100%">
-                @foreach (var methodName in classHelp.ExtensionMethodNames.OrderBy(m => m))
+                @foreach (var methodName in classHelp.MethodNames.OrderBy(m => m))
                 {
-                    var method = classHelp.ExtensionMethods.Where(m => m.Name == methodName).FirstOrDefault();
+                    var method = classHelp.Methods.Where(m => m.Name == methodName).FirstOrDefault();
                     if (!String.IsNullOrWhiteSpace(method.Description))
                     {
                         <tr class="searchable-content">
@@ -113,7 +133,32 @@
                     }
                 }
             </table>
-        }
+
+            @if (classHelp.ExtensionMethodNames.Count > 0)
+            {
+                <br />
+                <br />
+                <h4>Extended Methods</h4>
+                <table width="100%">
+                    @foreach (var methodName in classHelp.ExtensionMethodNames.OrderBy(m => m))
+                    {
+                        var method = classHelp.ExtensionMethods.Where(m => m.Name == methodName).FirstOrDefault();
+                        if (!String.IsNullOrWhiteSpace(method.Description))
+                        {
+                            <tr class="searchable-content">
+                                <td>
+                                    <a href="help?selected=@(classHelp.Name + "." + methodName)&lang=@currentLang">@methodName</a>
+                                </td>
+                                <td>
+                                    <p>@method.Description.Split('.')[0]</p>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </table>
+            }
+        </div>
+        panelIndex++;
     }
 }
 else
@@ -129,14 +174,58 @@ else
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        var storedLang = sessionStorage.getItem("selectedLang");
-        var currentLang = document.getElementById("languageSelector").value;
+        var languageSelector = document.getElementById("languageSelector");
 
-        if (storedLang && storedLang !== currentLang) {
-            document.getElementById("languageSelector").value = storedLang;
-            var url = new URL(window.location.href);
-            url.searchParams.set("lang", storedLang);
-            window.location.href = url.toString();
+        if (languageSelector) {
+            var storedLang = sessionStorage.getItem("selectedLang");
+            var currentLang = languageSelector.value;
+
+            if (storedLang && storedLang !== currentLang) {
+                languageSelector.value = storedLang;
+                var url = new URL(window.location.href);
+                url.searchParams.set("lang", storedLang);
+                window.location.href = url.toString();
+                return;
+            }
+        }
+
+        var panels = Array.from(document.querySelectorAll(".class-panel"));
+        var toggles = Array.from(document.querySelectorAll(".class-toggle"));
+
+        function applySearch() {
+            var input = document.querySelector("input.content-search");
+            if (input && window.applyHelpSearch) {
+                window.applyHelpSearch(input);
+            }
+        }
+
+        function setActiveClass(classIndex) {
+            panels.forEach(function (panel) {
+                var isActive = panel.getAttribute("data-class-index") === classIndex;
+                panel.classList.toggle("active", isActive);
+            });
+
+            toggles.forEach(function (toggle) {
+                toggle.classList.toggle("active", toggle.getAttribute("data-class-index") === classIndex);
+            });
+
+            sessionStorage.setItem("selectedHelpClass", classIndex);
+            applySearch();
+        }
+
+        if (panels.length > 0) {
+            var storedClass = sessionStorage.getItem("selectedHelpClass");
+            var initialClass = storedClass && panels.some(function (panel) { return panel.getAttribute("data-class-index") === storedClass; })
+                ? storedClass
+                : panels[0].getAttribute("data-class-index");
+
+            setActiveClass(initialClass);
+
+            toggles.forEach(function (toggle) {
+                toggle.addEventListener("click", function () {
+                    setActiveClass(toggle.getAttribute("data-class-index"));
+                });
+            });
         }
     });
 
