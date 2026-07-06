@@ -1,7 +1,18 @@
-﻿/* WAIT FOR DATALINQ CORE CLIENT SIDE LOGIC TO FINISH */
+/*
+ * PDF report editing mode (client side).
+ *
+ * Enables drag-and-drop positioning of @DLH.NewPdfElement blocks with optional
+ * snapping (to page-center guides or to other elements) and a right-click action
+ * that copies an element's coordinates as a ready-to-paste helper call.
+ */
+
+// Distance in pixels within which a dragged element snaps to a guide or another element.
+const SNAP_THRESHOLD = 15;
+
+// Wait until the DataLinq core client-side logic has finished before wiring up editing.
 dataLinq.events.on('onpageloaded', function () {
 
-    /* @DLH.NewPdfElement DRAG AND DROP, SNAPPING LOGIC*/
+    // Drag-and-drop + snapping for each @DLH.NewPdfElement on the page.
     const elements = document.querySelectorAll('.element');
 
     elements.forEach(element => {
@@ -10,7 +21,6 @@ dataLinq.events.on('onpageloaded', function () {
         let initialX = 0, initialY = 0;
 
         const page = element.closest('.page');
-        const snapThreshold = 15;
 
         let snapLineX = document.createElement('div');
         snapLineX.className = 'snap-guide-line-x';
@@ -118,30 +128,30 @@ dataLinq.events.on('onpageloaded', function () {
             let snapped = false;
 
             if (snapToVerticalLine) {
-                if (Math.abs(elementLeft - pageCenterX) < snapThreshold) {
+                if (Math.abs(elementLeft - pageCenterX) < SNAP_THRESHOLD) {
                     snappedX = pageCenterX;
                     snapped = true;
                 }
-                else if (Math.abs(elementRight - pageCenterX) < snapThreshold) {
+                else if (Math.abs(elementRight - pageCenterX) < SNAP_THRESHOLD) {
                     snappedX = pageCenterX - elementWidth;
                     snapped = true;
                 }
-                else if (Math.abs(elementCenterX - pageCenterX) < snapThreshold) {
+                else if (Math.abs(elementCenterX - pageCenterX) < SNAP_THRESHOLD) {
                     snappedX = pageCenterX - elementWidth / 2;
                     snapped = true;
                 }
             }
 
             if (snapToHorizontalLine) {
-                if (Math.abs(elementTop - pageCenterY) < snapThreshold) {
+                if (Math.abs(elementTop - pageCenterY) < SNAP_THRESHOLD) {
                     snappedY = pageCenterY;
                     snapped = true;
                 }
-                else if (Math.abs(elementBottom - pageCenterY) < snapThreshold) {
+                else if (Math.abs(elementBottom - pageCenterY) < SNAP_THRESHOLD) {
                     snappedY = pageCenterY - elementHeight;
                     snapped = true;
                 }
-                else if (Math.abs(elementCenterY - pageCenterY) < snapThreshold) {
+                else if (Math.abs(elementCenterY - pageCenterY) < SNAP_THRESHOLD) {
                     snappedY = pageCenterY - elementHeight / 2;
                     snapped = true;
                 }
@@ -201,7 +211,7 @@ dataLinq.events.on('onpageloaded', function () {
                 ];
 
                 xSnapPoints.forEach(point => {
-                    if (point.distance < minXDistance && point.distance < snapThreshold) {
+                    if (point.distance < minXDistance && point.distance < SNAP_THRESHOLD) {
                         minXDistance = point.distance;
                         bestXSnap = point.snap;
                         snapXPosition = point.position;
@@ -218,7 +228,7 @@ dataLinq.events.on('onpageloaded', function () {
                 ];
 
                 ySnapPoints.forEach(point => {
-                    if (point.distance < minYDistance && point.distance < snapThreshold) {
+                    if (point.distance < minYDistance && point.distance < SNAP_THRESHOLD) {
                         minYDistance = point.distance;
                         bestYSnap = point.snap;
                         snapYPosition = point.position;
@@ -227,12 +237,12 @@ dataLinq.events.on('onpageloaded', function () {
                 });
             });
 
-            if (minXDistance < snapThreshold) {
+            if (minXDistance < SNAP_THRESHOLD) {
                 snappedX = bestXSnap;
                 snapped = true;
             }
 
-            if (minYDistance < snapThreshold) {
+            if (minYDistance < SNAP_THRESHOLD) {
                 snappedY = bestYSnap;
                 snapped = true;
             }
@@ -242,8 +252,8 @@ dataLinq.events.on('onpageloaded', function () {
                 y: snappedY,
                 snapped: snapped,
                 snapInfo: snapped ? {
-                    xPosition: minXDistance < snapThreshold ? snapXPosition : null,
-                    yPosition: minYDistance < snapThreshold ? snapYPosition : null,
+                    xPosition: minXDistance < SNAP_THRESHOLD ? snapXPosition : null,
+                    yPosition: minYDistance < SNAP_THRESHOLD ? snapYPosition : null,
                     targetElement: snapTargetElement
                 } : null
             };
@@ -291,9 +301,8 @@ dataLinq.events.on('onpageloaded', function () {
             document.removeEventListener('mouseup', stopDrag);
         }
     });
-    /* @DLH.NewPdfElement DRAG AND DROP, SNAPPING LOGIC*/
 
-    /* COPY LOGIC FOR @DLH.NewPdfElement */
+    // Right-click a @DLH.NewPdfElement to copy its coordinates as a helper call.
     document.addEventListener('contextmenu', function (e) {
         const element = e.target.closest('.element');
 
@@ -303,12 +312,12 @@ dataLinq.events.on('onpageloaded', function () {
             const x = element.getAttribute('data-x');
             const y = element.getAttribute('data-y');
 
-            const textToCopy = `@DLH.NewPdfElement(x: ${x}, y:  ${y})`;
+            const textToCopy = `@DLH.NewPdfElement(x: ${x}, y: ${y})`;
 
             navigator.clipboard.writeText(textToCopy).then(() => {
-                showToast('Copied! ', e.clientX, e.clientY);
-            }).catch(err => {
-                showToast('Failed to copy location!! ', e.clientX, e.clientY);
+                showToast('Copied!', e.clientX, e.clientY);
+            }).catch(() => {
+                showToast('Failed to copy element location!', e.clientX, e.clientY);
             });
         }
     });
@@ -346,14 +355,11 @@ dataLinq.events.on('onpageloaded', function () {
             }, 300);
         }, 1000);
     }
-    /* COPY LOGIC FOR @DLH.NewPdfElement */
-
-    /* CENTERED SNAPPING LINES */
+    // Ctrl+M toggles the page-center guide lines used for snapping.
     $(document).on('keydown', function (e) {
         if (e.ctrlKey && e.key === 'm') {
             e.preventDefault();
             $('.vertical-middle-line, .horizontal-middle-line').toggle();
         }
     });
-    /* CENTERED SNAPPING LINES */
 });

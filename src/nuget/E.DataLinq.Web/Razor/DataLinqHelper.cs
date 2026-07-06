@@ -3121,7 +3121,9 @@ public class DataLinqHelper : IDataLinqHelper
     /// </returns>
     public object PrintPdfButton(string id, string buttonText = "Print", Dictionary<string, string> parameters = null)
     {
-        var queryString = string.Join("&", parameters.Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value)}"));
+        var queryString = parameters is null
+            ? string.Empty
+            : string.Join("&", parameters.Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value)}"));
 
         var buttonId = GenerateUniqueId(id);
 
@@ -3147,7 +3149,7 @@ public class DataLinqHelper : IDataLinqHelper
                 .AppendDiv(d =>
                 {
                     d.AddClass("element");
-                    if (x is not 0 && y is not 0)
+                    if (x is not 0 || y is not 0)
                     {
                         d.AddAttribute("data-x", x.ToString(CultureInfo.InvariantCulture));
                         d.AddAttribute("data-y", y.ToString(CultureInfo.InvariantCulture));

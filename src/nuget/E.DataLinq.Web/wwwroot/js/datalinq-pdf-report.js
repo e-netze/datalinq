@@ -1,7 +1,49 @@
-﻿/* WAIT FOR DATALINQ CORE CLIENT SIDE LOGIC TO FINISH */
+﻿/*
+ * PDF report generation (client side).
+ *
+ * Runs on report pages rendered in PDF mode. It paginates the rendered HTML into
+ * fixed-size pages, loads per-page templates, adds page numbers, and renders the
+ * result to a downloadable PDF using html-to-image (rasterize) + pdf-lib (assemble).
+ */
+
+// --- Configuration -------------------------------------------------------------
+
+// Rendering quality presets, selected via the `.main[quality]` attribute.
+const PDF_QUALITY_PRESETS = {
+    Best: { pixelRatio: 2, quality: 1 },
+    High: { pixelRatio: 2, quality: 0.92 },
+    Medium: { pixelRatio: 1.5, quality: 0.85 },
+    Low: { pixelRatio: 1.5, quality: 0.75 },
+    Preview: { pixelRatio: 1, quality: 0.80 },
+};
+const PDF_DEFAULT_QUALITY = 'High';
+
+// Paper sizes in PDF points [width, height], keyed by the `size-a1..a6` page class.
+const PDF_PAPER_DIMENSIONS = {
+    A1: { portrait: [1683.78, 2383.94], landscape: [2383.94, 1683.78] },
+    A2: { portrait: [1190.55, 1683.78], landscape: [1683.78, 1190.55] },
+    A3: { portrait: [841.89, 1190.55], landscape: [1190.55, 841.89] },
+    A4: { portrait: [595.28, 841.89], landscape: [841.89, 595.28] },
+    A5: { portrait: [419.53, 595.28], landscape: [595.28, 419.53] },
+    A6: { portrait: [297.64, 419.53], landscape: [419.53, 297.64] },
+};
+const PDF_DEFAULT_PAPER_SIZE = 'A4';
+
+// Pagination defaults and safety limits.
+const PDF_DEFAULT_MARGIN = 10;              // px, used when a dynamic page defines no margins
+const MAX_PAGINATION_ITERATIONS = 100;      // guards against infinite pagination loops
+
+// Auto-download timing (milliseconds).
+const AUTO_DOWNLOAD_START_DELAY = 1000;     // wait before the automatic download starts
+const AUTO_DOWNLOAD_CLOSE_DELAY = 100;      // wait before showing the "you can close" message
+
+// -------------------------------------------------------------------------------
+
+// Entry point: wait until the DataLinq core client-side logic has finished
+// rendering the report, then wire up the download button and build the pages.
 dataLinq.events.on('onpageloaded', function () {
 
-/* PDF GENERATION BUTTON ON SITE*/
+    // On-page "Download PDF" button (rendered next to the report).
     const downloadBtn = document.getElementById('downloadBtn');
     if (downloadBtn) {
         downloadBtn.addEventListener('click', async function () {
@@ -14,23 +56,21 @@ dataLinq.events.on('onpageloaded', function () {
                 requestAnimationFrame(resolve)
             ));
 
-            downloadPDFMethod();
+            await downloadPDFMethod();
         });
     }
-/* PDF GENERATION BUTTON ON SITE*/
 
-    /* FLATTEN FINISHED INCLUDE WRAPPERS BEFORE PAGINATION */
+    // Pagination pipeline (order matters): flatten finished includes, split
+    // overflowing content across pages, load per-page templates, then number pages.
     unwrapFinishedIncludes();
-    /* CALLS TABLE SPLIT LOGIC */
     splitAllTables();
-    /* CALLS TEMPLATE LOADER LOGIC */
     initializeTemplateLoader();
-    /* CALLS PAGE NUMBERING LOGIC */
     addPageNumbers();
 });
 
 
-/* AUTODOWNLOAD URL PARAM HANDELING FOR DLH.PrintPDF BUTTON */
+// Auto-download: DLH.PrintPDF opens the report with ?_autoDownload=true so the PDF
+// is generated and downloaded automatically, then the tab closes itself.
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('_autoDownload') === 'true') {
     document.body.style.opacity = '0';
@@ -41,14 +81,13 @@ if (urlParams.get('_autoDownload') === 'true') {
         window.close();
 
         setTimeout(() => {
-            document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;">PDF download started.  You can close this window.</div>';
-            document.body.style.opacity = '100';
-        }, 100);
-    }, 1000); 
+            document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;">PDF download started. You can close this window.</div>';
+            document.body.style.opacity = '1';
+        }, AUTO_DOWNLOAD_CLOSE_DELAY);
+    }, AUTO_DOWNLOAD_START_DELAY);
 }
-/* AUTODOWNLOAD URL PARAM HANDELING FOR DLH.PrintPDF BUTTON */
 
-/* PDF RENDERING */
+// Renders every `.page` element to a JPEG image and assembles the images into a PDF.
 async function downloadPDFMethod() {
     const pages = [...document.querySelectorAll('.page')];
 
@@ -65,7 +104,8 @@ async function downloadPDFMethod() {
                     backgroundColor: '#ffffff',
                     skipFonts: false,
                     onclone: (clonedDoc) => {
-                        //CORS zu CSS wenn z.B. leaflet eingebunden wird
+                        // Drop cross-origin stylesheets (e.g. Leaflet): reading their
+                        // cssRules would throw a CORS error inside html-to-image.
                         const links = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
                         links.forEach(link => {
                             try {
@@ -81,7 +121,7 @@ async function downloadPDFMethod() {
                 updateLoadingProgress(++completed, pages.length);
 
                 const sizeClass = [...page.classList].find(c => /^size-a[1-6]$/i.test(c));
-                const paperSize = sizeClass ? sizeClass.replace(/^size-/i, '').toUpperCase() : "A4";
+                const paperSize = sizeClass ? sizeClass.replace(/^size-/i, '').toUpperCase() : PDF_DEFAULT_PAPER_SIZE;
                 return { dataUrl, isHorizontal: page.classList.contains('horizontal'), paperSize: paperSize };
             })
         );
@@ -93,14 +133,14 @@ async function downloadPDFMethod() {
             const paperDimensions = getPaperDimensions(paperSize);
             const [w, h] = isHorizontal ? paperDimensions.landscape : paperDimensions.portrait;
 
-            const pngBytes = Uint8Array.from(
+            const jpegBytes = Uint8Array.from(
                 atob(dataUrl.slice(dataUrl.indexOf(',') + 1)),
                 c => c.charCodeAt(0)
             );
 
-            const pngImage = await pdfDoc.embedJpg(pngBytes);
+            const jpegImage = await pdfDoc.embedJpg(jpegBytes);
             const page = pdfDoc.addPage([w, h]);
-            page.drawImage(pngImage, { x: 0, y: 0, width: w, height: h });
+            page.drawImage(jpegImage, { x: 0, y: 0, width: w, height: h });
         }
 
         const pdfBytes = await pdfDoc.save();
@@ -131,33 +171,15 @@ async function downloadPDFMethod() {
 }
 
 const getQuality = () => {
-    const qualityMap = {
-        Best: { pixelRatio: 2, quality: 1 },
-        High: { pixelRatio: 2, quality: 0.92 },
-        Medium: { pixelRatio: 1.5, quality: 0.85 },
-        Low: { pixelRatio: 1.5, quality: 0.75 },
-        Preview: { pixelRatio: 1, quality: 0.80 },
-    };
-
-    const qualityKey = document.querySelector('.main')?.getAttribute('quality') ?? 'High';
-    return qualityMap[qualityKey] ?? qualityMap.High;
+    const qualityKey = document.querySelector('.main')?.getAttribute('quality') ?? PDF_DEFAULT_QUALITY;
+    return PDF_QUALITY_PRESETS[qualityKey] ?? PDF_QUALITY_PRESETS[PDF_DEFAULT_QUALITY];
 };
 
 const getPaperDimensions = (size) => {
-    const paperSizeMap = {
-        A1: { portrait: [1683.78, 2383.94], landscape: [2383.94, 1683.78] },
-        A2: { portrait: [1190.55, 1683.78], landscape: [1683.78, 1190.55] },
-        A3: { portrait: [841.89, 1190.55], landscape: [1190.55, 841.89] },
-        A4: { portrait: [595.28, 841.89], landscape: [841.89, 595.28] },
-        A5: { portrait: [419.53, 595.28], landscape: [595.28, 419.53] },
-        A6: { portrait: [297.64, 419.53], landscape: [419.53, 297.64] },
-    };
-
-    return paperSizeMap[size];
+    return PDF_PAPER_DIMENSIONS[size] ?? PDF_PAPER_DIMENSIONS[PDF_DEFAULT_PAPER_SIZE];
 }
-/* PDF RENDERING */
 
-/* LOGIC FOR ADDING PAGE NUMBERS AUTOMATICALLY */
+// Adds automatic page numbers based on the `.pdf-report-options` settings.
 function addPageNumbers() {
     const optionsDiv = document.querySelector('.pdf-report-options');
 
@@ -186,60 +208,24 @@ function addPageNumbers() {
         page.appendChild(p);
     });
 }
-/* LOGIC FOR ADDING PAGE NUMBERS AUTOMATICALLY */
 
-/* LOGIC FOR LOADING TEMPLATES FOR PAGES */
+// Loads per-page templates referenced via the `datalinq-pdfreport-template` attribute.
+// Pages that share a template are grouped so each template is only requested once.
 function initializeTemplateLoader() {
-    const pages = document.querySelectorAll('.page');
+    const pagesByTemplate = new Map();
 
-    const processedTemplates = new Set();
-
-    const checkedPages = new Set();
-
-    pages.forEach((page, index) => {
-        if (checkedPages.has(page)) {
-            return;
-        }
-
-        checkedPages.add(page);
-
+    document.querySelectorAll('.page').forEach(page => {
         const templateName = page.getAttribute('datalinq-pdfreport-template');
+        if (!templateName) return;
 
-        if (templateName) {
-            if (processedTemplates.has(templateName)) {
-            } else {
-                processedTemplates.add(templateName);
-
-                const pagesWithTemplate = [page];
-                const duplicatePages = checkForDuplicates(pages, templateName, checkedPages, index);
-                pagesWithTemplate.push(...duplicatePages);
-
-                makeTemplateRequest(pagesWithTemplate, templateName);
-            }
+        if (!pagesByTemplate.has(templateName)) {
+            pagesByTemplate.set(templateName, []);
         }
+
+        pagesByTemplate.get(templateName).push(page);
     });
 
-}
-
-function checkForDuplicates(pages, templateName, checkedPages, currentIndex) {
-    const duplicates = [];
-    const duplicatePages = [];
-
-    pages.forEach((page, index) => {
-        if (index <= currentIndex || checkedPages.has(page)) {
-            return;
-        }
-
-        const pageTemplateName = page.getAttribute('datalinq-pdfreport-template');
-
-        if (pageTemplateName === templateName) {
-            duplicates.push(index + 1);
-            duplicatePages.push(page);
-            checkedPages.add(page);
-        }
-    });
-
-    return duplicatePages;
+    pagesByTemplate.forEach((pages, templateName) => makeTemplateRequest(pages, templateName));
 }
 
 function makeTemplateRequest(pagesArray, templateName) {
@@ -251,9 +237,9 @@ function makeTemplateRequest(pagesArray, templateName) {
         console.error(`Error loading template "${templateName}":`, error);
     });
 }
-/* LOGIC FOR ADDING PAGE NUMBERS AUTOMATICALLY */
 
-/* LOGIC SPLITTING UP TABELS LONGER THAN 1 PAGE */
+// Pagination: flatten finished includes and split content that overflows a page
+// onto continuation pages (tables are split row by row, other elements are moved).
 function unwrapFinishedIncludes() {
     const pages = Array.from(document.querySelectorAll('.page'));
 
@@ -281,11 +267,13 @@ function splitAllTables() {
     originalPageWrappers.forEach(pageWrapper => paginateDynamicPage(pageWrapper, pagesContainer));
 }
 
+// Repeatedly splits a dynamic page while its content overflows, chaining onto each
+// newly created continuation page until nothing overflows (bounded by MAX_PAGINATION_ITERATIONS).
 function paginateDynamicPage(startWrapper, pagesContainer) {
     let currentWrapper = startWrapper;
     let guard = 0;
 
-    while (currentWrapper && guard++ < 100) {
+    while (currentWrapper && guard++ < MAX_PAGINATION_ITERATIONS) {
         const page = currentWrapper.querySelector('.page');
         if (!page) return;
 
@@ -306,6 +294,8 @@ function paginateDynamicPage(startWrapper, pagesContainer) {
     }
 }
 
+// Returns the first laid-out child whose bottom edge crosses the page's usable area
+// (ignoring `report-ignore` decorations such as spacers, headers and page numbers).
 function getFirstOverflowElement(page, bottomMargin = 0) {
     const pageRect = page.getBoundingClientRect();
     const maxBottom = pageRect.top + pageRect.height - bottomMargin;
@@ -315,6 +305,9 @@ function getFirstOverflowElement(page, bottomMargin = 0) {
         .find(child => child.getBoundingClientRect().bottom > maxBottom + 0.5);
 }
 
+// Splits an overflowing table: keeps the rows that fit on the current page and moves
+// the rest (plus any following siblings) onto a continuation page with a repeated header.
+// Falls back to moving the whole table when it cannot be split meaningfully.
 function splitOverflowingTable(table, page, currentWrapper, pagesContainer, margins) {
     const tbody = table.querySelector('tbody');
     if (!tbody) {
@@ -380,6 +373,7 @@ function splitOverflowingTable(table, page, currentWrapper, pagesContainer, marg
     return nextWrapper;
 }
 
+// Moves the overflowing element and every element after it onto a new continuation page.
 function moveOverflowingElementsToNextPage(startElement, page, currentWrapper, pagesContainer) {
     const nextWrapper = createContinuationPageWrapper(page, currentWrapper);
     const nextPage = nextWrapper.querySelector('.page');
@@ -404,6 +398,8 @@ function moveOverflowingElementsToNextPage(startElement, page, currentWrapper, p
     return nextWrapper;
 }
 
+// Builds an empty continuation page that mirrors the source page's format (orientation,
+// paper size, template, ignored decorations) and re-applies the configured top margin.
 function createContinuationPageWrapper(sourcePage, sourceWrapper) {
     const newPageWrapper = document.createElement('div');
     newPageWrapper.className = 'page-wrapper';
@@ -452,6 +448,8 @@ function createContinuationPageWrapper(sourcePage, sourceWrapper) {
     return newPageWrapper;
 }
 
+// Clones the original table (minus its id) so the moved rows keep the same styling,
+// repeating the header (thead or a th header row) on the continuation page.
 function createContinuationTable(originalTable, thead, headerRow, rows) {
     const newTable = document.createElement('table');
 
@@ -507,6 +505,8 @@ function insertPageAfter(currentWrapper, newPageWrapper, pagesContainer) {
     }
 }
 
+// Counts how many consecutive rows fit within availableHeight, never returning fewer
+// than minRows so pagination always makes forward progress.
 function countRowsThatFit(rows, startIndex, availableHeight, rowGap, minRows = 1) {
     let usedHeight = 0;
     let count = 0;
@@ -532,6 +532,7 @@ function getRowOuterHeight(row) {
         + (parseFloat(styles.marginBottom) || 0);
 }
 
+// Extracts the vertical component of a CSS `border-spacing` value (used as the row gap).
 function getRowGap(borderSpacing) {
     if (!borderSpacing) return 0;
 
@@ -547,8 +548,8 @@ function getDynamicMargins(pageWrapper) {
     const defaultMarginBottom = parseFloat(pageWrapper.getAttribute('data-dynamic-margin-bottom'));
 
     return {
-        defaultMarginTop: Number.isFinite(defaultMarginTop) ? defaultMarginTop : 10,
-        defaultMarginBottom: Number.isFinite(defaultMarginBottom) ? defaultMarginBottom : 10,
+        defaultMarginTop: Number.isFinite(defaultMarginTop) ? defaultMarginTop : PDF_DEFAULT_MARGIN,
+        defaultMarginBottom: Number.isFinite(defaultMarginBottom) ? defaultMarginBottom : PDF_DEFAULT_MARGIN,
     };
 }
 
@@ -558,9 +559,8 @@ function normalizeFirstMovedElement(element) {
     element.style.marginTop = '0';
     element.style.paddingTop = '0';
 }
-/* LOGIC SPLITTING UP TABELS LONGER THAN 1 PAGE */
 
-/* LOGIC FOR PDF-GENERATION LOADIN BAR */
+// Loading overlay + progress bar shown while the PDF is being generated.
 function showLoadingOverlay() {
     // Prevent creating multiple overlays
     if (document.getElementById('pdf-loading-overlay')) return;
