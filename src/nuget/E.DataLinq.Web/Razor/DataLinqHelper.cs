@@ -56,6 +56,8 @@ public class DataLinqHelper : IDataLinqHelper
         _razor = razorService;
     }
 
+    #region DataLinqHelper
+
     #region Load/Fetch Data
 
     /// <summary>
@@ -2916,13 +2918,32 @@ public class DataLinqHelper : IDataLinqHelper
             );
     }
 
+    #endregion
+
+    #region DataLinq PDF Helper
     /// <summary>
-    /// de: 
-    /// en: 
+    /// de: Startet einen PDF-Bericht und gibt den öffnenden HTML-Container zurück.
+    /// en: Starts a PDF report and returns the opening HTML container.
     /// </summary>
+    /// <param name="pageNumberOptions">
+    /// de: Optionen für die Seitennummerierung (z.B. Position, Typ, übersprungene Seiten). Standard ist null.
+    /// en: Options for page numbering (e.g. position, type, skipped pages). Default is null.
+    /// </param>
+    /// <param name="quality">
+    /// de: Die Qualitätsstufe des erzeugten PDFs. Standard ist PdfQuality.High.
+    /// en: The quality level of the generated PDF. Default is PdfQuality.High.
+    /// </param>
+    /// <param name="download_button">
+    /// de: Gibt an, ob ein Download-Button angezeigt werden soll. Standard ist false.
+    /// en: Indicates whether a download button should be displayed. Default is false.
+    /// </param>
+    /// <param name="fileName">
+    /// de: Der Dateiname des generierten PDFs (ohne Dateiendung). Standard ist "dataLinqPdfReport".
+    /// en: The file name of the generated PDF (without file extension). Default is "dataLinqPdfReport".
+    /// </param>
     /// <returns>
-    /// de: 
-    /// en: 
+    /// de: Gibt ein rohes HTML-Objekt mit dem öffnenden Container des PDF-Berichts zurück.
+    /// en: Returns a raw HTML object with the opening container of the PDF report.
     /// </returns>
     public object BeginPdfReport(
         PageNumberOptions pageNumberOptions = null, 
@@ -2976,12 +2997,12 @@ public class DataLinqHelper : IDataLinqHelper
     }
 
     /// <summary>
-    /// de: 
-    /// en: 
+    /// de: Beendet den PDF-Bericht und schließt den zugehörigen HTML-Container.
+    /// en: Ends the PDF report and closes the associated HTML container.
     /// </summary>
     /// <returns>
-    /// de: 
-    /// en: 
+    /// de: Gibt ein rohes HTML-Objekt mit dem schließenden Container des PDF-Berichts zurück.
+    /// en: Returns a raw HTML object with the closing container of the PDF report.
     /// </returns>
     public object EndPdfReport()
     {
@@ -2998,12 +3019,28 @@ public class DataLinqHelper : IDataLinqHelper
     }
 
     /// <summary>
-    /// de: 
-    /// en: 
+    /// de: Öffnet eine neue Seite im PDF-Bericht mit optionalen Vorlagen- und Tabellenoptionen.
+    /// en: Opens a new page in the PDF report with optional template and table options.
     /// </summary>
+    /// <param name="pageTemplateOptions">
+    /// de: Optionen für die Seitenvorlage (z.B. Vorlagen-ID). Standard ist null.
+    /// en: Options for the page template (e.g. template ID). Default is null.
+    /// </param>
+    /// <param name="dynamicTableOptions">
+    /// de: Optionen für dynamische Tabellen auf der Seite (z.B. dynamische Ränder). Standard ist null.
+    /// en: Options for dynamic tables on the page (e.g. dynamic margins). Default is null.
+    /// </param>
+    /// <param name="paperSize">
+    /// de: Das Papierformat der Seite (z.B. A4, A3). Standard ist PaperSize.A4.
+    /// en: The paper size of the page (e.g. A4, A3). Default is PaperSize.A4.
+    /// </param>
+    /// <param name="landscape">
+    /// de: Gibt an, ob die Seite im Querformat dargestellt werden soll. Standard ist false.
+    /// en: Indicates whether the page should be displayed in landscape orientation. Default is false.
+    /// </param>
     /// <returns>
-    /// de: 
-    /// en: 
+    /// de: Gibt ein rohes HTML-Objekt mit dem öffnenden Container der neuen PDF-Seite zurück.
+    /// en: Returns a raw HTML object with the opening container of the new PDF page.
     /// </returns>
     public object NewPage(
         PageTemplateOptions pageTemplateOptions = null,
@@ -3090,12 +3127,12 @@ public class DataLinqHelper : IDataLinqHelper
     }
 
     /// <summary>
-    /// de: 
-    /// en: 
+    /// de: Schließt die aktuelle Seite im PDF-Bericht.
+    /// en: Closes the current page in the PDF report.
     /// </summary>
     /// <returns>
-    /// de: 
-    /// en: 
+    /// de: Gibt ein rohes HTML-Objekt mit den schließenden Containern der aktuellen Seite zurück.
+    /// en: Returns a raw HTML object with the closing containers of the current page.
     /// </returns>
     public object EndPage()
     {
@@ -3112,12 +3149,24 @@ public class DataLinqHelper : IDataLinqHelper
     }
 
     /// <summary>
-    /// de: 
-    /// en: 
+    /// de: Rendert einen Button, der das stille Herunterladen eines PDF-Berichts auslöst.
+    /// en: Renders a button that triggers the silent download of a PDF report.
     /// </summary>
+    /// <param name="id">
+    /// de: Die ID des DataLinq-Endpunkts, dessen PDF heruntergeladen werden soll.
+    /// en: The ID of the DataLinq endpoint whose PDF should be downloaded.
+    /// </param>
+    /// <param name="buttonText">
+    /// de: Der anzuzeigende Text auf dem Button. Standard ist "Print".
+    /// en: The text to display on the button. Default is "Print".
+    /// </param>
+    /// <param name="parameters">
+    /// de: Optionale Query-Parameter, die beim PDF-Download mitgesendet werden. Standard ist null.
+    /// en: Optional query parameters to be sent with the PDF download. Default is null.
+    /// </param>
     /// <returns>
-    /// de: 
-    /// en: 
+    /// de: Gibt ein rohes HTML-Objekt mit dem gerenderten Download-Button zurück.
+    /// en: Returns a raw HTML object with the rendered download button.
     /// </returns>
     public object PrintPdfButton(string id, string buttonText = "Print", Dictionary<string, string> parameters = null)
     {
@@ -3142,6 +3191,22 @@ public class DataLinqHelper : IDataLinqHelper
         );
     }
 
+    /// <summary>
+    /// de: Öffnet ein neues positionierbares PDF-Element innerhalb einer Seite.
+    /// en: Opens a new positionable PDF element within a page.
+    /// </summary>
+    /// <param name="x">
+    /// de: Die horizontale Verschiebung des Elements in Pixeln. Standard ist 0.
+    /// en: The horizontal offset of the element in pixels. Default is 0.
+    /// </param>
+    /// <param name="y">
+    /// de: Die vertikale Verschiebung des Elements in Pixeln. Standard ist 0.
+    /// en: The vertical offset of the element in pixels. Default is 0.
+    /// </param>
+    /// <returns>
+    /// de: Gibt ein rohes HTML-Objekt mit dem öffnenden Container des PDF-Elements zurück.
+    /// en: Returns a raw HTML object with the opening container of the PDF element.
+    /// </returns>
     public object NewPdfElement(double x = 0, double y = 0)
     {
         return _razor.RawString(
@@ -3161,6 +3226,14 @@ public class DataLinqHelper : IDataLinqHelper
         );
     }
 
+    /// <summary>
+    /// de: Schließt das aktuelle PDF-Element.
+    /// en: Closes the current PDF element.
+    /// </summary>
+    /// <returns>
+    /// de: Gibt ein rohes HTML-Objekt mit dem schließenden Container des PDF-Elements zurück.
+    /// en: Returns a raw HTML object with the closing container of the PDF element.
+    /// </returns>
     public object EndPdfElement()
     {
         return _razor.RawString(
@@ -3172,6 +3245,8 @@ public class DataLinqHelper : IDataLinqHelper
                .BuildHtmlString()
        );
     }
+
+    #endregion
 
 
     /// <summary>
