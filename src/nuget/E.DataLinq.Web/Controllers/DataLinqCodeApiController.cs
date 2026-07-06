@@ -784,9 +784,9 @@ For more information, see Help (?).
 
     [HttpGet]
     [Route("monacosnippit")]
-    public IActionResult GetSnippets([FromQuery] string lang)
+    public IActionResult GetSnippets([FromQuery] string lang, [FromQuery] string helper = "dlh")
     {
-        string json = _monacoSnippetService.BuildSnippetJson(lang);
+        string json = _monacoSnippetService.BuildSnippetJson(lang, helper);
         return Content(json, "application/json");
     }
 

@@ -39,6 +39,7 @@ dataLinqCodeEditor = new function () {
             });
 
             let cachedCompletions = JSON.parse(localStorage.getItem('dlhCompletions'));
+            let cachedPdfCompletions = JSON.parse(localStorage.getItem('pdfCompletions'));
 
             function loadDLHCompletions(monaco, language) {
                 if (cachedCompletions) {
@@ -55,13 +56,35 @@ dataLinqCodeEditor = new function () {
                         localStorage.setItem('dlhCompletions', JSON.stringify(completions));
                         registerDLHCompletions(monaco, language || 'text', completions);
                     } catch (e) {
-                        console.error("Failed to parse completions JSON", e);
+                        console.error("Failed to parse DLH completions JSON", e);
                     }
-                }, selectedLang);
+                }, selectedLang, 'dlh');
+
+            }
+
+            function loadPDFCompletions(monaco, language) {
+                if (cachedPdfCompletions) {
+                    registerPDFCompletions(monaco, language || 'text', cachedPdfCompletions);
+                    return;
+                }
+
+                const selectedLang = sessionStorage.getItem('selectedLang') || 'en';
+
+                dataLinqCode.api.getMonacoSnippit(function (data) {
+                    try {
+                        const completions = JSON.parse(data);
+                        cachedPdfCompletions = completions;
+                        localStorage.setItem('pdfCompletions', JSON.stringify(completions));
+                        registerPDFCompletions(monaco, language || 'text', completions);
+                    } catch (e) {
+                        console.error("Failed to parse PDF completions JSON", e);
+                    }
+                }, selectedLang, 'pdf');
 
             }
 
             loadDLHCompletions(monaco, language || 'text');
+            loadPDFCompletions(monaco, language || 'text');
             registerRazorSnippets(monaco, language || 'text');
 
         } else {

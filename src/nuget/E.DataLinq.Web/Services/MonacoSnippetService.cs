@@ -11,18 +11,33 @@ using System.Xml.Linq;
 
 public class MonacoSnippetService : IMonacoSnippetService
 {
-    private readonly Type _targetType;
+    private readonly IReadOnlyDictionary<string, Type> _targetTypes;
 
-    public MonacoSnippetService(Type targetType)
+    public MonacoSnippetService(IReadOnlyDictionary<string, Type> targetTypes)
     {
-        _targetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
+        _targetTypes = targetTypes ?? throw new ArgumentNullException(nameof(targetTypes));
     }
 
-    public string BuildSnippetJson(string lang)
+    public MonacoSnippetService(Type targetType)
+        : this(new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase) { ["dlh"] = targetType })
     {
+    }
+
+    public string BuildSnippetJson(string lang, string helper = "dlh")
+    {
+        if (!_targetTypes.TryGetValue(helper ?? "dlh", out var targetType))
+        {
+            targetType = _targetTypes.Values.FirstOrDefault();
+        }
+
+        if (targetType == null)
+        {
+            return "[]";
+        }
+
         var snippets = new List<object>();
 
-        var methods = _targetType
+        var methods = targetType
                             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
                             .Where(m => m.GetCustomAttribute<ExcludeFromSnippetsAttribute>() == null)
                             .ToArray();
@@ -40,7 +55,7 @@ public class MonacoSnippetService : IMonacoSnippetService
                 currentMethod = method.Name;
             }
 
-            var methodDescription = GetDescriptionFromXML(_targetType, lang, method, skipper);
+            var methodDescription = GetDescriptionFromXML(targetType, lang, method, skipper);
 
             var parameters = method.GetParameters();
 

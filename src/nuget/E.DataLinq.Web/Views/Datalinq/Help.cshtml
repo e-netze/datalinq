@@ -67,7 +67,7 @@
 
     foreach (var classHelp in Model.Classes)
     {
-        <h3>@classHelp.Name Klasse</h3>
+        <h3>@classHelp.Name <small>(@@@classHelp.Alias)</small></h3>
         <p class="searchable-content">
             @classHelp.Description
         </p>

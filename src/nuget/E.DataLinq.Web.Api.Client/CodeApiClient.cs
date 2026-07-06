@@ -220,9 +220,9 @@ public class CodeApiClient
         }
     }
 
-    public async Task<string> GetMonacoSnippit(string lang)
+    public async Task<string> GetMonacoSnippit(string lang, string helper = "dlh")
     {
-        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/monacosnippit?lang={Uri.EscapeDataString(lang)}");
+        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/monacosnippit?lang={Uri.EscapeDataString(lang)}&helper={Uri.EscapeDataString(helper ?? "dlh")}");
         ModifyHttpRequest(requestMessage);
 
         using var httpResponse = await _httpClient.SendAsync(requestMessage);

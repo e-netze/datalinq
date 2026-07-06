@@ -22,6 +22,8 @@ public class ClassHelp
 
     public string Name { get; set; }
 
+    public string Alias { get; set; } = "DLH";
+
     public string Description { get; set; }
 
     public List<MethodHelp> Methods { get; set; }
@@ -324,7 +326,7 @@ public class ClassHelp
 
         sb.Append("<div class='copyable-content'>");
 
-        sb.Append($"<span class='keyword'>@DLH.{method.Name}</span>");
+        sb.Append($"<span class='keyword'>@{Alias}.{method.Name}</span>");
         sb.Append("<span class='literal'>(</span>");
 
         bool firstParameter = true;
@@ -481,11 +483,12 @@ public class ClassHelp
 
         return classHelp;
     }
-    static public ClassHelp FromTypeUseXmlDocumentation(Type type, string languageCode)
+    static public ClassHelp FromTypeUseXmlDocumentation(Type type, string languageCode, string alias = "DLH", bool includeExtensionMethods = true)
     {
         ClassHelp classHelp = new ClassHelp()
         {
-            Name = type.Name
+            Name = type.Name,
+            Alias = alias
         };
 
         XDocument xdoc = null;
@@ -493,12 +496,20 @@ public class ClassHelp
         if (System.IO.File.Exists(xmlFilePath))
         {
             xdoc = XDocument.Load(xmlFilePath);
-        } 
-        else if(E.DataLinq.Web.Properties.Resources.e_datalinq_web_xml?.Any() == true)
+        }
+        else
         {
-           xdoc = XDocument.Parse(
-              System.Text.Encoding.UTF8.GetString(
-                 E.DataLinq.Web.Properties.Resources.e_datalinq_web_xml));
+            var generatedXmlPath = System.IO.Path.ChangeExtension(type.Assembly.Location, ".xml");
+            if (System.IO.File.Exists(generatedXmlPath))
+            {
+                xdoc = XDocument.Load(generatedXmlPath);
+            }
+            else if (E.DataLinq.Web.Properties.Resources.e_datalinq_web_xml?.Any() == true)
+            {
+                xdoc = XDocument.Parse(
+                    System.Text.Encoding.UTF8.GetString(
+                        E.DataLinq.Web.Properties.Resources.e_datalinq_web_xml));
+            }
         }
 
         if (xdoc == null)
@@ -517,7 +528,7 @@ public class ClassHelp
         {
             if (!methodInfo.IsPublic)
             {
-                break;
+                continue;
             }
 
             // read the comment summery and params for this methodInfo
@@ -547,7 +558,10 @@ public class ClassHelp
             count++;
         }
 
-        AddExtensionMethodsUseAttributes(classHelp);
+        if (includeExtensionMethods)
+        {
+            AddExtensionMethodsUseAttributes(classHelp);
+        }
 
         return classHelp;
     }

@@ -345,8 +345,8 @@ var dataLinqCode = new function ($) {
             this.get('getFolderStructure', callback);
         };
 
-        this.getMonacoSnippit = function (callback, lang) {
-            this.get('getMonacoSnippit', callback, { lang: lang });
+        this.getMonacoSnippit = function (callback, lang, helper) {
+            this.get('getMonacoSnippit', callback, { lang: lang, helper: helper || 'dlh' });
         };
 
         this.getEndPointPrefixes = function (callback) {

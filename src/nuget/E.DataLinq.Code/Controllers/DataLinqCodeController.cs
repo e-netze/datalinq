@@ -151,11 +151,11 @@ public class DataLinqCodeController : DataLinqCodeBaseController
             await _client.GetEndPointQueryViews(endPoint, query));
     }
 
-    async public Task<IActionResult> GetMonacoSnippit(string lang) 
+    async public Task<IActionResult> GetMonacoSnippit(string lang, string helper = "dlh") 
     {
         return base.JsonObject(_client == null ?
             null :
-            await _client.GetMonacoSnippit(lang));
+            await _client.GetMonacoSnippit(lang, helper));
     }
 
     #endregion

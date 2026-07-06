@@ -154,3 +154,38 @@ function registerDLHCompletions(monaco, language, completions) {
         }
     });
 }
+
+function registerPDFCompletions(monaco, language, completions) {
+    monaco.languages.registerCompletionItemProvider(language, {
+        triggerCharacters: ['.'],
+        provideCompletionItems: function (model, position) {
+            const textUntilPosition = model.getValueInRange({
+                startLineNumber: position.lineNumber,
+                startColumn: 1,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column
+            });
+
+            if (!textUntilPosition.trim().endsWith('@PDF.')) {
+                return { suggestions: [] };
+            }
+
+            const word = model.getWordUntilPosition(position);
+            const range = {
+                startLineNumber: position.lineNumber,
+                endLineNumber: position.lineNumber,
+                startColumn: word.startColumn,
+                endColumn: word.endColumn
+            };
+
+            const fixedCompletions = completions.map(item => ({
+                ...item,
+                range
+            }));
+
+            return {
+                suggestions: fixedCompletions
+            };
+        }
+    });
+}

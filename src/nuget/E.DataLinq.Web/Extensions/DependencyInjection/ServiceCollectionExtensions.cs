@@ -26,6 +26,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel.Services;
 using StackExchange.Redis;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace E.DataLinq.Web.Extensions.DependencyInjection;
@@ -72,7 +73,12 @@ static public class ServiceCollectionExtensions
                        .AddTransient<DataLinqService>()
                        .AddTransient<DataLinqCompilerService>()
                        .AddTransient<AccessControlService>()
-                       .AddSingleton<IMonacoSnippetService>(provider => new MonacoSnippetService(typeof(DataLinqHelper)))
+                       .AddSingleton<IMonacoSnippetService>(provider => new MonacoSnippetService(
+                           new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+                           {
+                               ["dlh"] = typeof(DataLinqHelper),
+                               ["pdf"] = typeof(DataLinqPdfHelper)
+                           }))
                        .AddTransient<IDataLinqEnvironmentService, DataLinqEnvironmentService>()
                        .AddTransient<IRazorCompileEngineService, RazorEngineService>()  // classic version
                        .AddTransient<IRazorCompileEngineService, RazorEngineLanguageEngineRazorService>()  // Datalinq version
