@@ -50,7 +50,7 @@ public class DataLinqPdfHelper
     /// de: Gibt ein rohes HTML-Objekt mit dem öffnenden Container des PDF-Berichts zurück.
     /// en: Returns a raw HTML object with the opening container of the PDF report.
     /// </returns>
-    public object BeginPdfReport(
+    public object BeginReport(
         PageNumberOptions pageNumberOptions = null,
         PdfQuality quality = PdfQuality.High,
         bool download_button = false,
@@ -95,7 +95,6 @@ public class DataLinqPdfHelper
                     {
                         d2.AddClass("pages-container");
                         d2.WithId("pagesContainer");
-
                     }, WriteTags.OpenOnly);
                 }, WriteTags.OpenOnly).BuildHtmlString()
             );
@@ -109,7 +108,7 @@ public class DataLinqPdfHelper
     /// de: Gibt ein rohes HTML-Objekt mit dem schließenden Container des PDF-Berichts zurück.
     /// en: Returns a raw HTML object with the closing container of the PDF report.
     /// </returns>
-    public object EndPdfReport()
+    public object EndReport()
     {
         return _razor.RawString(
             HtmlBuilder.Create()
@@ -312,7 +311,7 @@ public class DataLinqPdfHelper
     /// de: Gibt ein rohes HTML-Objekt mit dem öffnenden Container des PDF-Elements zurück.
     /// en: Returns a raw HTML object with the opening container of the PDF element.
     /// </returns>
-    public object NewPdfElement(double x = 0, double y = 0)
+    public object NewDraggable(double x = 0, double y = 0)
     {
         return _razor.RawString(
             HtmlBuilder.Create()
@@ -339,7 +338,7 @@ public class DataLinqPdfHelper
     /// de: Gibt ein rohes HTML-Objekt mit dem schließenden Container des PDF-Elements zurück.
     /// en: Returns a raw HTML object with the closing container of the PDF element.
     /// </returns>
-    public object EndPdfElement()
+    public object EndDraggable()
     {
         return _razor.RawString(
            HtmlBuilder.Create()

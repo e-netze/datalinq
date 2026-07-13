@@ -2927,11 +2927,11 @@ public class DataLinqHelper : IDataLinqHelper
 
     [ExcludeFromSnippets]
     public object BeginPdfReport(PageNumberOptions pageNumberOptions = null, PdfQuality quality = PdfQuality.High, bool download_button = false, string fileName = "dataLinqPdfReport")
-        => Pdf.BeginPdfReport(pageNumberOptions, quality, download_button, fileName);
+        => Pdf.BeginReport(pageNumberOptions, quality, download_button, fileName);
 
     [ExcludeFromSnippets]
     public object EndPdfReport()
-        => Pdf.EndPdfReport();
+        => Pdf.EndReport();
 
     [ExcludeFromSnippets]
     public object NewPage(PageTemplateOptions pageTemplateOptions = null, DynamicTableOptions dynamicTableOptions = null, PaperSize paperSize = PaperSize.A4, bool landscape = false)
@@ -2947,11 +2947,11 @@ public class DataLinqHelper : IDataLinqHelper
 
     [ExcludeFromSnippets]
     public object NewPdfElement(double x = 0, double y = 0)
-        => Pdf.NewPdfElement(x, y);
+        => Pdf.NewDraggable(x, y);
 
     [ExcludeFromSnippets]
     public object EndPdfElement()
-        => Pdf.EndPdfElement();
+        => Pdf.EndDraggable();
 
     #endregion
 
