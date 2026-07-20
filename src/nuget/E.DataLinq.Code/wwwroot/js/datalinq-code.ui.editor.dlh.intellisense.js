@@ -25,6 +25,24 @@ function registerRazorSnippets(monaco, language) {
             return {
                 suggestions: [
                     {
+                        label: 'DLH',
+                        kind: monaco.languages.CompletionItemKind.Module,
+                        insertText: 'DLH',
+                        documentation: 'DataLinqHelper (DLH) — helper methods for building DataLinq views.'
+                    },
+                    {
+                        label: 'PDF',
+                        kind: monaco.languages.CompletionItemKind.Module,
+                        insertText: 'PDF',
+                        documentation: 'DataLinqPdfHelper (PDF) — helper methods for building PDF reports.'
+                    },
+                    {
+                        label: 'SECURITY',
+                        kind: monaco.languages.CompletionItemKind.Module,
+                        insertText: 'SECURITY',
+                        documentation: 'DataLinqSecurityHelper (SECURITY) — security related helper methods.'
+                    },
+                    {
                         label: 'foreach',
                         kind: monaco.languages.CompletionItemKind.Snippet,
                         insertText: [
@@ -167,6 +185,41 @@ function registerPDFCompletions(monaco, language, completions) {
             });
 
             if (!textUntilPosition.trim().endsWith('@PDF.')) {
+                return { suggestions: [] };
+            }
+
+            const word = model.getWordUntilPosition(position);
+            const range = {
+                startLineNumber: position.lineNumber,
+                endLineNumber: position.lineNumber,
+                startColumn: word.startColumn,
+                endColumn: word.endColumn
+            };
+
+            const fixedCompletions = completions.map(item => ({
+                ...item,
+                range
+            }));
+
+            return {
+                suggestions: fixedCompletions
+            };
+        }
+    });
+}
+
+function registerSecurityCompletions(monaco, language, completions) {
+    monaco.languages.registerCompletionItemProvider(language, {
+        triggerCharacters: ['.'],
+        provideCompletionItems: function (model, position) {
+            const textUntilPosition = model.getValueInRange({
+                startLineNumber: position.lineNumber,
+                startColumn: 1,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column
+            });
+
+            if (!textUntilPosition.trim().endsWith('@SECURITY.')) {
                 return { suggestions: [] };
             }
 

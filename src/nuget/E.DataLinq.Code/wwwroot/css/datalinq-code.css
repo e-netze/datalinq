@@ -1295,6 +1295,11 @@ body {
         float:right;
     }
 
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.key-value-store {
+        background-image: url(img/keyvalue_32@1.svg);
+        float: right;
+    }
+
     .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.logout {
         background-image: url(img/account_32@1.png);
         width: 120px;
@@ -1817,6 +1822,85 @@ body {
 
 .datalinq-code-buttons-bar-right {
     text-align: right;
+}
+
+/***** Secrets & Constants (Key/Value Store) ********/
+.datalinq-code-key-value-store-content {
+    color: #fff;
+    font-size: 14px;
+    overflow-y: auto;
+}
+
+.datalinq-code-kvstore-section {
+    margin-bottom: 24px;
+}
+
+.datalinq-code-kvstore-title {
+    font-size: 15px;
+    font-weight: bold;
+    padding: 4px 0;
+    border-bottom: 1px solid #444;
+    margin-bottom: 8px;
+}
+
+.datalinq-code-kvstore-description {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+
+.datalinq-code-kvstore-empty {
+    font-size: 12px;
+    color: #888;
+    padding: 6px 0;
+}
+
+.datalinq-code-kvstore-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-bottom: 1px solid #333;
+}
+
+    .datalinq-code-kvstore-row:hover {
+        background-color: #2a2a2a;
+    }
+
+.datalinq-code-kvstore-key {
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.datalinq-code-kvstore-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.datalinq-code-kvstore-editor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    padding: 8px;
+    margin: 8px 0;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+}
+
+.datalinq-code-kvstore-input {
+    flex: 1 1 180px;
+    padding: 6px 8px;
+    background-color: #1e1e1e;
+    color: #fff;
+    border: 1px solid #555;
+    box-sizing: border-box;
+}
+
+.datalinq-code-kvstore-add {
+    margin-top: 8px;
 }
 
 /***** Monaco Decoration ********/

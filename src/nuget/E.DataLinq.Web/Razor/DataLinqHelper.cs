@@ -3,6 +3,8 @@
 using E.DataLinq.Core;
 using E.DataLinq.Core.Models.AccessTree;
 using E.DataLinq.Core.Reflection;
+using E.DataLinq.Core.Services.KeyValueStore;
+using E.DataLinq.Core.Services.KeyValueStore.Abstraction;
 using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Html;
 using E.DataLinq.Web.Html.Abstractions;
@@ -13,6 +15,8 @@ using E.DataLinq.Web.Razor.Extensions;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
@@ -21,6 +25,7 @@ using System.Collections.Specialized;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
@@ -2918,6 +2923,153 @@ public class DataLinqHelper : IDataLinqHelper
             );
     }
 
+    /// <summary>
+    /// de: Ruft ein ArcGIS Server Bild ab und gibt es als HTML img-Element mit der angegebenen Größe zurück. Der Diensttyp bestimmt, ob ein MapServer- oder ImageServer-Endpunkt aufgerufen wird.
+    /// en: Retrieves an ArcGIS Server image and returns it as an HTML img element with the specified size. The service type determines whether a MapServer or ImageServer endpoint is called. 
+    /// </summary>
+    /// <param name="serviceType">
+    /// de: Der Diensttyp, der bestimmt, ob ein MapServer- oder ImageServer-Endpunkt in der URL verwendet wird.
+    /// en: The service type that determines whether a MapServer or ImageServer endpoint is used in the URL.
+    /// </param>
+    /// <param name="serverKey">
+    /// de: Der Schlüssel des ArcGIS Servers, der zur Auflösung der Basis-URL des Dienstes verwendet wird.
+    /// en: The key of the ArcGIS Server used to resolve the base URL of the service.
+    /// </param>
+    /// <param name="serviceName">
+    /// de: Der Name (Pfad) des ArcGIS Dienstes, der abgerufen werden soll.
+    /// en: The name (path) of the ArcGIS service to be retrieved.
+    /// </param>
+    /// <param name="parameters">
+    /// de: Ein dynamisches Objekt mit beliebigen Key-Value-Paaren, die an die URL angehängt werden. size wird für die Größe des img-Elements verwendet. Alle weiteren Parameter (z.B. bbox, format, transparent, layers, show) werden als Query-Parameter übergeben.
+    /// en: A dynamic object with arbitrary key-value pairs appended to the URL. size is used for the img element size. All other parameters (e.g., bbox, format, transparent, layers, show) are passed as query parameters.
+    /// </param>
+    /// <returns>
+    /// de: Gibt das abgerufene Bild als HTML img-Element zurück.
+    /// en: Returns the retrieved image as an HTML img element.
+    /// </returns>
+    public async Task<object> GetAgsImage(
+        AgsServiceType serviceType,
+        string serverKey,
+        string serviceName,
+        object parameters)
+    => await Security.GetAgsImage(serviceType, serverKey, serviceName, parameters, null);
+
+    /// <summary>
+    /// de: Ruft ein öffentlich zugängliches Bild von einem beliebigen Server ab und gibt es als HTML img-Element zurück. Die Basis-URL wird direkt übergeben und nicht aufgelöst. Um die URL nicht direkt anzugeben, kann sie im Razor-Code über GetSecret oder GetConstant aufgelöst werden. Es erfolgt keine Authentifizierung (nur für öffentliche Bilder). Antworten, die kein Bild sind, werden blockiert. Die Methode ist gegen SSRF abgesichert.
+    /// en: Retrieves a publicly accessible image from an arbitrary server and returns it as an HTML img element. The base URL is passed directly and is not resolved. To avoid specifying the URL directly, resolve it in Razor code via GetSecret or GetConstant. No authentication is performed (public images only). Non-image responses are blocked. The method is hardened against SSRF.
+    /// </summary>
+    /// <param name="baseUrl">
+    /// de: Die Basis-URL (Schema und Host) des Servers. Der Wert wird direkt verwendet. Um die URL nicht direkt anzugeben, kann sie über GetSecret oder GetConstant aufgelöst werden.
+    /// en: The base URL (scheme and host) of the server. The value is used directly. To avoid specifying the URL directly, resolve it via GetSecret or GetConstant.
+    /// </param>
+    /// <param name="path">
+    /// de: Der relative Rest des Pfades, der an die Basis-URL angehängt wird. Absolute URLs, Schema-Angaben, führende Slashes oder Verzeichniswechsel (..) sind nicht erlaubt.
+    /// en: The relative remainder of the path appended to the base URL. Absolute URLs, scheme specifications, leading slashes, or directory traversal (..) are not allowed.
+    /// </param>
+    /// <param name="parameters">
+    /// de: Ein optionales dynamisches Objekt mit beliebigen Key-Value-Paaren, die als Query-Parameter an die URL angehängt werden.
+    /// en: An optional dynamic object with arbitrary key-value pairs appended to the URL as query parameters.
+    /// </param>
+    /// <returns>
+    /// de: Gibt das abgerufene Bild als HTML img-Element zurück.
+    /// en: Returns the retrieved image as an HTML img element.
+    /// </returns>
+    public async Task<object> GetImage(
+        string baseUrl,
+        string path,
+        object parameters = null)
+    {
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new ArgumentException("The base url must not be empty.", nameof(baseUrl));
+        }
+
+        var relativePath = ValidateRelativePath(path);
+        var values = ToParameterDictionary(parameters);
+
+        var requestUri = BuildAndValidateRequestUri(baseUrl.Trim().TrimEnd('/'), relativePath, values);
+        var dataUri = await GetPublicImage(requestUri);
+
+        return BuildImageTag(dataUri);
+    }
+
+    /// <summary>
+    /// de: Liest einen Wert (Konstante) aus dem globalen Konstanten-Store (constants.blb) und gibt ihn zurück. Die Werte werden unverschlüsselt gespeichert und können über die DataLinq Code Oberfläche verwaltet werden.
+    /// en: Reads a value (constant) from the global constants store (constants.blb) and returns it. The values are stored unencrypted and can be managed through the DataLinq Code UI.
+    /// </summary>
+    /// <param name="key">
+    /// de: Der Schlüssel (Name) der Konstante, deren Wert zurückgegeben werden soll.
+    /// en: The key (name) of the constant whose value should be returned.
+    /// </param>
+    /// <returns>
+    /// de: Gibt den Wert der Konstante zurück, falls vorhanden, ansonsten einen leeren String.
+    /// en: Returns the value of the constant, if available, otherwise an empty string.
+    /// </returns>
+    public string GetConstant(string key)
+        => _httpContext?.RequestServices?.GetService<IKeyValueStoreService>()?
+            .GetValue(KeyValueStoreType.Constant, key) ?? "";
+
+    /// <summary>
+    /// de: Legt mehrere Bild-Elemente (img-Tags) deckungsgleich übereinander, sodass verschiedene PNGs/Bilder als Ebenen gestapelt werden können. Funktioniert auch mit den von GetImage und GetAgsImage (DLH/Security) erzeugten Bildern.
+    /// en: Overlays multiple image elements (img tags) on top of each other so that different PNGs/images can be layered. Also works with the images produced by the GetImage and GetAgsImage (DLH/Security) methods.
+    /// </summary>
+    /// <param name="images">
+    /// de: Eine beliebige Anzahl von Bildern, die übereinander gelegt werden. Jedes Element kann ein von den DLH- oder Security-Bildmethoden zurückgegebenes img-Element oder ein beliebiger HTML/img-String sein. Das erste Bild bestimmt die Größe des Containers, alle weiteren werden deckungsgleich darüber positioniert.
+    /// en: An arbitrary number of images to be stacked. Each element can be an img element returned by the DLH or Security image methods, or any HTML/img string. The first image determines the container size, all following images are positioned congruently on top of it.
+    /// </param>
+    /// <returns>
+    /// de: Gibt einen Container zurück, in dem die übergebenen Bilder als Ebenen übereinander liegen.
+    /// en: Returns a container in which the supplied images are layered on top of each other.
+    /// </returns>
+    public object OverlayImages(params object[] images)
+    {
+        if (images is null || images.Length == 0)
+        {
+            return _razor.RawString("");
+        }
+
+        var htmlBuilder = HtmlBuilder.Create()
+            .Append("div", container =>
+            {
+                container.AddStyle("position", "relative");
+                container.AddStyle("display", "inline-block");
+                container.AddStyle("line-height", "0");
+
+                var isFirstLayer = true;
+
+                foreach (var image in images)
+                {
+                    var imageHtml = image?.ToString();
+
+                    if (String.IsNullOrEmpty(imageHtml))
+                    {
+                        continue;
+                    }
+
+                    var isBaseLayer = isFirstLayer;
+                    isFirstLayer = false;
+
+                    container.Append("div", layer =>
+                    {
+                        if (isBaseLayer)
+                        {
+                            layer.AddStyle("position", "relative");
+                        }
+                        else
+                        {
+                            layer.AddStyle("position", "absolute");
+                            layer.AddStyle("top", "0");
+                            layer.AddStyle("left", "0");
+                        }
+
+                        layer.Content(imageHtml);
+                    });
+                }
+            });
+
+        return _razor.RawString(htmlBuilder.BuildHtmlString());
+    }
+
     #endregion
 
     #region DataLinq PDF Helper (backward-compatible delegates — implementations moved to DataLinqPdfHelper)
@@ -2955,96 +3107,31 @@ public class DataLinqHelper : IDataLinqHelper
 
     #endregion
 
+    #region DataLinq Security Helper (backward-compatible delegates — implementations moved to DataLinqSecurityHelper)
+    private DataLinqSecurityHelper _security;
+    private DataLinqSecurityHelper Security => _security ??= new DataLinqSecurityHelper(_httpContext, _ui, _razor);
 
-    /// <summary>
-    /// de: Der Username des aktuell angemeldeten Benutzers.
-    /// en: The username of the currently logged-in user.
-    /// </summary>
-    /// <returns>
-    /// de: Gibt den Username des aktuell angemeldeten Benutzers zurück, falls verfügbar, ansonsten einen leeren String.
-    /// en: Returns the username of the currently logged-in user, if available, otherwise an empty string.
-    /// </returns>
+    [ExcludeFromSnippets]
     public string GetCurrentUsername()
-        => _ui?.Username ?? "";
+        => Security.GetCurrentUsername();
 
-    /// <summary>
-    /// de: Prüft, ob der aktuelle User Mitglied in der angegeben Rolle ist.
-    /// en: Checks if the current user is a member of the specified role.
-    /// </summary>
-    /// <param name="roleName">
-    /// de: Der Name der Rolle, die geprüft werden soll.
-    /// en: The name of the role to be checked.
-    /// </param>
-    /// <returns>
-    /// de: Gibt true zurück, wenn der Benutzer Mitglied der angegebenen Rolle ist, andernfalls false.
-    /// en: Returns true if the user is a member of the specified role, otherwise false.
-    /// </returns>
-    public bool HasRole(
-            [HelpDescription("Rollenname, der geprüft werdens soll")]
-            string roleName
-        ) => _ui?
-             .Userroles?
-             .Any(r => r.Equals(roleName, StringComparison.InvariantCultureIgnoreCase)) == true;
+    [ExcludeFromSnippets]
+    public bool HasRole(string roleName)
+        => Security.HasRole(roleName);
 
-    [HelpDescription("Liefert den Wert eines Rollenparameters zurück, zB GKZ (Gemeindekennzahl). Rollenparameter werden nur in speziellen Authentication Umgebungen wie PVP unterstützt.")]
-    public string GetUserClaim(
-        [HelpDescription("Name des Claims, dessen Wert zurückgegeben werden soll, zB GKZ")]
-        string claimName,
-        [HelpDescription("Gibt an, ob bei der Suche nach dem Claim auf Groß-/Kleinschreibung geachtet werden soll (true) oder nicht (false). Standardwert ist true.")]
-        bool caseSensitiv = true)
-    {
-        var claimValue = _ui?
-            .Claims?
-            .Where(p => p?.StartsWith($"{claimName}=", caseSensitiv ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase) == true)
-            .FirstOrDefault()?
-            .Substring(claimName.Length + 1)
-            .Trim() ?? "";
+    [ExcludeFromSnippets]
+    public string GetUserClaim(string claimName, bool caseSensitiv = true)
+        => Security.GetUserClaim(claimName, caseSensitiv);
 
-        return claimValue;
-    }
+    [ExcludeFromSnippets]
+    public string GetRequestHeaderValue(string header)
+    => Security.GetRequestHeaderValue(header);
+
+    #endregion
 
     //[HelpDescription("Gibt alle HTTP Request Header Namen zurück")]
     //public IEnumerable<string> GetRequestHeaders()
     //    => _httpContext?.Request?.Headers?.Keys ?? Enumerable.Empty<string>();
-
-    /// <summary>
-    /// de: Gibt den Wert eines HTTP Request Headers zurück.
-    /// en: Returns the value of an HTTP request header.
-    /// </summary>
-    /// <param name="header">
-    /// de: Der Name des Headers, dessen Wert zurückgegeben werden soll.
-    /// en: The name of the header whose value is to be returned.
-    /// </param>
-    /// <returns>
-    /// de: Gibt den Wert des angegebenen Headers zurück. Falls der Header nicht vorhanden ist, wird ein leerer String zurückgegeben.
-    /// en: Returns the value of the specified header. If the header is not present, an empty string is returned.
-    /// </returns>
-    public string GetRequestHeaderValue(string header)
-        => _httpContext?.Request?.Headers[header] ?? "";
-
-    [ExcludeFromSnippets]
-    private string ParseUrl(string url, bool encodeQueryString)
-    {
-        if (encodeQueryString && url.Contains("?"))
-        {
-            var queryString = HttpUtility.ParseQueryString(url.Substring(url.IndexOf("?"))); ;
-            url = url.Split('?')[0];
-
-            foreach (string key in queryString.Keys)
-            {
-                url += url.Contains("?") ? "&" : "?";
-                url += key + "=" + HttpUtility.UrlEncode(queryString[key]);
-            }
-        }
-
-        return url;
-    }
-
-    [ExcludeFromSnippets]
-    public static string GenerateUniqueId(string id)
-    {
-        return $"{id}-{Guid.NewGuid().ToString("N").Substring(0, 8)}";
-    }
 
     #region IDataLinqHelper
 
@@ -3098,6 +3185,30 @@ public class DataLinqHelper : IDataLinqHelper
     #endregion
 
     #region Helper
+
+    [ExcludeFromSnippets]
+    private string ParseUrl(string url, bool encodeQueryString)
+    {
+        if (encodeQueryString && url.Contains("?"))
+        {
+            var queryString = HttpUtility.ParseQueryString(url.Substring(url.IndexOf("?"))); ;
+            url = url.Split('?')[0];
+
+            foreach (string key in queryString.Keys)
+            {
+                url += url.Contains("?") ? "&" : "?";
+                url += key + "=" + HttpUtility.UrlEncode(queryString[key]);
+            }
+        }
+
+        return url;
+    }
+
+    [ExcludeFromSnippets]
+    public static string GenerateUniqueId(string id)
+    {
+        return $"{id}-{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+    }
 
     [ExcludeFromSnippets]
     private string ToHtml(string str)
@@ -3162,6 +3273,168 @@ public class DataLinqHelper : IDataLinqHelper
             dict.Add(pi.Name, pi.GetValue(anonymousObject));
         }
         return dict;
+    }    
+
+    [ExcludeFromSnippets]
+    private object BuildImageTag(string dataUri)
+    {
+        var htmlBuilder = HtmlBuilder.Create()
+            .Append("img", img =>
+            {
+                img.AddAttribute("src", dataUri);
+            }, WriteTags.SelfClose);
+
+        return _razor is not null
+            ? _razor.RawString(htmlBuilder.BuildHtmlString())
+            : htmlBuilder.BuildHtmlString();
+    }
+
+    [ExcludeFromSnippets]
+    private static IDictionary<string, string> ToParameterDictionary(object parameters)
+    {
+        var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        if (parameters is not null)
+        {
+            foreach (var property in parameters.GetType().GetProperties())
+            {
+                values[property.Name] = property.GetValue(parameters)?.ToString() ?? "";
+            }
+        }
+
+        return values;
+    }
+
+    [ExcludeFromSnippets]
+    private static string ValidateRelativePath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new ArgumentException("The path must not be empty.", nameof(path));
+        }
+
+        var trimmed = path.Trim();
+
+        if (trimmed.Any(char.IsControl))
+        {
+            throw new ArgumentException("The path must not contain control characters.", nameof(path));
+        }
+
+        if (trimmed.Contains('\\'))
+        {
+            throw new ArgumentException("The path must not contain backslashes.", nameof(path));
+        }
+
+        if (trimmed.Contains('@'))
+        {
+            throw new ArgumentException("The path must not contain '@'.", nameof(path));
+        }
+
+        // No scheme / absolute url allowed (e.g. http://, https://, file:, //host).
+        if (trimmed.Contains("://") || trimmed.StartsWith("//"))
+        {
+            throw new ArgumentException("Absolute urls are not allowed. Provide a relative path only.", nameof(path));
+        }
+
+        // No leading slash - the path is always relative to the resolved base url.
+        if (trimmed.StartsWith('/'))
+        {
+            throw new ArgumentException("The path must not start with '/'.", nameof(path));
+        }
+
+        // No directory traversal.
+        var segments = trimmed.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Any(segment => segment == ".." || segment == "."))
+        {
+            throw new ArgumentException("Directory traversal is not allowed in the path.", nameof(path));
+        }
+
+        return trimmed;
+    }
+
+    [ExcludeFromSnippets]
+    private static string BuildAndValidateRequestUri(
+        string baseUrl,
+        string relativePath,
+        IDictionary<string, string> parameters)
+    {
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var baseUri))
+        {
+            throw new InvalidOperationException("The resolved base url is not a valid absolute url.");
+        }
+
+        if (baseUri.Scheme != Uri.UriSchemeHttp && baseUri.Scheme != Uri.UriSchemeHttps)
+        {
+            throw new InvalidOperationException("Only http and https base urls are allowed.");
+        }
+
+        var combined = $"{baseUri.GetLeftPart(UriPartial.Path).TrimEnd('/')}/{relativePath}";
+
+        if (!Uri.TryCreate(combined, UriKind.Absolute, out var requestUri))
+        {
+            throw new InvalidOperationException("The composed request url is not valid.");
+        }
+
+        // The composed url must stay on the same origin as the allowlisted base url.
+        if (requestUri.Scheme != baseUri.Scheme
+            || !string.Equals(requestUri.Host, baseUri.Host, StringComparison.OrdinalIgnoreCase)
+            || requestUri.Port != baseUri.Port)
+        {
+            throw new InvalidOperationException("The composed request url must not leave the allowlisted base url origin.");
+        }
+
+        var query = string.Join("&", parameters
+            .Select(p => $"{Uri.EscapeDataString(p.Key)}={Uri.EscapeDataString(p.Value ?? "")}"));
+
+        return string.IsNullOrEmpty(query)
+            ? requestUri.AbsoluteUri
+            : $"{requestUri.AbsoluteUri}?{query}";
+    }
+
+    [ExcludeFromSnippets]
+    private async Task<string> GetPublicImage(string requestUri)
+    {
+        EnsureImageRequestAllowed(requestUri);
+
+        using var handler = new HttpClientHandler
+        {
+            AllowAutoRedirect = false,
+            UseCookies = false,
+            UseDefaultCredentials = false,
+            Credentials = null
+        };
+
+        using var httpClient = new HttpClient(handler);
+
+        // Many servers reject requests without a User-Agent (and sometimes Accept) header with 403.
+        // Browsers and tools like Postman always send these, so mimic a neutral, non-authenticated client.
+        httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; DataLinq/1.0)");
+        httpClient.DefaultRequestHeaders.Accept.ParseAdd("image/*");
+
+        var response = await httpClient.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
+
+        var mediaType = response.Content.Headers.ContentType?.MediaType;
+
+        if (mediaType is null || !mediaType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("The response is not an image.");
+        }
+
+        byte[] imageBytes = await response.Content.ReadAsByteArrayAsync();
+        return $"data:{mediaType};base64,{Convert.ToBase64String(imageBytes)}";
+    }
+
+    [ExcludeFromSnippets]
+    private void EnsureImageRequestAllowed(string requestUri)
+    {
+        var options = _httpContext?.RequestServices?.GetService<IOptions<DataLinqOptions>>()?.Value;
+
+        if (options is null || !options.IsImageRequestUrlAllowed(requestUri))
+        {
+            throw new InvalidOperationException(
+                "The request url is not allowed. Add its base url to the image request whitelist via the api startup configuration (DataLinqOptions.AddToImageRequestWhiteList).");
+        }
     }
 
     #endregion

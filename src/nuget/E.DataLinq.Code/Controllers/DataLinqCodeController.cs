@@ -160,6 +160,109 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
     #endregion
 
+    #region KeyValueStore (Secrets & Constants)
+
+    async public Task<IActionResult> GetSecretKeys()
+    {
+        return base.JsonObject(_client == null ?
+            null :
+            new { keys = await _client.GetKeyValueStoreKeys("secret") });
+    }
+
+    async public Task<IActionResult> GetConstantKeys()
+    {
+        return base.JsonObject(_client == null ?
+            null :
+            new { keys = await _client.GetKeyValueStoreKeys("constant") });
+    }
+
+    async public Task<IActionResult> GetConstantValue(string key)
+    {
+        return base.JsonObject(_client == null ?
+            null :
+            new { key, value = await _client.GetKeyValueStoreValue("constant", key) });
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> SetSecret([FromBody] KeyValueStoreEntry entry)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return base.JsonObject(new SuccessModel(await _client.SetKeyValueStoreValue("secret", entry?.Key, entry?.Value)));
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> SetConstant([FromBody] KeyValueStoreEntry entry)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return base.JsonObject(new SuccessModel(await _client.SetKeyValueStoreValue("constant", entry?.Key, entry?.Value)));
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> DeleteSecret([FromBody] KeyValueStoreEntry entry)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return base.JsonObject(new SuccessModel(await _client.DeleteKeyValueStoreValue("secret", entry?.Key)));
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> DeleteConstant([FromBody] KeyValueStoreEntry entry)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return base.JsonObject(new SuccessModel(await _client.DeleteKeyValueStoreValue("constant", entry?.Key)));
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    public class KeyValueStoreEntry
+    {
+        public string Key { get; set; }
+        public string Value { get; set; }
+    }
+
+    #endregion
+
     #region Edit 
 
     [HttpGet]

@@ -40,6 +40,7 @@ dataLinqCodeEditor = new function () {
 
             let cachedCompletions = JSON.parse(localStorage.getItem('dlhCompletions'));
             let cachedPdfCompletions = JSON.parse(localStorage.getItem('pdfCompletions'));
+            let cachedSecurityCompletions = JSON.parse(localStorage.getItem('securityCompletions'));
 
             function loadDLHCompletions(monaco, language) {
                 if (cachedCompletions) {
@@ -83,8 +84,30 @@ dataLinqCodeEditor = new function () {
 
             }
 
+            function loadSecurityCompletions(monaco, language) {
+                if (cachedSecurityCompletions) {
+                    registerSecurityCompletions(monaco, language || 'text', cachedSecurityCompletions);
+                    return;
+                }
+
+                const selectedLang = sessionStorage.getItem('selectedLang') || 'en';
+
+                dataLinqCode.api.getMonacoSnippit(function (data) {
+                    try {
+                        const completions = JSON.parse(data);
+                        cachedSecurityCompletions = completions;
+                        localStorage.setItem('securityCompletions', JSON.stringify(completions));
+                        registerSecurityCompletions(monaco, language || 'text', completions);
+                    } catch (e) {
+                        console.error("Failed to parse SECURITY completions JSON", e);
+                    }
+                }, selectedLang, 'security');
+
+            }
+
             loadDLHCompletions(monaco, language || 'text');
             loadPDFCompletions(monaco, language || 'text');
+            loadSecurityCompletions(monaco, language || 'text');
             registerRazorSnippets(monaco, language || 'text');
 
         } else {

@@ -9,6 +9,7 @@ using E.DataLinq.Web.Services.Abstraction;
 using E.DataLinq.Web.Services.TokenCache;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Collections.Concurrent;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,9 @@ builder.Services.AddDataLinqServices<FileSystemPersistanceService, CryptoService
             _ => RazorEngineIds.DataLinqLanguageEngineRazor,
         };
         options.TempPath = Path.Combine(Path.GetTempPath(), "datalinq");
+        options.AddToImageRequestWhiteList(
+            builder.Configuration.GetSection("DataLinq.Api:ImageRequestWhiteList").Get<string[]>()
+            ?? Array.Empty<string>());
     },
     persistanceOptions: options =>
     {

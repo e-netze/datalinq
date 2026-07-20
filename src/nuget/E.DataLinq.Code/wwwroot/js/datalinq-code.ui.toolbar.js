@@ -111,6 +111,11 @@
             .addClass('datalinq-code-toolbutton help')
             .appendTo($parent);
 
+        $("<div><div class='text'>Secrets &amp; Constants</div></div>")
+            .data('event', 'toggle-key-value-store')
+            .addClass('datalinq-code-toolbutton key-value-store')
+            .appendTo($parent);
+
         if (features.Sandbox) {
             $("<div><div class='text'>Datalinq Sandbox</div></div>")
                 .data('event', 'toggle-sandbox')

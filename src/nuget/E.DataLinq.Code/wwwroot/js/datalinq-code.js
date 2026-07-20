@@ -196,6 +196,10 @@ var dataLinqCode = new function ($) {
             }
         });
 
+        dataLinqCode.events.on('toggle-key-value-store', function (channel) {
+            dataLinqCode.ui.keyValueStore();
+        });
+
         dataLinqCode.events.on('initialize-git-push', function (channel) {
             dataLinqCode.ui.confirmPromised(
                 "Initializing Git",
@@ -347,6 +351,29 @@ var dataLinqCode = new function ($) {
 
         this.getMonacoSnippit = function (callback, lang, helper) {
             this.get('getMonacoSnippit', callback, { lang: lang, helper: helper || 'dlh' });
+        };
+
+        this.getSecretKeys = function (callback) {
+            this.get('getSecretKeys', callback);
+        };
+        this.setSecret = function (key, value, callback) {
+            this.post('setSecret', { key: key, value: value }, callback);
+        };
+        this.deleteSecret = function (key, callback) {
+            this.post('deleteSecret', { key: key }, callback);
+        };
+
+        this.getConstantKeys = function (callback) {
+            this.get('getConstantKeys', callback);
+        };
+        this.getConstantValue = function (key, callback) {
+            this.get('getConstantValue', callback, { key: key });
+        };
+        this.setConstant = function (key, value, callback) {
+            this.post('setConstant', { key: key, value: value }, callback);
+        };
+        this.deleteConstant = function (key, callback) {
+            this.post('deleteConstant', { key: key }, callback);
         };
 
         this.getEndPointPrefixes = function (callback) {
@@ -573,6 +600,187 @@ var dataLinqCode = new function ($) {
             dataLinqCode.ui.confirmIf(true, title, message, onConfirm);
         }
 
+        this.keyValueStore = function () {
+            $('body').dataLinq_code_modal({
+                title: 'Secrets & Constants',
+                height: '80%',
+                width: '720px',
+                id: 'datalinq-code-key-value-store',
+                onload: function ($content) {
+                    $content.addClass('datalinq-code-key-value-store-content');
+
+                    var buildSection = function (options) {
+                        var $section = $("<div>")
+                            .addClass('datalinq-code-kvstore-section')
+                            .appendTo($content);
+
+                        $("<div>")
+                            .addClass('datalinq-code-kvstore-title')
+                            .text(options.title)
+                            .appendTo($section);
+
+                        if (options.description) {
+                            $("<div>")
+                                .addClass('datalinq-code-kvstore-description')
+                                .text(options.description)
+                                .appendTo($section);
+                        }
+
+                        var $list = $("<div>")
+                            .addClass('datalinq-code-kvstore-list')
+                            .appendTo($section);
+
+                        var reload = function () {
+                            $list.empty();
+                            options.getKeys(function (result) {
+                                var keys = (result && result.keys) || [];
+
+                                if (keys.length === 0) {
+                                    $("<div>")
+                                        .addClass('datalinq-code-kvstore-empty')
+                                        .text('No entries yet.')
+                                        .appendTo($list);
+                                    return;
+                                }
+
+                                $.each(keys, function (i, key) {
+                                    var $row = $("<div>")
+                                        .addClass('datalinq-code-kvstore-row')
+                                        .appendTo($list);
+
+                                    $("<div>")
+                                        .addClass('datalinq-code-kvstore-key')
+                                        .text(key)
+                                        .appendTo($row);
+
+                                    var $actions = $("<div>")
+                                        .addClass('datalinq-code-kvstore-actions')
+                                        .appendTo($row);
+
+                                    $("<button>")
+                                        .addClass('datalinq-code-button')
+                                        .text('Edit')
+                                        .appendTo($actions)
+                                        .click(function () {
+                                            editEntry(key);
+                                        });
+
+                                    $("<button>")
+                                        .addClass('datalinq-code-button cancel')
+                                        .text('Delete')
+                                        .appendTo($actions)
+                                        .click(function () {
+                                            dataLinqCode.ui.confirm(
+                                                options.title,
+                                                'Delete "' + key + '"?',
+                                                function () {
+                                                    options.deleteValue(key, function () {
+                                                        reload();
+                                                    });
+                                                });
+                                        });
+                                });
+                            });
+                        };
+
+                        var editEntry = function (existingKey) {
+                            var isNew = !existingKey;
+
+                            // Only allow a single editor open at a time across the whole modal.
+                            $content.find('.datalinq-code-kvstore-editor').remove();
+
+                            var $editor = $("<div>")
+                                .addClass('datalinq-code-kvstore-editor')
+                                .appendTo($section);
+
+                            var $keyInput = $("<input>")
+                                .attr('type', 'text')
+                                .attr('placeholder', 'Key')
+                                .addClass('datalinq-code-kvstore-input')
+                                .val(existingKey || '')
+                                .prop('disabled', !isNew)
+                                .appendTo($editor);
+
+                            var $valueInput = $("<input>")
+                                .attr('type', options.maskValue ? 'password' : 'text')
+                                .attr('placeholder', options.maskValue ? 'Value (write-only)' : 'Value')
+                                .addClass('datalinq-code-kvstore-input')
+                                .appendTo($editor);
+
+                            if (!isNew && options.getValue) {
+                                options.getValue(existingKey, function (result) {
+                                    $valueInput.val((result && result.value) || '');
+                                });
+                            }
+
+                            var $editorActions = $("<div>")
+                                .addClass('datalinq-code-kvstore-actions')
+                                .appendTo($editor);
+
+                            $("<button>")
+                                .addClass('datalinq-code-button')
+                                .text('Save')
+                                .appendTo($editorActions)
+                                .click(function () {
+                                    var key = $.trim($keyInput.val());
+                                    if (!key) {
+                                        dataLinqCode.ui.alert(options.title, 'Key must not be empty.');
+                                        return;
+                                    }
+
+                                    options.setValue(key, $valueInput.val(), function () {
+                                        $editor.remove();
+                                        reload();
+                                    });
+                                });
+
+                            $("<button>")
+                                .addClass('datalinq-code-button cancel')
+                                .text('Cancel')
+                                .appendTo($editorActions)
+                                .click(function () {
+                                    $editor.remove();
+                                });
+                        };
+
+                        $("<button>")
+                            .addClass('datalinq-code-button datalinq-code-kvstore-add')
+                            .text('Add ' + options.itemName)
+                            .appendTo($section)
+                            .click(function () {
+                                editEntry(null);
+                            });
+
+                        reload();
+                    };
+
+                    buildSection({
+                        title: 'Secrets (encrypted)',
+                        description: 'Values are stored encrypted and are never displayed. Use @SECURITY.GetSecret("key") to read them.',
+                        itemName: 'Secret',
+                        maskValue: true,
+                        getKeys: dataLinqCode.api.getSecretKeys.bind(dataLinqCode.api),
+                        setValue: dataLinqCode.api.setSecret.bind(dataLinqCode.api),
+                        deleteValue: dataLinqCode.api.deleteSecret.bind(dataLinqCode.api)
+                    });
+
+                    buildSection({
+                        title: 'Constants (plain text)',
+                        description: 'Values are stored unencrypted. Use @DLH.GetConstant("key") to read them.',
+                        itemName: 'Constant',
+                        maskValue: false,
+                        getKeys: dataLinqCode.api.getConstantKeys.bind(dataLinqCode.api),
+                        getValue: dataLinqCode.api.getConstantValue.bind(dataLinqCode.api),
+                        setValue: dataLinqCode.api.setConstant.bind(dataLinqCode.api),
+                        deleteValue: dataLinqCode.api.deleteConstant.bind(dataLinqCode.api)
+                    });
+                }
+            });
+        }
+
+        this.confirm = function (title, message, onConfirm) {
+            dataLinqCode.ui.confirmIf(true, title, message, onConfirm);
+        }
         this.confirmIf = function (contition, title, message, onConfirm) {
             if (contition === false) {
                 if (onConfirm) {

@@ -174,7 +174,7 @@ public class DataLinqCompilerService
             razorCode.Append(Environment.NewLine);
         }
 
-        razorCode.Append("@{ var IntegratorHelper=Model?.CreateDataLinqHelper(); var IH=IntegratorHelper; var DataLinqHelper=IH; var DLH=IH; var PDF=Model?.CreateDataLinqPdfHelper();");
+        razorCode.Append("@{ var IntegratorHelper=Model?.CreateDataLinqHelper(); var IH=IntegratorHelper; var DataLinqHelper=IH; var DLH=IH; var PDF=Model?.CreateDataLinqPdfHelper(); var SECURITY=Model?.CreateDataLinqSecurityHelper();");
         if (!String.IsNullOrWhiteSpace(constants))
         {
             razorCode.Append(constants);

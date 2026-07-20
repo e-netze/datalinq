@@ -9,6 +9,8 @@ using E.DataLinq.Core.Services;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Crypto;
 using E.DataLinq.Core.Services.Crypto.Abstraction;
+using E.DataLinq.Core.Services.KeyValueStore;
+using E.DataLinq.Core.Services.KeyValueStore.Abstraction;
 using E.DataLinq.Core.Services.Persistance;
 using E.DataLinq.Core.Services.Persistance.Abstraction;
 using E.DataLinq.Web.Html.Abstractions;
@@ -65,6 +67,7 @@ static public class ServiceCollectionExtensions
                        .AddTransient<IHostUrlHelper, TUrlHelperType>()
                        .AddTransient<IPersistanceProviderService, TPersistProvider>()
                        .AddTransient<ICryptoService, TCryptoService>()
+                       .AddSingleton<IKeyValueStoreService, FileKeyValueStoreService>()
                        .AddTransient<AccessTokenService>()
                        // DatalinqService muss Transient sein!!
                        // IEnumerable<IDataLinqEngine> wird injectet
@@ -77,7 +80,8 @@ static public class ServiceCollectionExtensions
                            new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
                            {
                                ["dlh"] = typeof(DataLinqHelper),
-                               ["pdf"] = typeof(DataLinqPdfHelper)
+                               ["pdf"] = typeof(DataLinqPdfHelper),
+                               ["security"] = typeof(DataLinqSecurityHelper)
                            }))
                        .AddTransient<IDataLinqEnvironmentService, DataLinqEnvironmentService>()
                        .AddTransient<IRazorCompileEngineService, RazorEngineService>()  // classic version

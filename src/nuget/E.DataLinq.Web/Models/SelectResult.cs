@@ -197,6 +197,11 @@ public class SelectResult
         return new DataLinqPdfHelper(_razorEngine);
     }
 
+    public DataLinqSecurityHelper CreateDataLinqSecurityHelper()
+    {
+        return new DataLinqSecurityHelper(_httpContext, this.UserInformation, _razorEngine);
+    }
+
     [JsonProperty("environment")]
     public SelectEnvironment Environment
     {

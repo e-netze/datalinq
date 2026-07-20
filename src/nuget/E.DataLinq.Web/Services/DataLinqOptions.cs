@@ -141,4 +141,73 @@ public class DataLinqOptions
     public IEnumerable<string> RazorWhiteList => _razorWhiteList.ToArray();
 
     #endregion
+
+    #region ImageRequestWhiteList
+
+    private readonly ConcurrentBag<string> _imageRequestWhiteList = new ConcurrentBag<string>();
+
+    public void AddToImageRequestWhiteList(IEnumerable<string> allowedBaseUrls)
+    {
+        foreach (var allowedBaseUrl in allowedBaseUrls)
+        {
+            if (!string.IsNullOrWhiteSpace(allowedBaseUrl))
+            {
+                _imageRequestWhiteList.Add(allowedBaseUrl.Trim());
+            }
+        }
+    }
+
+    public void ClearImageRequestWhiteList()
+    {
+        _imageRequestWhiteList.Clear();
+    }
+
+    public IEnumerable<string> ImageRequestWhiteList => _imageRequestWhiteList.ToArray();
+
+    public bool IsImageRequestUrlAllowed(string requestUrl)
+    {
+        if (string.IsNullOrWhiteSpace(requestUrl))
+        {
+            return false;
+        }
+
+        if (!Uri.TryCreate(requestUrl, UriKind.Absolute, out var requestUri))
+        {
+            return false;
+        }
+
+        if (requestUri.Scheme != Uri.UriSchemeHttp && requestUri.Scheme != Uri.UriSchemeHttps)
+        {
+            return false;
+        }
+
+        foreach (var entry in _imageRequestWhiteList)
+        {
+            if (!Uri.TryCreate(entry, UriKind.Absolute, out var allowedUri))
+            {
+                continue;
+            }
+
+            if (requestUri.Scheme != allowedUri.Scheme
+                || !string.Equals(requestUri.Host, allowedUri.Host, StringComparison.OrdinalIgnoreCase)
+                || requestUri.Port != allowedUri.Port)
+            {
+                continue;
+            }
+
+            var allowedPath = allowedUri.AbsolutePath.TrimEnd('/');
+            var requestPath = requestUri.AbsolutePath;
+
+            if (allowedPath.Length == 0
+                || requestPath.Equals(allowedPath, StringComparison.OrdinalIgnoreCase)
+                || requestPath.StartsWith(allowedPath + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    #endregion
 }

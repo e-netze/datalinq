@@ -373,6 +373,85 @@ public class CodeApiClient
         }
     }
 
+    async public Task<IEnumerable<string>> GetKeyValueStoreKeys(string store)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/keyvaluestore/{store}/keys"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var result = JsonConvert.DeserializeAnonymousType(
+                    await GetAndCheckHttpResponseAsync(httpResponse),
+                    new { keys = new string[0] });
+
+                return result?.keys ?? new string[0];
+            }
+        }
+    }
+
+    async public Task<string> GetKeyValueStoreValue(string store, string key)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/keyvaluestore/{store}/value?key={HttpUtility.UrlEncode(key)}"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var result = JsonConvert.DeserializeAnonymousType(
+                    await GetAndCheckHttpResponseAsync(httpResponse),
+                    new { key = "", value = "" });
+
+                return result?.value ?? "";
+            }
+        }
+    }
+
+    async public Task<bool> SetKeyValueStoreValue(string store, string key, string value)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/keyvaluestore/{store}/set"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            requestMessage.Content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("key", key),
+                new KeyValuePair<string, string>("value", value ?? "")
+            });
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var result = JsonConvert.DeserializeAnonymousType(
+                    await GetAndCheckHttpResponseAsync(httpResponse),
+                    new { success = false });
+
+                return result?.success ?? false;
+            }
+        }
+    }
+
+    async public Task<bool> DeleteKeyValueStoreValue(string store, string key)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/keyvaluestore/{store}/delete"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            requestMessage.Content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("key", key)
+            });
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var result = JsonConvert.DeserializeAnonymousType(
+                    await GetAndCheckHttpResponseAsync(httpResponse),
+                    new { success = false });
+
+                return result?.success ?? false;
+            }
+        }
+    }
+
     async public Task<bool> StoreEndPointCss(string endPointId, string css)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/endpointcss"))

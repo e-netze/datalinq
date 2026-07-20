@@ -5,6 +5,8 @@ using E.DataLinq.Core.Models;
 using E.DataLinq.Core.Models.Abstraction;
 using E.DataLinq.Core.Models.Authentication;
 using E.DataLinq.Core.Services.Abstraction;
+using E.DataLinq.Core.Services.KeyValueStore;
+using E.DataLinq.Core.Services.KeyValueStore.Abstraction;
 using E.DataLinq.Core.Services.Persistance.Abstraction;
 using E.DataLinq.Web.Extensions;
 using E.DataLinq.Web.Reflection;
@@ -39,6 +41,7 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly SemanticKernelService _semanticKernelService;
     private readonly IGitService? _gitService;
     private readonly FeaturesService _featuresService;
+    private readonly IKeyValueStoreService _keyValueStore;
 
     public DataLinqCodeApiController(ILogger<DataLinqCodeApiController> logger,
                                      IPersistanceProviderService persistanceProvider,
@@ -48,6 +51,7 @@ public class DataLinqCodeApiController : ApiBaseController
                                      IMonacoSnippetService monacoSnippetService,
                                      JsLibrariesService jsLibraries,
                                      FeaturesService featuresService,
+                                     IKeyValueStoreService keyValueStore = null,
                                      IGitService gitService = null,
                                      SemanticKernelService semanticKernelService = null,
                                      IHostAuthenticationService hostAuthentication = null,
@@ -65,6 +69,7 @@ public class DataLinqCodeApiController : ApiBaseController
         _semanticKernelService = semanticKernelService;
         _gitService = gitService;
         _featuresService = featuresService;
+        _keyValueStore = keyValueStore;
     }
 
     #region Get
@@ -218,6 +223,88 @@ public class DataLinqCodeApiController : ApiBaseController
 
         return base.JsonObject(_featuresService.GetFeatures());
     }
+
+    #endregion
+
+    #region KeyValueStore (Secrets & Constants)
+
+    [HttpGet]
+    [Route("keyvaluestore/{store}/keys")]
+    public IActionResult KeyValueStoreKeys(string store)
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        if (_keyValueStore is null)
+            throw new Exception("KeyValueStore is not configured");
+
+        var storeType = ParseStoreType(store);
+
+        // Never return decrypted secret values here, only the keys.
+        return base.JsonObject(new { keys = _keyValueStore.GetKeys(storeType) });
+    }
+
+    [HttpGet]
+    [Route("keyvaluestore/{store}/value")]
+    public IActionResult KeyValueStoreValue(string store, string key)
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        if (_keyValueStore is null)
+            throw new Exception("KeyValueStore is not configured");
+
+        var storeType = ParseStoreType(store);
+
+        // Only expose plain text values (constants) through this endpoint.
+        if (storeType == KeyValueStoreType.Secret)
+            throw new Exception("Secret values can not be read through this endpoint");
+
+        return base.JsonObject(new { key, value = _keyValueStore.GetValue(storeType, key) });
+    }
+
+    [HttpPost]
+    [Route("keyvaluestore/{store}/set")]
+    public IActionResult KeyValueStoreSet(string store, [FromForm] string key, [FromForm] string value)
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        if (_keyValueStore is null)
+            throw new Exception("KeyValueStore is not configured");
+
+        if (String.IsNullOrWhiteSpace(key))
+            throw new ArgumentException("Key must not be empty");
+
+        var storeType = ParseStoreType(store);
+
+        _keyValueStore.SetValue(storeType, key, value ?? "");
+
+        return base.JsonObject(new { success = true });
+    }
+
+    [HttpPost]
+    [Route("keyvaluestore/{store}/delete")]
+    public IActionResult KeyValueStoreDelete(string store, [FromForm] string key)
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        if (_keyValueStore is null)
+            throw new Exception("KeyValueStore is not configured");
+
+        var storeType = ParseStoreType(store);
+
+        return base.JsonObject(new { success = _keyValueStore.DeleteKey(storeType, key) });
+    }
+
+    private static KeyValueStoreType ParseStoreType(string store)
+        => store?.ToLowerInvariant() switch
+        {
+            "secret" or "secrets" => KeyValueStoreType.Secret,
+            "constant" or "constants" => KeyValueStoreType.Constant,
+            _ => throw new ArgumentException($"Unknown key value store '{store}'")
+        };
 
     #endregion
 
