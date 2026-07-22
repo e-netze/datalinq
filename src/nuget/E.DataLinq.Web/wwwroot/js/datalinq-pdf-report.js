@@ -127,7 +127,8 @@ async function downloadPDFMethod() {
         );
 
         const pdfDoc = await PDFLib.PDFDocument.create();
-        pdfDoc.setCreator('DataLinq');
+        pdfDoc.setCreator('Energienetze Steiermark');
+        pdfDoc.setProducer('DataLinq');
 
         for (const { dataUrl, isHorizontal, paperSize } of pageImages) {
             const paperDimensions = getPaperDimensions(paperSize);
