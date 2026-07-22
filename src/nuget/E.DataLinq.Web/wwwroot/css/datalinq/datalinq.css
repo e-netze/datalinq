@@ -433,6 +433,18 @@ div.datalinq-filter-field-wrapper:focus {
     background-color: #b5dbad;
 }
 
+.datalinq-label.datalinq-filter-required-label::after {
+    content: ' *';
+    color: #b00020;
+    font-weight: bold;
+}
+
+.datalinq-filter-parameter.datalinq-filter-required-missing,
+.datalinq-filter-parameter.datalinq-filter-required-missing + .select2 > .selection > .select2-selection {
+    border: 1px solid #b00020 !important;
+    background-color: #f8d7da;
+}
+
 .datalinq-filter-parameter + .select2 > .selection > .select2-selection--multiple {
     width: 300px;
 }

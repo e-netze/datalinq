@@ -969,6 +969,12 @@ public class DataLinqHelper : IDataLinqHelper
     /// This allows for the creation of cascading comboboxes.
     /// For multi-select dropdowns, the `multiple='multiple'` attribute 
     /// can be added.
+    /// Additionally, a filter parameter can be marked as mandatory by setting `required=true`. 
+    /// de: Zusätzlich kann ein Filterparameter mit `required=true` als Pflichtfeld markiert werden. 
+    /// Wird auf "Übernehmen" geklickt, ohne dass ein Pflichtfeld ausgefüllt ist, erscheint ein 
+    /// kurzer Hinweis (Toast) und das Neuladen der Ansicht wird verhindert.
+    /// en: If a required field is empty when the user clicks "Apply", a short toast notification is 
+    /// shown and the view reload is prevented.
     /// </param>
     /// <param name="htmlAttributes">
     /// de: Ein anonymes Objekt mit HTML-Attributen für den Button (z.B.: new { style="width:300px" @class="meine-klasse" }).
@@ -1010,6 +1016,8 @@ public class DataLinqHelper : IDataLinqHelper
                             foreach (string filterParameter in filterParameters.Keys)
                             {
                                 var filterProperties = ToDictionary(filterParameters[filterParameter]);
+                                bool isRequired = filterProperties != null
+                                    && string.Equals(GetDefaultValueFromRecord(filterProperties, "required")?.ToString(), "true", StringComparison.OrdinalIgnoreCase);
                                 div2.AppendDiv(div3 =>
                                 {
                                     div3.AddClass("datalinq-filter-field-wrapper");
@@ -1022,6 +1030,10 @@ public class DataLinqHelper : IDataLinqHelper
                                         div3.AppendDiv(div4 =>
                                         {
                                             div4.AddClass("datalinq-label");
+                                            if (isRequired)
+                                            {
+                                                div4.AddClass("datalinq-filter-required-label");
+                                            }
                                             div4.Content(GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter).ToString());
                                         });
                                         div3.ComboFor(
@@ -1029,7 +1041,7 @@ public class DataLinqHelper : IDataLinqHelper
                                             filterParameter,
                                             new
                                             {
-                                                @class = "datalinq-filter-parameter",
+                                                @class = isRequired ? "datalinq-filter-parameter datalinq-filter-required" : "datalinq-filter-parameter",
                                                 onchange = "dataLinq.updateViewFilter(this)",
                                                 multiple = GetDefaultValueFromRecord(filterProperties, "multiple")
                                             },
@@ -1069,10 +1081,18 @@ public class DataLinqHelper : IDataLinqHelper
                                         div3.AppendDiv(div6 =>
                                         {
                                             div6.AddClass("datalinq-label");
+                                            if (isRequired)
+                                            {
+                                                div6.AddClass("datalinq-filter-required-label");
+                                            }
                                             div6.Content(GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter).ToString());
                                         }).AppendInput(input =>
                                         {
                                             input.AddClass("datalinq-filter-parameter datalinq-input");
+                                            if (isRequired)
+                                            {
+                                                input.AddClass("datalinq-filter-required");
+                                            }
                                             input.AddAttribute("type", fieldType.ToString().ToLower());
                                             input.AddAttribute("name", filterParameter);
                                             input.AddAttribute("onkeyup", "dataLinq.updateViewFilter(this)");

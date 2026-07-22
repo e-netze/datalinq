@@ -55,4 +55,24 @@ $(function () {
             e.stopPropagation();
             window.applyHelpSearch(this);
         });
+
+    function applyHelpColorScheme(theme) {
+        var isLight = theme === 'vs';
+        document.documentElement.classList.toggle('colorscheme-light', isLight);
+        document.body.classList.toggle('colorscheme-light', isLight);
+    }
+
+    // Restore the scheme remembered from a previous message so it survives
+    // in-frame navigations (e.g. switching the help language reloads the iframe).
+    var storedHelpTheme = sessionStorage.getItem('helpColorScheme');
+    if (storedHelpTheme) {
+        applyHelpColorScheme(storedHelpTheme);
+    }
+
+    window.addEventListener('message', function (event) {
+        if (event.data && event.data.theme) {
+            sessionStorage.setItem('helpColorScheme', event.data.theme);
+            applyHelpColorScheme(event.data.theme);
+        }
+    });
 });

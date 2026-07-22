@@ -10,6 +10,10 @@
       "DefaultPasswort____": "f4vGGp{W26BS#@%zpNG5Rg!eeRp)XW@%",
       "SaltBytes____": "5CPAOaj8UnLd7GsQnZpC8w=="
     },
+    "ImageRequestWhiteList": [
+      "https://upload.wikimedia.org/",
+      "https://raw.githubusercontent.com/"
+    ],
     "SelectEngines": {
       "TextFileEngine_": {
         "AllowedExtensions": [

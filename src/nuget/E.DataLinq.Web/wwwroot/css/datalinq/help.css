@@ -61,3 +61,47 @@ input.content-search {
     border:1px solid #aaa;
     outline: none;
 }
+
+/************* Lightmode ***********************/
+body.colorscheme-light {
+    background-color: #ffffff;
+    color: #222;
+}
+
+    body.colorscheme-light a {
+        color: #0a66c2;
+    }
+
+    body.colorscheme-light td {
+        border-bottom: 1px solid #d4d4d4;
+    }
+
+    body.colorscheme-light .method-def {
+        border: 3px solid #ccc;
+        color: #0b7285;
+        background: #f6f6f6;
+    }
+
+        body.colorscheme-light .method-def .keyword {
+            color: #c0392b;
+        }
+
+        body.colorscheme-light .method-def .literal {
+            color: #b8860b;
+        }
+
+    body.colorscheme-light .descr-code {
+        border: 1px solid #ccc;
+        background: #f0f0f0;
+        color: #222;
+    }
+
+    body.colorscheme-light .parameter-name {
+        color: #0b7285;
+    }
+
+    body.colorscheme-light input.content-search {
+        border: 1px solid #aaa;
+        background: #fff;
+        color: #222;
+    }

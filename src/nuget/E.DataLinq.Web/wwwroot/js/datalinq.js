@@ -445,6 +445,10 @@ var dataLinq = new function () {
                 $e.removeClass('hasvalue');
             }
 
+            if ($e.hasClass('datalinq-filter-required') && $e.val()) {
+                $e.removeClass('datalinq-filter-required-missing');
+            }
+
             if ($e.attr("type") === "checkbox") {
                 $e.removeClass('hasvalue');
                 if ($e.is(":checked"))
@@ -587,6 +591,34 @@ var dataLinq = new function () {
     };
 
     this.refresh = function (elem) {
+        // If the refresh is triggered from within a FilterView, validate required filter parameters first.
+        var $filterBody = $(elem).closest('.datalinq-refresh-filter-body');
+        if ($filterBody.length > 0) {
+            var missingLabels = [];
+            $filterBody.find('.datalinq-filter-parameter.datalinq-filter-required').each(function (i, e) {
+                var $e = $(e);
+                var val = $e.val();
+                var isEmpty = (val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0));
+
+                if ($e.attr('type') === 'checkbox') {
+                    isEmpty = !$e.is(':checked');
+                }
+
+                if (isEmpty) {
+                    var label = $.trim($e.closest('.datalinq-filter-field-wrapper').find('.datalinq-label').first().text()) || $e.attr('name');
+                    missingLabels.push(label);
+                    $e.addClass('datalinq-filter-required-missing');
+                } else {
+                    $e.removeClass('datalinq-filter-required-missing');
+                }
+            });
+
+            if (missingLabels.length > 0) {
+                dataLinq.showFilterToast(elem, 'Required field: ' + missingLabels.join(', '));
+                return;
+            }
+        }
+
         var $e = $(elem).closest('.datalinq-include, .datalinq-include-click').removeClass('datalinq-include-click-loaded');
         if ($e.length > 0) {
             $e.each(function (i, e) {
@@ -602,6 +634,42 @@ var dataLinq = new function () {
                 }
             });
         }
+    };
+
+    this.showFilterToast = function (elem, message) {
+        var rect = elem.getBoundingClientRect();
+        var toast = document.createElement('div');
+        toast.className = 'datalinq-filter-toast';
+        toast.textContent = message;
+        toast.style.cssText = [
+            'position: fixed',
+            'left: ' + (rect.left + rect.width / 2) + 'px',
+            'top: ' + rect.top + 'px',
+            'transform: translate(-50%, -100%)',
+            'margin-top: -10px',
+            'background-color: #b00020',
+            'color: #fff',
+            'padding: 8px 16px',
+            'border-radius: 4px',
+            'font-size: 13px',
+            'z-index: 10000',
+            'opacity: 0',
+            'transition: opacity 0.3s ease',
+            'pointer-events: none',
+            'max-width: 320px'
+        ].join(';');
+
+        document.body.appendChild(toast);
+
+        setTimeout(function () { toast.style.opacity = '1'; }, 10);
+        setTimeout(function () {
+            toast.style.opacity = '0';
+            setTimeout(function () {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, 2500);
     };
 
     this.export = function (elem, columnsToKeep) {

@@ -2212,3 +2212,80 @@ body.colorscheme-light .datalinq-autocomplete-multiselect .datalinq-autocomplete
 body.colorscheme-light .datalinq-code-editor-code-panel .datalinq-code-editor-code-statusbar {
     background: #cfcfcf;
 }
+
+/***** Secrets & Constants (Key/Value Store) - Lightmode ********/
+.datalinq-code-modal.colorscheme-light .datalinq-code-key-value-store-content {
+    color: #222;
+}
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-kvstore-title {
+    color: #222;
+    border-bottom: 1px solid #ccc;
+}
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-kvstore-description {
+    color: #666;
+}
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-kvstore-empty {
+    color: #888;
+}
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-kvstore-row {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+    .datalinq-code-modal.colorscheme-light .datalinq-code-kvstore-row:hover {
+        background-color: #f0f0f0;
+    }
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-kvstore-editor {
+    background-color: #f6f6f6;
+    border: 1px solid #ccc;
+}
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-kvstore-input {
+    background-color: #fff;
+    color: #222;
+    border: 1px solid #aaa;
+}
+
+/***** Tree view - Lightmode readability ********/
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node {
+    color: #333;
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.folder {
+    filter: none;
+    background-image: url(img/folder-icon.svg);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.folder > .icon {
+    filter: none;
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node button.new-folder-btn {
+    filter: brightness(0);
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.found > .tree-nodes {
+    color: #333;
+}
+
+/***** Modal input - Lightmode ********/
+.datalinq-code-modal.colorscheme-light .datalinq-code-modal-input {
+    border: 1px solid #aaa;
+    background: #fff;
+    color: #222;
+}
+
+/***** Editor container - Lightmode ********/
+.datalinq-code-ide.colorscheme-light .datalinq-code-content .datalinq-code-editor {
+    background-color: #eee;
+}
+
+/***** Heading paragraphs - Lightmode ********/
+body.colorscheme-light .datalinq-code-heading p,
+.datalinq-code-ide.colorscheme-light .datalinq-code-heading p {
+    color: #000;
+}

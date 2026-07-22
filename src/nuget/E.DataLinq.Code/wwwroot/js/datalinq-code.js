@@ -175,6 +175,7 @@ var dataLinqCode = new function ($) {
             });
 
             sessionStorage.setItem('editorTheme', _editorTheme);
+            localStorage.setItem('editorColorScheme', _editorTheme);
 
             ide.find('iframe').each(function () {
                 this.contentWindow.postMessage({ theme: _editorTheme }, '*');
@@ -192,7 +193,13 @@ var dataLinqCode = new function ($) {
             $datalinqBody.toggleClass('showhelp');
 
             if ($datalinqBody.hasClass('showhelp')) {
-                $datalinqBody.find('.datalinq-code-help > #help-frame').attr('src', _dataLinqEngineUrl + '/help');
+                var $helpFrame = $datalinqBody.find('.datalinq-code-help > #help-frame');
+                $helpFrame.one('load', function () {
+                    if (this.contentWindow) {
+                        this.contentWindow.postMessage({ theme: _editorTheme }, '*');
+                    }
+                });
+                $helpFrame.attr('src', _dataLinqEngineUrl + '/help');
             }
         });
 
