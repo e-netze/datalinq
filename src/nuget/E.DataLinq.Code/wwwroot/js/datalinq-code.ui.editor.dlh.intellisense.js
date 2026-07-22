@@ -43,6 +43,17 @@ function registerRazorSnippets(monaco, language) {
                         documentation: 'DataLinqSecurityHelper (SECURITY) — security related helper methods.'
                     },
                     {
+                        label: 'region',
+                        kind: monaco.languages.CompletionItemKind.Snippet,
+                        insertText: [
+                            '* #region ${1:name} *@',
+                            '${2:}',
+                            '@* #endregion *@'
+                        ].join('\n'),
+                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        documentation: 'A foldable region.\n\nWrapped in Razor comments (@* *@) so the markers are removed at compile time and never appear in the rendered page.'
+                    },
+                    {
                         label: 'foreach',
                         kind: monaco.languages.CompletionItemKind.Snippet,
                         insertText: [
@@ -239,6 +250,54 @@ function registerSecurityCompletions(monaco, language, completions) {
             return {
                 suggestions: fixedCompletions
             };
+        }
+    });
+}
+
+function registerViewFolding(monaco, language) {
+    const pdfPageStart = /@PDF\s*\.\s*NewPage\s*\(/i;
+    const pdfPageEnd = /@PDF\s*\.\s*EndPage\s*\(/i;
+    const regionStart = /@\*\s*#region\b/i;
+    const regionEnd = /@\*\s*#endregion\b/i;
+
+    monaco.languages.registerFoldingRangeProvider(language, {
+        provideFoldingRanges: function (model) {
+            const ranges = [];
+            const pdfStack = [];
+            const regionStack = [];
+            const lineCount = model.getLineCount();
+
+            for (let lineNumber = 1; lineNumber <= lineCount; lineNumber++) {
+                const line = model.getLineContent(lineNumber);
+
+                if (pdfPageStart.test(line)) {
+                    pdfStack.push(lineNumber);
+                } else if (pdfPageEnd.test(line)) {
+                    const start = pdfStack.pop();
+                    if (start !== undefined && lineNumber > start) {
+                        ranges.push({
+                            start: start,
+                            end: lineNumber,
+                            kind: monaco.languages.FoldingRangeKind.Region
+                        });
+                    }
+                }
+
+                if (regionStart.test(line)) {
+                    regionStack.push(lineNumber);
+                } else if (regionEnd.test(line)) {
+                    const start = regionStack.pop();
+                    if (start !== undefined && lineNumber > start) {
+                        ranges.push({
+                            start: start,
+                            end: lineNumber,
+                            kind: monaco.languages.FoldingRangeKind.Region
+                        });
+                    }
+                }
+            }
+
+            return ranges;
         }
     });
 }

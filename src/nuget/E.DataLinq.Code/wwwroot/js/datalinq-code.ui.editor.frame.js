@@ -38,6 +38,16 @@ dataLinqCodeEditor = new function () {
                 this.removeDecoration();
             });
 
+            // Fold all region markers (@* #region *@ and @PDF.NewPage()/@PDF.EndPage()) by default.
+            // Deferred so the folding range provider has computed the ranges first.
+            setTimeout(() => {
+                try {
+                    _editor.getAction('editor.foldAllMarkerRegions')?.run();
+                } catch (e) {
+                    console.warn('Could not fold regions by default', e);
+                }
+            }, 0);
+
             let cachedCompletions = JSON.parse(localStorage.getItem('dlhCompletions'));
             let cachedPdfCompletions = JSON.parse(localStorage.getItem('pdfCompletions'));
             let cachedSecurityCompletions = JSON.parse(localStorage.getItem('securityCompletions'));
@@ -109,6 +119,7 @@ dataLinqCodeEditor = new function () {
             loadPDFCompletions(monaco, language || 'text');
             loadSecurityCompletions(monaco, language || 'text');
             registerRazorSnippets(monaco, language || 'text');
+            registerViewFolding(monaco, language || 'text');
 
         } else {
             $('.datalinq-code-editor-settings').css('display', 'block');
