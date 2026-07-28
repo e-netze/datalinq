@@ -42,6 +42,7 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly IGitService? _gitService;
     private readonly FeaturesService _featuresService;
     private readonly IKeyValueStoreService _keyValueStore;
+    private bool GitEnabled => _gitService?.IsEnabled == true;
 
     public DataLinqCodeApiController(ILogger<DataLinqCodeApiController> logger,
                                      IPersistanceProviderService persistanceProvider,
@@ -697,7 +698,7 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
-            if (_gitService.IsEnabled)
+            if (GitEnabled)
             {
                 await _persistanceProvider.DeleteCode(endPointId);
                 await _gitService.CommitAndPushAsync($"Endpoint deleted: {endPointId}",_identity.Name);
@@ -716,7 +717,7 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
-            if (_gitService.IsEnabled)
+            if (GitEnabled)
             {
                 await _persistanceProvider.DeleteCode($"{endPointId}@{queryId}");
                 await _gitService.CommitAndPushAsync($"Query deleted: {endPointId}@{queryId}", _identity.Name);
@@ -735,7 +736,7 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
-            if (_gitService.IsEnabled)
+            if (GitEnabled)
             {
                 await _persistanceProvider.DeleteCode($"{endPointId}@{queryId}@{viewId}");
                 await _gitService.CommitAndPushAsync($"View deleted: {endPointId}@{queryId}@{viewId}", _identity.Name);
@@ -776,7 +777,7 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
-            if (!_gitService.IsEnabled)
+            if (!GitEnabled)
                 return new GitCommitChangesResult() { Error = "Version Control is not configured" };
 
             bool isQuery = viewId.Equals("_isQuery");
@@ -806,7 +807,7 @@ For more information, see Help (?).
     {
         return await SecureMethodHandler(async () =>
         {
-            if (!_gitService.IsEnabled)
+            if (!GitEnabled)
                 return new GitCommitChangesResult { Error = "Version Control is not configured" };
 
             if (!await _persistanceProvider.DeleteLocalGitFolder())
