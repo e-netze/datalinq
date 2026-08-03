@@ -81,7 +81,8 @@ static public class ServiceCollectionExtensions
                            {
                                ["dlh"] = typeof(DataLinqHelper),
                                ["pdf"] = typeof(DataLinqPdfHelper),
-                               ["security"] = typeof(DataLinqSecurityHelper)
+                               ["security"] = typeof(DataLinqSecurityHelper),
+                               ["records"] = typeof(JsonApiRecordExtensions)
                            }))
                        .AddTransient<IDataLinqEnvironmentService, DataLinqEnvironmentService>()
                        .AddTransient<IRazorCompileEngineService, RazorEngineService>()  // classic version

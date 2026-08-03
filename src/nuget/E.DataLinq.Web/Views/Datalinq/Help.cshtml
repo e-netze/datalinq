@@ -115,30 +115,36 @@
                 @classHelp.Description
             </p>
 
-            <h4>Methods</h4>
-            <table width="100%">
-                @foreach (var methodName in classHelp.MethodNames.OrderBy(m => m))
-                {
-                    var method = classHelp.Methods.Where(m => m.Name == methodName).FirstOrDefault();
-                    if (!String.IsNullOrWhiteSpace(method.Description))
+            @if (classHelp.MethodNames.Count > 0)
+            {
+                <h4>Methods</h4>
+                <table width="100%">
+                    @foreach (var methodName in classHelp.MethodNames.OrderBy(m => m))
                     {
-                        <tr class="searchable-content">
-                            <td>
-                                <a href="help?selected=@(classHelp.Name + "." + methodName)&lang=@currentLang">@methodName</a>
-                            </td>
-                            <td>
-                                <p>@method.Description.Split('.')[0]</p>
-                            </td>
-                        </tr>
+                        var method = classHelp.Methods.Where(m => m.Name == methodName).FirstOrDefault();
+                        if (!String.IsNullOrWhiteSpace(method.Description))
+                        {
+                            <tr class="searchable-content">
+                                <td>
+                                    <a href="help?selected=@(classHelp.Name + "." + methodName)&lang=@currentLang">@methodName</a>
+                                </td>
+                                <td>
+                                    <p>@method.Description.Split('.')[0]</p>
+                                </td>
+                            </tr>
+                        }
                     }
-                }
-            </table>
+                </table>
+            }
 
             @if (classHelp.ExtensionMethodNames.Count > 0)
             {
-                <br />
-                <br />
-                <h4>Extended Methods</h4>
+                @if (classHelp.MethodNames.Count > 0)
+                {
+                    <br />
+                    <br />
+                }
+                <h4>Extension Methods</h4>
                 <table width="100%">
                     @foreach (var methodName in classHelp.ExtensionMethodNames.OrderBy(m => m))
                     {

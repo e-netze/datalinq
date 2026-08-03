@@ -1,4 +1,5 @@
 ﻿@using E.DataLinq.Code.Extensions
+@using E.DataLinq.Core.Models
 @model E.DataLinq.Core.Models.DataLinqEndPointQuery
 
 @{
@@ -88,6 +89,30 @@
                 <br/>
                 <input type="text" readonly="readonly" name="datalinq_token1" value="@(Model.AccessTokens!=null && Model.AccessTokens.Length>1 ? Model.AccessTokens[1] : String.Empty)">
             </div>
+
+            @if ((int?)ViewData["EndPointTypeValue"] == (int)DefaultEndPointTypes.JsonApi)
+            {
+                <br />
+                <span>HTTP Request Headers:</span>
+                <p class="description">Key-value pairs added as HTTP headers to every JSON API request for this query.</p>
+                <table style="width:100%;font-size:10px">
+                    <tr>
+                        <th style="width:50%">Header Name</th>
+                        <th>Header Value</th>
+                    </tr>
+                    @for (var i = 0; i < 10; i++)
+                    {
+                        <tr>
+                            <td>
+                                <input type="text" style="width:100%" name="JsonApiHttpHeaders[@(i)].Key" value="@(Model.JsonApiHttpHeaders != null && Model.JsonApiHttpHeaders.Length > i ? Model.JsonApiHttpHeaders[i].Key : String.Empty)" />
+                            </td>
+                            <td>
+                                <input type="text" style="width:100%" name="JsonApiHttpHeaders[@(i)].Value" value="@(Model.JsonApiHttpHeaders != null && Model.JsonApiHttpHeaders.Length > i ? Model.JsonApiHttpHeaders[i].Value : String.Empty)" />
+                            </td>
+                        </tr>
+                    }
+                </table>
+            }
         </div>
 
         <h3>Domains</h3>

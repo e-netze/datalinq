@@ -55,6 +55,9 @@ public class DataLinqEndPointQuery : IDataLinqAuthProperties
     [JsonProperty(PropertyName = "domains", NullValueHandling = NullValueHandling.Ignore)]
     public Domain[] Domains { get; set; }
 
+    [JsonProperty(PropertyName = "jsonapi_http_headers", NullValueHandling = NullValueHandling.Ignore)]
+    public JsonApiHttpHeader[] JsonApiHttpHeaders { get; set; }
+
     [JsonProperty(PropertyName = "test_parameters")]
     [DisplayName("Test Url Parameters")]
     [Description("Url parameters can be specified here, which are automatically appended during a test/debug call from the IDE")]
@@ -75,6 +78,14 @@ public class DataLinqEndPointQuery : IDataLinqAuthProperties
         public string ValueField { get; set; }
         [JsonProperty("name_field")]
         public string NameField { get; set; }
+    }
+
+    public class JsonApiHttpHeader
+    {
+        [JsonProperty("key")]
+        public string Key { get; set; }
+        [JsonProperty("value")]
+        public string Value { get; set; }
     }
 
     #endregion

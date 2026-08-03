@@ -214,6 +214,7 @@ public class DataLinqController : DataLinqBaseController
         model.Classes.Add(ClassHelp.FromTypeUseXmlDocumentation(typeof(DataLinqHelper), language));
         model.Classes.Add(ClassHelp.FromTypeUseXmlDocumentation(typeof(DataLinqPdfHelper), language, "PDF", includeExtensionMethods: false));
         model.Classes.Add(ClassHelp.FromTypeUseXmlDocumentation(typeof(DataLinqSecurityHelper), language, "SECURITY", includeExtensionMethods: false));
+        model.Classes.Add(ClassHelp.FromTypeUseXmlDocumentation(typeof(JsonApiRecordExtensions), language, "Model.Records", includeExtensionMethods: false, recordsExtensionMethods: true));
         model.Selected = Request.Query["selected"];
 
         return ViewResult(model);

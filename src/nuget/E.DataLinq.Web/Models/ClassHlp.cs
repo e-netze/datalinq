@@ -483,7 +483,12 @@ public class ClassHelp
 
         return classHelp;
     }
-    static public ClassHelp FromTypeUseXmlDocumentation(Type type, string languageCode, string alias = "DLH", bool includeExtensionMethods = true)
+
+    static public ClassHelp FromTypeUseXmlDocumentation(Type type,
+                                                        string languageCode,
+                                                        string alias = "DLH",
+                                                        bool includeExtensionMethods = true,
+                                                        bool recordsExtensionMethods = false)
     {
         ClassHelp classHelp = new ClassHelp()
         {
@@ -531,6 +536,11 @@ public class ClassHelp
                 continue;
             }
 
+            if (recordsExtensionMethods && !IsRecordsExtensionMethod(methodInfo))
+            {
+                continue;
+            }
+
             // read the comment summery and params for this methodInfo
             var methodSummary = GetXmlDocumentation(xdoc, methodInfo, count, languageCode);
 
@@ -540,9 +550,22 @@ public class ClassHelp
                 ReturnType = methodInfo.ReturnType,
                 Description = methodSummary
             };
-            classHelp.Methods.Add(methodHelp);
 
-            foreach (var parameterInfo in methodInfo.GetParameters())
+            if (recordsExtensionMethods)
+            {
+                classHelp.ExtensionMethods.Add(methodHelp);
+            }
+            else
+            {
+                classHelp.Methods.Add(methodHelp);
+            }
+
+            // skip the first parameter of extension methods => the "this" parameter!
+            var parameterInfos = recordsExtensionMethods
+                ? methodInfo.GetParameters().Skip(1)
+                : methodInfo.GetParameters();
+
+            foreach (var parameterInfo in parameterInfos)
             {
                 var parameterSummary = GetXmlDocumentation(xdoc, parameterInfo, count, languageCode);
                 methodHelp.Parameters.Add(new ClassHelp.MethodHelp.ParameterHelp()
@@ -567,6 +590,21 @@ public class ClassHelp
     }
 
     #region Static Helpers
+
+    static private bool IsRecordsExtensionMethod(MethodInfo methodInfo)
+    {
+        if (!methodInfo.IsStatic
+            || !methodInfo.IsDefined(typeof(ExtensionAttribute), false)
+            || methodInfo.GetParameters().Length == 0)
+        {
+            return false;
+        }
+
+        var thisParameterType = methodInfo.GetParameters()[0].ParameterType;
+
+        return thisParameterType.IsGenericType
+            && thisParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>);
+    }
 
     private const string NotCommented = "Sorry, documentation missing!";
 

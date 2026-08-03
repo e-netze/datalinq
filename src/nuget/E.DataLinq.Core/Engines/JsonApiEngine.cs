@@ -1,6 +1,8 @@
 ﻿using E.DataLinq.Core.Engines.Abstraction;
 using E.DataLinq.Core.Extensions;
 using E.DataLinq.Core.Models;
+using E.DataLinq.Core.Services.KeyValueStore;
+using E.DataLinq.Core.Services.KeyValueStore.Abstraction;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,19 +11,23 @@ using System.Dynamic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 public class JsonApiEngine : IDataLinqSelectEngine
 {
     private readonly ILogger<JsonApiEngine> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IKeyValueStoreService _keyValueStore;
 
     public JsonApiEngine(
         ILogger<JsonApiEngine> logger,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        IKeyValueStoreService keyValueStore = null)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+        _keyValueStore = keyValueStore;
     }
 
     public int EndpointType => (int)DefaultEndPointTypes.JsonApi;
@@ -61,7 +67,17 @@ public class JsonApiEngine : IDataLinqSelectEngine
             var fullUrl = BuildUrl(endPoint.ConnectionString, statementWithReplacements, arguments);
             string cleaned = fullUrl.Replace("\r", "").Replace("\n", "");
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync(cleaned);
+
+            var request = new HttpRequestMessage(HttpMethod.Get, cleaned);
+            if (query.JsonApiHttpHeaders != null)
+            {
+                foreach (var header in query.JsonApiHttpHeaders.Where(h => !string.IsNullOrWhiteSpace(h?.Key)))
+                {
+                    request.Headers.TryAddWithoutValidation(header.Key, ResolveHeaderValue(header.Value));
+                }
+            }
+
+            var response = await client.SendAsync(request);
 
 
             if (!response.IsSuccessStatusCode)
@@ -130,6 +146,23 @@ public class JsonApiEngine : IDataLinqSelectEngine
             JsonValue v => v.GetValue<object>() ?? null!,
             _ => node.ToString() ?? null!
         };
+    }
+
+    private static readonly Regex _secretPattern   = new Regex(@"\{\$([A-Za-z0-9_\-]+)\}", RegexOptions.Compiled);
+    private static readonly Regex _constantPattern  = new Regex(@"\{&([A-Za-z0-9_\-]+)\}", RegexOptions.Compiled);
+
+    private string ResolveHeaderValue(string value)
+    {
+        if (string.IsNullOrEmpty(value) || _keyValueStore == null)
+            return value ?? string.Empty;
+
+        value = _secretPattern.Replace(value, m =>
+            _keyValueStore.GetValue(KeyValueStoreType.Secret, m.Groups[1].Value));
+
+        value = _constantPattern.Replace(value, m =>
+            _keyValueStore.GetValue(KeyValueStoreType.Constant, m.Groups[1].Value));
+
+        return value;
     }
 
     private static string BuildUrl(string baseUrl, string queryString, NameValueCollection args)

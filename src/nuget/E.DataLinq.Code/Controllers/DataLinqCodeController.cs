@@ -432,6 +432,9 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
         var model = await _client.GetEndPointQuery(endPoint, query);
 
+        var ep = await _client.GetEndPoint(endPoint);
+        ViewData["EndPointTypeValue"] = ep?.TypeValue;
+
         ViewData["AccessTree"] = await _accessTree.GetTree($"{endPoint}@{query}");
 #if DEBUG
         //ViewData["AccessTree"] = ViewData["AccessTree"] ?? DataLinq.Core.Models.AccessTree.Tree.CreateDummy();
@@ -451,6 +454,15 @@ public class DataLinqCodeController : DataLinqCodeBaseController
             }
 
             await Request.Form.AddAuthProperties(query, _accessTree);
+
+            if (query.JsonApiHttpHeaders != null)
+            {
+                query.JsonApiHttpHeaders = query.JsonApiHttpHeaders
+                    .Where(h => !string.IsNullOrWhiteSpace(h.Key))
+                    .ToArray();
+                if (query.JsonApiHttpHeaders.Length == 0)
+                    query.JsonApiHttpHeaders = null;
+            }
 
             return base.JsonObject(new SuccessModel(await _client.StoreEndPointQuery(query)));
         }

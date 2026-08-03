@@ -51,6 +51,7 @@ dataLinqCodeEditor = new function () {
             let cachedCompletions = JSON.parse(localStorage.getItem('dlhCompletions'));
             let cachedPdfCompletions = JSON.parse(localStorage.getItem('pdfCompletions'));
             let cachedSecurityCompletions = JSON.parse(localStorage.getItem('securityCompletions'));
+            let cachedRecordsCompletions = JSON.parse(localStorage.getItem('recordsCompletions'));
 
             function loadDLHCompletions(monaco, language) {
                 if (cachedCompletions) {
@@ -115,9 +116,31 @@ dataLinqCodeEditor = new function () {
 
             }
 
+            function loadRecordsCompletions(monaco, language) {
+                if (cachedRecordsCompletions) {
+                    registerRecordsCompletions(monaco, language || 'text', cachedRecordsCompletions);
+                    return;
+                }
+
+                const selectedLang = sessionStorage.getItem('selectedLang') || 'en';
+
+                dataLinqCode.api.getMonacoSnippit(function (data) {
+                    try {
+                        const completions = JSON.parse(data);
+                        cachedRecordsCompletions = completions;
+                        localStorage.setItem('recordsCompletions', JSON.stringify(completions));
+                        registerRecordsCompletions(monaco, language || 'text', completions);
+                    } catch (e) {
+                        console.error("Failed to parse Model.Records completions JSON", e);
+                    }
+                }, selectedLang, 'records');
+
+            }
+
             loadDLHCompletions(monaco, language || 'text');
             loadPDFCompletions(monaco, language || 'text');
             loadSecurityCompletions(monaco, language || 'text');
+            loadRecordsCompletions(monaco, language || 'text');
             registerRazorSnippets(monaco, language || 'text');
             registerViewFolding(monaco, language || 'text');
 

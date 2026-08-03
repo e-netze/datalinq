@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml.Linq;
 
@@ -40,6 +41,7 @@ public class MonacoSnippetService : IMonacoSnippetService
         var methods = targetType
                             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
                             .Where(m => m.GetCustomAttribute<ExcludeFromSnippetsAttribute>() == null)
+                            .Where(m => IsRecordsExtensionTarget(helper) == false || IsRecordsExtensionMethod(m))
                             .ToArray();
 
         var currentMethod = "";
@@ -57,33 +59,75 @@ public class MonacoSnippetService : IMonacoSnippetService
 
             var methodDescription = GetDescriptionFromXML(targetType, lang, method, skipper);
 
-            var parameters = method.GetParameters();
+            // for extension methods, the first ("this") parameter is provided by the caller
+            // (e.g. Model.Records) and must not be part of the snippet
+            var parameters = IsExtensionMethod(method)
+                ? method.GetParameters().Skip(1).ToArray()
+                : method.GetParameters();
+
+            // generic methods (e.g. JsonValue<T>) get a placeholder for the type argument
+            var genericArguments = method.IsGenericMethodDefinition
+                ? method.GetGenericArguments()
+                : Array.Empty<Type>();
+
+            var label = $"{method.Name}{(genericArguments.Length > 0 ? $"<{String.Join(", ", genericArguments.Select(g => g.Name))}>" : "")}";
+
+            var genericSnippet = genericArguments.Length > 0
+                ? $"<{String.Join(", ", genericArguments.Select((g, i) => $"${{{i + 1}:{g.Name}}}"))}>"
+                : "";
 
             var insertTextLines = parameters.Select((p, i) =>
             {
                 var defaultVal = TypeToString(p.ParameterType);
                 var comma = (i < parameters.Length - 1) ? "," : "";
-                return $"    ${{{i + 1}:{defaultVal}}}{comma} //{p.Name}";
+                return $"    ${{{i + 1 + genericArguments.Length}:{defaultVal}}}{comma} //{p.Name}";
             }).ToList();
 
             var insertText = new StringBuilder();
-            insertText.AppendLine($"{method.Name}(");
+            insertText.AppendLine($"{method.Name}{genericSnippet}(");
             insertText.AppendLine(string.Join(",\n", insertTextLines));
             insertText.Append(")");
 
             var snippet = new
             {
-                label = method.Name,
+                label,
                 kind = 3,
                 insertText = insertText.ToString(),
                 insertTextRules = 4,
-                documentation = $"{method.Name}({string.Join(", ", method.GetParameters().Select(p => TypeToString(p.ParameterType)))})\n\n" + methodDescription
+                documentation = $"{label}({string.Join(", ", parameters.Select(p => TypeToString(p.ParameterType)))})\n\n" + methodDescription
             };
 
             snippets.Add(snippet);
         }
 
         return JsonConvert.SerializeObject(snippets, Formatting.Indented);
+    }
+
+    private const string RecordsHelperKey = "records";
+
+    static private bool IsRecordsExtensionTarget(string helper)
+        => RecordsHelperKey.Equals(helper, StringComparison.OrdinalIgnoreCase);
+
+    static private bool IsExtensionMethod(MethodInfo method)
+        => method.IsStatic
+        && method.IsDefined(typeof(ExtensionAttribute), false)
+        && method.GetParameters().Length > 0;
+
+    /// <summary>
+    /// Only the overloads extending the records collection (Model.Records) are offered,
+    /// the single record overloads are not valid in this context.
+    /// </summary>
+    static private bool IsRecordsExtensionMethod(MethodInfo method)
+    {
+        if (!IsExtensionMethod(method))
+        {
+            return false;
+        }
+
+        var thisParameterType = method.GetParameters()[0].ParameterType;
+
+        return thisParameterType.IsGenericType
+            && thisParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>);
     }
 
     private string TypeToString(Type type)

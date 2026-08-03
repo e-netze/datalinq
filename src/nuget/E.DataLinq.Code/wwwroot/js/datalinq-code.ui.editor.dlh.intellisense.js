@@ -254,6 +254,44 @@ function registerSecurityCompletions(monaco, language, completions) {
     });
 }
 
+function registerRecordsCompletions(monaco, language, completions) {
+    // matches @Model.Records. / @(Model.Records. / var x = Model.Records.
+    const recordsExpression = /Model\s*\.\s*Records\s*\.$/;
+
+    monaco.languages.registerCompletionItemProvider(language, {
+        triggerCharacters: ['.'],
+        provideCompletionItems: function (model, position) {
+            const textUntilPosition = model.getValueInRange({
+                startLineNumber: position.lineNumber,
+                startColumn: 1,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column
+            });
+
+            if (!recordsExpression.test(textUntilPosition.trim())) {
+                return { suggestions: [] };
+            }
+
+            const word = model.getWordUntilPosition(position);
+            const range = {
+                startLineNumber: position.lineNumber,
+                endLineNumber: position.lineNumber,
+                startColumn: word.startColumn,
+                endColumn: word.endColumn
+            };
+
+            const fixedCompletions = completions.map(item => ({
+                ...item,
+                range
+            }));
+
+            return {
+                suggestions: fixedCompletions
+            };
+        }
+    });
+}
+
 function registerViewFolding(monaco, language) {
     const pdfPageStart = /@PDF\s*\.\s*NewPage\s*\(/i;
     const pdfPageEnd = /@PDF\s*\.\s*EndPage\s*\(/i;
