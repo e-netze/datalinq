@@ -46,6 +46,7 @@ public class DynamicTableOptions
     public bool DynamicUseTemplate { get; set; } = false;
     public double DefaultMarginTop { get; set; } = 10;
     public double DefaultMarginBottom { get; set; } = 10;
+    public bool RepeatHeader { get; set; } = true;
 
     public static implicit operator DynamicTableOptions(Dictionary<string, object> d)
     {
@@ -56,6 +57,7 @@ public class DynamicTableOptions
             DynamicUseTemplate = d.ContainsKey("DynamicUseTemplate") && (bool)d["DynamicUseTemplate"],
             DefaultMarginTop = d.ContainsKey("DefaultMarginTop") ? Convert.ToDouble(d["DefaultMarginTop"]) : 10,
             DefaultMarginBottom = d.ContainsKey("DefaultMarginBottom") ? Convert.ToDouble(d["DefaultMarginBottom"]) : 10,
+            RepeatHeader = !d.ContainsKey("RepeatHeader") || (bool)d["RepeatHeader"],
         };
     }
 }

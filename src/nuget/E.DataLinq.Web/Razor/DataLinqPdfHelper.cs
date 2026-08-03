@@ -162,6 +162,7 @@ public class DataLinqPdfHelper
         bool dynamicUseTemplate = dynamicTableOptions.DynamicUseTemplate;
         double defaultMarginTop = dynamicTableOptions.DefaultMarginTop;
         double defaultMarginBottom = dynamicTableOptions.DefaultMarginBottom;
+        bool repeatHeader = dynamicTableOptions.RepeatHeader;
 
         return _razor.RawString(
             HtmlBuilder.Create()
@@ -174,6 +175,10 @@ public class DataLinqPdfHelper
                         d.AddClass("dynamic");
                         d.AddAttribute("data-dynamic-margin-top", defaultMarginTop.ToString(CultureInfo.InvariantCulture));
                         d.AddAttribute("data-dynamic-margin-bottom", defaultMarginBottom.ToString(CultureInfo.InvariantCulture));
+                        if (!repeatHeader)
+                        {
+                            d.AddAttribute("data-dynamic-repeat-header", "false");
+                        }
                         if (dynamicUseTemplate)
                         {
                             d.AddClass("dynamic-use-template");

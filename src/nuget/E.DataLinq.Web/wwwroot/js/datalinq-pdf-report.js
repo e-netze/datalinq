@@ -365,7 +365,8 @@ function splitOverflowingTable(table, page, currentWrapper, pagesContainer, marg
     const nextWrapper = createContinuationPageWrapper(page, currentWrapper);
     const nextPage = nextWrapper.querySelector('.page');
 
-    const continuationTable = createContinuationTable(table, thead, headerRow, overflowRows);
+    const repeatHeader = currentWrapper.getAttribute('data-dynamic-repeat-header') !== 'false';
+    const continuationTable = createContinuationTable(table, thead, headerRow, overflowRows, repeatHeader);
     normalizeFirstMovedElement(continuationTable);
     nextPage.appendChild(continuationTable);
     moveFollowingSiblings(table, nextPage);
@@ -417,6 +418,10 @@ function createContinuationPageWrapper(sourcePage, sourceWrapper) {
     newPageWrapper.setAttribute('data-dynamic-margin-top', margins.defaultMarginTop.toString());
     newPageWrapper.setAttribute('data-dynamic-margin-bottom', margins.defaultMarginBottom.toString());
 
+    if (sourceWrapper.getAttribute('data-dynamic-repeat-header') === 'false') {
+        newPageWrapper.setAttribute('data-dynamic-repeat-header', 'false');
+    }
+
     const newPage = document.createElement('div');
     newPage.className = 'page';
 
@@ -450,8 +455,9 @@ function createContinuationPageWrapper(sourcePage, sourceWrapper) {
 }
 
 // Clones the original table (minus its id) so the moved rows keep the same styling,
-// repeating the header (thead or a th header row) on the continuation page.
-function createContinuationTable(originalTable, thead, headerRow, rows) {
+// repeating the header (thead or a th header row) on the continuation page unless
+// repeatHeader is false.
+function createContinuationTable(originalTable, thead, headerRow, rows, repeatHeader = true) {
     const newTable = document.createElement('table');
 
     Array.from(originalTable.attributes).forEach(attr => {
@@ -460,13 +466,13 @@ function createContinuationTable(originalTable, thead, headerRow, rows) {
         }
     });
 
-    if (thead) {
+    if (thead && repeatHeader) {
         newTable.appendChild(thead.cloneNode(true));
     }
 
     const newTbody = document.createElement('tbody');
 
-    if (headerRow && !thead) {
+    if (headerRow && !thead && repeatHeader) {
         newTbody.appendChild(headerRow.cloneNode(true));
     }
 
