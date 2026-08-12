@@ -5,7 +5,7 @@
   </PropertyGroup>
 
 	<PropertyGroup>
-		<Version>8.26.1802</Version>
+		<Version>8.26.3101</Version>
 		<Copyright>2026, Energienetze Steiermark</Copyright>
 		<PackageProjectUrl>https://github.com/e-netze/datalinq</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/e-netze/datalinq</RepositoryUrl>
@@ -17,7 +17,7 @@
 	</PropertyGroup>
 	
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="10.0.1" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
   </ItemGroup>
 	
   <ItemGroup>
