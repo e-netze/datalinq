@@ -34,6 +34,10 @@ public class DataLinqPdfHelper
     /// de: Optionen für die Seitennummerierung (z.B. Position, Typ, übersprungene Seiten). Standard ist null.
     /// en: Options for page numbering (e.g. position, type, skipped pages). Default is null.
     /// </param>
+    /// <param name="pageDateTimeOptions">
+    /// de: Optionen für die Anzeige von Datum und Uhrzeit auf den Seiten (z.B. Position, Format, übersprungene Seiten). Standard ist null.
+    /// en: Options for displaying date and time on the pages (e.g. position, format, skipped pages). Default is null.
+    /// </param>
     /// <param name="quality">
     /// de: Die Qualitätsstufe des erzeugten PDFs. Standard ist PdfQuality.High.
     /// en: The quality level of the generated PDF. Default is PdfQuality.High.
@@ -52,17 +56,23 @@ public class DataLinqPdfHelper
     /// </returns>
     public object BeginReport(
         PageNumberOptions pageNumberOptions = null,
+        PageDateTimeOptions pageDateTimeOptions = null,
         PdfQuality quality = PdfQuality.High,
         bool download_button = false,
         string fileName = "dataLinqPdfReport"
         )
     {
         pageNumberOptions ??= new PageNumberOptions();
-
         bool usePageNumbers = pageNumberOptions.UsePageNumbers;
         int position = pageNumberOptions.Position;
         int type = pageNumberOptions.Type;
         int skipPages = pageNumberOptions.SkipPages;
+
+        pageDateTimeOptions ??= new PageDateTimeOptions();
+        bool usePageDateTime = pageDateTimeOptions.UsePageDateTime;
+        int dateTimePosition = pageDateTimeOptions.Position;
+        string format = pageDateTimeOptions.Format;
+        int dateTimeSkipPages = pageDateTimeOptions.SkipPages;
 
         return _razor.RawString(
             HtmlBuilder.Create()
@@ -75,7 +85,13 @@ public class DataLinqPdfHelper
                         dOptions.AddAttribute("data-skipPages", skipPages.ToString());
                         dOptions.AddAttribute("data-position", position.ToString());
                     }
-
+                    if(usePageDateTime)
+                    {
+                        dOptions.AddClass("pdf-report-options");
+                        dOptions.AddAttribute("data-datetime-skipPages", dateTimeSkipPages.ToString());
+                        dOptions.AddAttribute("data-datetime-position", dateTimePosition.ToString());
+                        dOptions.AddAttribute("data-datetime-format", DateTime.Now.ToString(format));
+                    }
                 })
                 .AppendDiv(d =>
                 {
@@ -253,6 +269,33 @@ public class DataLinqPdfHelper
                 .AppendDiv(d =>
                 {
                 }, WriteTags.CloseOnly)
+                .BuildHtmlString()
+            );
+    }
+
+    /// <summary>
+    /// de: Fügt innerhalb einer Seite (zwischen NewPage und EndPage) einen manuellen Seitenumbruch ein.
+    /// Der gesamte Inhalt unterhalb des Umbruchs wird auf eine neue Seite verschoben. Die neue Seite
+    /// übernimmt die relevanten Metadaten der übergeordneten Seite (PageTemplateOptions,
+    /// DynamicTableOptions, Papierformat und Querformat), damit dynamische Tabellen und die
+    /// automatische Seitenaufteilung weiterhin funktionieren. 
+    /// en: Inserts a manual page break within a page (between NewPage and EndPage). All content below
+    /// the break is moved onto a new page. The new page inherits the relevant metadata of the parent
+    /// page (PageTemplateOptions, DynamicTableOptions, paper size and landscape orientation) so that
+    /// dynamic tables and automatic page splitting keep working. 
+    /// </summary>
+    /// <returns>
+    /// de: Gibt ein rohes HTML-Objekt mit dem Seitenumbruch-Marker zurück.
+    /// en: Returns a raw HTML object with the page break marker.
+    /// </returns>
+    public object PageBreak()
+    {
+        return _razor.RawString(
+            HtmlBuilder.Create()
+                .AppendDiv(d =>
+                {
+                    d.AddClass("page-break");
+                })
                 .BuildHtmlString()
             );
     }

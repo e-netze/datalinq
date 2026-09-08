@@ -3098,8 +3098,8 @@ public class DataLinqHelper : IDataLinqHelper
     private DataLinqPdfHelper Pdf => _pdf ??= new DataLinqPdfHelper(_razor);
 
     [ExcludeFromSnippets]
-    public object BeginPdfReport(PageNumberOptions pageNumberOptions = null, PdfQuality quality = PdfQuality.High, bool download_button = false, string fileName = "dataLinqPdfReport")
-        => Pdf.BeginReport(pageNumberOptions, quality, download_button, fileName);
+    public object BeginPdfReport(PageNumberOptions pageNumberOptions = null, PageDateTimeOptions pageDateTimeOptions = null, PdfQuality quality = PdfQuality.High, bool download_button = false, string fileName = "dataLinqPdfReport")
+        => Pdf.BeginReport(pageNumberOptions, pageDateTimeOptions, quality, download_button, fileName);
 
     [ExcludeFromSnippets]
     public object EndPdfReport()

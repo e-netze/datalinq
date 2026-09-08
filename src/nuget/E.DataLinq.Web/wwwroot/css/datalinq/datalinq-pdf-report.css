@@ -10,6 +10,7 @@
     padding: 30px;
     padding-top: 5px;
     box-sizing: border-box;
+    background-color: #222;
 }
 
 .reportModeHeading {
@@ -164,6 +165,27 @@
     }
 
     .page-number.position-2 {
+        right: 0;
+    }
+
+.page-dateTime {
+    position: absolute;
+    bottom: 0;
+    padding: 50px;
+    margin: 0;
+    z-index: 10;
+}
+
+    .page-dateTime.position-0 {
+        left: 0;
+    }
+
+    .page-dateTime.position-1 {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .page-dateTime.position-2 {
         right: 0;
     }
 

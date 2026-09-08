@@ -63,9 +63,11 @@ dataLinq.events.on('onpageloaded', function () {
     // Pagination pipeline (order matters): flatten finished includes, split
     // overflowing content across pages, load per-page templates, then number pages.
     unwrapFinishedIncludes();
+    applyManualPageBreaks();
     splitAllTables();
     initializeTemplateLoader();
     addPageNumbers();
+    addDateTime();
 });
 
 
@@ -210,6 +212,35 @@ function addPageNumbers() {
     });
 }
 
+// Adds automatic date and time based on the `.pdf-report-options` settings.
+function addDateTime() {
+    const optionsDiv = document.querySelector('.pdf-report-options');
+
+    if (!optionsDiv) return;
+
+    const skipPages = parseInt(optionsDiv.getAttribute('data-datetime-skipPages')) || 0;
+    const position = parseInt(optionsDiv.getAttribute('data-datetime-position')) || 0;
+    const dateTime = optionsDiv.getAttribute('data-datetime-format') || '';
+
+    const pages = document.querySelectorAll('.page');
+    const total = pages.length;
+
+    pages.forEach((page, index) => {
+        const p = document.createElement('p');
+
+        const currentPage = index + 1 - skipPages;
+
+        if (index < skipPages) return;
+
+        const now = new Date();
+        p.textContent = dateTime;
+
+        p.classList.add('page-dateTime', `position-${position}`);
+
+        page.appendChild(p);
+    });
+}
+
 // Loads per-page templates referenced via the `datalinq-pdfreport-template` attribute.
 // Pages that share a template are grouped so each template is only requested once.
 function initializeTemplateLoader() {
@@ -258,6 +289,58 @@ function unwrapFinishedIncludes() {
             parent.removeChild(wrapper);
         });
     });
+}
+
+// Manual page breaks: every `.page-break` marker (emitted by @PDF.PageBreak between
+// NewPage/EndPage) starts a fresh continuation page. Everything after the marker on the
+// same page is moved onto a new page that mirrors the parent page's metadata (paper size,
+// orientation, template, dynamic table options and margins) via createContinuationPageWrapper.
+// Runs before splitAllTables so the resulting pages still participate in dynamic pagination.
+function applyManualPageBreaks() {
+    const pagesContainer = document.getElementById('pagesContainer');
+    if (!pagesContainer) return;
+
+    let guard = 0;
+    let pageBreak = pagesContainer.querySelector('.page-break');
+
+    while (pageBreak && guard++ < MAX_PAGINATION_ITERATIONS) {
+        const page = pageBreak.closest('.page');
+        const wrapper = pageBreak.closest('.page-wrapper');
+
+        if (!page || !wrapper) {
+            pageBreak.remove();
+            pageBreak = pagesContainer.querySelector('.page-break');
+            continue;
+        }
+
+        const firstToMove = pageBreak.nextElementSibling;
+        pageBreak.remove();
+
+        const nextWrapper = createContinuationPageWrapper(page, wrapper);
+        const nextPage = nextWrapper.querySelector('.page');
+
+        let current = firstToMove;
+        let firstMovedElement = null;
+
+        while (current) {
+            const next = current.nextElementSibling;
+
+            if (!current.classList.contains('report-ignore')) {
+                nextPage.appendChild(current);
+
+                if (!firstMovedElement) {
+                    firstMovedElement = current;
+                }
+            }
+
+            current = next;
+        }
+
+        normalizeFirstMovedElement(firstMovedElement);
+        insertPageAfter(wrapper, nextWrapper, pagesContainer);
+
+        pageBreak = pagesContainer.querySelector('.page-break');
+    }
 }
 
 function splitAllTables() {

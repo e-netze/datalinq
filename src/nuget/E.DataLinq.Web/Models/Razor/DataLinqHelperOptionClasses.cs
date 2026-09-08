@@ -24,6 +24,26 @@ public class PageNumberOptions
     }
 }
 
+public class PageDateTimeOptions
+{
+    public bool UsePageDateTime { get; set; } = false;
+    public int Position { get; set; } = 0;
+    public string Format { get; set; } = "HH:mm dd.MM.yyyy";
+    public int SkipPages { get; set; } = 0;
+
+    public static implicit operator PageDateTimeOptions(Dictionary<string, object> d)
+    {
+        d ??= new Dictionary<string, object>();
+        return new PageDateTimeOptions
+        {
+            UsePageDateTime = d.ContainsKey("UsePageDateTime") && (bool)d["UsePageDateTime"],
+            Position = d.ContainsKey("Position") ? Convert.ToInt32(d["Position"]) : 0,
+            Format = d.ContainsKey("Format") ? d["Format"].ToString() : "HH:mm dd.MM.yyyy",
+            SkipPages = d.ContainsKey("SkipPages") ? Convert.ToInt32(d["SkipPages"]) : 0,
+        };
+    }
+}
+
 public class PageTemplateOptions
 {
     public bool UsePageTemplate { get; set; } = false;
