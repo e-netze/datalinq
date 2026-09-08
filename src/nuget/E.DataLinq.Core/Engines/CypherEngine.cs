@@ -2,6 +2,8 @@
 using E.DataLinq.Core.Extensions;
 using E.DataLinq.Core.Models;
 using E.DataLinq.Core.Services.Abstraction;
+using E.DataLinq.Core.Services.KeyValueStore;
+using E.DataLinq.Core.Services.KeyValueStore.Abstraction;
 using Microsoft.Extensions.Hosting;
 using Neo4j.Driver;
 using System;
@@ -18,10 +20,13 @@ namespace E.DataLinq.Core.Engines;
 public class CypherEngine : IDataLinqSelectEngine
 {
     private readonly IDataLinqEnvironmentService _environment;
+    private readonly IKeyValueStoreService _keyValueStore;
 
-    public CypherEngine(IDataLinqEnvironmentService environment)
+    public CypherEngine(IDataLinqEnvironmentService environment,
+                        IKeyValueStoreService keyValueStore = null)
     {
         _environment = environment;
+        _keyValueStore = keyValueStore;
     }
     public int EndpointType => (int)DefaultEndPointTypes.Cypher;
 
@@ -35,7 +40,7 @@ public class CypherEngine : IDataLinqSelectEngine
         if (!AreParametersMatching(cypher, arguments))
             throw new Exception("Parameters arent matching!");
 
-        var connection = CypherConnection.FromConnectionString(endPoint.GetConnectionString(_environment));
+        var connection = CypherConnection.FromConnectionString(_keyValueStore.ResolvePlaceholders(endPoint.GetConnectionString(_environment)));
 
         try
         {
@@ -69,7 +74,7 @@ public class CypherEngine : IDataLinqSelectEngine
 
     public async Task<bool> TestConnection(DataLinqEndPoint endPoint)
     {
-        var connection = CypherConnection.FromConnectionString(endPoint.GetConnectionString(_environment));
+        var connection = CypherConnection.FromConnectionString(_keyValueStore.ResolvePlaceholders(endPoint.GetConnectionString(_environment)));
 
         await using var driver = GraphDatabase.Driver(connection.Url, AuthTokens.Basic(connection.Username, connection.Password));
 

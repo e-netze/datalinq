@@ -5,6 +5,8 @@ using E.DataLinq.Core.Engines.Reader;
 using E.DataLinq.Core.Extensions;
 using E.DataLinq.Core.Models;
 using E.DataLinq.Core.Services.Abstraction;
+using E.DataLinq.Core.Services.KeyValueStore;
+using E.DataLinq.Core.Services.KeyValueStore.Abstraction;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -20,14 +22,17 @@ public class DatabaseEngine : IDataLinqSelectEngine, IDataLinqExecuteNonQueryEng
     private readonly IEnumerable<IDbFactoryProviderService> _factories;
     private readonly IEnumerable<IEngineFieldParserService> _fieldParser;
     private readonly IDataLinqEnvironmentService _environment;
+    private readonly IKeyValueStoreService _keyValueStore;
 
     public DatabaseEngine(IEnumerable<IDbFactoryProviderService> factories,
                           IEnumerable<IEngineFieldParserService> fieldParser,
-                          IDataLinqEnvironmentService environment)
+                          IDataLinqEnvironmentService environment,
+                          IKeyValueStoreService keyValueStore = null)
     {
         _factories = factories;
         _fieldParser = fieldParser;
         _environment = environment;
+        _keyValueStore = keyValueStore;
     }
 
     #region IDataLinqSelectEngine
@@ -36,7 +41,7 @@ public class DatabaseEngine : IDataLinqSelectEngine, IDataLinqExecuteNonQueryEng
 
     async public Task<bool> TestConnection(DataLinqEndPoint endPoint)
     {
-        string connectionString = endPoint.GetConnectionString(_environment);
+        string connectionString = _keyValueStore.ResolvePlaceholders(endPoint.GetConnectionString(_environment));
         var factoryProvider = _factories?.Where(f => f.SupportsConnection(connectionString)).FirstOrDefault();
 
         if (factoryProvider != null)
@@ -59,7 +64,7 @@ public class DatabaseEngine : IDataLinqSelectEngine, IDataLinqExecuteNonQueryEng
         bool isOrdered = false;
         List<object> result = new List<object>();
 
-        string connectionString = endPoint.GetConnectionString(_environment);
+        string connectionString = _keyValueStore.ResolvePlaceholders(endPoint.GetConnectionString(_environment));
         var factoryProvider = _factories?.Where(f => f.SupportsConnection(connectionString)).FirstOrDefault();
 
         if (factoryProvider != null)
@@ -165,7 +170,7 @@ public class DatabaseEngine : IDataLinqSelectEngine, IDataLinqExecuteNonQueryEng
                                                  DataLinqEndPointQuery query,
                                                  NameValueCollection form)
     {
-        string connectionString = endPoint.GetConnectionString(_environment);
+        string connectionString = _keyValueStore.ResolvePlaceholders(endPoint.GetConnectionString(_environment));
         var factoryProvider = _factories?.Where(f => f.SupportsConnection(connectionString)).FirstOrDefault();
 
         if (factoryProvider != null)

@@ -73,7 +73,7 @@ public class JsonApiEngine : IDataLinqSelectEngine
             {
                 foreach (var header in query.JsonApiHttpHeaders.Where(h => !string.IsNullOrWhiteSpace(h?.Key)))
                 {
-                    request.Headers.TryAddWithoutValidation(header.Key, ResolveHeaderValue(header.Value));
+                    request.Headers.TryAddWithoutValidation(header.Key, _keyValueStore.ResolvePlaceholders(header.Value));
                 }
             }
 
@@ -146,23 +146,6 @@ public class JsonApiEngine : IDataLinqSelectEngine
             JsonValue v => v.GetValue<object>() ?? null!,
             _ => node.ToString() ?? null!
         };
-    }
-
-    private static readonly Regex _secretPattern   = new Regex(@"\{\$([A-Za-z0-9_\-]+)\}", RegexOptions.Compiled);
-    private static readonly Regex _constantPattern  = new Regex(@"\{&([A-Za-z0-9_\-]+)\}", RegexOptions.Compiled);
-
-    private string ResolveHeaderValue(string value)
-    {
-        if (string.IsNullOrEmpty(value) || _keyValueStore == null)
-            return value ?? string.Empty;
-
-        value = _secretPattern.Replace(value, m =>
-            _keyValueStore.GetValue(KeyValueStoreType.Secret, m.Groups[1].Value));
-
-        value = _constantPattern.Replace(value, m =>
-            _keyValueStore.GetValue(KeyValueStoreType.Constant, m.Groups[1].Value));
-
-        return value;
     }
 
     private static string BuildUrl(string baseUrl, string queryString, NameValueCollection args)
