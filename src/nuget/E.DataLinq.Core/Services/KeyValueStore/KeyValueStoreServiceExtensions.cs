@@ -15,11 +15,11 @@ public static class KeyValueStoreServiceExtensions
             return value ?? string.Empty;
         }
 
-        value = _secretPattern.Replace(value, m =>
-            keyValueStore.GetValue(KeyValueStoreType.Secret, m.Groups[1].Value));
-
         value = _constantPattern.Replace(value, m =>
             keyValueStore.GetValue(KeyValueStoreType.Constant, m.Groups[1].Value));
+
+        value = _secretPattern.Replace(value, m =>
+            keyValueStore.GetValue(KeyValueStoreType.Secret, m.Groups[1].Value));
 
         return value;
     }
