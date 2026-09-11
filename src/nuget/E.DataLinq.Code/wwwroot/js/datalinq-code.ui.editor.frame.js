@@ -142,6 +142,7 @@ dataLinqCodeEditor = new function () {
             loadSecurityCompletions(monaco, language || 'text');
             loadRecordsCompletions(monaco, language || 'text');
             registerRazorSnippets(monaco, language || 'text');
+            registerModelRazorSnippets(monaco, language || 'text');
             registerViewFolding(monaco, language || 'text');
 
         } else {
