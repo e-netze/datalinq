@@ -162,25 +162,37 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
     #region KeyValueStore (Secrets & Constants)
 
-    async public Task<IActionResult> GetSecretKeys()
+    async public Task<IActionResult> GetKeyValueStoreEnvironments()
     {
-        return base.JsonObject(_client == null ?
-            null :
-            new { keys = await _client.GetKeyValueStoreKeys("secret") });
+        if (_client == null)
+        {
+            return base.JsonObject(null);
+        }
+
+        var (environments, current) = await _client.GetKeyValueStoreEnvironments();
+
+        return base.JsonObject(new { environments, current });
     }
 
-    async public Task<IActionResult> GetConstantKeys()
+    async public Task<IActionResult> GetSecretKeys(string environment = null)
     {
         return base.JsonObject(_client == null ?
             null :
-            new { keys = await _client.GetKeyValueStoreKeys("constant") });
+            new { keys = await _client.GetKeyValueStoreKeys("secret", environment) });
     }
 
-    async public Task<IActionResult> GetConstantValue(string key)
+    async public Task<IActionResult> GetConstantKeys(string environment = null)
     {
         return base.JsonObject(_client == null ?
             null :
-            new { key, value = await _client.GetKeyValueStoreValue("constant", key) });
+            new { keys = await _client.GetKeyValueStoreKeys("constant", environment) });
+    }
+
+    async public Task<IActionResult> GetConstantValue(string key, string environment = null)
+    {
+        return base.JsonObject(_client == null ?
+            null :
+            new { key, value = await _client.GetKeyValueStoreValue("constant", key, environment) });
     }
 
     [HttpPost]
@@ -193,7 +205,7 @@ public class DataLinqCodeController : DataLinqCodeBaseController
                 throw new Exception("datalinq endpoint no set");
             }
 
-            return base.JsonObject(new SuccessModel(await _client.SetKeyValueStoreValue("secret", entry?.Key, entry?.Value)));
+            return base.JsonObject(new SuccessModel(await _client.SetKeyValueStoreValue("secret", entry?.Key, entry?.Value, entry?.Environment)));
         }
         catch (Exception ex)
         {
@@ -211,7 +223,7 @@ public class DataLinqCodeController : DataLinqCodeBaseController
                 throw new Exception("datalinq endpoint no set");
             }
 
-            return base.JsonObject(new SuccessModel(await _client.SetKeyValueStoreValue("constant", entry?.Key, entry?.Value)));
+            return base.JsonObject(new SuccessModel(await _client.SetKeyValueStoreValue("constant", entry?.Key, entry?.Value, entry?.Environment)));
         }
         catch (Exception ex)
         {
@@ -229,7 +241,7 @@ public class DataLinqCodeController : DataLinqCodeBaseController
                 throw new Exception("datalinq endpoint no set");
             }
 
-            return base.JsonObject(new SuccessModel(await _client.DeleteKeyValueStoreValue("secret", entry?.Key)));
+            return base.JsonObject(new SuccessModel(await _client.DeleteKeyValueStoreValue("secret", entry?.Key, entry?.Environment)));
         }
         catch (Exception ex)
         {
@@ -247,7 +259,7 @@ public class DataLinqCodeController : DataLinqCodeBaseController
                 throw new Exception("datalinq endpoint no set");
             }
 
-            return base.JsonObject(new SuccessModel(await _client.DeleteKeyValueStoreValue("constant", entry?.Key)));
+            return base.JsonObject(new SuccessModel(await _client.DeleteKeyValueStoreValue("constant", entry?.Key, entry?.Environment)));
         }
         catch (Exception ex)
         {
@@ -259,6 +271,7 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     {
         public string Key { get; set; }
         public string Value { get; set; }
+        public string Environment { get; set; }
     }
 
     #endregion

@@ -1,3 +1,4 @@
+using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Crypto.Abstraction;
 using E.DataLinq.Core.Services.KeyValueStore.Abstraction;
 using E.DataLinq.Core.Services.Persistance;
@@ -12,30 +13,33 @@ namespace E.DataLinq.Core.Services.KeyValueStore;
 
 public class FileKeyValueStoreService : IKeyValueStoreService
 {
-    private const string SecretsFileName = "secrets.blb";
-    private const string ConstantsFileName = "constants.blb";
+    private const string SecretsFilePrefix = "secrets";
+    private const string ConstantsFilePrefix = "constants";
 
     private readonly ICryptoService _crypto;
+    private readonly IDataLinqEnvironmentService _environment;
     private readonly string _storagePath;
     private readonly object _syncRoot = new object();
 
     public FileKeyValueStoreService(
         ICryptoService crypto,
-        IOptionsMonitor<PersistanceProviderServiceOptions> optionsMonitor)
+        IOptionsMonitor<PersistanceProviderServiceOptions> optionsMonitor,
+        IDataLinqEnvironmentService environment = null)
     {
         _crypto = crypto;
+        _environment = environment;
         _storagePath = optionsMonitor.CurrentValue.ConnectionString;
     }
 
-    public IEnumerable<string> GetKeys(KeyValueStoreType store)
+    public IEnumerable<string> GetKeys(KeyValueStoreType store, DataLinqEnvironmentType? environment = null)
     {
         lock (_syncRoot)
         {
-            return Read(store).Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase).ToArray();
+            return Read(store, ResolveEnvironment(environment)).Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase).ToArray();
         }
     }
 
-    public string GetValue(KeyValueStoreType store, string key)
+    public string GetValue(KeyValueStoreType store, string key, DataLinqEnvironmentType? environment = null)
     {
         if (String.IsNullOrEmpty(key))
         {
@@ -44,13 +48,13 @@ public class FileKeyValueStoreService : IKeyValueStoreService
 
         lock (_syncRoot)
         {
-            return Read(store).TryGetValue(key, out var value)
+            return Read(store, ResolveEnvironment(environment)).TryGetValue(key, out var value)
                 ? value ?? ""
                 : "";
         }
     }
 
-    public void SetValue(KeyValueStoreType store, string key, string value)
+    public void SetValue(KeyValueStoreType store, string key, string value, DataLinqEnvironmentType? environment = null)
     {
         if (String.IsNullOrWhiteSpace(key))
         {
@@ -59,13 +63,15 @@ public class FileKeyValueStoreService : IKeyValueStoreService
 
         lock (_syncRoot)
         {
-            var dict = Read(store);
+            var environmentType = ResolveEnvironment(environment);
+
+            var dict = Read(store, environmentType);
             dict[key] = value ?? "";
-            Write(store, dict);
+            Write(store, environmentType, dict);
         }
     }
 
-    public bool DeleteKey(KeyValueStoreType store, string key)
+    public bool DeleteKey(KeyValueStoreType store, string key, DataLinqEnvironmentType? environment = null)
     {
         if (String.IsNullOrEmpty(key))
         {
@@ -74,26 +80,33 @@ public class FileKeyValueStoreService : IKeyValueStoreService
 
         lock (_syncRoot)
         {
-            var dict = Read(store);
+            var environmentType = ResolveEnvironment(environment);
+
+            var dict = Read(store, environmentType);
 
             if (!dict.Remove(key))
             {
                 return false;
             }
 
-            Write(store, dict);
+            Write(store, environmentType, dict);
             return true;
         }
     }
 
     #region Helpers
 
-    private string StoreFilePath(KeyValueStoreType store)
-        => Path.Combine(_storagePath, store == KeyValueStoreType.Secret ? SecretsFileName : ConstantsFileName);
+    private DataLinqEnvironmentType ResolveEnvironment(DataLinqEnvironmentType? environment)
+        => environment ?? _environment?.CurrentEnvironment ?? DataLinqEnvironmentType.Default;
 
-    private Dictionary<string, string> Read(KeyValueStoreType store)
+    private string StoreFilePath(KeyValueStoreType store, DataLinqEnvironmentType environment)
+        => Path.Combine(
+            _storagePath,
+            $"{(store == KeyValueStoreType.Secret ? SecretsFilePrefix : ConstantsFilePrefix)}.{environment.ToString().ToLowerInvariant()}.blb");
+
+    private Dictionary<string, string> Read(KeyValueStoreType store, DataLinqEnvironmentType environment)
     {
-        var fi = new FileInfo(StoreFilePath(store));
+        var fi = new FileInfo(StoreFilePath(store, environment));
 
         if (!fi.Exists)
         {
@@ -126,7 +139,7 @@ public class FileKeyValueStoreService : IKeyValueStoreService
         }
     }
 
-    private void Write(KeyValueStoreType store, Dictionary<string, string> dict)
+    private void Write(KeyValueStoreType store, DataLinqEnvironmentType environment, Dictionary<string, string> dict)
     {
         if (!Directory.Exists(_storagePath))
         {
@@ -140,7 +153,7 @@ public class FileKeyValueStoreService : IKeyValueStoreService
             json = _crypto.EncryptTextDefault(json);
         }
 
-        File.WriteAllText(StoreFilePath(store), json);
+        File.WriteAllText(StoreFilePath(store, environment), json);
     }
 
     #endregion

@@ -17,6 +17,8 @@ public class DataLinqEnvironmentService : IDataLinqEnvironmentService
 
     #region IDataLinqEnvironmentService
 
+    public DataLinqEnvironmentType CurrentEnvironment => _options.EnvironmentType;
+
     public string GetConnectionString(DataLinqEndPoint endPoint)
     {
         switch (_options.EnvironmentType)

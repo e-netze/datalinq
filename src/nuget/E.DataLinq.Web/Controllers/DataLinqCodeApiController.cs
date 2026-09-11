@@ -42,6 +42,7 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly IGitService? _gitService;
     private readonly FeaturesService _featuresService;
     private readonly IKeyValueStoreService _keyValueStore;
+    private readonly IDataLinqEnvironmentService _environmentService;
     private bool GitEnabled => _gitService?.IsEnabled == true;
 
     public DataLinqCodeApiController(ILogger<DataLinqCodeApiController> logger,
@@ -53,6 +54,7 @@ public class DataLinqCodeApiController : ApiBaseController
                                      JsLibrariesService jsLibraries,
                                      FeaturesService featuresService,
                                      IKeyValueStoreService keyValueStore = null,
+                                     IDataLinqEnvironmentService environmentService = null,
                                      IGitService gitService = null,
                                      SemanticKernelService semanticKernelService = null,
                                      IHostAuthenticationService hostAuthentication = null,
@@ -71,6 +73,7 @@ public class DataLinqCodeApiController : ApiBaseController
         _gitService = gitService;
         _featuresService = featuresService;
         _keyValueStore = keyValueStore;
+        _environmentService = environmentService;
     }
 
     #region Get
@@ -230,8 +233,22 @@ public class DataLinqCodeApiController : ApiBaseController
     #region KeyValueStore (Secrets & Constants)
 
     [HttpGet]
+    [Route("keyvaluestore/environments")]
+    public IActionResult KeyValueStoreEnvironments()
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        return base.JsonObject(new
+        {
+            environments = Enum.GetNames(typeof(DataLinqEnvironmentType)),
+            current = (_environmentService?.CurrentEnvironment ?? DataLinqEnvironmentType.Default).ToString()
+        });
+    }
+
+    [HttpGet]
     [Route("keyvaluestore/{store}/keys")]
-    public IActionResult KeyValueStoreKeys(string store)
+    public IActionResult KeyValueStoreKeys(string store, string environment = null)
     {
         if (!_identity.HasDataLinqCodeRole())
             throw new Exception("Not authorized");
@@ -242,12 +259,12 @@ public class DataLinqCodeApiController : ApiBaseController
         var storeType = ParseStoreType(store);
 
         // Never return decrypted secret values here, only the keys.
-        return base.JsonObject(new { keys = _keyValueStore.GetKeys(storeType) });
+        return base.JsonObject(new { keys = _keyValueStore.GetKeys(storeType, ParseEnvironment(environment)) });
     }
 
     [HttpGet]
     [Route("keyvaluestore/{store}/value")]
-    public IActionResult KeyValueStoreValue(string store, string key)
+    public IActionResult KeyValueStoreValue(string store, string key, string environment = null)
     {
         if (!_identity.HasDataLinqCodeRole())
             throw new Exception("Not authorized");
@@ -261,12 +278,12 @@ public class DataLinqCodeApiController : ApiBaseController
         if (storeType == KeyValueStoreType.Secret)
             throw new Exception("Secret values can not be read through this endpoint");
 
-        return base.JsonObject(new { key, value = _keyValueStore.GetValue(storeType, key) });
+        return base.JsonObject(new { key, value = _keyValueStore.GetValue(storeType, key, ParseEnvironment(environment)) });
     }
 
     [HttpPost]
     [Route("keyvaluestore/{store}/set")]
-    public IActionResult KeyValueStoreSet(string store, [FromForm] string key, [FromForm] string value)
+    public IActionResult KeyValueStoreSet(string store, [FromForm] string key, [FromForm] string value, [FromForm] string environment = null)
     {
         if (!_identity.HasDataLinqCodeRole())
             throw new Exception("Not authorized");
@@ -279,14 +296,14 @@ public class DataLinqCodeApiController : ApiBaseController
 
         var storeType = ParseStoreType(store);
 
-        _keyValueStore.SetValue(storeType, key, value ?? "");
+        _keyValueStore.SetValue(storeType, key, value ?? "", ParseEnvironment(environment));
 
         return base.JsonObject(new { success = true });
     }
 
     [HttpPost]
     [Route("keyvaluestore/{store}/delete")]
-    public IActionResult KeyValueStoreDelete(string store, [FromForm] string key)
+    public IActionResult KeyValueStoreDelete(string store, [FromForm] string key, [FromForm] string environment = null)
     {
         if (!_identity.HasDataLinqCodeRole())
             throw new Exception("Not authorized");
@@ -296,7 +313,7 @@ public class DataLinqCodeApiController : ApiBaseController
 
         var storeType = ParseStoreType(store);
 
-        return base.JsonObject(new { success = _keyValueStore.DeleteKey(storeType, key) });
+        return base.JsonObject(new { success = _keyValueStore.DeleteKey(storeType, key, ParseEnvironment(environment)) });
     }
 
     private static KeyValueStoreType ParseStoreType(string store)
@@ -306,6 +323,21 @@ public class DataLinqCodeApiController : ApiBaseController
             "constant" or "constants" => KeyValueStoreType.Constant,
             _ => throw new ArgumentException($"Unknown key value store '{store}'")
         };
+
+    private static DataLinqEnvironmentType? ParseEnvironment(string environment)
+    {
+        if (String.IsNullOrWhiteSpace(environment))
+        {
+            return null;
+        }
+
+        if (!Enum.TryParse<DataLinqEnvironmentType>(environment, ignoreCase: true, out var environmentType))
+        {
+            throw new ArgumentException($"Unknown environment '{environment}'");
+        }
+
+        return environmentType;
+    }
 
     #endregion
 

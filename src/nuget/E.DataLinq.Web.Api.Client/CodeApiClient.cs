@@ -373,9 +373,26 @@ public class CodeApiClient
         }
     }
 
-    async public Task<IEnumerable<string>> GetKeyValueStoreKeys(string store)
+    async public Task<(IEnumerable<string> Environments, string Current)> GetKeyValueStoreEnvironments()
     {
-        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/keyvaluestore/{store}/keys"))
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/keyvaluestore/environments"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var result = JsonConvert.DeserializeAnonymousType(
+                    await GetAndCheckHttpResponseAsync(httpResponse),
+                    new { environments = new string[0], current = "" });
+
+                return (result?.environments ?? new string[0], result?.current ?? "");
+            }
+        }
+    }
+
+    async public Task<IEnumerable<string>> GetKeyValueStoreKeys(string store, string environment = null)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/keyvaluestore/{store}/keys{EnvironmentQuery(environment, "?")}"))
         {
             ModifyHttpRequest(requestMessage);
 
@@ -390,9 +407,9 @@ public class CodeApiClient
         }
     }
 
-    async public Task<string> GetKeyValueStoreValue(string store, string key)
+    async public Task<string> GetKeyValueStoreValue(string store, string key, string environment = null)
     {
-        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/keyvaluestore/{store}/value?key={HttpUtility.UrlEncode(key)}"))
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/keyvaluestore/{store}/value?key={HttpUtility.UrlEncode(key)}{EnvironmentQuery(environment, "&")}"))
         {
             ModifyHttpRequest(requestMessage);
 
@@ -407,7 +424,7 @@ public class CodeApiClient
         }
     }
 
-    async public Task<bool> SetKeyValueStoreValue(string store, string key, string value)
+    async public Task<bool> SetKeyValueStoreValue(string store, string key, string value, string environment = null)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/keyvaluestore/{store}/set"))
         {
@@ -416,7 +433,8 @@ public class CodeApiClient
             requestMessage.Content = new FormUrlEncodedContent(new[]
             {
                 new KeyValuePair<string, string>("key", key),
-                new KeyValuePair<string, string>("value", value ?? "")
+                new KeyValuePair<string, string>("value", value ?? ""),
+                new KeyValuePair<string, string>("environment", environment ?? "")
             });
 
             using (var httpResponse = await _httpClient.SendAsync(requestMessage))
@@ -430,7 +448,7 @@ public class CodeApiClient
         }
     }
 
-    async public Task<bool> DeleteKeyValueStoreValue(string store, string key)
+    async public Task<bool> DeleteKeyValueStoreValue(string store, string key, string environment = null)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/keyvaluestore/{store}/delete"))
         {
@@ -438,7 +456,8 @@ public class CodeApiClient
 
             requestMessage.Content = new FormUrlEncodedContent(new[]
             {
-                new KeyValuePair<string, string>("key", key)
+                new KeyValuePair<string, string>("key", key),
+                new KeyValuePair<string, string>("environment", environment ?? "")
             });
 
             using (var httpResponse = await _httpClient.SendAsync(requestMessage))
@@ -451,6 +470,11 @@ public class CodeApiClient
             }
         }
     }
+
+    private static string EnvironmentQuery(string environment, string separator)
+        => String.IsNullOrWhiteSpace(environment)
+            ? ""
+            : $"{separator}environment={HttpUtility.UrlEncode(environment)}";
 
     async public Task<bool> StoreEndPointCss(string endPointId, string css)
     {

@@ -360,27 +360,31 @@ var dataLinqCode = new function ($) {
             this.get('getMonacoSnippit', callback, { lang: lang, helper: helper || 'dlh' });
         };
 
-        this.getSecretKeys = function (callback) {
-            this.get('getSecretKeys', callback);
-        };
-        this.setSecret = function (key, value, callback) {
-            this.post('setSecret', { key: key, value: value }, callback);
-        };
-        this.deleteSecret = function (key, callback) {
-            this.post('deleteSecret', { key: key }, callback);
+        this.getKeyValueStoreEnvironments = function (callback) {
+            this.get('getKeyValueStoreEnvironments', callback);
         };
 
-        this.getConstantKeys = function (callback) {
-            this.get('getConstantKeys', callback);
+        this.getSecretKeys = function (callback, environment) {
+            this.get('getSecretKeys', callback, { environment: environment });
         };
-        this.getConstantValue = function (key, callback) {
-            this.get('getConstantValue', callback, { key: key });
+        this.setSecret = function (key, value, callback, environment) {
+            this.post('setSecret', { key: key, value: value, environment: environment }, callback);
         };
-        this.setConstant = function (key, value, callback) {
-            this.post('setConstant', { key: key, value: value }, callback);
+        this.deleteSecret = function (key, callback, environment) {
+            this.post('deleteSecret', { key: key, environment: environment }, callback);
         };
-        this.deleteConstant = function (key, callback) {
-            this.post('deleteConstant', { key: key }, callback);
+
+        this.getConstantKeys = function (callback, environment) {
+            this.get('getConstantKeys', callback, { environment: environment });
+        };
+        this.getConstantValue = function (key, callback, environment) {
+            this.get('getConstantValue', callback, { key: key, environment: environment });
+        };
+        this.setConstant = function (key, value, callback, environment) {
+            this.post('setConstant', { key: key, value: value, environment: environment }, callback);
+        };
+        this.deleteConstant = function (key, callback, environment) {
+            this.post('deleteConstant', { key: key, environment: environment }, callback);
         };
 
         this.getEndPointPrefixes = function (callback) {
@@ -616,6 +620,55 @@ var dataLinqCode = new function ($) {
                 onload: function ($content) {
                     $content.addClass('datalinq-code-key-value-store-content');
 
+                    var selectedEnvironment = null;
+                    var sectionReloads = [];
+
+                    var $environmentBar = $("<div>")
+                        .addClass('datalinq-code-kvstore-environment')
+                        .appendTo($content);
+
+                    $("<span>")
+                        .addClass('datalinq-code-kvstore-environment-label')
+                        .text('Environment:')
+                        .appendTo($environmentBar);
+
+                    var $environmentButtons = $("<div>")
+                        .addClass('datalinq-code-kvstore-environment-buttons')
+                        .appendTo($environmentBar);
+
+                    var selectEnvironment = function (environment) {
+                        selectedEnvironment = environment;
+                        $environmentButtons
+                            .find('.datalinq-code-kvstore-environment-button')
+                            .each(function () {
+                                $(this).toggleClass(
+                                    'selected',
+                                    $(this).data('environment') === selectedEnvironment);
+                            });
+                        $content.find('.datalinq-code-kvstore-editor').remove();
+                        $.each(sectionReloads, function (i, reload) {
+                            reload();
+                        });
+                    };
+
+                    dataLinqCode.api.getKeyValueStoreEnvironments(function (result) {
+                        var environments = (result && result.environments) || [];
+
+                        $.each(environments, function (i, environment) {
+                            $("<button>")
+                                .attr('type', 'button')
+                                .addClass('datalinq-code-button datalinq-code-kvstore-environment-button')
+                                .data('environment', environment)
+                                .text(environment)
+                                .appendTo($environmentButtons)
+                                .click(function () {
+                                    selectEnvironment(environment);
+                                });
+                        });
+
+                        selectEnvironment((result && result.current) || environments[0] || null);
+                    });
+
                     var buildSection = function (options) {
                         var $section = $("<div>")
                             .addClass('datalinq-code-kvstore-section')
@@ -639,6 +692,11 @@ var dataLinqCode = new function ($) {
 
                         var reload = function () {
                             $list.empty();
+
+                            if (!selectedEnvironment) {
+                                return;
+                            }
+
                             options.getKeys(function (result) {
                                 var keys = (result && result.keys) || [];
 
@@ -683,11 +741,11 @@ var dataLinqCode = new function ($) {
                                                 function () {
                                                     options.deleteValue(key, function () {
                                                         reload();
-                                                    });
+                                                    }, selectedEnvironment);
                                                 });
                                         });
                                 });
-                            });
+                            }, selectedEnvironment);
                         };
 
                         var editEntry = function (existingKey) {
@@ -717,7 +775,7 @@ var dataLinqCode = new function ($) {
                             if (!isNew && options.getValue) {
                                 options.getValue(existingKey, function (result) {
                                     $valueInput.val((result && result.value) || '');
-                                });
+                                }, selectedEnvironment);
                             }
 
                             var $editorActions = $("<div>")
@@ -738,7 +796,7 @@ var dataLinqCode = new function ($) {
                                     options.setValue(key, $valueInput.val(), function () {
                                         $editor.remove();
                                         reload();
-                                    });
+                                    }, selectedEnvironment);
                                 });
 
                             $("<button>")
@@ -758,6 +816,7 @@ var dataLinqCode = new function ($) {
                                 editEntry(null);
                             });
 
+                        sectionReloads.push(reload);
                         reload();
                     };
 
