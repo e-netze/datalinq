@@ -2963,6 +2963,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Ein dynamisches Objekt mit beliebigen Key-Value-Paaren, die an die URL angehängt werden. size wird für die Größe des img-Elements verwendet. Alle weiteren Parameter (z.B. bbox, format, transparent, layers, show) werden als Query-Parameter übergeben.
     /// en: A dynamic object with arbitrary key-value pairs appended to the URL. size is used for the img element size. All other parameters (e.g., bbox, format, transparent, layers, show) are passed as query parameters.
     /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein optionales Objekt mit HTML-Attributen, die dem img-Element hinzugefügt werden.
+    /// en: An optional object containing HTML attributes to be added to the img element.
+    /// </param>
     /// <returns>
     /// de: Gibt das abgerufene Bild als HTML img-Element zurück.
     /// en: Returns the retrieved image as an HTML img element.
@@ -2971,8 +2975,9 @@ public class DataLinqHelper : IDataLinqHelper
         AgsServiceType serviceType,
         string serverKey,
         string serviceName,
-        object parameters)
-    => await Security.GetAgsImage(serviceType, serverKey, serviceName, parameters, null);
+        object parameters,
+        object htmlAttributes = null)
+    => await Security.GetAgsImage(serviceType, serverKey, serviceName, parameters, null, htmlAttributes);
 
     /// <summary>
     /// de: Ruft ein öffentlich zugängliches Bild von einem beliebigen Server ab und gibt es als HTML img-Element zurück. Die Basis-URL wird direkt übergeben und nicht aufgelöst. Um die URL nicht direkt anzugeben, kann sie im Razor-Code über GetSecret oder GetConstant aufgelöst werden. Es erfolgt keine Authentifizierung (nur für öffentliche Bilder). Antworten, die kein Bild sind, werden blockiert. Die Methode ist gegen SSRF abgesichert.
@@ -2990,6 +2995,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Ein optionales dynamisches Objekt mit beliebigen Key-Value-Paaren, die als Query-Parameter an die URL angehängt werden.
     /// en: An optional dynamic object with arbitrary key-value pairs appended to the URL as query parameters.
     /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein optionales Objekt mit HTML-Attributen, die dem img-Element hinzugefügt werden.
+    /// en: An optional object containing HTML attributes to be added to the img element.
+    /// </param>
     /// <returns>
     /// de: Gibt das abgerufene Bild als HTML img-Element zurück.
     /// en: Returns the retrieved image as an HTML img element.
@@ -2997,7 +3006,8 @@ public class DataLinqHelper : IDataLinqHelper
     public async Task<object> GetImage(
         string baseUrl,
         string path,
-        object parameters = null)
+        object parameters = null,
+        object htmlAttributes = null)
     {
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
@@ -3010,7 +3020,7 @@ public class DataLinqHelper : IDataLinqHelper
         var requestUri = BuildAndValidateRequestUri(baseUrl.Trim().TrimEnd('/'), relativePath, values);
         var dataUri = await GetPublicImage(requestUri);
 
-        return BuildImageTag(dataUri);
+        return BuildImageTag(dataUri, htmlAttributes);
     }
 
     /// <summary>
@@ -3296,12 +3306,13 @@ public class DataLinqHelper : IDataLinqHelper
     }    
 
     [ExcludeFromSnippets]
-    private object BuildImageTag(string dataUri)
+    private object BuildImageTag(string dataUri, object htmlAttributes)
     {
         var htmlBuilder = HtmlBuilder.Create()
             .Append("img", img =>
             {
                 img.AddAttribute("src", dataUri);
+                img.AddAttributes(htmlAttributes);
             }, WriteTags.SelfClose);
 
         return _razor is not null

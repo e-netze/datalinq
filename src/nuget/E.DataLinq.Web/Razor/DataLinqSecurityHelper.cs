@@ -181,6 +181,10 @@ public class DataLinqSecurityHelper
     /// de: Das optionale Token-Objekt mit UsernameKey und PasswordKey. UsernameKey und PasswordKey müssen Schlüssel (Namen) von Secrets sein - Konstanten oder direkte Werte sind nicht erlaubt. Wird nur bei abgesicherten Diensten benötigt.
     /// en: The optional token object containing UsernameKey and PasswordKey. UsernameKey and PasswordKey must be keys (names) of secrets - constants or direct values are not allowed. Only required for secured services.
     /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Ein optionales Objekt mit HTML-Attributen, die dem img-Element hinzugefügt werden.
+    /// en: An optional object containing HTML attributes to be added to the img element.
+    /// </param>
     /// <returns>
     /// de: Gibt das abgerufene Bild als HTML img-Element zurück.
     /// en: Returns the retrieved image as an HTML img element.
@@ -190,24 +194,26 @@ public class DataLinqSecurityHelper
         string serverKey,
         string serviceName,
         object parameters,
-        AgsTokenObject token)
+        AgsTokenObject token,
+        object htmlAttributes = null)
     {
         var values = ToParameterDictionary(parameters);
 
         var agsToken = await ResolveAgsToken(serverKey, token);
         var dataUri = await GetAgsServiceImage(serviceType, serverKey, serviceName, values, agsToken);
 
-        return BuildImageTag(dataUri);
+        return BuildImageTag(dataUri, htmlAttributes);
     }
 
     #region Helpers
     [ExcludeFromSnippets]
-    private object BuildImageTag(string dataUri)
+    private object BuildImageTag(string dataUri, object htmlAttributes)
     {
         var htmlBuilder = HtmlBuilder.Create()
             .Append("img", img =>
             {
                 img.AddAttribute("src", dataUri);
+                img.AddAttributes(htmlAttributes);
             }, WriteTags.SelfClose);
 
         return _razor is not null
