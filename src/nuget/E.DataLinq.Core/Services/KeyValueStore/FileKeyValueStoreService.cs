@@ -1,3 +1,4 @@
+using E.DataLinq.Core.Extensions;
 using E.DataLinq.Core.Services.Abstraction;
 using E.DataLinq.Core.Services.Crypto.Abstraction;
 using E.DataLinq.Core.Services.KeyValueStore.Abstraction;
@@ -19,6 +20,7 @@ public class FileKeyValueStoreService : IKeyValueStoreService
     private readonly ICryptoService _crypto;
     private readonly IDataLinqEnvironmentService _environment;
     private readonly string _storagePath;
+    private readonly EncryptionLevel _encryptionLevel;
     private readonly object _syncRoot = new object();
 
     public FileKeyValueStoreService(
@@ -29,6 +31,7 @@ public class FileKeyValueStoreService : IKeyValueStoreService
         _crypto = crypto;
         _environment = environment;
         _storagePath = optionsMonitor.CurrentValue.ConnectionString;
+        _encryptionLevel = optionsMonitor.CurrentValue.SecureStringEncryptionLevel;
     }
 
     public IEnumerable<string> GetKeys(KeyValueStoreType store, DataLinqEnvironmentType? environment = null)
@@ -124,7 +127,7 @@ public class FileKeyValueStoreService : IKeyValueStoreService
         {
             if (store == KeyValueStoreType.Secret)
             {
-                fileContent = _crypto.DecryptTextDefault(fileContent);
+                fileContent = fileContent.DecryptStringProperty(_crypto);
             }
 
             var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(fileContent);
@@ -150,7 +153,7 @@ public class FileKeyValueStoreService : IKeyValueStoreService
 
         if (store == KeyValueStoreType.Secret)
         {
-            json = _crypto.EncryptTextDefault(json);
+            json = json.EncryptStringProperty(_crypto, _encryptionLevel);
         }
 
         File.WriteAllText(StoreFilePath(store, environment), json);
