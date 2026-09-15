@@ -332,7 +332,7 @@ var dataLinq = new function () {
         }).then(function (result) {
             var $page = $(result.html).find('.page');
             $page.find('.report-ignore').remove();
-            return $page.html();44
+            return $page.html();
         });
     }
 
