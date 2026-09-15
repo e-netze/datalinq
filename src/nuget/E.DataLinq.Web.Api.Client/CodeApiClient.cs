@@ -118,6 +118,19 @@ public class CodeApiClient
         }
     }
 
+    async public Task<string> GetErrorPage()
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/errorpage"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                return await GetAndCheckHttpResponseAsync(httpResponse);
+            }
+        }
+    }
+
     async public Task<string> GetEndPointJavascript(string endPointId)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/js/{endPointId}"))
@@ -521,6 +534,34 @@ public class CodeApiClient
                 if (result.Success == false)
                 {
                     throw new Exception(result.ErrorMessage);
+                }
+
+                return true;
+            }
+        }
+    }
+
+    async public Task<bool> StoreErrorPage(string code)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/errorpage"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            requestMessage.Content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("code", code ?? "")
+            });
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var result = JsonConvert.DeserializeObject<SuccessModel>(await GetAndCheckHttpResponseAsync(httpResponse, false));
+
+                if (result.Success == false)
+                {
+                    throw new RazorCompileException(result.ErrorMessage)
+                    {
+                        CompilerErrors = result.CompilerErrors
+                    };
                 }
 
                 return true;

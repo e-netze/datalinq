@@ -43,7 +43,9 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly FeaturesService _featuresService;
     private readonly IKeyValueStoreService _keyValueStore;
     private readonly IDataLinqEnvironmentService _environmentService;
+    private readonly DataLinqErrorPageService _errorPage;
     private bool GitEnabled => _gitService?.IsEnabled == true;
+
 
     public DataLinqCodeApiController(ILogger<DataLinqCodeApiController> logger,
                                      IPersistanceProviderService persistanceProvider,
@@ -55,6 +57,7 @@ public class DataLinqCodeApiController : ApiBaseController
                                      FeaturesService featuresService,
                                      IKeyValueStoreService keyValueStore = null,
                                      IDataLinqEnvironmentService environmentService = null,
+                                     DataLinqErrorPageService errorPage = null,
                                      IGitService gitService = null,
                                      SemanticKernelService semanticKernelService = null,
                                      IHostAuthenticationService hostAuthentication = null,
@@ -74,6 +77,7 @@ public class DataLinqCodeApiController : ApiBaseController
         _featuresService = featuresService;
         _keyValueStore = keyValueStore;
         _environmentService = environmentService;
+        _errorPage = errorPage;
     }
 
     #region Get
@@ -227,6 +231,20 @@ public class DataLinqCodeApiController : ApiBaseController
 
         return base.JsonObject(_featuresService.GetFeatures());
     }
+
+    [HttpGet]
+    [Route("errorpage")]
+    async public Task<string> GetErrorPage()
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        // fall back to the built in default page, so the editor always opens with a usable template
+        return _errorPage != null
+            ? await _errorPage.GetErrorPageCodeAsync()
+            : await _persistanceProvider.GetErrorPage();
+    }
+
 
     #endregion
 
@@ -521,6 +539,45 @@ public class DataLinqCodeApiController : ApiBaseController
 
             }));
         }, new[] { id });
+    }
+
+    [HttpPost]
+    [Route("post/errorpage")]
+    async public Task<IActionResult> StoreErrorPage([FromForm] string code, bool verifyOnly = false)
+    {
+        try
+        {
+            // the error page is a global (system wide) resource => no endpoint scoped check possible
+            if (!_identity.HasDataLinqCodeRole())
+            {
+                throw new Exception("Not authorized");
+            }
+
+            // compile the razor first => a typo/syntax error is reported instead of silently stored
+            if (_errorPage != null)
+            {
+                await _errorPage.ValidateErrorPageCodeAsync(code);
+            }
+
+            if (verifyOnly == true)
+            {
+                return base.JsonObject(new SuccessModel());
+            }
+
+            return base.JsonObject(new SuccessModel(await _persistanceProvider.StoreErrorPage(code)));
+        }
+        catch (RazorCompileException razorEx)
+        {
+            return base.JsonObject(new SuccessModel(false)
+            {
+                ErrorMessage = "Razor compiler errors",
+                CompilerErrors = razorEx.CompilerErrors
+            });
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
     }
 
     [HttpPost]

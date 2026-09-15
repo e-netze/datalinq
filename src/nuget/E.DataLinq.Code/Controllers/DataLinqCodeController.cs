@@ -375,6 +375,43 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     }
 
     [HttpGet]
+    async public Task<IActionResult> EditErrorPage()
+    {
+        var model = new ErrorPageModel()
+        {
+            Code = _client != null ? await _client.GetErrorPage() : null
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> EditErrorPage(ErrorPageModel model)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return base.JsonObject(new SuccessModel(await _client.StoreErrorPage(model.Code)));
+        }
+        catch (RazorCompileException razorEx)
+        {
+            return base.JsonObject(new SuccessModel(false)
+            {
+                ErrorMessage = razorEx.Message,
+                CompilerErrors = razorEx.CompilerErrors
+            });
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    [HttpGet]
     async public Task<IActionResult> EditEndPointJavascript(string endPoint)
     {
         var model = new EndPointJavascriptModel()

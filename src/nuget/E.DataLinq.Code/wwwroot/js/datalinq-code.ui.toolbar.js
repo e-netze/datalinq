@@ -101,30 +101,18 @@
                 .appendTo($parent);
         }
 
-        $("<div><div class='text'>Color scheme</div></div>")
-            .data('event', 'toggle-color-scheme')
-            .addClass('datalinq-code-toolbutton colorscheme')
-            .appendTo($parent);
-
-        $("<div><div class='text'>Datalinq Helper</div></div>")
+        $("<div><div class='text'>DataLinq Helper</div></div>")
             .data('event', 'toggle-help')
             .addClass('datalinq-code-toolbutton help')
             .appendTo($parent);
 
-        $("<div><div class='text'>Secrets &amp; Constants</div></div>")
-            .data('event', 'toggle-key-value-store')
-            .addClass('datalinq-code-toolbutton key-value-store')
+        $("<div><div class='text'>DataLinq Settings</div></div>")
+            .data('event', 'toggle-settings')
+            .addClass('datalinq-code-toolbutton settings')
             .appendTo($parent);
 
-        if (features.Sandbox) {
-            $("<div><div class='text'>Datalinq Sandbox</div></div>")
-                .data('event', 'toggle-sandbox')
-                .addClass('datalinq-code-toolbutton sandbox')
-                .appendTo($parent);
-        }
-
         if (features.Copilot) {
-            $("<div><div class='text'>Datalinq Copilot</div></div>")
+            $("<div><div class='text'>DataLinq Copilot</div></div>")
                 .data('event', 'toggle-copilot')
                 .addClass('datalinq-code-toolbutton copilot')
                 .appendTo($parent);

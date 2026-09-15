@@ -42,6 +42,7 @@ public class DataLinqService
     private readonly IDataLinqCacheTokenService _tokenService;
     private readonly IDataLinqCodeIdentityService _dataLinqCodeIdentity;
     private readonly IDataLinqAccessProviderService _dataLinqAccessProvider;
+    private readonly DataLinqErrorPageService _errorPage;
 
     public DataLinqService(ILogger<DataLinqService> logger,
                            IOptionsMonitor<DataLinqOptions> optionsMonitor,
@@ -54,6 +55,7 @@ public class DataLinqService
                            IWebHostEnvironment environment,
                            IDataLinqAccessProviderService dataLinqAccessProvider,
                            IDataLinqCacheTokenService tokenService,
+                           DataLinqErrorPageService errorPage = null,
                            IHostAuthenticationService hostAuthenication = null,
                            IDataLinqCodeIdentityService dataLinqCodeIdentity = null)
     {
@@ -70,6 +72,7 @@ public class DataLinqService
         _tokenService = tokenService;
         _dataLinqCodeIdentity = dataLinqCodeIdentity;
         _dataLinqAccessProvider = dataLinqAccessProvider;
+        _errorPage = errorPage;
     }
 
     async public Task<(object result, string contentType, bool succeeded)> QueryAsync(HttpContext httpContext,
@@ -355,42 +358,61 @@ public class DataLinqService
 
             if (dataLinqRoute.HasView)
             {
-                StringBuilder sb = new StringBuilder();
-                bool showStackTrace = false;
-#if DEBUG
-                showStackTrace = true;
-#endif
-                sb.Append("<div id='datalinq-services-error' style='background-color:#efefaa;display:inline-block;margin:5px;padding:10px;border:1px solid red'>");
-                sb.Append(ex.Message);
-
-                if (showStackTrace || ex is NullReferenceException)
+                var errorModel = new DataLinqErrorPageModel(ex)
                 {
-                    sb.Append("<br/><br/>");
-                    sb.Append(ex.StackTrace.Replace("\n", "<br/>"));
-                }
-#if DEBUG
-                var innerException = ex.InnerException;
-                while (innerException != null)
-                {
-                    sb.Append("<br/><br/>");
-                    sb.Append("Inner Exception: ");
-                    sb.Append("<br/>");
-                    sb.Append(innerException.Message);
-                    sb.Append("<br/><br/>");
-                    sb.Append(innerException.StackTrace.Replace("\n", "<br/>"));
+                    Route = routeString,
+                    EndpointId = dataLinqRoute.EndpointId,
+                    QueryId = dataLinqRoute.QueryId,
+                    ViewId = dataLinqRoute.ViewId,
+                    RequestPath = httpContext?.Request?.Path.ToString(),
+                    QueryString = httpContext?.Request?.Query.ToCollection() ?? new System.Collections.Specialized.NameValueCollection()
+                };
 
-                    innerException = innerException.InnerException;
-                }
-#endif
-                sb.Append("</div>");
+                string errorHtml = _errorPage != null
+                    ? await _errorPage.RenderAsync(ex, errorModel)
+                    : LegacyErrorHtml(ex);
 
                 contentType = "text/html";
 
                 succeeded = false;
-                return (result: sb.ToString(), contentType: contentType, succeeded: succeeded);
+                return (result: errorHtml, contentType: contentType, succeeded: succeeded);
             }
             throw;
         }
+    }
+
+    private static string LegacyErrorHtml(Exception ex)
+    {
+        StringBuilder sb = new StringBuilder();
+        bool showStackTrace = false;
+#if DEBUG
+        showStackTrace = true;
+#endif
+        sb.Append("<div id='datalinq-services-error' style='background-color:#efefaa;display:inline-block;margin:5px;padding:10px;border:1px solid red'>");
+        sb.Append(ex.Message);
+
+        if (showStackTrace || ex is NullReferenceException)
+        {
+            sb.Append("<br/><br/>");
+            sb.Append(ex.StackTrace.Replace("\n", "<br/>"));
+        }
+#if DEBUG
+        var innerException = ex.InnerException;
+        while (innerException != null)
+        {
+            sb.Append("<br/><br/>");
+            sb.Append("Inner Exception: ");
+            sb.Append("<br/>");
+            sb.Append(innerException.Message);
+            sb.Append("<br/><br/>");
+            sb.Append(innerException.StackTrace.Replace("\n", "<br/>"));
+
+            innerException = innerException.InnerException;
+        }
+#endif
+        sb.Append("</div>");
+
+        return sb.ToString();
     }
 
     async public Task<bool> ExecuteNonQueryAsync(HttpContext httpContext,

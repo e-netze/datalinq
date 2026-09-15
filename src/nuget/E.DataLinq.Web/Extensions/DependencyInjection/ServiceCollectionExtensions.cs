@@ -75,6 +75,7 @@ static public class ServiceCollectionExtensions
                        // Sonst kommt es zu Fehler (IFeatureCollection has been disposed), weil IHttpContextAccessor sonst auch Singleton wird!!!
                        .AddTransient<DataLinqService>()
                        .AddTransient<DataLinqCompilerService>()
+                       .AddTransient<DataLinqErrorPageService>()
                        .AddTransient<AccessControlService>()
                        .AddSingleton<IMonacoSnippetService>(provider => new MonacoSnippetService(
                            new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)

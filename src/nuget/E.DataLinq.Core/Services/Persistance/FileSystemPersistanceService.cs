@@ -175,6 +175,18 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         return string.Empty;
     }
 
+    async public Task<string> GetErrorPage()
+    {
+        FileInfo fi = new FileInfo(ErrorPageBloblPath());
+
+        if (fi.Exists)
+        {
+            return await File.ReadAllTextAsync(fi.FullName);
+        }
+
+        return string.Empty;
+    }
+
     async public Task<IDictionary<string, IEnumerable<string>>> GetEndPointPrefixes()
     {
         var result = new Dictionary<string, IEnumerable<string>>();
@@ -393,6 +405,16 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         FileInfo fi = new FileInfo(ViewJavascriptBloblPath(id));
 
         await File.WriteAllTextAsync(fi.FullName, js);
+
+        return true;
+    }
+
+    async public Task<bool> StoreErrorPage(string razorCode)
+    {
+        FileInfo fi = new FileInfo(ErrorPageBloblPath());
+
+        Directory.CreateDirectory(fi.DirectoryName!);
+        await File.WriteAllTextAsync(fi.FullName, razorCode ?? string.Empty);
 
         return true;
     }
@@ -664,6 +686,9 @@ public class FileSystemPersistanceService : IPersistanceProviderService
 
         return Path.Combine(_storagePath, ids[0], "queries", $"{ids[1]}-views", $"_{ids[2]}_js.blb");
     }
+
+    private string ErrorPageBloblPath()
+        => Path.Combine(_storagePath, "_errorpage.blb");
 
     private string CodeBloblPath(string id)
     {

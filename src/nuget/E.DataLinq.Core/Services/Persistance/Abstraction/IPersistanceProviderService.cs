@@ -15,6 +15,12 @@ public interface IPersistanceProviderService
     Task<string> GetEndPointJavascript(string endPointId);
     Task<string> GetViewJs(string id);
 
+    /// <summary>
+    /// Gets the global (system wide) razor code of the custom error page.
+    /// Returns an empty string if no custom error page was stored.
+    /// </summary>
+    Task<string> GetErrorPage() => Task.FromResult(string.Empty);
+
     Task<bool> DeleteEndPoint(string endPointId);
     Task<bool> DeleteEndPointQuery(string endPointId, string endPointQueryId);
     Task<bool> DeleteEndPointQueryView(string endPointId, string endPointQueryId, string endPointQueryViewId);
@@ -34,6 +40,11 @@ public interface IPersistanceProviderService
     Task<bool> StoreViewCss(string id, string css);
     Task<bool> StoreEndPointJavascript(string endPointId, string css);
     Task<bool> StoreViewJs(string id, string js);
+
+    /// <summary>
+    /// Stores the global (system wide) razor code of the custom error page.
+    /// </summary>
+    Task<bool> StoreErrorPage(string razorCode) => Task.FromResult(false);
 
     Task<bool> StoreCode(string id, string code);
     Task<bool> DeleteCode(string id);

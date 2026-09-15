@@ -207,6 +207,14 @@ var dataLinqCode = new function ($) {
             dataLinqCode.ui.keyValueStore();
         });
 
+        dataLinqCode.events.on('edit-error-page', function (channel) {
+            dataLinqCode.ui.errorPage();
+        });
+
+        dataLinqCode.events.on('toggle-settings', function (channel) {
+            dataLinqCode.ui.settings();
+        });
+
         dataLinqCode.events.on('initialize-git-push', function (channel) {
             dataLinqCode.ui.confirmPromised(
                 "Initializing Git",
@@ -610,6 +618,164 @@ var dataLinqCode = new function ($) {
         this.confirm = function (title, message, onConfirm) {
             dataLinqCode.ui.confirmIf(true, title, message, onConfirm);
         }
+
+        this.errorPage = function () {
+            var modalId = 'datalinq-code-error-page';
+            var baseTitle = 'Global Error Page';
+
+            $('body').dataLinq_code_modal({
+                title: baseTitle,
+                height: '80%',
+                width: '80%',
+                id: modalId,
+                onload: function ($content) {
+                    $content.addClass('datalinq-code-error-page-content');
+
+                    var $frame = $("<iframe>")
+                        .addClass('datalinq-code-error-page-frame')
+                        .attr('frameborder', '0')
+                        .css({ width: '100%', height: 'calc(100% - 50px)' })
+                        .attr('src', dataLinqCode.targetUrl() +
+                            '/EditErrorPage?dl_token=' + window._datalinqCodeAccessToken)
+                        .appendTo($content);
+
+                    var isDirty = false;
+
+                    var updateDirtyIndicator = function () {
+                        var $titleElement = $('body')
+                            .dataLinq_code_modal('title', { id: modalId });
+
+                        var titleText = baseTitle + (isDirty ? ' \u25CF (unsaved changes)' : '');
+
+                        if ($titleElement && $titleElement.length) {
+                            $titleElement.text(titleText);
+                        }
+
+                        $content.toggleClass('datalinq-code-editor-dirty', isDirty);
+                    };
+
+                    var setupFrameHooks = function () {
+                        var frameWindow = $frame[0].contentWindow;
+
+                        if (frameWindow) {
+                            frameWindow.onErrorPageDirtyChanged = function (dirty) {
+                                isDirty = dirty;
+                                updateDirtyIndicator();
+                            };
+                        }
+                    };
+
+                    $frame.on('load', setupFrameHooks);
+                    setupFrameHooks();
+
+                    var closeModal = function () {
+                        $('body').dataLinq_code_modal('close', { id: modalId });
+                    };
+
+                    var $buttonbar = $("<div>").addClass("button-bar").appendTo($content);
+
+                    $("<button>")
+                        .addClass("datalinq-code-button")
+                        .text("Save")
+                        .appendTo($buttonbar)
+                        .click(function () {
+                            var frameWindow = $frame[0].contentWindow;
+
+                            if (frameWindow && frameWindow.dataLinqCodeEditor) {
+                                frameWindow.dataLinqCodeEditor.submitForm();
+                            }
+                        });
+
+                    $("<button>")
+                        .addClass("datalinq-code-button")
+                        .text("Close")
+                        .appendTo($buttonbar)
+                        .click(function () {
+                            if (isDirty) {
+                                dataLinqCode.ui.confirm(
+                                    "Unsaved changes",
+                                    "You have unsaved changes. Are you sure you want to close without saving?",
+                                    function () {
+                                        closeModal();
+                                    });
+                            } else {
+                                closeModal();
+                            }
+                        });
+                }
+            });
+        };
+
+        this.settings = function () {
+            var modalId = 'datalinq-code-settings';
+
+            var features = window.datalinqFeatures || {};
+
+            var settingsItems = [
+                {
+                    key: 'colorscheme',
+                    title: 'Color Scheme',
+                    description: 'Toggle between the light and dark editor theme.',
+                    action: function () { dataLinqCode.events.fire('toggle-color-scheme'); }
+                },
+                {
+                    key: 'key-value-store',
+                    title: 'Secrets & Constants',
+                    description: 'Manage secrets and constants for your environments.',
+                    action: function () { dataLinqCode.ui.keyValueStore(); }
+                },
+                {
+                    key: 'error-page',
+                    title: 'Error Page',
+                    description: 'Customize the error page shown to end users.',
+                    action: function () { dataLinqCode.ui.errorPage(); }
+                }
+            ];
+
+            if (features.Sandbox) {
+                settingsItems.push({
+                    key: 'sandbox',
+                    title: 'DataLinq Sandbox',
+                    description: 'Open the DataLinq sandbox guide in a new tab.',
+                    action: function () { dataLinqCode.events.fire('toggle-sandbox'); }
+                });
+            }
+
+            $('body').dataLinq_code_modal({
+                title: 'Settings',
+                height: '440px',
+                width: '480px',
+                id: modalId,
+                onload: function ($content) {
+                    $content.addClass('datalinq-code-settings-content');
+
+                    var $list = $("<div>")
+                        .addClass('datalinq-code-settings-list')
+                        .appendTo($content);
+
+                    $.each(settingsItems, function (i, item) {
+                        var $item = $("<div>")
+                            .addClass('datalinq-code-settings-item')
+                            .appendTo($list)
+                            .click(function () {
+                                $('body').dataLinq_code_modal('close', { id: modalId });
+                                item.action();
+                            });
+
+                        $("<div>")
+                            .addClass('datalinq-code-settings-icon ' + item.key)
+                            .appendTo($item);
+
+                        var $text = $("<div>")
+                            .addClass('datalinq-code-settings-text')
+                            .appendTo($item);
+
+                        $("<div>").addClass('title').text(item.title).appendTo($text);
+                        $("<div>").addClass('desc').text(item.description).appendTo($text);
+                    });
+                }
+            });
+        };
 
         this.keyValueStore = function () {
             $('body').dataLinq_code_modal({

@@ -1300,6 +1300,70 @@ body {
         float: right;
     }
 
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.settings {
+        background-image: url(img/settings_32@1.svg);
+        float: right;
+    }
+
+    .datalinq-code-settings-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px;
+    }
+
+        .datalinq-code-settings-list .datalinq-code-settings-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border: 1px solid #3a3f44;
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: rgb(73 73 73);
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .datalinq-code-settings-list .datalinq-code-settings-item:hover {
+            background-color: rgba(91, 173, 255, 0.12);
+            border-color: #5badff;
+        }
+
+        .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-icon {
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 28px 28px;
+        }
+
+            .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-icon.key-value-store {
+                background-image: url(img/keyvalue_32@1.svg);
+            }
+
+            .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-icon.error-page {
+                background-image: url(img/error_32@1.svg);
+            }
+
+            .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-icon.colorscheme {
+                background-image: url(img/darkmode_32@1.png);
+            }
+
+            .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-icon.sandbox {
+                background-image: url(img/sandbox_32@1.png);
+            }
+
+        .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-text .title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-text .desc {
+            font-size: 12px;
+            color: #9aa0a6;
+        }
+
     .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.logout {
         background-image: url(img/account_32@1.png);
         width: 120px;
@@ -2249,8 +2313,14 @@ body.colorscheme-light .datalinq-autocomplete-multiselect .datalinq-autocomplete
     color: black;
 }
 
-body.colorscheme-light .datalinq-code-editor-code-panel .datalinq-code-editor-code-statusbar {
-    background: #cfcfcf;
+body.colorscheme-light .datalinq-code-editor-code-panel .datalinq-code-editor-code-statusbar,
+.colorscheme-light .datalinq-code-editor-code-panel .datalinq-code-editor-code-statusbar {
+    background: #c3c3c3 !important;
+}
+
+/***** Settings modal - Lightmode ********/
+.datalinq-code-modal.colorscheme-light .datalinq-code-settings-list .datalinq-code-settings-item {
+    background-color: rgb(231 231 231);
 }
 
 /***** Secrets & Constants (Key/Value Store) - Lightmode ********/
@@ -2297,7 +2367,6 @@ body.colorscheme-light .datalinq-code-editor-code-panel .datalinq-code-editor-co
 
 .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.folder {
     filter: none;
-    background-image: url(img/folder-icon.svg);
 }
 
 .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.folder > .icon {

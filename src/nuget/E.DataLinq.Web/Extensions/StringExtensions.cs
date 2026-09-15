@@ -73,6 +73,18 @@ internal static class StringExtensions
     static public string ToRazorAssemblyFilename(this string id)
         => $"razor_{id}.dll";
 
+    static public string RazorCodeHash(this string code)
+    {
+        if (String.IsNullOrEmpty(code))
+        {
+            return "empty";
+        }
+
+        var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(code));
+
+        return Convert.ToHexString(hash).Substring(0, 32).ToLowerInvariant();
+    }
+
     public static string CleanRazorString(this string input)
     {
         if (string.IsNullOrWhiteSpace(input))

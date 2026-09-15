@@ -1,0 +1,84 @@
+@using E.DataLinq.Code.Extensions
+@model E.DataLinq.Code.Models.ErrorPageModel
+
+@{
+    Layout = "~/Views/Shared/_Layout_empty-datalinq-code-frame.cshtml";
+    ViewBag.Title = "DataLinq Code";
+}
+
+<div class="datalinq-code-editor-code-panel switch-to code">
+    <div id="datalinq-code-editor-code">
+
+    </div>
+    <div class="datalinq-code-editor-code-errors">
+
+    </div>
+
+    <div class="datalinq-code-editor-code-statusbar">
+
+    </div>
+</div>
+
+<div class="datalinq-code-editor-settings switch-to settings">
+    @using (Html.BeginForm("EditErrorPage", "DataLinqCode", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.HiddenFor(m => m.Code);
+
+        <button class="submit" style="display:none">Submit</button>
+    }
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        $(function () {
+            window._datalinqCodeAccessToken = new URLSearchParams(window.location.search).get('dl_token');
+
+            try {
+                var editorTheme = sessionStorage.getItem('editorTheme');
+                document.body.classList.toggle('colorscheme-light', editorTheme === 'vs');
+            } catch (e) { }
+
+            var id = '_errorpage';
+
+            var value = "@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(Model.Code))";
+            var originalValue = value;
+            var isDirty = false;
+
+            function setDirty(dirty) {
+                isDirty = dirty;
+                if (typeof window.onErrorPageDirtyChanged === 'function') {
+                    window.onErrorPageDirtyChanged(dirty);
+                }
+            }
+
+            window.errorPageEditor = {
+                isDirty: function () { return isDirty; },
+                save: function () {
+                    if (typeof dataLinqCodeEditor !== 'undefined' && dataLinqCodeEditor.submitForm) {
+                        dataLinqCodeEditor.submitForm();
+                    }
+                }
+            };
+
+            dataLinqCodeEditor.init(id, value, "razor");
+            dataLinqCodeEditor.events.on('editor-value-changed', function (channel, args) {
+                if (args.id === id) {
+                    $("input[name='Code']").val(args.value);
+                    setDirty(args.value !== originalValue);
+                }
+            });
+
+            dataLinqCode.events.on('document-saved', function (channel, args) {
+                originalValue = $("input[name='Code']").val();
+                setDirty(false);
+            });
+
+            $(document).on('keydown', function (e) {
+                if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
+                    e.preventDefault();
+                    window.errorPageEditor.save();
+                }
+            });
+        });
+    </script>
+}

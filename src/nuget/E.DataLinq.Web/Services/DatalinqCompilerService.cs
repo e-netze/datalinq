@@ -130,6 +130,56 @@ public class DataLinqCompilerService
 
     public IRazorCompileEngineService RazorEngine => _razorEngines.GetRazorEngineService(_options, "");
 
+    public Task ValidateErrorPageCode(string razorCode)
+    {
+        if (String.IsNullOrWhiteSpace(razorCode))
+        {
+            return Task.CompletedTask;
+        }
+
+        // the built in default page is trusted code and must never be rejected by the black list
+        if (razorCode != DataLinqErrorPageDefaults.DefaultRazorCode)
+        {
+            CheckRazorBlackAndWhiteList(razorCode);
+        }
+
+        var code = CreateErrorPageCodeStringBuilder();
+        code.Append(razorCode);
+
+        string tempalteId = Guid.NewGuid().ToString();
+
+        return _razorEngines
+                .GetRazorEngineService(_options, razorCode)
+                .RunCompile<DataLinqErrorPageModel>(code.ToString(), tempalteId, new DataLinqErrorPageModel(null));
+    }
+
+    async public Task<string> RenderErrorPage(string razorCode, DataLinqErrorPageModel model)
+    {
+        if (String.IsNullOrWhiteSpace(razorCode))
+        {
+            return String.Empty;
+        }
+
+        var razorEngineService = _razorEngines.GetRazorEngineService(_options, razorCode);
+
+        var code = CreateErrorPageCodeStringBuilder();
+        code.Append(razorCode);
+
+        // cache by content => a changed error page is recompiled, an unchanged one is not
+        string razorCacheId = $"_datalinq-errorpage-{razorCode.RazorCodeHash()}";
+
+        // the built in default page is trusted code and must never be rejected by the black list
+        bool isTrustedDefault = razorCode == DataLinqErrorPageDefaults.DefaultRazorCode;
+
+        if (!isTrustedDefault && !razorEngineService.IsCompilationCached(razorCacheId, typeof(DataLinqErrorPageModel)))
+        {
+            CheckRazorBlackAndWhiteList(razorCode);
+        }
+
+        return await razorEngineService.RunCompile<DataLinqErrorPageModel>(code.ToString(), razorCacheId, model);
+    }
+
+
     #region Config
 
     private System.Xml.XmlDocument ConfigXmlDocument(string name)
@@ -182,6 +232,28 @@ public class DataLinqCompilerService
             razorCode.Append(constants);
         }
         razorCode.Append("}");
+        razorCode.Append(Environment.NewLine);
+
+        return razorCode;
+    }
+
+    private StringBuilder CreateErrorPageCodeStringBuilder()
+    {
+        StringBuilder razorCode = new StringBuilder();
+
+        razorCode.Append("@using E.DataLinq.Web.Razor;");
+        razorCode.Append(Environment.NewLine);
+        razorCode.Append("@using E.DataLinq.Web.Models.Razor;");
+        razorCode.Append(Environment.NewLine);
+
+        foreach (var razorNamespace in _options.RazorNamespaces)
+        {
+            razorCode.Append($"@using {razorNamespace};");
+            razorCode.Append(Environment.NewLine);
+        }
+
+        // expose the exception as @exception, so authors can write @exception.Message, @exception.StackTrace, ...
+        razorCode.Append("@{ var exception = Model?.Exception; var ex = exception; var queryString = Model?.QueryString; }");
         razorCode.Append(Environment.NewLine);
 
         return razorCode;
