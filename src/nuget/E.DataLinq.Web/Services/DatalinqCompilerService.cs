@@ -167,6 +167,8 @@ public class DataLinqCompilerService
 
         razorCode.Append("@using E.DataLinq.Web.Razor;");
         razorCode.Append(Environment.NewLine);
+        razorCode.Append("@using E.DataLinq.Web.Models.Razor;");
+        razorCode.Append(Environment.NewLine);
 
         foreach (var razorNamespace in _options.RazorNamespaces)
         {

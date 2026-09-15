@@ -59,13 +59,10 @@ public class MonacoSnippetService : IMonacoSnippetService
 
             var methodDescription = GetDescriptionFromXML(targetType, lang, method, skipper);
 
-            // for extension methods, the first ("this") parameter is provided by the caller
-            // (e.g. Model.Records) and must not be part of the snippet
             var parameters = IsExtensionMethod(method)
                 ? method.GetParameters().Skip(1).ToArray()
                 : method.GetParameters();
 
-            // generic methods (e.g. JsonValue<T>) get a placeholder for the type argument
             var genericArguments = method.IsGenericMethodDefinition
                 ? method.GetGenericArguments()
                 : Array.Empty<Type>();
@@ -76,12 +73,16 @@ public class MonacoSnippetService : IMonacoSnippetService
                 ? $"<{String.Join(", ", genericArguments.Select((g, i) => $"${{{i + 1}:{g.Name}}}"))}>"
                 : "";
 
-            var insertTextLines = parameters.Select((p, i) =>
+            var tabIndex = genericArguments.Length;
+
+            var insertTextLines = new List<string>();
+            for (int i = 0; i < parameters.Length; i++)
             {
-                var defaultVal = TypeToString(p.ParameterType);
+                var p = parameters[i];
                 var comma = (i < parameters.Length - 1) ? "," : "";
-                return $"    ${{{i + 1 + genericArguments.Length}:{defaultVal}}}{comma} //{p.Name}";
-            }).ToList();
+                var value = BuildValueSnippet(p.ParameterType, ref tabIndex, "    ", 0);
+                insertTextLines.Add($"    {value}{comma} //{p.Name}");
+            }
 
             var insertText = new StringBuilder();
             insertText.AppendLine($"{method.Name}{genericSnippet}(");
@@ -113,10 +114,6 @@ public class MonacoSnippetService : IMonacoSnippetService
         && method.IsDefined(typeof(ExtensionAttribute), false)
         && method.GetParameters().Length > 0;
 
-    /// <summary>
-    /// Only the overloads extending the records collection (Model.Records) are offered,
-    /// the single record overloads are not valid in this context.
-    /// </summary>
     static private bool IsRecordsExtensionMethod(MethodInfo method)
     {
         if (!IsExtensionMethod(method))
@@ -130,12 +127,71 @@ public class MonacoSnippetService : IMonacoSnippetService
             && thisParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>);
     }
 
+    private string BuildValueSnippet(Type type, ref int tabIndex, string indent, int depth)
+    {
+        var underlying = Nullable.GetUnderlyingType(type) ?? type;
+
+        if (underlying.IsEnum)
+        {
+            tabIndex++;
+            var names = Enum.GetNames(underlying);
+            return $"{underlying.Name}.${{{tabIndex}|{string.Join(",", names)}|}}";
+        }
+
+        if (depth < 2 && IsComplexType(underlying))
+        {
+            var properties = underlying
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(pr => pr.CanWrite && pr.GetIndexParameters().Length == 0)
+                .ToArray();
+
+            if (properties.Length > 0)
+            {
+                var sb = new StringBuilder();
+                sb.Append($"new {TypeToString(underlying)}");
+                sb.Append($"\n{indent}{{");
+
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    var property = properties[i];
+                    var comma = (i < properties.Length - 1) ? "," : "";
+                    var value = BuildValueSnippet(property.PropertyType, ref tabIndex, indent + "    ", depth + 1);
+                    sb.Append($"\n{indent}    {property.Name} = {value}{comma}");
+                }
+
+                sb.Append($"\n{indent}}}");
+                return sb.ToString();
+            }
+        }
+
+        tabIndex++;
+        return $"${{{tabIndex}:{TypeToString(type)}}}";
+    }
+
+    private static bool IsComplexType(Type type)
+    {
+        if (type.IsPrimitive || type.IsEnum)
+        {
+            return false;
+        }
+
+        if (type == typeof(string) || type == typeof(decimal) || type == typeof(object)
+            || type == typeof(DateTime) || type == typeof(DateTimeOffset)
+            || type == typeof(TimeSpan) || type == typeof(Guid))
+        {
+            return false;
+        }
+
+        if (type.IsArray || type.IsGenericType || !type.IsClass)
+        {
+            return false;
+        }
+
+        return type.GetConstructor(Type.EmptyTypes) != null;
+    }
+
     private string TypeToString(Type type)
     {
-        if (type == typeof(object))
-        {
-            return "object";
-        }
 
         if (type == typeof(string))
         {
