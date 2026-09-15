@@ -518,7 +518,7 @@ function createContinuationPageWrapper(sourcePage, sourceWrapper) {
     }
 
     const template = sourcePage.getAttribute('datalinq-pdfreport-template');
-    if (template) {
+    if (template && sourceWrapper.classList.contains('dynamic-use-template')) {
         newPage.setAttribute('datalinq-pdfreport-template', template);
     }
 
