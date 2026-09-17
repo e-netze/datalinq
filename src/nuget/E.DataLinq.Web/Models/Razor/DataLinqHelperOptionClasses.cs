@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using static QRCoder.PayloadGenerator.Girocode;
 
 namespace E.DataLinq.Web.Models.Razor;
 
@@ -80,4 +81,50 @@ public class DynamicTableOptions
             RepeatHeader = !d.ContainsKey("RepeatHeader") || (bool)d["RepeatHeader"],
         };
     }
+}
+
+public class MailQrCodeDetails
+{
+    public string reciever { get; set; } = "max.musermann@mail.at";
+    public string subject { get; set; } = "Mail Betreff";
+    public string body { get; set; } = "Mail Body";
+    public QrCodeMailEncoding mailEncoding { get; set; } = QrCodeMailEncoding.MAILTO;
+}
+
+public class GeoLocationQrCodeDetails
+{
+    public string latitude { get; set; } = "47.05566";
+    public string longitude { get; set; } = "15.4365";
+    public QrCodeGeolocationEncoding geolocationEncoding { get; set; } = QrCodeGeolocationEncoding.GEO;
+}
+
+public class GiroQrCodeDetails
+{
+    public string iban { get; set; } = "47.05566";
+    public string bic { get; set; } = "15.4365";
+    public string name { get; set; } = "Max Mustermann";
+    public decimal amount { get; set; } = 0;
+    public string purpose { get; set; } = "Rechnung 1234";
+    public QrCodeGiroTypeOfRemittance purposeType { get; set; } = QrCodeGiroTypeOfRemittance.Structured;
+    public string purposeOfCreditTransfer { get; set; } = "Rechnung 1234";
+    public string messageToGirocodeRecipient { get; set; } = "Vielen Dank für Ihre Zahlung!";
+}
+
+public enum QrCodeMailEncoding
+{
+    MAILTO,
+    MATMSG,
+    SMTP
+}
+
+public enum QrCodeGeolocationEncoding
+{
+    GEO,
+    GoogleMaps
+}
+
+public enum QrCodeGiroTypeOfRemittance
+{
+    Structured,
+    Unstructured
 }

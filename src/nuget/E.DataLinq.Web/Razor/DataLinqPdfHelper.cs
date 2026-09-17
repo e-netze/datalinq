@@ -3,10 +3,16 @@ using E.DataLinq.Web.Html.Abstractions;
 using E.DataLinq.Web.Html.Extensions;
 using E.DataLinq.Web.Models.Razor;
 using E.DataLinq.Web.Services.Abstraction;
+using QRCoder;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Xml.Serialization;
+using static QRCoder.PayloadGenerator;
+using static QRCoder.PayloadGenerator.Geolocation;
+using static QRCoder.PayloadGenerator.Girocode;
+using static QRCoder.PayloadGenerator.Mail;
 
 namespace E.DataLinq.Web.Razor;
 
@@ -398,6 +404,101 @@ public class DataLinqPdfHelper
        );
     }
 
+    /// <summary>
+    /// de: Erzeugt einen QR-Code aus einer URL und gibt ihn als HTML-img-Tag mit eingebettetem Base64-Bild zurück.
+    /// en: Generates a QR code from a URL and returns it as an HTML img tag with an embedded Base64 image.
+    /// </summary>
+    /// <param name="url">
+    /// de: Die URL, die im QR-Code kodiert werden soll.
+    /// en: The URL to encode in the QR code.
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Optionale HTML-Attribute (z.B. class, style), die dem img-Tag hinzugefügt werden. Standard ist null.
+    /// en: Optional HTML attributes (e.g. class, style) to add to the img tag. Default is null.
+    /// </param>
+    /// <returns>
+    /// de: Gibt ein rohes HTML-Objekt mit dem img-Tag zurück, das den QR-Code als Base64-Bild enthält.
+    /// en: Returns a raw HTML object with the img tag containing the QR code as a Base64 image.
+    /// </returns>
+    public object GenerateUrlQRCode(string url, object htmlAttributes = null)
+    {
+        return BuildQRCode(new PayloadGenerator.Url(url), htmlAttributes);
+    }
+
+    /// <summary>
+    /// de: Erzeugt einen Mail-QR-Code und gibt ihn als HTML-img-Tag mit eingebettetem Base64-Bild zurück.
+    /// en: Generates a mail QR code and returns it as an HTML img tag with an embedded Base64 image.
+    /// </summary>
+    /// <param name="mailDetails">
+    /// de: Die Details für den Mail-QR-Code (Empfänger, Betreff, Text, Kodierung).
+    /// en: The details for the mail QR code (receiver, subject, body, encoding).
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Optionale HTML-Attribute (z.B. class, style), die dem img-Tag hinzugefügt werden. Standard ist null.
+    /// en: Optional HTML attributes (e.g. class, style) to add to the img tag. Default is null.
+    /// </param>
+    /// <returns>
+    /// de: Gibt ein rohes HTML-Objekt mit dem img-Tag zurück, das den QR-Code als Base64-Bild enthält.
+    /// en: Returns a raw HTML object with the img tag containing the QR code as a Base64 image.
+    /// </returns>
+    public object GenerateMailQRCode(MailQrCodeDetails mailDetails, object htmlAttributes = null)
+    {
+        return BuildQRCode(
+            new Mail(mailDetails.reciever, mailDetails.subject, mailDetails.body, (MailEncoding)mailDetails.mailEncoding),
+            htmlAttributes);
+    }
+
+    /// <summary>
+    /// de: Erzeugt einen Geolocation-QR-Code und gibt ihn als HTML-img-Tag mit eingebettetem Base64-Bild zurück.
+    /// en: Generates a geolocation QR code and returns it as an HTML img tag with an embedded Base64 image.
+    /// </summary>
+    /// <param name="geoLocationDetails">
+    /// de: Die Details für den Geolocation-QR-Code (Breitengrad, Längengrad, Kodierung).
+    /// en: The details for the geolocation QR code (latitude, longitude, encoding).
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Optionale HTML-Attribute (z.B. class, style), die dem img-Tag hinzugefügt werden. Standard ist null.
+    /// en: Optional HTML attributes (e.g. class, style) to add to the img tag. Default is null.
+    /// </param>
+    /// <returns>
+    /// de: Gibt ein rohes HTML-Objekt mit dem img-Tag zurück, das den QR-Code als Base64-Bild enthält.
+    /// en: Returns a raw HTML object with the img tag containing the QR code as a Base64 image.
+    /// </returns>
+    public object GenerateGeoLocationQRCode(GeoLocationQrCodeDetails geoLocationDetails, object htmlAttributes = null)
+    {
+        return BuildQRCode(
+            new Geolocation(geoLocationDetails.latitude, geoLocationDetails.longitude, (GeolocationEncoding)geoLocationDetails.geolocationEncoding),
+            htmlAttributes);
+    }
+
+    /// <summary>
+    /// de: Erzeugt einen Giro-QR-Code und gibt ihn als HTML-img-Tag mit eingebettetem Base64-Bild zurück.
+    /// en: Generates a giro QR code and returns it as an HTML img tag with an embedded Base64 image.
+    /// </summary>
+    /// <param name="giroCodeDetails">
+    /// de: Die Details für den Giro-QR-Code (IBAN, BIC, Name, Betrag, Verwendungszweck).
+    /// en: The details for the giro QR code (IBAN, BIC, Name, Amount, Purpose).
+    /// </param>
+    /// <param name="htmlAttributes">
+    /// de: Optionale HTML-Attribute (z.B. class, style), die dem img-Tag hinzugefügt werden. Standard ist null.
+    /// en: Optional HTML attributes (e.g. class, style) to add to the img tag. Default is null.
+    /// </param>
+    /// <returns>
+    /// de: Gibt ein rohes HTML-Objekt mit dem img-Tag zurück, das den QR-Code als Base64-Bild enthält.
+    /// en: Returns a raw HTML object with the img tag containing the QR code as a Base64 image.
+    /// </returns>
+    public object GenerateGiroQRCode(GiroQrCodeDetails giroCodeDetails, object htmlAttributes = null)
+    {
+        return BuildQRCode(
+            new Girocode(
+                giroCodeDetails.iban, 
+                giroCodeDetails.bic, 
+                giroCodeDetails.name, 
+                giroCodeDetails.amount, 
+                giroCodeDetails.purpose),
+            htmlAttributes);
+    }
+
     #endregion
 
     #region Helpers
@@ -405,6 +506,22 @@ public class DataLinqPdfHelper
     private static string GenerateUniqueId(string id)
     {
         return $"{id}-{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+    }
+
+    private object BuildQRCode(PayloadGenerator.Payload payload, object htmlAttributes)
+    {
+        using var qrCodeData = QRCodeGenerator.GenerateQrCode(payload);
+
+        Base64QRCode base64QRCode = new Base64QRCode(qrCodeData);
+        string qrCodeImageAsBase64 = $"data:image/png;base64,{base64QRCode.GetGraphic(20)}";
+
+        var htmlBuilder = HtmlBuilder.Create().Append("img", img =>
+        {
+            img.AddAttribute("src", qrCodeImageAsBase64);
+            img.AddAttributes(htmlAttributes);
+        }, WriteTags.SelfClose);
+
+        return _razor is not null ? _razor.RawString(htmlBuilder.BuildHtmlString()) : htmlBuilder.BuildHtmlString();
     }
 
     #endregion
