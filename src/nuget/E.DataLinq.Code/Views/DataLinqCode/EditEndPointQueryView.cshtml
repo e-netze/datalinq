@@ -1,5 +1,8 @@
 ﻿@using E.DataLinq.Code.Extensions
 @using E.DataLinq.Code.Services
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using System.Collections.Generic
+@using System.Linq
 @model E.DataLinq.Core.Models.DataLinqEndPointQueryView
 
 @inject DataLinqCodeService DataLinqCode
@@ -76,6 +79,32 @@
                 </div>
 
             }
+        </div>
+
+        <h3>Error Page</h3>
+        <div class="hr"></div>
+
+        <div class="datalinq-form-section">
+            @Html.LabelFor(m => m.ErrorPage)
+            @Html.DescriptionFor(m => m.ErrorPage)
+            @{
+                var errorPageNames = await DataLinqCode.ApiClient.GetErrorPageNames();
+                var errorPageItems = new List<SelectListItem>()
+                {
+                    new SelectListItem() { Value = "", Text = "(Global default)" }
+                };
+
+                foreach (var errorPageName in errorPageNames.Where(n => n != "global"))
+                {
+                    errorPageItems.Add(new SelectListItem()
+                    {
+                        Value = errorPageName,
+                        Text = errorPageName,
+                        Selected = errorPageName == Model.ErrorPage
+                    });
+                }
+            }
+            @Html.DropDownListFor(m => m.ErrorPage, errorPageItems)
         </div>
 
         <h3>PDF Report mode</h3>

@@ -175,9 +175,9 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         return string.Empty;
     }
 
-    async public Task<string> GetErrorPage()
+    async public Task<string> GetErrorPage(string name)
     {
-        FileInfo fi = new FileInfo(ErrorPageBloblPath());
+        FileInfo fi = new FileInfo(ErrorPageBloblPath(name));
 
         if (fi.Exists)
         {
@@ -185,6 +185,50 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         }
 
         return string.Empty;
+    }
+
+    public Task<string> GetErrorPage()
+        => GetErrorPage(DataLinqErrorPage.GlobalName);
+
+    public Task<IEnumerable<string>> GetErrorPageNames()
+    {
+        var names = new List<string>() { DataLinqErrorPage.GlobalName };
+
+        var di = new DirectoryInfo(ErrorPagesDirectoryPath());
+
+        if (di.Exists)
+        {
+            foreach (var fi in di.GetFiles("_errorpage_*.blb"))
+            {
+                var name = Path.GetFileNameWithoutExtension(fi.Name)
+                               .Substring("_errorpage_".Length);
+
+                if (!String.IsNullOrEmpty(name) &&
+                    !names.Contains(name, StringComparer.OrdinalIgnoreCase))
+                {
+                    names.Add(name);
+                }
+            }
+        }
+
+        return Task.FromResult<IEnumerable<string>>(names);
+    }
+
+    public Task<bool> DeleteErrorPage(string name)
+    {
+        if (DataLinqErrorPage.GlobalName.Equals(name, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new Exception("The global error page can not be deleted");
+        }
+
+        FileInfo fi = new FileInfo(ErrorPageBloblPath(name));
+
+        if (fi.Exists)
+        {
+            fi.Delete();
+        }
+
+        return Task.FromResult(true);
     }
 
     async public Task<IDictionary<string, IEnumerable<string>>> GetEndPointPrefixes()
@@ -409,15 +453,18 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         return true;
     }
 
-    async public Task<bool> StoreErrorPage(string razorCode)
+    async public Task<bool> StoreErrorPage(string name, string razorCode)
     {
-        FileInfo fi = new FileInfo(ErrorPageBloblPath());
+        FileInfo fi = new FileInfo(ErrorPageBloblPath(name));
 
         Directory.CreateDirectory(fi.DirectoryName!);
         await File.WriteAllTextAsync(fi.FullName, razorCode ?? string.Empty);
 
         return true;
     }
+
+    public Task<bool> StoreErrorPage(string razorCode)
+        => StoreErrorPage(DataLinqErrorPage.GlobalName, razorCode);
 
     async public Task<bool> StoreCode(string id, string code)
     {
@@ -687,8 +734,22 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         return Path.Combine(_storagePath, ids[0], "queries", $"{ids[1]}-views", $"_{ids[2]}_js.blb");
     }
 
-    private string ErrorPageBloblPath()
-        => Path.Combine(_storagePath, "_errorpage.blb");
+    private string ErrorPagesDirectoryPath()
+        => Path.Combine(_storagePath, "_errorpages");
+
+    private string ErrorPageBloblPath(string name)
+    {
+        name = String.IsNullOrWhiteSpace(name)
+            ? DataLinqErrorPage.GlobalName
+            : name.Trim();
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(name, "^[A-Za-z0-9_-]+$"))
+        {
+            throw new Exception($"Invalid error page name {name}");
+        }
+
+        return Path.Combine(ErrorPagesDirectoryPath(), $"_errorpage_{name}.blb");
+    }
 
     private string CodeBloblPath(string id)
     {

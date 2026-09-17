@@ -234,15 +234,54 @@ public class DataLinqCodeApiController : ApiBaseController
 
     [HttpGet]
     [Route("errorpage")]
-    async public Task<string> GetErrorPage()
+    async public Task<string> GetErrorPage(string name = null)
     {
         if (!_identity.HasDataLinqCodeRole())
             throw new Exception("Not authorized");
 
+        name = String.IsNullOrWhiteSpace(name)
+            ? DataLinqErrorPageService.GlobalErrorPageName
+            : name;
+
         // fall back to the built in default page, so the editor always opens with a usable template
         return _errorPage != null
-            ? await _errorPage.GetErrorPageCodeAsync()
-            : await _persistanceProvider.GetErrorPage();
+            ? await _errorPage.GetErrorPageCodeAsync(name)
+            : await _persistanceProvider.GetErrorPage(name);
+    }
+
+    [HttpGet]
+    [Route("errorpages")]
+    async public Task<IActionResult> GetErrorPageNames()
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        var names = _errorPage != null
+            ? await _errorPage.GetErrorPageNamesAsync()
+            : await _persistanceProvider.GetErrorPageNames();
+
+        return base.JsonObject(names);
+    }
+
+    [HttpPost]
+    [Route("delete/errorpage")]
+    async public Task<IActionResult> DeleteErrorPage([FromForm] string name)
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        try
+        {
+            var succeeded = _errorPage != null
+                ? await _errorPage.DeleteErrorPageAsync(name)
+                : await _persistanceProvider.DeleteErrorPage(name);
+
+            return base.JsonObject(new SuccessModel(succeeded));
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(false) { ErrorMessage = ex.Message });
+        }
     }
 
 
@@ -543,7 +582,7 @@ public class DataLinqCodeApiController : ApiBaseController
 
     [HttpPost]
     [Route("post/errorpage")]
-    async public Task<IActionResult> StoreErrorPage([FromForm] string code, bool verifyOnly = false)
+    async public Task<IActionResult> StoreErrorPage([FromForm] string code, [FromForm] string name = null, bool verifyOnly = false)
     {
         try
         {
@@ -564,7 +603,11 @@ public class DataLinqCodeApiController : ApiBaseController
                 return base.JsonObject(new SuccessModel());
             }
 
-            return base.JsonObject(new SuccessModel(await _persistanceProvider.StoreErrorPage(code)));
+            name = String.IsNullOrWhiteSpace(name)
+                ? DataLinqErrorPageService.GlobalErrorPageName
+                : name;
+
+            return base.JsonObject(new SuccessModel(await _persistanceProvider.StoreErrorPage(name, code)));
         }
         catch (RazorCompileException razorEx)
         {

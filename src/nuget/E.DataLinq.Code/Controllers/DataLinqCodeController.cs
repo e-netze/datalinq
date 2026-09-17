@@ -375,14 +375,45 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     }
 
     [HttpGet]
-    async public Task<IActionResult> EditErrorPage()
+    async public Task<IActionResult> EditErrorPage(string name = null)
     {
+        name = String.IsNullOrWhiteSpace(name) ? "global" : name;
+
         var model = new ErrorPageModel()
         {
-            Code = _client != null ? await _client.GetErrorPage() : null
+            Name = name,
+            Code = _client != null ? await _client.GetErrorPage(name) : null
         };
 
         return View(model);
+    }
+
+    [HttpGet]
+    async public Task<IActionResult> ErrorPageNames()
+    {
+        var names = _client != null
+            ? await _client.GetErrorPageNames()
+            : new[] { "global" };
+
+        return base.JsonObject(names);
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> DeleteErrorPage(string name)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return base.JsonObject(new SuccessModel(await _client.DeleteErrorPage(name)));
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
     }
 
     [HttpPost]
@@ -395,7 +426,7 @@ public class DataLinqCodeController : DataLinqCodeBaseController
                 throw new Exception("datalinq endpoint no set");
             }
 
-            return base.JsonObject(new SuccessModel(await _client.StoreErrorPage(model.Code)));
+            return base.JsonObject(new SuccessModel(await _client.StoreErrorPage(model.Code, model.Name)));
         }
         catch (RazorCompileException razorEx)
         {

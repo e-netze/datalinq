@@ -621,22 +621,48 @@ var dataLinqCode = new function ($) {
 
         this.errorPage = function () {
             var modalId = 'datalinq-code-error-page';
-            var baseTitle = 'Global Error Page';
+            var globalName = 'global';
+            var currentName = globalName;
+
+            var displayName = function (name) {
+                return name === globalName ? 'Global Error Page' : 'Error Page: ' + name;
+            };
 
             $('body').dataLinq_code_modal({
-                title: baseTitle,
-                height: '80%',
+                title: displayName(globalName),
+                height: 'calc(80% + 10px)',
                 width: '80%',
                 id: modalId,
                 onload: function ($content) {
                     $content.addClass('datalinq-code-error-page-content');
 
+                    var $toolbar = $("<div>")
+                        .addClass('datalinq-code-error-page-toolbar')
+                        .appendTo($content);
+
+                    var $select = $("<select>")
+                        .addClass('datalinq-code-error-page-select')
+                        .appendTo($toolbar);
+
+                    var $newButton = $("<button>")
+                        .addClass('datalinq-code-button')
+                        .text('New...')
+                        .appendTo($toolbar);
+
+                    var $deleteButton = $("<button>")
+                        .addClass('datalinq-code-button')
+                        .text('Delete')
+                        .appendTo($toolbar);
+
+                    var $saveButton = $("<button>")
+                        .addClass('datalinq-code-button align-right')
+                        .text('Save')
+                        .appendTo($toolbar);
+
                     var $frame = $("<iframe>")
                         .addClass('datalinq-code-error-page-frame')
                         .attr('frameborder', '0')
                         .css({ width: '100%', height: 'calc(100% - 50px)' })
-                        .attr('src', dataLinqCode.targetUrl() +
-                            '/EditErrorPage?dl_token=' + window._datalinqCodeAccessToken)
                         .appendTo($content);
 
                     var isDirty = false;
@@ -645,7 +671,7 @@ var dataLinqCode = new function ($) {
                         var $titleElement = $('body')
                             .dataLinq_code_modal('title', { id: modalId });
 
-                        var titleText = baseTitle + (isDirty ? ' \u25CF (unsaved changes)' : '');
+                        var titleText = displayName(currentName) + (isDirty ? ' \u25CF (unsaved changes)' : '');
 
                         if ($titleElement && $titleElement.length) {
                             $titleElement.text(titleText);
@@ -666,42 +692,137 @@ var dataLinqCode = new function ($) {
                     };
 
                     $frame.on('load', setupFrameHooks);
-                    setupFrameHooks();
 
-                    var closeModal = function () {
-                        $('body').dataLinq_code_modal('close', { id: modalId });
+                    var frameUrl = function (name) {
+                        return dataLinqCode.targetUrl() +
+                            '/EditErrorPage?name=' + encodeURIComponent(name) +
+                            '&dl_token=' + window._datalinqCodeAccessToken;
                     };
 
-                    var $buttonbar = $("<div>").addClass("button-bar").appendTo($content);
+                    var loadPage = function (name) {
+                        currentName = name || globalName;
+                        isDirty = false;
 
-                    $("<button>")
-                        .addClass("datalinq-code-button")
-                        .text("Save")
-                        .appendTo($buttonbar)
-                        .click(function () {
-                            var frameWindow = $frame[0].contentWindow;
+                        $select.val(currentName);
+                        // the global page is the system wide fallback => it can never be deleted
+                        $deleteButton.toggle(currentName !== globalName);
 
-                            if (frameWindow && frameWindow.dataLinqCodeEditor) {
-                                frameWindow.dataLinqCodeEditor.submitForm();
-                            }
+                        $frame.attr('src', frameUrl(currentName));
+
+                        updateDirtyIndicator();
+                    };
+
+                    var fillNames = function (names, selectName) {
+                        $select.empty();
+
+                        $.each(names || [globalName], function (i, name) {
+                            $("<option>").attr('value', name).text(displayName(name)).appendTo($select);
                         });
 
-                    $("<button>")
-                        .addClass("datalinq-code-button")
-                        .text("Close")
-                        .appendTo($buttonbar)
-                        .click(function () {
-                            if (isDirty) {
-                                dataLinqCode.ui.confirm(
-                                    "Unsaved changes",
-                                    "You have unsaved changes. Are you sure you want to close without saving?",
-                                    function () {
-                                        closeModal();
-                                    });
-                            } else {
-                                closeModal();
-                            }
+                        loadPage(selectName || currentName);
+                    };
+
+                    var refreshNames = function (selectName) {
+                        $.ajax({
+                            url: dataLinqCode.targetUrl() + '/ErrorPageNames?dl_token=' + window._datalinqCodeAccessToken,
+                            type: 'get',
+                            success: function (names) { fillNames(names, selectName); },
+                            error: function () { fillNames([globalName], selectName); }
                         });
+                    };
+
+                    var confirmUnsaved = function (onContinue) {
+                        if (isDirty) {
+                            dataLinqCode.ui.confirm(
+                                "Unsaved changes",
+                                "You have unsaved changes. Are you sure you want to continue without saving?",
+                                onContinue);
+                        } else {
+                            onContinue();
+                        }
+                    };
+
+                    $select.change(function () {
+                        var name = $select.val();
+
+                        if (name === currentName) {
+                            return;
+                        }
+
+                        // keep the current selection visible until the user confirmed
+                        $select.val(currentName);
+
+                        confirmUnsaved(function () {
+                            loadPage(name);
+                        });
+                    });
+
+                    $newButton.click(function () {
+                        confirmUnsaved(function () {
+                            dataLinqCode.ui.prompt(
+                                "New error page",
+                                "Name of the new error page (letters, digits, - and _ only):",
+                                "",
+                                function (name) {
+                                    if ($select.find("option[value='" + name + "']").length === 0) {
+                                        // a new page only exists once it has been saved
+                                        $("<option>").attr('value', name).text(displayName(name)).appendTo($select);
+                                    }
+
+                                    loadPage(name);
+                                },
+                                {
+                                    validate: function (value) {
+                                        if (!value) {
+                                            return "Please enter a name.";
+                                        }
+
+                                        if (!/^[A-Za-z0-9_-]+$/.test(value)) {
+                                            return "Only letters, digits, '-' and '_' are allowed.";
+                                        }
+
+                                        return null;
+                                    }
+                                });
+                        });
+                    });
+
+                    $deleteButton.click(function () {
+                        if (currentName === globalName) {
+                            return;
+                        }
+
+                        var name = currentName;
+
+                        dataLinqCode.ui.confirm(
+                            "Delete error page",
+                            "Do you really want to delete the error page '" + name + "'?",
+                            function () {
+                                $.ajax({
+                                    url: dataLinqCode.targetUrl() + '/DeleteErrorPage?dl_token=' + window._datalinqCodeAccessToken,
+                                    type: 'post',
+                                    data: { name: name },
+                                    success: function () {
+                                        isDirty = false;
+                                        refreshNames(globalName);
+                                    },
+                                    error: function () {
+                                        dataLinqCode.ui.confirm("Error",
+                                            "The error page could not be deleted.", function () { });
+                                    }
+                                });
+                            });
+                    });
+
+                    refreshNames(globalName);
+
+                    $saveButton.click(function () {
+                        var frameWindow = $frame[0].contentWindow;
+
+                        if (frameWindow && frameWindow.dataLinqCodeEditor) {
+                            frameWindow.dataLinqCodeEditor.submitForm();
+                        }
+                    });
                 }
             });
         };
@@ -1052,6 +1173,76 @@ var dataLinqCode = new function ($) {
 
                             $('body').dataLinq_code_modal('close', { id: 'datalinq-code-alert' });
                         });
+                }
+            });
+        }
+
+        this.prompt = function (title, message, defaultValue, onConfirm, options) {
+            options = options || {};
+
+            $('body').dataLinq_code_modal({
+                title: title,
+                height: '220px',
+                width: '640px',
+                id: 'datalinq-code-prompt',
+                onload: function ($content) {
+                    $content.addClass('datalinq-code-messagebox-content');
+
+                    if (message) {
+                        $("<p>").text(message).appendTo($content);
+                    }
+
+                    var $input = $("<input>")
+                        .attr('type', 'text')
+                        .addClass('datalinq-code-prompt-input')
+                        .val(defaultValue || '')
+                        .appendTo($content);
+
+                    var $error = $("<div>")
+                        .addClass('datalinq-code-prompt-error')
+                        .appendTo($content);
+
+                    var $buttonbar = $("<div>").addClass("button-bar").appendTo($content);
+
+                    var submit = function () {
+                        var value = ($input.val() || '').trim();
+
+                        if (options.validate) {
+                            var message = options.validate(value);
+
+                            if (message) {
+                                $error.text(message);
+                                return;
+                            }
+                        }
+
+                        $('body').dataLinq_code_modal('close', { id: 'datalinq-code-prompt' });
+
+                        if (onConfirm) {
+                            onConfirm(value);
+                        }
+                    };
+
+                    $("<button>")
+                        .addClass("datalinq-code-button cancel")
+                        .text("Cancel")
+                        .appendTo($buttonbar)
+                        .click(function () {
+                            $('body').dataLinq_code_modal('close', { id: 'datalinq-code-prompt' });
+                        });
+
+                    $("<button>")
+                        .addClass("datalinq-code-button")
+                        .text("OK")
+                        .appendTo($buttonbar)
+                        .click(submit);
+
+                    $input.on('keydown', function (e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            submit();
+                        }
+                    }).focus();
                 }
             });
         }

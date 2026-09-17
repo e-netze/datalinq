@@ -368,9 +368,32 @@ public class DataLinqService
                     QueryString = httpContext?.Request?.Query.ToCollection() ?? new System.Collections.Specialized.NameValueCollection()
                 };
 
-                string errorHtml = _errorPage != null
-                    ? await _errorPage.RenderAsync(ex, errorModel)
-                    : LegacyErrorHtml(ex);
+                string errorHtml;
+
+                if (_errorPage != null)
+                {
+                    string errorPageName = null;
+
+                    try
+                    {
+                        // the view may reference a named error page. It is (re)loaded here, because
+                        // the exception could have been thrown before the view was available.
+                        errorPageName = (await _persistanceProvider.GetEndPointQueryView(
+                                                dataLinqRoute.EndpointId,
+                                                dataLinqRoute.QueryId,
+                                                dataLinqRoute.ViewId))?.ErrorPage;
+                    }
+                    catch (Exception viewEx)
+                    {
+                        _logger.LogWarning(viewEx, "Could not determine the error page of the view, using the global one");
+                    }
+
+                    errorHtml = await _errorPage.RenderAsync(ex, errorModel, errorPageName);
+                }
+                else
+                {
+                    errorHtml = LegacyErrorHtml(ex);
+                }
 
                 contentType = "text/html";
 

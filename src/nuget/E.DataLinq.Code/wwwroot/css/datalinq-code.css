@@ -1364,6 +1364,40 @@ body {
             color: #9aa0a6;
         }
 
+    .datalinq-code-error-page-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        box-sizing: border-box;
+        padding-bottom:7px;
+    }
+
+        .datalinq-code-error-page-toolbar .datalinq-code-error-page-select {
+            flex: 1 1 auto;
+            max-width: 320px;
+            height: 26px;
+            padding: 2px 6px;
+            background-color: #333;
+            color: #eee;
+            border: 1px solid #555;
+        }
+
+        .datalinq-code-error-page-toolbar .datalinq-code-button {
+            flex: 0 0 auto;
+            margin:0;
+        }
+
+        .datalinq-code-error-page-toolbar .datalinq-code-button.align-right {
+            margin-left: auto;
+        }
+
+    .datalinq-code-modal.colorscheme-light .datalinq-code-error-page-toolbar .datalinq-code-error-page-select {
+        background-color: #fff;
+        color: #222;
+        border: 1px solid #bbb;
+    }
+
     .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.logout {
         background-image: url(img/account_32@1.png);
         width: 120px;
@@ -1883,6 +1917,30 @@ body {
         padding: 5px 20px;
         text-align: right;
     }
+
+    .datalinq-code-messagebox-content .datalinq-code-prompt-input {
+        box-sizing: border-box;
+        width: 100%;
+        margin-top: 8px;
+        padding: 6px 8px;
+        background-color: #333;
+        color: #eee;
+        border: 1px solid #555;
+        font-size: 14px;
+    }
+
+    .datalinq-code-messagebox-content .datalinq-code-prompt-error {
+        color: #ff6b6b;
+        font-size: 12px;
+        min-height: 16px;
+        margin-top: 6px;
+    }
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-messagebox-content .datalinq-code-prompt-input {
+    background-color: #fff;
+    color: #222;
+    border: 1px solid #bbb;
+}
 
 .datalinq-code-buttons-bar-right {
     text-align: right;

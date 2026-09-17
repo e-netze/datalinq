@@ -118,15 +118,33 @@ public class CodeApiClient
         }
     }
 
-    async public Task<string> GetErrorPage()
+    async public Task<string> GetErrorPage(string name = null)
     {
-        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/errorpage"))
+        var query = String.IsNullOrWhiteSpace(name) ? "" : $"?name={Uri.EscapeDataString(name)}";
+
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/errorpage{query}"))
         {
             ModifyHttpRequest(requestMessage);
 
             using (var httpResponse = await _httpClient.SendAsync(requestMessage))
             {
                 return await GetAndCheckHttpResponseAsync(httpResponse);
+            }
+        }
+    }
+
+    async public Task<IEnumerable<string>> GetErrorPageNames()
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/errorpages"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var json = await GetAndCheckHttpResponseAsync(httpResponse);
+
+                return JsonConvert.DeserializeObject<IEnumerable<string>>(json)
+                    ?? new[] { "global" };
             }
         }
     }
@@ -541,7 +559,7 @@ public class CodeApiClient
         }
     }
 
-    async public Task<bool> StoreErrorPage(string code)
+    async public Task<bool> StoreErrorPage(string code, string name = null)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/errorpage"))
         {
@@ -549,7 +567,8 @@ public class CodeApiClient
 
             requestMessage.Content = new FormUrlEncodedContent(new[]
             {
-                new KeyValuePair<string, string>("code", code ?? "")
+                new KeyValuePair<string, string>("code", code ?? ""),
+                new KeyValuePair<string, string>("name", String.IsNullOrWhiteSpace(name) ? "global" : name)
             });
 
             using (var httpResponse = await _httpClient.SendAsync(requestMessage))
@@ -562,6 +581,31 @@ public class CodeApiClient
                     {
                         CompilerErrors = result.CompilerErrors
                     };
+                }
+
+                return true;
+            }
+        }
+    }
+
+    async public Task<bool> DeleteErrorPage(string name)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/delete/errorpage"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            requestMessage.Content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("name", name ?? "")
+            });
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var result = JsonConvert.DeserializeObject<SuccessModel>(await GetAndCheckHttpResponseAsync(httpResponse, false));
+
+                if (result.Success == false)
+                {
+                    throw new Exception(result.ErrorMessage);
                 }
 
                 return true;

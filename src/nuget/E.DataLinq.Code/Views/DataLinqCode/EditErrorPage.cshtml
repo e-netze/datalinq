@@ -22,6 +22,7 @@
 <div class="datalinq-code-editor-settings switch-to settings">
     @using (Html.BeginForm("EditErrorPage", "DataLinqCode", FormMethod.Post, new { enctype = "multipart/form-data" }))
     {
+        @Html.HiddenFor(m => m.Name);
         @Html.HiddenFor(m => m.Code);
 
         <button class="submit" style="display:none">Submit</button>
