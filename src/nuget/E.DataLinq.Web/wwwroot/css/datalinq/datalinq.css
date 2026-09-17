@@ -676,3 +676,41 @@ a.jsoneditor-poweredBy {
     opacity: 1;
     visibility: visible;
 }
+
+/* ===== Accessibility (WCAG 2.1 AA / EN 301 549) ===== */
+
+/* Visible keyboard focus indicators for all interactive report controls.
+   :focus-visible only shows the outline for keyboard users, not mouse clicks. */
+.datalinq-button:focus-visible,
+.datalinq-update-filter:focus-visible,
+.datalinq-copy-button:focus-visible,
+.datalinq-include-click:focus-visible,
+.datalinq-quicksearch-clear-button:focus-visible,
+.datalinq-filter-parameter:focus-visible,
+.datalinq-ordering-field:focus-visible,
+.datalinq-ordering-desc:focus-visible,
+.datalinq-input:focus-visible,
+.datalinq-chart:focus-visible {
+    outline: 2px solid #005a9e;
+    outline-offset: 2px;
+}
+
+/* Ensure the copy control is reachable via keyboard: reveal it while focused
+   even though it is hidden until hover for mouse users. */
+.datalinq-copy-button:focus,
+.datalinq-copy-button:focus-visible {
+    display: inline-block !important;
+}
+
+/* Visually-hidden utility for screen-reader-only text. */
+.datalinq-sr-only {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

@@ -182,8 +182,8 @@ public class DataLinqSecurityHelper
     /// en: The optional token object containing UsernameKey and PasswordKey. UsernameKey and PasswordKey must be keys (names) of secrets - constants or direct values are not allowed. Only required for secured services.
     /// </param>
     /// <param name="htmlAttributes">
-    /// de: Ein optionales Objekt mit HTML-Attributen, die dem img-Element hinzugefügt werden.
-    /// en: An optional object containing HTML attributes to be added to the img element.
+    /// de: Ein optionales Objekt mit HTML-Attributen, die dem img-Element hinzugefügt werden. Für die Barrierefreiheit (WCAG 1.1.1) sollte ein aussagekräftiges alt-Attribut angegeben werden (z.B. new { alt = "Übersichtskarte" }); für rein dekorative Bilder alt = "".
+    /// en: An optional object containing HTML attributes to be added to the img element. For accessibility (WCAG 1.1.1) a meaningful alt attribute should be provided (e.g. new { alt = "Overview map" }); use alt = "" for purely decorative images.
     /// </param>
     /// <returns>
     /// de: Gibt das abgerufene Bild als HTML img-Element zurück.
@@ -213,6 +213,10 @@ public class DataLinqSecurityHelper
             .Append("img", img =>
             {
                 img.AddAttribute("src", dataUri);
+                // Provide a default alt so the image is not unlabeled (WCAG 1.1.1).
+                // Report authors can override it (or set it to "" for decorative images)
+                // by passing an "alt" value in htmlAttributes.
+                img.AddAttribute("alt", "");
                 img.AddAttributes(htmlAttributes);
             }, WriteTags.SelfClose);
 

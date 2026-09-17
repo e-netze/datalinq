@@ -29,9 +29,15 @@ var dataLinq = new function () {
                 id = dataLinq.setId($e);
             }
 
-            $e.addClass('button').html($e.attr('data-header'))
+            $e.addClass('button').attr('role', 'button').attr('tabindex', '0').html($e.attr('data-header'))
                 .click(function () {
                     dataLinq.update($(this), $(this).attr('data-source'));
+                })
+                .on('keydown', function (ev) {
+                    if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+                        ev.preventDefault();
+                        $(this).trigger('click');
+                    }
                 });
         });
 
@@ -297,12 +303,14 @@ var dataLinq = new function () {
         var filter = $e.attr('data-filter');      
         url += (url.indexOf('?') > 0 ? "&" : "?") + filter;
 
-        $e.html("<img src='" + dataLinq.baseUrl + "/_content/E.DataLinq.Web/css/img/hourglass/loader1.gif" + "' />");
+        $e.html("<img src='" + dataLinq.baseUrl + "/_content/E.DataLinq.Web/css/img/hourglass/loader1.gif" + "' alt='' />");
+        $e.attr('aria-busy', 'true');
         $.ajax({
             url: url,
             data: dataLinq.overrideModifyRequestData({ _f: 'json', _id: id, _orderby: $e.attr('data-orderby') }),
             success: function (result) {
                 var $elem = $('#' + result._id).removeClass('button').html(result.html);
+                $elem.attr('aria-busy', 'false');
 
                 dataLinq.updateElement($elem);
                 if (result.success)
@@ -395,6 +403,14 @@ var dataLinq = new function () {
         const timeoutId = setTimeout(() => {
             cleanup("pdf download timeout");
         }, 60000);
+    };
+
+    // Keeps the aria-expanded state of a collapsible toggle button in sync with
+    // the visible state of its associated panel (WCAG 4.1.2).
+    this.toggleAriaExpanded = function (sender) {
+        var $button = $(sender);
+        var expanded = $button.attr('aria-expanded') === 'true';
+        $button.attr('aria-expanded', (!expanded).toString());
     };
 
     this.updateViewOrdering = function (sender) {
@@ -1378,8 +1394,22 @@ var dataLinq = new function () {
 
         $copyable
             .find(".datalinq-copy-button")
+            // Ensure the copy control is visible while keyboard-focused so it is
+            // reachable and operable without a mouse (WCAG 2.1.1).
+            .on('focus', function () {
+                $(this).show();
+            })
+            .on('blur', function () {
+                $(this).hide();
+            })
             .on("click", function () {
                 dataLinq.copyToClipboard($(this).data("copy-value"));
+            })
+            .on('keydown', function (ev) {
+                if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+                    ev.preventDefault();
+                    dataLinq.copyToClipboard($(this).data("copy-value"));
+                }
             });
     }
 

@@ -13,6 +13,7 @@ static internal class HtmlBuilderExtensions
         => htmlBuilder.AppendButton(button =>
                         button.AddClass("datalinq-button apply")
                               .AddAttributes(htmlAttributes)
+                              .AddAttribute("type", "button")
                               .AddAttribute("onclick", "dataLinq.refresh(this)")
                               .Content(label)
                     );

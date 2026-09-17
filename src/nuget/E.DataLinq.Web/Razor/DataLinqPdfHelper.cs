@@ -100,6 +100,7 @@ public class DataLinqPdfHelper
                         d.AppendButton(button =>
                         {
                             button.WithId("downloadBtn");
+                            button.AddAttribute("type", "button");
                             button.Content("Download PDF");
                             button.AddClass("datalinq-button-pdf");
                         });
@@ -336,7 +337,12 @@ public class DataLinqPdfHelper
                 {
                     b.WithId(buttonId);
                     b.AddClass("datalinq-button");
+                    b.AddAttribute("type", "button");
                     b.Content(buttonText);
+                    if (String.IsNullOrWhiteSpace(buttonText))
+                    {
+                        b.AddAttribute("aria-label", "PDF drucken");
+                    }
                     b.AddAttribute("onclick", onClickJs);
                 })
                 .BuildHtmlString()

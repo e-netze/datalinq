@@ -123,7 +123,9 @@ internal class HtmlElementBuilder : IHtmlElementBuilder
             {
                 string val = htmlAttribute.GetValue(htmlAttributes)?.ToString()!;
 
-                AddAttribute(htmlAttribute.Name, val);
+                // Follow the ASP.NET convention of converting underscores in property
+                // names to dashes so aria_* / data_* map to aria-* / data-* attributes.
+                AddAttribute(htmlAttribute.Name.Replace('_', '-'), val);
             }
         }
 

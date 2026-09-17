@@ -404,6 +404,8 @@ public class DataLinqHelper : IDataLinqHelper
                     _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
                 ).AppendDiv(div =>
                         div.AddClass("datalinq-include")
+                           .AddAttribute("aria-live", "polite")
+                           .AddAttribute("aria-busy", "true")
                            .AddAttribute("data-source", ParseUrl(id, encodeQueryString))
                 ).BuildHtmlString()
              );
@@ -448,6 +450,8 @@ public class DataLinqHelper : IDataLinqHelper
                     _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
                 ).AppendDiv(div =>
                         div.AddClass("datalinq-include")
+                           .AddAttribute("aria-live", "polite")
+                           .AddAttribute("aria-busy", "true")
                            .AddAttribute("data-source", ParseUrl(id, encodeUrl))
                            .AddAttribute("data-filter", ParseUrl(filter, encodeUrl))
                            .AddAttribute("data-orderby", ParseUrl(orderby, encodeUrl))
@@ -489,6 +493,7 @@ public class DataLinqHelper : IDataLinqHelper
                     _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
                 ).AppendDiv(div =>
                         div.AddClass("datalinq-include-click")
+                           .AddAttribute("aria-live", "polite")
                            .AddAttribute("data-source", ParseUrl(id, encodeUrl))
                            .AddAttribute("data-header", text)
                     )
@@ -539,6 +544,7 @@ public class DataLinqHelper : IDataLinqHelper
                         _currentDatalinqService.GetViewJs(id).GetAwaiter().GetResult()
                     ).AppendDiv(div =>
                             div.AddClass("datalinq-include-click")
+                               .AddAttribute("aria-live", "polite")
                                .AddAttribute("data-source", ParseUrl(id, encodeUrl))
                                .AddAttribute("data-filter", ParseUrl(filter, encodeUrl))
                                .AddAttribute("data-orderby", ParseUrl(orderby, encodeUrl))
@@ -710,6 +716,8 @@ public class DataLinqHelper : IDataLinqHelper
         object htmlAttributes = null,
         bool isOpen = false)
     {
+        string orderingBodyId = GenerateUniqueId("datalinq-ordering-body");
+
         return _razor.RawString(
                 HtmlBuilder.Create()
                     .AppendDiv(div =>
@@ -720,24 +728,29 @@ public class DataLinqHelper : IDataLinqHelper
                            .AddAttribute("data-isOpen", isOpen.ToString())
                            .AppendButton(button =>
                                button.AddClass("datalinq-button menu")
-                                     .AddAttribute("onclick", "$(this).closest('.datalinq-refresh-ordering-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-ordering-body').slideToggle()")
+                                     .AddAttribute("type", "button")
+                                     .AddAttribute("aria-expanded", "false")
+                                     .AddAttribute("aria-controls", orderingBodyId)
+                                     .AddAttribute("onclick", "$(this).closest('.datalinq-refresh-ordering-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-ordering-body').slideToggle();dataLinq.toggleAriaExpanded(this)")
                                      .Content(label)
                            )
                            .AppendDiv(div =>
                                div.AddClass("datalinq-refresh-ordering-body")
+                                  .WithId(orderingBodyId)
                                   .AddStyle("display", "none")
                                   .AppendTable(table =>
                                   {
                                       table.AppendTableRow(tr =>
                                       {
-                                          tr.AppendTableHeaderCell(th => th.Content("Feld"))
-                                            .AppendTableHeaderCell(th => th.Content("Absteigend"));
+                                          tr.AppendTableHeaderCell(th => th.AddAttribute("scope", "col").Content("Feld"))
+                                            .AppendTableHeaderCell(th => th.AddAttribute("scope", "col").Content("Absteigend"));
                                       });
                                       foreach (var orderField in orderFields)
                                       {
                                           var orderProperties = ToDictionary(orderField.Value);
                                           bool checkedAsc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checked", false));
                                           bool checkedDesc = Convert.ToBoolean(GetDefaultValueFromRecord(orderProperties, "checkedDesc", false));
+                                          string fieldDisplayName = GetDefaultValueFromRecord(orderProperties, "displayname", orderField.Key).ToString();
 
                                           table.AppendTableRow(tr =>
                                           {
@@ -751,7 +764,7 @@ public class DataLinqHelper : IDataLinqHelper
                                                                 .AddAttribute("onclick", "dataLinq.updateViewOrdering(this)")
                                                         )
                                                         .AppendSpan(span =>
-                                                            span.Content(GetDefaultValueFromRecord(orderProperties, "displayname", orderField.Key).ToString())
+                                                            span.Content(fieldDisplayName)
                                                         )
                                                      )
                                                  )
@@ -760,6 +773,7 @@ public class DataLinqHelper : IDataLinqHelper
                                                         checkbox
                                                            .AddClass("datalinq-ordering-desc")
                                                            .WithName(orderField.Key)
+                                                           .AddAttribute("aria-label", StripHtml(fieldDisplayName) + " absteigend")
                                                            .AddAttribute("onclick", "dataLinq.updateViewOrdering(this)")
                                                     ).AddStyle("text-align", "center")
                                               );
@@ -831,6 +845,7 @@ public class DataLinqHelper : IDataLinqHelper
                                 input.AddClass("datalinq-quicksearch-search-input");
                                 input.AddAttribute("placeholder", placeholder);
                                 input.AddAttribute("id", "datalinq-quicksearch-searchInput");
+                                input.AddAttribute("aria-label", StripHtml(placeholder));
                                 input.AddAttribute("oninput", "dataLinq.onSearchInput(this)");
 
                                 if (isOpen)
@@ -840,6 +855,8 @@ public class DataLinqHelper : IDataLinqHelper
                             {
                                 button.AddClass("datalinq-quicksearch-clear-button");
                                 button.AddAttribute("id", "datalinq-quicksearch-clearButton");
+                                button.AddAttribute("type", "button");
+                                button.AddAttribute("aria-label", "Suche leeren");
                                 button.AddAttribute("onclick", "dataLinq.deleteQuicksearch(this)");
                                 button.Content("×");
                             });
@@ -995,6 +1012,8 @@ public class DataLinqHelper : IDataLinqHelper
         bool isOpen = false)
     {
 
+        string filterBodyId = GenerateUniqueId("datalinq-filter-body");
+
         return _razor.RawString(
                 HtmlBuilder.Create()
                     .AppendDiv(div =>
@@ -1005,12 +1024,16 @@ public class DataLinqHelper : IDataLinqHelper
                         div.AppendButton(button =>
                         {
                             button.AddClass("datalinq-button menu");
-                            button.AddAttribute("onclick", "$(this).closest('.datalinq-refresh-filter-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-filter-body').slideToggle()");
+                            button.AddAttribute("type", "button");
+                            button.AddAttribute("aria-expanded", "false");
+                            button.AddAttribute("aria-controls", filterBodyId);
+                            button.AddAttribute("onclick", "$(this).closest('.datalinq-refresh-filter-container').toggleClass('collapsed');$(this).next('.datalinq-refresh-filter-body').slideToggle();dataLinq.toggleAriaExpanded(this)");
                             button.Content(label);
                         });
                         div.AppendDiv(div2 =>
                         {
                             div2.AddClass("datalinq-refresh-filter-body");
+                            div2.WithId(filterBodyId);
                             div2.AddStyle("display", "none");
 
                             foreach (string filterParameter in filterParameters.Keys)
@@ -1026,15 +1049,18 @@ public class DataLinqHelper : IDataLinqHelper
                                     {
                                         var source = GetDefaultValueFromRecord(filterProperties, "source").ToString();
                                         var dependsOn = source.KeyParameters();
+                                        string comboLabelId = GenerateUniqueId("datalinq-filter-label");
+                                        string comboDisplayName = GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter).ToString();
 
                                         div3.AppendDiv(div4 =>
                                         {
+                                            div4.WithId(comboLabelId);
                                             div4.AddClass("datalinq-label");
                                             if (isRequired)
                                             {
                                                 div4.AddClass("datalinq-filter-required-label");
                                             }
-                                            div4.Content(GetDefaultValueFromRecord(filterProperties, "displayname", filterParameter).ToString());
+                                            div4.Content(comboDisplayName);
                                         });
                                         div3.ComboFor(
                                             GetDefaultValueFromRecord(filterProperties, "defaultValue"), 
@@ -1043,7 +1069,9 @@ public class DataLinqHelper : IDataLinqHelper
                                             {
                                                 @class = isRequired ? "datalinq-filter-parameter datalinq-filter-required" : "datalinq-filter-parameter",
                                                 onchange = "dataLinq.updateViewFilter(this)",
-                                                multiple = GetDefaultValueFromRecord(filterProperties, "multiple")
+                                                multiple = GetDefaultValueFromRecord(filterProperties, "multiple"),
+                                                aria_labelledby = comboLabelId,
+                                                aria_required = isRequired ? "true" : null
                                             },
                                             new
                                             {
@@ -1078,8 +1106,11 @@ public class DataLinqHelper : IDataLinqHelper
                                             }
                                         }
 
+                                        string textLabelId = GenerateUniqueId("datalinq-filter-label");
+
                                         div3.AppendDiv(div6 =>
                                         {
+                                            div6.WithId(textLabelId);
                                             div6.AddClass("datalinq-label");
                                             if (isRequired)
                                             {
@@ -1092,9 +1123,11 @@ public class DataLinqHelper : IDataLinqHelper
                                             if (isRequired)
                                             {
                                                 input.AddClass("datalinq-filter-required");
+                                                input.AddAttribute("aria-required", "true");
                                             }
                                             input.AddAttribute("type", fieldType.ToString().ToLower());
                                             input.AddAttribute("name", filterParameter);
+                                            input.AddAttribute("aria-labelledby", textLabelId);
                                             input.AddAttribute("onkeyup", "dataLinq.updateViewFilter(this)");
                                             input.AddAttribute("onchange", "dataLinq.updateViewFilter(this)");
 
@@ -1121,6 +1154,7 @@ public class DataLinqHelper : IDataLinqHelper
                                 div5.AppendButton(button2 =>
                                 {
                                     button2.AddClass("datalinq-button datalinq-filter-clear");
+                                    button2.AddAttribute("type", "button");
                                     button2.AddAttribute("onclick", "dataLinq.clearFilter(this)");
                                     button2.Content("Filter leeren");
                                 });
@@ -1186,8 +1220,10 @@ public class DataLinqHelper : IDataLinqHelper
                 {
                     b.AddClass("datalinq-button apply");
                     b.AddAttributes(htmlAttributes);
+                    b.AddAttribute("type", "button");
                     b.AddAttribute("onclick", onclickJs);
                     b.Content(label);
+                    AddAccessibleName(b, label, "Export");
 
                     if (exportWithBom)
                         b.AddAttribute("datalinq-export-bom", "true");
@@ -1244,10 +1280,12 @@ public class DataLinqHelper : IDataLinqHelper
                 {
                     b.AddClass("datalinq-update-filter");
                     b.AddAttributes(htmlAttributes);
+                    b.AddAttribute("type", "button");
                     b.AddAttribute("data-filter-id", filterId);
                     b.AddAttribute("data-filter-name", filterName);
                     b.AddAttribute("data-filter-value", filterValue.ToString());
                     b.Content(String.IsNullOrEmpty(buttonText) ? "" : buttonText);
+                    AddAccessibleName(b, buttonText, AccessibleName(filterName, filterValue?.ToString(), filterName));
                 }).BuildHtmlString()
             );
     }
@@ -1353,6 +1391,7 @@ public class DataLinqHelper : IDataLinqHelper
                             headerRow.AppendTableHeaderCell(headerCell =>
                                   headerCell
                                       .Content(ToHtml(column))
+                                      .AddAttribute("scope", "col")
                                       .AddAttributes(cell0HtmlAttributes ?? new { style = "padding:4px" })
                             );
                         }
@@ -2144,15 +2183,17 @@ public class DataLinqHelper : IDataLinqHelper
                 {
                     d.AddClass("datalinq-statistics");
                     d.AddAttributes(htmlAttributes);
+                    string count = (records != null) ? records.Length.ToString() : "0";
                     if (!String.IsNullOrWhiteSpace(label))
                     {
                         string labelStrong = $"<strong>{ToHtml(label)}</strong>";
-                        string content = (records != null) ? records.Length.ToString() : "0";
-                        d.Content(labelStrong + content);
+                        d.AddAttribute("aria-label", AccessibleName("Anzahl", StripHtml(label)) + ": " + count);
+                        d.Content(labelStrong + count);
                     }
                     else
                     {
-                        d.Content(records != null ? records.Length.ToString() : "0");
+                        d.AddAttribute("aria-label", "Anzahl: " + count);
+                        d.Content(count);
                     }
                 }).BuildHtmlString()
             );
@@ -2687,8 +2728,8 @@ public class DataLinqHelper : IDataLinqHelper
     #endregion
 
     /// <summary>
-    /// de: Erstellt ein Diagramm mit unterschiedlichen Typen, das auf einem JSON-Objekt im Javascript-Code basiert.
-    /// en: Creates a chart with different types based on a JSON object in the JavaScript code.
+    /// de: Erstellt ein Diagramm mit unterschiedlichen Typen, das auf einem JSON-Objekt im Javascript-Code basiert. Für die Barrierefreiheit (WCAG 1.1.1) wird das Diagramm mit role="img" und einem aria-label aus dem 'label'-Parameter ausgegeben; ein aussagekräftiges 'label' sollte daher immer angegeben werden.
+    /// en: Creates a chart with different types based on a JSON object in the JavaScript code. For accessibility (WCAG 1.1.1) the chart is rendered with role="img" and an aria-label taken from the 'label' parameter, so a meaningful 'label' should always be provided.
     /// </summary>
     /// <param name="chartType">
     /// de: Diagrammtyp als Enumeration, hier sind Balken-(Bar), Torten-(Pie), Doughnut oder Linien(Line) als Typ möglich, bspw. ChartType.Bar
@@ -2742,6 +2783,8 @@ public class DataLinqHelper : IDataLinqHelper
                 {
                     d.AddClass("datalinq-chart");
                     d.AddAttributes(htmlAttributes);
+                    d.AddAttribute("role", "img");
+                    d.AddAttribute("aria-label", AccessibleName("Diagramm", label));
                     d.AddAttribute("data-chart-label", label);
                     d.AddAttribute("data-chart-data", jsValueVariable);
                     d.AddAttribute("data-chart-type", chartType.ToString());
@@ -2755,8 +2798,8 @@ public class DataLinqHelper : IDataLinqHelper
     #endregion
 
     /// <summary>
-    /// de: Bei Hover über einen Datensatz wird ein Symbol zum Kopieren angezeigt.
-    /// en: A copy icon is displayed when hovering over a data entry.
+    /// de: Bei Hover über einen Datensatz wird ein Symbol zum Kopieren angezeigt. Das Symbol ist barrierefrei (WCAG 2.1.1): Es ist per Tastatur erreichbar (role="button", tabindex) und kann mit Enter/Leertaste ausgelöst werden.
+    /// en: A copy icon is displayed when hovering over a data entry. The icon is accessible (WCAG 2.1.1): it is keyboard reachable (role="button", tabindex) and can be triggered with Enter/Space.
     /// </summary>
     /// <param name="copyValue">
     /// de: Wert, der kopiert werden soll.
@@ -2800,6 +2843,9 @@ public class DataLinqHelper : IDataLinqHelper
                 {
                     d1.AddClass("datalinq-copy-button");
                     d1.AddAttributes(htmlAttributes);
+                    d1.AddAttribute("role", "button");
+                    d1.AddAttribute("tabindex", "0");
+                    d1.AddAttribute("aria-label", AccessibleName("In die Zwischenablage kopieren", "In die Zwischenablage kopieren: " + StripHtml(copyValue.ToString())));
                     d1.AddAttribute("data-copy-value", copyValue.ToString());
                 }).BuildHtmlString()
             );
@@ -3252,6 +3298,66 @@ public class DataLinqHelper : IDataLinqHelper
         return str;
     }
 
+    #region Accessibility Helpers
+
+    /// <summary>
+    /// Returns the first non-empty accessible name from the supplied candidates.
+    /// Report authors' own label/buttonText/displayname values are preferred so that
+    /// the accessible name matches the visible text (WCAG 2.5.3 / 1.1.1).
+    /// Falls back to <paramref name="fallback"/> only when every candidate is empty.
+    /// </summary>
+    [ExcludeFromSnippets]
+    private static string AccessibleName(string fallback, params string[] candidates)
+    {
+        if (candidates != null)
+        {
+            foreach (var candidate in candidates)
+            {
+                if (!String.IsNullOrWhiteSpace(candidate))
+                {
+                    return StripHtml(candidate).Trim();
+                }
+            }
+        }
+
+        return fallback;
+    }
+
+    /// <summary>
+    /// Removes HTML tags and decodes entities so a value can be used as a plain-text
+    /// accessible name (aria-label / alt).
+    /// </summary>
+    [ExcludeFromSnippets]
+    private static string StripHtml(string value)
+    {
+        if (String.IsNullOrEmpty(value))
+        {
+            return String.Empty;
+        }
+
+        var withoutTags = System.Text.RegularExpressions.Regex.Replace(value, "<.*?>", " ");
+        withoutTags = System.Net.WebUtility.HtmlDecode(withoutTags);
+
+        return System.Text.RegularExpressions.Regex.Replace(withoutTags, "\\s+", " ").Trim();
+    }
+
+    /// <summary>
+    /// Adds an <c>aria-label</c> to an element when the visible content is empty
+    /// (e.g. icon-only buttons), so screen readers can still announce the control.
+    /// </summary>
+    [ExcludeFromSnippets]
+    private static IHtmlElementBuilder AddAccessibleName(IHtmlElementBuilder builder, string visibleText, string accessibleName)
+    {
+        if (String.IsNullOrWhiteSpace(visibleText) && !String.IsNullOrWhiteSpace(accessibleName))
+        {
+            builder.AddAttribute("aria-label", accessibleName);
+        }
+
+        return builder;
+    }
+
+    #endregion
+
     [ExcludeFromSnippets]
     private object GetDefaultValueFromRecord(object record, string name, object defaultValue = null)
     {
@@ -3312,6 +3418,9 @@ public class DataLinqHelper : IDataLinqHelper
             .Append("img", img =>
             {
                 img.AddAttribute("src", dataUri);
+                // Default alt so the image is never unlabeled (WCAG 1.1.1);
+                // report authors can override it via htmlAttributes.
+                img.AddAttribute("alt", "");
                 img.AddAttributes(htmlAttributes);
             }, WriteTags.SelfClose);
 
