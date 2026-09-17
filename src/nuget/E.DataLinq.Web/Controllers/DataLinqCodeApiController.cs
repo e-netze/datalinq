@@ -284,6 +284,27 @@ public class DataLinqCodeApiController : ApiBaseController
         }
     }
 
+    [HttpGet]
+    [Route("previewerrorpage")]
+    async public Task<IActionResult> PreviewErrorPage(string name = null)
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        if (_errorPage == null)
+        {
+            return Content("The error page service is not configured.", "text/html");
+        }
+
+        name = String.IsNullOrWhiteSpace(name)
+            ? DataLinqErrorPageService.GlobalErrorPageName
+            : name;
+
+        var html = await _errorPage.RenderPreviewAsync(name);
+
+        return Content(html, "text/html");
+    }
+
 
     #endregion
 

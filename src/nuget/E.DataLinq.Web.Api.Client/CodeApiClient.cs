@@ -133,6 +133,21 @@ public class CodeApiClient
         }
     }
 
+    async public Task<string> PreviewErrorPage(string name = null)
+    {
+        var query = String.IsNullOrWhiteSpace(name) ? "" : $"?name={Uri.EscapeDataString(name)}";
+
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/previewerrorpage{query}"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                return await GetAndCheckHttpResponseAsync(httpResponse);
+            }
+        }
+    }
+
     async public Task<IEnumerable<string>> GetErrorPageNames()
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/errorpages"))

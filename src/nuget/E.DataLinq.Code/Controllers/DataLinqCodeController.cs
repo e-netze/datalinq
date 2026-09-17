@@ -389,6 +389,21 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     }
 
     [HttpGet]
+    async public Task<IActionResult> PreviewErrorPage(string name = null)
+    {
+        name = String.IsNullOrWhiteSpace(name) ? "global" : name;
+
+        if (_client == null)
+        {
+            return Content("datalinq endpoint not set", "text/html");
+        }
+
+        var html = await _client.PreviewErrorPage(name);
+
+        return Content(html ?? String.Empty, "text/html");
+    }
+
+    [HttpGet]
     async public Task<IActionResult> ErrorPageNames()
     {
         var names = _client != null

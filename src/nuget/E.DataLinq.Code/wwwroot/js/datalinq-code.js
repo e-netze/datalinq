@@ -654,8 +654,13 @@ var dataLinqCode = new function ($) {
                         .text('Delete')
                         .appendTo($toolbar);
 
-                    var $saveButton = $("<button>")
+                    var $previewButton = $("<button>")
                         .addClass('datalinq-code-button align-right')
+                        .text('Preview')
+                        .appendTo($toolbar);
+
+                    var $saveButton = $("<button>")
+                        .addClass('datalinq-code-button')
                         .text('Save')
                         .appendTo($toolbar);
 
@@ -815,6 +820,15 @@ var dataLinqCode = new function ($) {
                     });
 
                     refreshNames(globalName);
+
+                    $previewButton.click(function () {
+                        // the preview intentionally renders the last saved version in a new tab
+                        var url = dataLinqCode.targetUrl() +
+                            '/PreviewErrorPage?name=' + encodeURIComponent(currentName) +
+                            '&dl_token=' + window._datalinqCodeAccessToken;
+
+                        window.open(url);
+                    });
 
                     $saveButton.click(function () {
                         var frameWindow = $frame[0].contentWindow;

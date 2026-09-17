@@ -103,6 +103,60 @@ public class DataLinqErrorPageService
         }
     }
 
+    async public Task<string> RenderPreviewAsync(string errorPageName = null)
+    {
+        var exception = CreateSampleException();
+
+        var model = new DataLinqErrorPageModel(exception)
+        {
+            Route = "sample-endpoint@sample-query@sample-view",
+            EndpointId = "sample-endpoint",
+            QueryId = "sample-query",
+            ViewId = "sample-view",
+            RequestPath = "/datalinq/report/sample-endpoint@sample-query@sample-view",
+            // the preview always shows the developer view, so the error page can be inspected completely
+            IsDevelopment = true
+        };
+
+        model.QueryString.Add("id", "4711");
+        model.QueryString.Add("lang", "en");
+        model.QueryString.Add("filter", "status=active");
+
+        string customCode = await LoadCodeOrFallbackAsync(errorPageName);
+
+        if (!String.IsNullOrWhiteSpace(customCode))
+        {
+            return await _compiler.RenderErrorPage(customCode, model);
+        }
+
+        return await _compiler.RenderErrorPage(DataLinqErrorPageDefaults.DefaultRazorCode, model);
+    }
+
+    // build a realistic, nested exception whose StackTrace is actually populated (only thrown exceptions carry one)
+    private static Exception CreateSampleException()
+    {
+        Exception Throw(Exception inner)
+        {
+            try
+            {
+                throw inner;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+
+        var root = Throw(new InvalidOperationException(
+            "The database connection to 'sample-endpoint' timed out after 30 seconds."));
+
+        var middle = Throw(new Exception(
+            "Query 'sample-query' could not be executed.", root));
+
+        return Throw(new Exception(
+            "The view 'sample-view' could not be rendered.", middle));
+    }
+
     async private Task<string> LoadCodeOrFallbackAsync(string errorPageName)
     {
         // a view can reference a named error page => if it is gone, fall back to the global one
