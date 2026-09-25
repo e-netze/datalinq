@@ -764,6 +764,11 @@ body {
                 display: inline-block;
             }
 
+            .datalinq-code-tree .tree-nodes .tree-node:hover {
+                background-color: rgba(91, 173, 255, 0.10);
+                border-radius: 4px;
+                transition: background-color 0.15s ease;
+            }
 
 @media (-webkit-min-device-pixel-ratio: 1.5),
 (min-resolution: 144dpi) {
@@ -856,6 +861,12 @@ body {
                 background: none;
                 padding-left: 4px;
             }
+
+                .datalinq-code-tree .tree-nodes .tree-node.view:hover {
+                    background-color: rgba(91, 173, 255, 0.10);
+                    border-radius: 4px;
+                    transition: background-color 0.15s ease;
+                }
 
                 .datalinq-code-tree .tree-nodes .tree-node label:hover {
                     color: #eee;
