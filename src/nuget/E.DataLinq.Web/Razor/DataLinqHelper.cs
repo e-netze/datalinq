@@ -63,6 +63,57 @@ public class DataLinqHelper : IDataLinqHelper
 
     #region DataLinqHelper
 
+    #region QueryString
+
+    /// <summary>
+    /// de: Liefert den Wert eines Query-String-Parameters. Optional kann geprüft werden, ob der Parameter vorhanden ist und einem regulären Ausdruck entspricht.
+    /// en: Returns the value of a query string parameter. Optionally checks whether the parameter is present and matches a regular expression.
+    /// </summary>
+    /// <param name="key">
+    /// de: Der Name des Query-String-Parameters.
+    /// en: The name of the query string parameter.
+    /// </param>
+    /// <param name="required">
+    /// de: Wenn true, wird eine Exception geworfen, falls der Parameter fehlt oder leer ist.
+    /// en: If true, an exception is thrown if the parameter is missing or empty.
+    /// </param>
+    /// <param name="regex">
+    /// de: Optionaler regulärer Ausdruck, dem der Wert entsprechen muss.
+    /// en: Optional regular expression the value must match.
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Wert, der zurückgegeben wird, falls der Parameter fehlt. Wird ignoriert, wenn required true ist.
+    /// en: Value returned if the parameter is missing. Ignored if required is true.
+    /// </param>
+    /// <returns>
+    /// de: Der Wert des Parameters oder der Default-Wert.
+    /// en: The value of the parameter or the default value.
+    /// </returns>
+    public string QueryParameter(string key, bool required = false, string regex = "", string defaultValue = "")
+    {
+        var value = _httpContext?.Request?.Query[key].ToString() ?? String.Empty;
+
+        if (String.IsNullOrEmpty(value))
+        {
+            if (required)
+            {
+                throw new ArgumentException($"DataLinq: required parameter '{key}' is missing");
+            }
+
+            return defaultValue ?? String.Empty;
+        }
+
+        if (!String.IsNullOrEmpty(regex) &&
+            !System.Text.RegularExpressions.Regex.IsMatch(value, regex, System.Text.RegularExpressions.RegexOptions.None, TimeSpan.FromSeconds(1)))
+        {
+            throw new ArgumentException($"DataLinq: parameter '{key}' has an invalid format");
+        }
+
+        return value;
+    }
+
+    #endregion
+
     #region Load/Fetch Data
 
     /// <summary>
