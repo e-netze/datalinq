@@ -885,15 +885,32 @@ body {
                 }
 
                 .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info ul {
-                    padding: 5px 15px;
+                    margin: 4px 0 6px 0;
+                    padding: 8px 10px 8px 26px;
                     max-width: calc(100% - 59px);
+                    box-sizing: border-box;
                     overflow: hidden;
                     font-size: 0.8em;
+                    line-height: 1.45;
                     white-space: normal;
-                    background-color: #ffa;
-                    color: #000;
-                    border-radius: 5px;
+                    background-color: rgba(88, 166, 255, 0.08);
+                    color: #d4d4d4;
+                    border: 1px solid rgba(88, 166, 255, 0.35);
+                    border-left: 3px solid #58a6ff;
+                    border-radius: 4px;
+                    cursor: default;
                 }
+
+                    .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info ul li {
+                        margin: 2px 0;
+                        padding: 0;
+                        list-style: disc;
+                        background: none;
+                    }
+
+                        .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info ul li::marker {
+                            color: #58a6ff;
+                        }
 
                 .datalinq-code-tree .tree-nodes .tree-node input {
                     background-color: rgba(255, 255, 255, 0.05);
@@ -2316,6 +2333,17 @@ body {
 .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.add {
     background-image: url(img/round-plus_16@2_light.png);
 }
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info ul {
+    background-color: rgba(0, 120, 212, 0.06);
+    color: #333;
+    border-color: rgba(0, 120, 212, 0.3);
+    border-left-color: #0078d4;
+}
+
+    .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info ul li::marker {
+        color: #0078d4;
+    }
 
 .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.view {
     background: none;
