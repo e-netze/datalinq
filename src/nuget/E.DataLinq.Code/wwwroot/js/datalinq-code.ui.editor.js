@@ -688,6 +688,7 @@
     $editor.css({ display: 'flex', flexDirection: 'row', width: '100%', height: '100%' });
 
     const count = frames.length;
+    $editor.toggleClass('split', count > 1);
 
     if (count === 1) {
         const $frame = $(frames[0]);
