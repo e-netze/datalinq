@@ -200,6 +200,13 @@ body {
                     background-image: url(img/js_svg@1.svg);
                     background-size: 16px 16px;
                 }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.preview {
+                    background-image: url(img/triangle-right_32@1.png);
+                    background-size: 16px 16px;
+                }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-editor-frame.preview {
+                    background-color: #fff;
+                }
 
 .dragging {
     background-color: #5badff !important;
@@ -1283,6 +1290,10 @@ body {
         background-image: url(img/round-right_32@1.png);
     }
 
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.run-in-code-tab {
+        background-image: url(img/triangle-right-down_32@1.png);
+    }
+
     .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.push-snapshot {
         background-image: url(img/git_32@1.svg);  
     }
@@ -1437,6 +1448,10 @@ body {
         background-image: url(img/round-right_32@2.png);
     }
 
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.run-in-code-tab {
+        background-image: url(img/triangle-right-down_32@2.png);
+    }
+
     .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.colorscheme {
         background-image: url(img/darkmode_32@2.png);
     }
@@ -1465,7 +1480,7 @@ body {
 }
 
 .datalinq-code-ide.tree-collapsed .datalinq-code-sidebar .datalinq-code-tree-top .datalinq-code-tree-collapse-button {
-    background-color: #bebebe;
+    background-color: #393939;
     background-image: url(img/triangle-right-down_32@1.png)
 }
 
@@ -2351,6 +2366,9 @@ body.colorscheme-light .datalinq-autocomplete-multiselect .datalinq-autocomplete
 }
 .datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.run-in-tab {
     background-image: url(img/round-right_32@1_light.png);
+}
+.datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.run-in-code-tab {
+    background-image: url(img/triangle-right_32@1_light.png);
 }
 .datalinq-code-ide.colorscheme-light .datalinq-code-toolbar .datalinq-code-toolbutton.colorscheme {
     background-image: url(img/darkmode_32@1.png);

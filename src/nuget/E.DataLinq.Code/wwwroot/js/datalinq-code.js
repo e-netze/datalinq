@@ -8,6 +8,18 @@ var dataLinqCode = new function ($) {
     this.loginUsername = () => _username;
     this.editorTheme = () => _editorTheme;
 
+    this.buildRunUrl = function (id) {
+        var cmd = id.split('@').length === 3 ? '/report/' : '/select/';
+        var url = _dataLinqEngineUrl + cmd + id;
+
+        var args = { id: id, urlParameters: '' }
+        dataLinqCode.events.fire('before-run-document', args);  // collect url parameters
+        if (args.urlParameters) {
+            url += '?' + args.urlParameters;
+        }
+        return url;
+    };
+
     this.start = function (targetUrl, dataLinqEngineUrl, username, userPrivileges) {
         _targetUrl = targetUrl;
         _dataLinqEngineUrl = dataLinqEngineUrl;
@@ -135,15 +147,7 @@ var dataLinqCode = new function ($) {
 
         dataLinqCode.events.on(['run-current-document-in-tab', 'run-current-document'], function (channel) {
             var id = $editor.dataLinqCode_editor('currentDoc');
-
-            var cmd = id.split('@').length === 3 ? '/report/' : '/select/';
-            var url = _dataLinqEngineUrl + cmd + id;
-
-            var args = { id: id, urlParameters: '' }
-            dataLinqCode.events.fire('before-run-document', args);  // collect url parameters
-            if (args.urlParameters) {
-                url += '?' + args.urlParameters;
-            }
+            var url = dataLinqCode.buildRunUrl(id);
             //console.log(channel, url);
 
             if (channel.channel === 'run-current-document-in-tab') {
@@ -163,6 +167,15 @@ var dataLinqCode = new function ($) {
                     }
                 });
             }
+        });
+
+        dataLinqCode.events.on('run-current-document-in-code-tab', function (channel) {
+            var id = $editor.dataLinqCode_editor('currentDoc');
+            if (!id || id.indexOf('_') === 0 || id.split('@').length !== 3) {
+                return;
+            }
+
+            dataLinqCode.events.fire('open-view-preview', { id: id, url: dataLinqCode.buildRunUrl(id) });
         });
 
         dataLinqCode.events.on('toggle-color-scheme', function (channel) {
@@ -1412,7 +1425,7 @@ var dataLinqCode = new function ($) {
             const tabs = document.querySelectorAll('.datalinq-code-tab[data-id]');
             const tabIds = Array.from(tabs)
                 .map(tab => tab.getAttribute('data-id'))
-                .filter(id => id !== '_start');
+                .filter(id => id !== '_start' && id.indexOf('_preview:') !== 0);
             localStorage.setItem('datalinq-open-tabs', JSON.stringify(tabIds));
 
             // save the individual width of sidebar of user

@@ -131,6 +131,89 @@ ______      _        _     _
 
         dataLinq.init();
     });
+
+    (function () {
+        if (window.parent === window) {
+            return;
+        }
+
+        var scrollTimer = null;
+
+        var elementPath = function (el) {
+            if (!el || el === document || el === document.documentElement || el === document.scrollingElement) {
+                return '';
+            }
+            var parts = [];
+            while (el && el.parentElement && el !== document.documentElement) {
+                parts.unshift(Array.prototype.indexOf.call(el.parentElement.children, el));
+                el = el.parentElement;
+            }
+            return parts.join('/');
+        };
+
+        var elementByPath = function (path) {
+            if (!path) {
+                return document.scrollingElement || document.documentElement;
+            }
+            var el = document.documentElement;
+            var parts = path.split('/');
+            for (var i = 0; i < parts.length && el; i++) {
+                el = el.children[parseInt(parts[i], 10)];
+            }
+            return el;
+        };
+
+        document.addEventListener('scroll', function (e) {
+            var el = e.target === document ? (document.scrollingElement || document.documentElement) : e.target;
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(function () {
+                window.parent.postMessage({
+                    datalinqPreviewScroll: { path: elementPath(el), x: el.scrollLeft, y: el.scrollTop }
+                }, '*');
+            }, 150);
+        }, true);
+
+        window.addEventListener('message', function (event) {
+            var target = event.data && event.data.datalinqRestoreScroll;
+            if (!target || event.source !== window.parent ||
+                typeof target.x !== 'number' || typeof target.y !== 'number' ||
+                (target.path !== undefined && typeof target.path !== 'string')) {
+                return;
+            }
+
+            var started = Date.now();
+            var cancelled = false;
+            var cancel = function () { cancelled = true; };
+            ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(function (evt) {
+                window.addEventListener(evt, cancel, { once: true, passive: true });
+            });
+
+            var restore = function () {
+                if (cancelled) {
+                    return;
+                }
+                var el = elementByPath(target.path);
+                if (el) {
+                    el.scrollLeft = target.x;
+                    el.scrollTop = target.y;
+                }
+                // content is loaded async (datalinq-include) -> retry until reachable, user interaction or timeout
+                if ((!el || Math.abs(el.scrollTop - target.y) > 1) && Date.now() - started < 5000) {
+                    setTimeout(restore, 100);
+                }
+            };
+            restore();
+        });
+
+        var sendReady = function () {
+            window.parent.postMessage({ datalinqPreviewReady: true }, '*');
+        };
+        if (document.readyState === 'complete') {
+            sendReady();
+        } else {
+            window.addEventListener('load', sendReady);
+        }
+    })();
 </script>
 
 <div id="datalinq-body">

@@ -31,7 +31,9 @@
 
             return $tabs.children(".datalinq-code-tab.selected").map(function () {
                 return $(this).attr('data-id');
-            }).get();
+            }).get().filter(function (id) {
+                return id && id.indexOf('_') !== 0;
+            });
         },
         dirtyDocs: function (options) {
             var ids = [];
@@ -93,17 +95,91 @@
         dataLinqCode.events.on('open-copilot', function (channel, args) {
             var $tab = showOrAddTab($tabs, 'DataLinq Copilot', 'copilot');
         });
+        dataLinqCode.events.on('open-view-preview', function (channel, args) {
+            var previewId = previewPrefix + args.id;
+            var exists = $tabs.children(".datalinq-code-tab[data-id='" + previewId + "']").length > 0;
+
+            previewUrls[previewId] = args.url;
+            suppressPreviewCleanup = true;
+            var $previewTab = showOrAddTab($tabs, 'Preview: ' + args.id.split('@')[2], previewId, 'preview');
+
+            if (exists) {
+                reloadPreviewFrame(previewId);
+            }
+
+            var $viewTab = $tabs.children(".datalinq-code-tab[data-id='" + args.id + "']");
+            if ($viewTab.length > 0) {
+                var prevCtrl = ctrlPressed;
+                ctrlPressed = false;
+                $viewTab.trigger('click');
+                ctrlPressed = true;
+                $previewTab.trigger('click');
+                ctrlPressed = prevCtrl;
+            }
+            suppressPreviewCleanup = false;
+        });
+        dataLinqCode.events.on('document-saved', function (channel, args) {
+            if (!args || typeof args.id !== 'string') {
+                return;
+            }
+
+            var parts = args.id.split('@');
+            if (parts.length === 4 && (parts[3] === '_css' || parts[3] === '_js')) {
+                parts.pop();
+            }
+            if (parts.length !== 3) {
+                return;
+            }
+
+            var viewId = parts.join('@');
+            var previewId = previewPrefix + viewId;
+            if (!previewUrls[previewId]) {
+                return;
+            }
+
+            if ($tabs.children(".datalinq-code-tab[data-id='" + viewId + "']").length > 0) {
+                previewUrls[previewId] = dataLinqCode.buildRunUrl(viewId);
+            }
+            reloadPreviewFrame(previewId);
+        });
         dataLinqCode.events.on('tab-selected', function (channel, args) {
             showOrAddEditorFrame($editor, args.id);
+
+            // live preview tabs are temporary -> remove them once they are no longer shown
+            if (!suppressPreviewCleanup) {
+                $tabs.children('.datalinq-code-tab.preview:not(.selected)').each(function () {
+                    var id = $(this).attr('data-id');
+                    $(this).remove();
+                    dataLinqCode.events.fire('tab-removed', { id: id, selected: false });
+                });
+            }
 
             checkSize($tabs);
             dataLinqCode.events.fire('refresh-ui');
         });
         dataLinqCode.events.on('tab-removed', function (channel, args) {
+            delete previewUrls[args.id];
+            delete previewScrolls[args.id];
             dataLinqCode.events.fire('destroy-editor', { id: args.id });
             $(".datalinq-code-editor-frame[data-id='" + args.id + "']").remove();
 
-            if (args.selected) {
+            // closing a view also closes its live preview
+            if (args.id.indexOf(previewPrefix) !== 0 && args.id.split('@').length === 3) {
+                var $previewTab = $tabs.children(".datalinq-code-tab[data-id='" + previewPrefix + args.id + "']");
+                if ($previewTab.length > 0) {
+                    var previewSelected = $previewTab.hasClass('selected');
+                    $previewTab.remove();
+                    dataLinqCode.events.fire('tab-removed', { id: previewPrefix + args.id, selected: previewSelected });
+                    return;
+                }
+            }
+
+            var remainingFrames = getOrderedSelectedFrames($tabs, $editor);
+            if (remainingFrames.length > 0) {
+                $editor.children('.datalinq-code-editor-frame').removeClass('selected');
+                $(remainingFrames).addClass('selected');
+                layoutFrames($editor, remainingFrames);
+            } else {
                 $tabs.children('.datalinq-code-tab').last().trigger('click');
             }
 
@@ -155,7 +231,8 @@
             $parent.children('.datalinq-code-tabs').children('.datalinq-code-tab').each(function (i, tab) {
                 var $tab = $(tab);
                 var id = $tab.attr('data-id');
-                if (id === args.id || id.indexOf(args.id + '@') === 0) {
+                var docId = id.indexOf(previewPrefix) === 0 ? id.substring(previewPrefix.length) : id;
+                if (docId === args.id || docId.indexOf(args.id + '@') === 0) {
                     var selected = $tab.hasClass('selected');
                     $tab.remove();
                     dataLinqCode.events.fire('tab-removed', { id: id, selected: selected });
@@ -216,7 +293,7 @@
             }
         }
 
-        $tab.click(function (e) {
+        $tab.off('click.dlc').on('click.dlc', function (e) {
             e.stopPropagation();
 
             const $clicked = $(this);
@@ -424,10 +501,22 @@
                 .addClass('datalinq-code-editor-frame')
                 .attr('data-id', id)
                 .attr('src', src)
+                .toggleClass('preview', id.indexOf(previewPrefix) === 0)
                 .appendTo($editor);
 
             // Attach the load event ONLY for new iframes
             $frame.on('load', function () {
+                try {
+                    var pdfCheckbox = this.contentDocument &&
+                        this.contentDocument.querySelector("input[type='checkbox'][name='PDFReportMode']");
+                    if (pdfCheckbox) {
+                        pdfCheckbox.addEventListener('change', function () {
+                            dataLinqCode.events.fire('refresh-ui');
+                        });
+                    }
+                } catch (e) { }
+                dataLinqCode.events.fire('refresh-ui');
+
                 try {
                     const iframeWindow = this.contentWindow;
                     const theme = sessionStorage.getItem('editorTheme');
@@ -496,11 +585,64 @@
         layoutFrames($editor, selectedFrames);
     };
 
+    var previewPrefix = '_preview:';
+    var previewUrls = {};
+    var suppressPreviewCleanup = false;
+
+    function reloadPreviewFrame(previewId) {
+        var $frame = $(".datalinq-code-editor-frame[data-id='" + previewId + "']");
+        if ($frame.length > 0 && previewUrls[previewId]) {
+            $frame.attr('src', previewUrls[previewId]);
+        }
+    }
+
+    var previewScrolls = {};
+
+    var findPreviewIdBySource = function (source) {
+        var result = null;
+        $(".datalinq-code-editor-frame.preview").each(function () {
+            if (this.contentWindow === source) {
+                result = $(this).attr('data-id');
+                return false;
+            }
+        });
+        return result;
+    };
+
+    window.addEventListener('message', function (event) {
+        var data = event.data;
+        if (!data || (!data.datalinqPreviewScroll && !data.datalinqPreviewReady)) {
+            return;
+        }
+
+        var previewId = findPreviewIdBySource(event.source);
+        if (!previewId) {
+            return;
+        }
+
+        if (data.datalinqPreviewScroll) {
+            var s = data.datalinqPreviewScroll;
+            if (typeof s.x !== 'number' || typeof s.y !== 'number' || (s.path !== undefined && typeof s.path !== 'string')) {
+                return;
+            }
+            previewScrolls[previewId] = { path: s.path || '', x: s.x, y: s.y };
+        } else if (data.datalinqPreviewReady) {
+            var scroll = previewScrolls[previewId];
+            if (scroll && (scroll.x || scroll.y)) {
+                event.source.postMessage({ datalinqRestoreScroll: scroll }, event.origin);
+            }
+        }
+    });
+
     function buildFrameSrc(id) {
         const base = dataLinqCode.targetUrl();
         const token = window._datalinqCodeAccessToken;
 
         if (id === '_start') return `${base}/Start`;
+
+        if (id.indexOf(previewPrefix) === 0) {
+            return previewUrls[id] || dataLinqCode.buildRunUrl(id.substring(previewPrefix.length));
+        }
 
         const parts = id.split('@');
         const [endpoint, query, view, suffix] = parts;

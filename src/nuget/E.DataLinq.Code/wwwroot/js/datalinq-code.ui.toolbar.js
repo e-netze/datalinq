@@ -22,6 +22,22 @@
             });
         }
     };
+
+    var isPdfReportView = function (id) {
+        if (!id || id.indexOf('_') === 0 || id.split('@').length !== 3) {
+            return false;
+        }
+
+        var frame = $(".datalinq-code-editor-frame[data-id='" + id + "']")[0];
+        try {
+            var checkbox = frame && frame.contentDocument &&
+                frame.contentDocument.querySelector("input[type='checkbox'][name='PDFReportMode']");
+            return !!(checkbox && checkbox.checked);
+        } catch (e) {
+            return false;
+        }
+    };
+
     var initUI = function (parent, options) {
         var $parent = $(parent);
 
@@ -31,7 +47,7 @@
             .data('event', 'verify-current-document')
             .addClass('datalinq-code-toolbutton verify-current')
             .data('refresh-ui', function (args) {
-                return args.currentDoc && args.currentDoc.split('@').length === 3;
+                return args.currentDoc && args.currentDoc.indexOf('_') !== 0 && args.currentDoc.split('@').length === 3;
             })
             .appendTo($parent);
 
@@ -39,7 +55,7 @@
             .data('event', 'save-current-document')
             .addClass('datalinq-code-toolbutton save-current')
             .data('refresh-ui', function (args) {
-                return args.currentDoc && args.dirtyDocs &&
+                return args.currentDoc && args.currentDoc.indexOf('_preview:') !== 0 && args.dirtyDocs &&
                     $.inArray(args.currentDoc, args.dirtyDocs) >= 0;
             })
             .appendTo($parent);
@@ -81,13 +97,22 @@
             })
             .appendTo($parent);
 
+        $("<div><div class='text'>Live Preview</div></div>")
+            .data('event', 'run-current-document-in-code-tab')
+            .addClass('datalinq-code-toolbutton run-in-code-tab')
+            .css('display', 'none')
+            .data('visible', function (args) {
+                return isPdfReportView(args.currentDoc);
+            })
+            .appendTo($parent);
+
         if (features.VersionControl) {
             $("<div><div class='text'>Push Snapshot</div></div>")
                 .data('event', 'push-snapshot')
                 .addClass('datalinq-code-toolbutton push-snapshot disabled')
                 .data('base-image', '_content/E.DataLinq.Code/css/img/git_32')
                 .data('refresh-ui', function (args) {
-                    if (!args.currentDoc || ![2, 3].includes(args.currentDoc.split('@').length)) {
+                    if (!args.currentDoc || args.currentDoc.indexOf('_') === 0 || ![2, 3].includes(args.currentDoc.split('@').length)) {
                         return false;
                     }
 
@@ -148,6 +173,11 @@
                     $button.addClass('disabled');
                 } else {
                     $button.removeClass('disabled');
+                }
+
+                var visibleFunc = $button.data('visible');
+                if (visibleFunc) {
+                    $button.css('display', visibleFunc(args) ? '' : 'none');
                 }
 
                 var baseImage = $button.data('base-image');

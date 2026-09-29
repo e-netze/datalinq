@@ -1090,7 +1090,8 @@
     };
 
     function restoreSavedTabs() {
-        const savedTabs = JSON.parse(localStorage.getItem('datalinq-open-tabs') || '[]');
+        const savedTabs = JSON.parse(localStorage.getItem('datalinq-open-tabs') || '[]')
+            .filter(id => id && id.indexOf('_') !== 0);
 
         dataLinqCode.ui.confirmIf(
             savedTabs.length > 0,
