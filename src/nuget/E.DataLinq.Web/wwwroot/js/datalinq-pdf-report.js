@@ -151,12 +151,31 @@ function initializePageNavigator() {
     };
 
     const update = () => {
-        let best = current || 1, bestVisible = 0;
+        if (lockedToTarget) return;
+        let best = current || 1, bestVisible = 0, bestDistance = Infinity;
+        const centerY = window.innerHeight / 2;
         visibleHeights.forEach((h, idx) => {
-            if (h > bestVisible) { bestVisible = h; best = idx + 1; }
+            if (h < bestVisible - 1) return;
+            // tie-break (e.g. several fully visible pages when zoomed out): closest to viewport center
+            const r = pageList[idx].getBoundingClientRect();
+            const distance = Math.abs((r.top + r.bottom) / 2 - centerY);
+            if (h > bestVisible + 1 || distance < bestDistance) {
+                bestVisible = h; bestDistance = distance; best = idx + 1;
+            }
         });
         setCurrent(best);
     };
+
+    // After a button/input jump, keep the chosen page as current until the user scrolls
+    // manually; otherwise, with several pages fully visible (zoomed out) or at the end of
+    // the document, the counter would snap back and next/prev would get stuck.
+    let lockedToTarget = false;
+    const unlock = () => { lockedToTarget = false; };
+    ['wheel', 'touchstart', 'mousedown'].forEach(evt =>
+        window.addEventListener(evt, (e) => { if (!nav.contains(e.target)) unlock(); }, { passive: true }));
+    window.addEventListener('keydown', (e) => {
+        if (!nav.contains(e.target) && ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) unlock();
+    });
 
     // IntersectionObserver avoids measuring every page on each scroll frame.
     const thresholds = Array.from({ length: 21 }, (_, i) => i / 20);
@@ -175,6 +194,8 @@ function initializePageNavigator() {
         const target = Math.min(Math.max(1, n), pageList.length);
         const distance = Math.abs(target - (current || 1));
         pageList[target - 1].scrollIntoView({ behavior: distance > 2 ? 'auto' : 'smooth', block: 'center' });
+        lockedToTarget = true;
+        current = target;
         input.value = target;
     };
 
