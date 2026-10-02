@@ -500,6 +500,7 @@
             $frame = $("<iframe>")
                 .addClass('datalinq-code-editor-frame')
                 .attr('data-id', id)
+                .attr('allow', 'clipboard-write')
                 .attr('src', src)
                 .toggleClass('preview', id.indexOf(previewPrefix) === 0)
                 .appendTo($editor);

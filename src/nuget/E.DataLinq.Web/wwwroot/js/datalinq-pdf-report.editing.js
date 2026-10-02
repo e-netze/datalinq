@@ -314,7 +314,14 @@ dataLinq.events.on('onpageloaded', function () {
 
             const textToCopy = `@DLH.NewPdfElement(x: ${x}, y: ${y})`;
 
-            navigator.clipboard.writeText(textToCopy).then(() => {
+            const copied = navigator.clipboard && window.isSecureContext
+                ? navigator.clipboard.writeText(textToCopy)
+                : Promise.reject();
+
+            copied.catch(() => {
+                // Fallback for embedded frames (e.g. the live preview) without clipboard permission.
+                if (!dataLinq.copyToClipboard(textToCopy)) throw new Error('copy failed');
+            }).then(() => {
                 showToast('Copied!', e.clientX, e.clientY);
             }).catch(() => {
                 showToast('Failed to copy element location!', e.clientX, e.clientY);

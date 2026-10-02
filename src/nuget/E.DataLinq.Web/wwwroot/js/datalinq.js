@@ -1445,8 +1445,9 @@ var dataLinq = new function () {
         //     .on("focus", function () { document.execCommand('selectAll', false, null) })
         //     .focus();
 
-        document.execCommand("copy");
+        var success = document.execCommand("copy");
         $temp.remove();
+        return success;
     };
 
     this.updateFilter = function (sender, id, name, val) {
