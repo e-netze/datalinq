@@ -41,8 +41,8 @@ dataLinq.events.on('onpageloaded', function () {
             initialX = matrix.m41;
             initialY = matrix.m42;
 
-            startX = e.clientX - initialX;
-            startY = e.clientY - initialY;
+            startX = e.clientX;
+            startY = e.clientY;
 
             document.addEventListener('mousemove', drag);
             document.addEventListener('mouseup', stopDrag);
@@ -53,16 +53,30 @@ dataLinq.events.on('onpageloaded', function () {
         function drag(e) {
             if (!isDragging) return;
 
-            let newX = e.clientX - startX;
-            let newY = e.clientY - startY;
-
             const pageRect = page.getBoundingClientRect();
             const elementRect = element.getBoundingClientRect();
 
-            const maxX = pageRect.width - elementRect.width;
+            // Screen px -> CSS px (the viewer may be zoomed).
+            const scale = page.offsetWidth > 0 ? pageRect.width / page.offsetWidth : 1;
 
-            newX = Math.max(0, Math.min(newX, maxX));
-            newY = Math.max(0, newY); // Only constrain the top (minimum), allow going below
+            let newX = initialX + (e.clientX - startX) / scale;
+            let newY = initialY + (e.clientY - startY) / scale;
+
+            // The translate is relative to the element's layout position, which is not
+            // necessarily the page's top-left corner, so clamp using that base offset.
+            const currentMatrix = new DOMMatrix(window.getComputedStyle(element).transform);
+            const baseLeft = (elementRect.left - pageRect.left) / scale - currentMatrix.m41;
+            const baseTop = (elementRect.top - pageRect.top) / scale - currentMatrix.m42;
+            const elementWidth = elementRect.width / scale;
+            const elementHeight = elementRect.height / scale;
+
+            const minX = -baseLeft;
+            const maxX = page.offsetWidth - elementWidth - baseLeft;
+            const minY = -baseTop;
+            const maxY = page.offsetHeight - elementHeight - baseTop;
+
+            newX = Math.max(minX, Math.min(newX, Math.max(minX, maxX)));
+            newY = Math.max(minY, Math.min(newY, Math.max(minY, maxY)));
 
             let isSnapped = false;
             let snapInfo = null;
@@ -312,7 +326,7 @@ dataLinq.events.on('onpageloaded', function () {
             const x = element.getAttribute('data-x');
             const y = element.getAttribute('data-y');
 
-            const textToCopy = `@DLH.NewPdfElement(x: ${x}, y: ${y})`;
+            const textToCopy = `@PDF.NewDraggable(x: ${x}, y: ${y})`;
 
             const copied = navigator.clipboard && window.isSecureContext
                 ? navigator.clipboard.writeText(textToCopy)
