@@ -412,20 +412,77 @@ div.datalinq-filter-field-wrapper:focus {
     }
 
 .datalinq-splashscreen {
-    z-index: 999999;
-    background: #eee url(../img/datalinq-splash-logo.png) no-repeat center center;
-    /*display: none;*/
-    padding: 10px;
-    text-align: center;
     position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(240, 242, 245, 0.92);
+    opacity: 1;
+    transition: opacity .3s ease;
+    animation: datalinq-splash-in .25s ease-out;
+}
+
+    .datalinq-splashscreen.hiding {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+.datalinq-splashscreen-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    width: min(420px, 90vw);
+    padding: 32px 28px 16px 28px;
+    box-sizing: border-box;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    font-family: 'Segoe UI', Verdana, Tahoma, Arial, sans-serif;
+}
+
+.datalinq-splashscreen-logo {
+    width: 100%;
+    height: 70px;
+    background: url(../img/datalinq-splash-logo.png) no-repeat center center;
+    background-size: contain;
 }
 
 .datalinq-splashscreen-text {
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
-    color: black;
-    font-size: 8.5px;
+    align-self: flex-end;
+    color: #888;
+    font-size: 10px;
+}
+
+.datalinq-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(91, 173, 255, 0.2);
+    border-top-color: #5badff;
+    border-radius: 50%;
+    box-sizing: border-box;
+    animation: datalinq-spin .8s linear infinite;
+}
+
+    .datalinq-spinner.datalinq-spinner-small {
+        width: 20px;
+        height: 20px;
+        border-width: 3px;
+        margin: 6px;
+    }
+
+@keyframes datalinq-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes datalinq-splash-in {
+    from {
+        opacity: 0;
+    }
 }
 
 .datalinq-filter-parameter.hasvalue,

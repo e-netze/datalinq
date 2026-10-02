@@ -103,11 +103,10 @@ public class DataLinqPdfHelper
                 {
                     if (download_button)
                     {
-                        d.AppendButton(button =>
+                        d.AppendDiv(div =>
                         {
-                            button.WithId("downloadBtn");
-                            button.Content("Download PDF");
-                            button.AddClass("datalinq-button-pdf");
+                            div.WithId("downloadBtnContainer");
+                            div.AddClass("datalinq-button-pdf-container");
                         });
                     }
                     d.AddAttribute("fileName", fileName);

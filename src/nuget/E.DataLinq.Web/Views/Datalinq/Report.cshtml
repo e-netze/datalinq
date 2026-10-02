@@ -127,9 +127,20 @@ ______      _        _     _
     dataLinq.__authObject=@Html.Raw(Model.ClientSideAuthObjectString);
 
     $(document).ready(function () {
-        dataLinq.showSplashSreen('(c) '+(new Date()).getFullYear()+' Energienetze Steiermark GmbH', 2000);
+        dataLinq.showSplashSreen('(c) '+(new Date()).getFullYear()+' Energienetze Steiermark GmbH');
+
+        dataLinq.events.on('onpageloaded', function () {
+            dataLinq.hideSplashScreen();
+        });
 
         dataLinq.init();
+
+        if ($('.datalinq-include').length === $('.datalinq-include.finished').length) {
+            dataLinq.hideSplashScreen();
+        }
+
+        // safety net: never block the page forever (e.g. a failing include)
+        setTimeout(function () { dataLinq.hideSplashScreen(); }, 2000);
     });
 
     (function () {
@@ -178,6 +189,10 @@ ______      _        _     _
             if (!target || event.source !== window.parent ||
                 typeof target.x !== 'number' || typeof target.y !== 'number' ||
                 (target.path !== undefined && typeof target.path !== 'string')) {
+                return;
+            }
+
+            if (window.__datalinqPdfRestoresView) {
                 return;
             }
 

@@ -37,6 +37,18 @@ const MAX_PAGINATION_ITERATIONS = 100;      // guards against infinite paginatio
 const AUTO_DOWNLOAD_START_DELAY = 1000;     // wait before the automatic download starts
 const AUTO_DOWNLOAD_CLOSE_DELAY = 100;      // wait before showing the "you can close" message
 
+// Label of the download button (icon + text).
+const DOWNLOAD_BUTTON_HTML =
+    '<svg class="pdf-download-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+    '<span>Download</span>';
+
+// Label of the print button (icon + text).
+const PRINT_BUTTON_HTML =
+    '<svg class="pdf-print-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>' +
+    '<span>Print</span>';
+
 // -------------------------------------------------------------------------------
 
 // Entry point: wait until the DataLinq core client-side logic has finished
@@ -68,12 +80,243 @@ dataLinq.events.on('onpageloaded', function () {
     initializeTemplateLoader();
     addPageNumbers();
     addDateTime();
+    initializePageNavigator();
 });
+
+// Floating "page X / Y" navigator with prev/next buttons and an editable page input.
+function initializePageNavigator() {
+    if (urlParams.get('_autoDownload') === 'true') return;
+
+    const pages = () => [...document.querySelectorAll('.page')];
+    if (pages().length === 0) return;
+
+    const nav = document.createElement('div');
+    nav.className = 'pdf-page-navigator';
+    nav.innerHTML =
+        '<div class="pdf-nav-controls">' +
+        '<button type="button" class="pdf-nav-prev" title="Previous page">&#9650;</button>' +
+        '<input type="number" class="pdf-nav-input" min="1" />' +
+        '<span class="pdf-nav-total"></span>' +
+        '<button type="button" class="pdf-nav-next" title="Next page">&#9660;</button>' +
+        '</div>' +
+        '<div class="pdf-nav-controls pdf-zoom-controls">' +
+        '<button type="button" class="pdf-zoom-out" title="Zoom out">&minus;</button>' +
+        '<button type="button" class="pdf-zoom-reset" title="Reset zoom">100%</button>' +
+        '<button type="button" class="pdf-zoom-in" title="Zoom in">+</button>' +
+        '</div>';
+    if (document.getElementById('downloadBtnContainer') && !document.getElementById('downloadBtn')) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.id = 'downloadBtn';
+        button.innerHTML = DOWNLOAD_BUTTON_HTML;
+        button.classList.add('datalinq-button-pdf');
+        button.addEventListener('click', async function () {
+            this.textContent = 'Generating PDF ...';
+            this.disabled = true;
+
+            showLoadingOverlay();
+
+            await new Promise(resolve => requestAnimationFrame(() =>
+                requestAnimationFrame(resolve)
+            ));
+
+            await downloadPDFMethod();
+        });
+        nav.appendChild(button);
+    }
+
+    const printButton = document.createElement('button');
+    printButton.type = 'button';
+    printButton.id = 'printBtn';
+    printButton.innerHTML = PRINT_BUTTON_HTML;
+    printButton.classList.add('datalinq-button-pdf');
+    printButton.addEventListener('click', () => window.print());
+    nav.appendChild(printButton);
+
+    document.body.appendChild(nav);
+
+    const input = nav.querySelector('.pdf-nav-input');
+    const totalSpan = nav.querySelector('.pdf-nav-total');
+    let current = 0;
+    let pageList = pages();
+    const visibleHeights = new Map();
+
+    totalSpan.textContent = `/ ${pageList.length}`;
+    input.max = pageList.length;
+
+    const setCurrent = (n) => {
+        if (n === current) return;
+        current = n;
+        if (document.activeElement !== input) input.value = current;
+    };
+
+    const update = () => {
+        let best = current || 1, bestVisible = 0;
+        visibleHeights.forEach((h, idx) => {
+            if (h > bestVisible) { bestVisible = h; best = idx + 1; }
+        });
+        setCurrent(best);
+    };
+
+    // IntersectionObserver avoids measuring every page on each scroll frame.
+    const thresholds = Array.from({ length: 21 }, (_, i) => i / 20);
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const idx = pageList.indexOf(entry.target);
+            if (idx < 0) return;
+            if (entry.isIntersecting) visibleHeights.set(idx, entry.intersectionRect.height);
+            else visibleHeights.delete(idx);
+        });
+        update();
+    }, { threshold: thresholds });
+    pageList.forEach(p => observer.observe(p));
+
+    const goTo = (n) => {
+        const target = Math.min(Math.max(1, n), pageList.length);
+        const distance = Math.abs(target - (current || 1));
+        pageList[target - 1].scrollIntoView({ behavior: distance > 2 ? 'auto' : 'smooth', block: 'center' });
+        input.value = target;
+    };
+
+    nav.querySelector('.pdf-nav-prev').addEventListener('click', () => goTo(current - 1));
+    nav.querySelector('.pdf-nav-next').addEventListener('click', () => goTo(current + 1));
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const n = parseInt(input.value);
+            if (!isNaN(n)) goTo(n);
+            input.blur();
+        } else if (e.key === 'Escape') {
+            input.value = current;
+            input.blur();
+        }
+    });
+    input.addEventListener('focus', () => input.select());
+    input.addEventListener('blur', () => { input.value = current; });
+
+    setCurrent(1);
+
+    initializeZoom(nav, () => pageList[(current || 1) - 1], saveViewState);
+
+    restoreViewState(pageList);
+
+    let saveTimer = null;
+    window.addEventListener('scroll', () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => saveViewState(pageList), 200);
+    }, { passive: true });
+    window.addEventListener('pagehide', () => saveViewState(pageList));
+}
+
+// View state (zoom + position) is kept per report in sessionStorage, so reloads
+// (e.g. the live preview after saving code) return to the same zoom and page.
+const PDF_VIEW_STATE_KEY = 'datalinq-pdf-view:' + window.location.pathname;
+
+// The position is stored as page index + relative offset of the viewport center within
+// that page, so it survives zoom changes and small layout differences.
+function saveViewState(pageList) {
+    pageList = pageList || [...document.querySelectorAll('.page')];
+    if (pageList.length === 0) return;
+
+    const centerY = window.innerHeight / 2;
+    let pageIndex = 0, bestDistance = Infinity, offset = 0;
+    pageList.forEach((page, i) => {
+        const r = page.getBoundingClientRect();
+        const distance = centerY < r.top ? r.top - centerY : centerY > r.bottom ? centerY - r.bottom : 0;
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            pageIndex = i;
+            offset = r.height > 0 ? Math.min(Math.max((centerY - r.top) / r.height, 0), 1) : 0;
+        }
+    });
+
+    try {
+        sessionStorage.setItem(PDF_VIEW_STATE_KEY, JSON.stringify({ zoom: pdfZoomLevel, page: pageIndex, offset: offset }));
+    } catch { }
+}
+
+function restoreViewState(pageList) {
+    let state = null;
+    try {
+        state = JSON.parse(sessionStorage.getItem(PDF_VIEW_STATE_KEY));
+    } catch { }
+    if (!state) return;
+
+    if (typeof state.zoom === 'number' && state.zoom !== 1) {
+        setZoomLevel(state.zoom);
+    }
+
+    const page = pageList[Math.min(Math.max(0, state.page | 0), pageList.length - 1)];
+    if (!page) return;
+
+    const r = page.getBoundingClientRect();
+    const target = r.top + (state.offset || 0) * r.height;
+    window.scrollBy({ top: target - window.innerHeight / 2, behavior: 'auto' });
+
+    if (pdfZoomLevel > 1) {
+        const root = document.scrollingElement || document.documentElement;
+        root.scrollLeft = (root.scrollWidth - root.clientWidth) / 2;
+    }
+}
+
+// Zoom controls: scales the pages container via CSS zoom and keeps the current page centered.
+const PDF_ZOOM_STEPS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3];
+let pdfZoomLevel = 1;
+let setZoomLevel = () => { };
+
+function initializeZoom(nav, getCurrentPage, onChange) {
+    const container = document.getElementById('pagesContainer');
+    if (!container) return;
+
+    const resetBtn = nav.querySelector('.pdf-zoom-reset');
+
+    setZoomLevel = (level) => {
+        pdfZoomLevel = level;
+        container.style.zoom = level;
+        resetBtn.textContent = `${Math.round(level * 100)}%`;
+    };
+
+    const apply = (level) => {
+        const page = getCurrentPage();
+        setZoomLevel(level);
+        if (page) page.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
+        if (onChange) onChange();
+    };
+
+    const step = (dir) => {
+        const idx = PDF_ZOOM_STEPS.findIndex(z => z >= pdfZoomLevel - 0.001);
+        const next = PDF_ZOOM_STEPS[Math.min(Math.max(0, (idx < 0 ? PDF_ZOOM_STEPS.length - 1 : idx) + dir), PDF_ZOOM_STEPS.length - 1)];
+        apply(next);
+    };
+
+    nav.querySelector('.pdf-zoom-in').addEventListener('click', () => step(1));
+    nav.querySelector('.pdf-zoom-out').addEventListener('click', () => step(-1));
+    resetBtn.addEventListener('click', () => apply(1));
+
+    window.addEventListener('keydown', (e) => {
+        if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+        if (e.key === '+' || e.key === '=') { e.preventDefault(); step(1); }
+        else if (e.key === '-') { e.preventDefault(); step(-1); }
+        else if (e.key === '0') { e.preventDefault(); apply(1); }
+    });
+}
+
+// Temporarily resets zoom (e.g. while rasterizing pages) and returns a restore function.
+function suspendZoom() {
+    const container = document.getElementById('pagesContainer');
+    if (!container || pdfZoomLevel === 1) return () => { };
+    container.style.zoom = 1;
+    return () => { container.style.zoom = pdfZoomLevel; };
+}
 
 
 // Auto-download: DLH.PrintPDF opens the report with ?_autoDownload=true so the PDF
 // is generated and downloaded automatically, then the tab closes itself.
 const urlParams = new URLSearchParams(window.location.search);
+
+// PDF reports restore their own view (zoom + page) instead of the live preview's
+// pixel-based scroll restore, which breaks once the zoom level differs.
+window.__datalinqPdfRestoresView = urlParams.get('_autoDownload') !== 'true';
 if (urlParams.get('_autoDownload') === 'true') {
     document.body.style.opacity = '0';
 
@@ -92,6 +335,7 @@ if (urlParams.get('_autoDownload') === 'true') {
 // Renders every `.page` element to a JPEG image and assembles the images into a PDF.
 async function downloadPDFMethod() {
     const pages = [...document.querySelectorAll('.page')];
+    const restoreZoom = suspendZoom();
 
     try {
         let completed = 0;
@@ -162,14 +406,15 @@ async function downloadPDFMethod() {
     } catch (error) {
         console.error('PDF generation failed:', error);
     } finally {
+        restoreZoom();
         removeLoadingOverlay();
 
         if (window.parent !== window) {
             window.parent.postMessage({ type: 'pdfDownloadComplete' }, '*');
-        } else {
-            const btn = document.getElementById('downloadBtn');
-            if (btn) { btn.textContent = 'Download PDF'; btn.disabled = false; }
         }
+
+        const btn = document.getElementById('downloadBtn');
+        if (btn) { btn.innerHTML = DOWNLOAD_BUTTON_HTML; btn.disabled = false; }
     }
 }
 

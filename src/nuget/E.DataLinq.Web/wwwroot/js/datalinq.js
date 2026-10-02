@@ -297,7 +297,7 @@ var dataLinq = new function () {
         var filter = $e.attr('data-filter');      
         url += (url.indexOf('?') > 0 ? "&" : "?") + filter;
 
-        $e.html("<img src='" + dataLinq.baseUrl + "/_content/E.DataLinq.Web/css/img/hourglass/loader1.gif" + "' />");
+        $e.html("<div class='datalinq-spinner datalinq-spinner-small'></div>");
         $.ajax({
             url: url,
             data: dataLinq.overrideModifyRequestData({ _f: 'json', _id: id, _orderby: $e.attr('data-orderby') }),
@@ -1711,29 +1711,35 @@ var dataLinq = new function () {
         dataLinq._tickTimer.start();
     }, 1000);
 
+    // Shows the splash screen with a loading spinner. If no duration is given, it stays
+    // until hideSplashScreen() is called (e.g. when the page has finished loading).
     this.showSplashSreen = function (text, duration) {
-        var width = Math.min(480, $(window).width());
-        var height = 120;
+        if ($('.datalinq-splashscreen').length > 0)
+            return;
 
-        var $splash = $("<div>").addClass('datalinq-splashscreen').css({
-            width: width,
-            height: height,
-            left: ($(window).width() - width) / 2,
-            top: ($(window).height() - height) / 3
-        }).appendTo('body');
+        var $splash = $("<div>").addClass('datalinq-splashscreen').appendTo('body');
+        var $card = $("<div>").addClass('datalinq-splashscreen-card').appendTo($splash);
+        $("<div>").addClass('datalinq-splashscreen-logo').appendTo($card);
+        $("<div>").addClass('datalinq-spinner').appendTo($card);
         $('<div>' + text + "</div>")
             .addClass('datalinq-splashscreen-text')
-            .appendTo($splash);
+            .appendTo($card);
 
-        //$splash.fadeIn(function () {
-        var timer = new dataLinq.timer(function ($splash) {
-            //$splash.fadeOut(function () {
-            $splash.remove();
-            //});
-        }, duration, $splash);
-        timer.start();
-        //});
+        if (duration) {
+            var timer = new dataLinq.timer(function () {
+                dataLinq.hideSplashScreen();
+            }, duration);
+            timer.start();
+        }
+    };
 
+    this.hideSplashScreen = function () {
+        var $splash = $('.datalinq-splashscreen');
+        if ($splash.length === 0 || $splash.hasClass('hiding'))
+            return;
+
+        $splash.addClass('hiding');
+        setTimeout(function () { $splash.remove(); }, 300);
     };
 
     this.encodeUntrustedHtml = function (html, isMarkdown) {
