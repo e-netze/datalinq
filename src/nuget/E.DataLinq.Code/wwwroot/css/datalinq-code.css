@@ -667,32 +667,6 @@ body {
             .datalinq-code-tree .tree-nodes .tree-node.found > .tree-nodes {
                 color: #eee;
             }
-            .datalinq-code-tree .tree-nodes .tree-node.add {
-                background-image: url(img/round-plus_16@1.png);
-            }
-            .datalinq-code-tree .tree-nodes .tree-node button.new-folder-btn {
-                background-image: url(img/new-folder.svg);
-                background-repeat: no-repeat;
-                background-position: center;
-                background-size: contain;
-                filter: brightness(0) invert(1);
-                background-color: transparent;
-                cursor: pointer;
-                border: none;
-                position: absolute;
-                right: 0px;
-                top: 12px;
-                transform: translateY(-50%);
-                width: 24px;
-                height: 24px;
-                opacity:0.5;
-            }
-
-                .datalinq-code-tree .tree-nodes .tree-node button.new-folder-btn.new-folder-active {
-                    filter: brightness(0) saturate(100%) invert(64%) sepia(85%) saturate(2297%) hue-rotate(178deg) brightness(101%) contrast(101%);
-                    opacity: 1;
-                }
-
             .datalinq-code-tree .tree-nodes .tree-node > .icon {
                 width: 20px;
                 height: 20px;
@@ -787,6 +761,18 @@ body {
                     border-radius: 4px;
                 }
 
+            .datalinq-code-tree .tree-nodes .tree-node .copy-button.add-button {
+                background-image: url(img/round-plus_16@1.png);
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node.view > .copy-button.css-button {
+                right: 2px;
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node.view > .copy-button.js-button {
+                right: 28px;
+            }
+
             .datalinq-code-tree .tree-nodes .tree-node.mouseover > .copy-button {
                 display: block;
             }
@@ -861,6 +847,10 @@ body {
         .datalinq-code-tree .tree-nodes .tree-node .copy-button {
             background-image: url(img/copy_16@2.png);
         }
+
+        .datalinq-code-tree .tree-nodes .tree-node .copy-button.add-button {
+            background-image: url(img/round-plus_16@2.png);
+        }
 }
 
 
@@ -877,84 +867,9 @@ body {
                 .datalinq-code-tree .tree-nodes .tree-node.has-children.collapsed {
                     background-image: url(img/triangle-filled-right-down_16@2.png);
                 }
-                .datalinq-code-tree .tree-nodes .tree-node.add {
-                    background-image: url(img/round-plus_16@2.png);
-                }
-
-                .datalinq-code-tree.new-folder-mode .tree-nodes .tree-node.add .icon,
-                .datalinq-code-tree.new-folder-mode .tree-nodes .tree-node.add input {
-                    display: none;
-                }
-
-                .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info {
-                    display: none;
-                }
-
-                .datalinq-code-tree.new-folder-mode .tree-nodes .tree-node.add .folder-mode-info {
-                    display: block;
-                }
-
-                .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info ul {
-                    margin: 4px 0 6px 0;
-                    padding: 8px 10px 8px 26px;
-                    max-width: calc(100% - 59px);
-                    box-sizing: border-box;
-                    overflow: hidden;
-                    font-size: 0.8em;
-                    line-height: 1.45;
-                    white-space: normal;
-                    background-color: rgba(88, 166, 255, 0.08);
-                    color: #d4d4d4;
-                    border: 1px solid rgba(88, 166, 255, 0.35);
-                    border-left: 3px solid #58a6ff;
-                    border-radius: 4px;
-                    cursor: default;
-                }
-
-                    .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info ul li {
-                        margin: 2px 0;
-                        padding: 0;
-                        list-style: disc;
-                        background: none;
-                    }
-
-                        .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info ul li::marker {
-                            color: #58a6ff;
-                        }
-
-                .datalinq-code-tree .tree-nodes .tree-node input {
-                    background-color: rgba(255, 255, 255, 0.05);
-                    border: 1px solid #444;
-                    border-radius: 4px;
-                    color: #f0f0f0;
-                    font-size: 12px;
-                    padding: 3px 6px;
-                    outline: none;
-                    transition: all 0.2s ease-in-out;
-                    width: auto;
-                    max-width: 180px;
-                    vertical-align: middle;
-                }
-
-                    .datalinq-code-tree .tree-nodes .tree-node input:focus {
-                        border-color: #5badff;
-                        background-color: rgba(255, 255, 255, 0.08);
-                        box-shadow: 0 0 0 1px rgba(90, 173, 255, 0.3);
-                    }
-
-
-            
 
             .datalinq-code-tree .tree-nodes .tree-node.view {
                 background: none;
-                padding-left: 24px;
-            }
-
-            .datalinq-code-tree .tree-nodes .tree-node.view.add {
-                background-image: url(img/round-plus_16@1.png);
-                background-repeat: no-repeat;
-                background-position: left 3px;
-                background-size: 16px 16px;
                 padding-left: 24px;
             }
 
@@ -1597,6 +1512,108 @@ body {
     display: none;
 }
 
+/****** Tree Context Menu *****/
+
+.datalinq-code-contextmenu {
+    position: fixed;
+    z-index: 10000;
+    min-width: 180px;
+    padding: 4px 0;
+    margin: 0;
+    list-style: none;
+    background-color: #252526;
+    color: #ddd;
+    border: 1px solid #454545;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    font-size: 0.9em;
+    user-select: none;
+}
+
+    .datalinq-code-contextmenu .item {
+        padding: 5px 16px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+        .datalinq-code-contextmenu .item:hover {
+            background-color: #04395e;
+            color: #fff;
+        }
+
+        .datalinq-code-contextmenu .item.danger:hover {
+            background-color: #8b1d1d;
+        }
+
+    .datalinq-code-contextmenu .separator {
+        height: 1px;
+        margin: 4px 0;
+        background-color: #454545;
+    }
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-contextmenu,
+.colorscheme-light .datalinq-code-contextmenu {
+    background-color: #f8f8f8;
+    color: #222;
+    border-color: #ccc;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+    .colorscheme-light .datalinq-code-contextmenu .item:hover {
+        background-color: #cce4f7;
+        color: #000;
+    }
+
+    .colorscheme-light .datalinq-code-contextmenu .item.danger:hover {
+        background-color: #f4c7c7;
+    }
+
+    .colorscheme-light .datalinq-code-contextmenu .separator {
+        background-color: #ccc;
+    }
+
+.datalinq-code-prompt-select {
+    display: block;
+    width: auto;
+    min-width: 240px;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 6px 28px 6px 8px;
+    margin-bottom: 8px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #333;
+    color: #eee;
+    border: 1px solid #777;
+    border-radius: 4px;
+    background-image: url(img/triangle-down_16@1.png);
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    background-size: 16px 16px;
+    cursor: pointer;
+    outline: none;
+}
+
+    .datalinq-code-prompt-select:focus {
+        border-color: #58a6ff;
+    }
+
+    .datalinq-code-prompt-select option {
+        background-color: #252526;
+        color: #eee;
+    }
+
+.colorscheme-light .datalinq-code-prompt-select {
+    background-color: #fff;
+    color: #222;
+    border-color: #ccc;
+}
+
+    .colorscheme-light .datalinq-code-prompt-select option {
+        background-color: #fff;
+        color: #222;
+    }
+
 /****** Tree Toolbar *****/
 
 .tree-tool {
@@ -1619,8 +1636,38 @@ body {
         background-image: url(img/triangle-up_16@1.png);
     }
 
+    .tree-tool.new-folder {
+        position: relative;
+    }
+
+        .tree-tool.new-folder::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url(img/new-folder.svg);
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            filter: brightness(0) invert(1);
+        }
+
+.colorscheme-light .tree-tool.new-folder::before {
+    filter: none;
+}
+
+    .tree-tool.new-endpoint {
+        background-image: url(img/round-plus_16@1.png);
+    }
+
 .datalinq-tree-search-input {
     width: calc( 100% - 30px);
+}
+
+.tree-tool.new-folder ~ .datalinq-tree-search-input {
+    width: calc( 100% - 90px);
+}
+
+.datalinq-tree-search-input {
     box-sizing: border-box;
     background: transparent;
     border: 1px solid #777;
@@ -2361,32 +2408,12 @@ body {
     .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node .copy-button.js-button {
         background-image: url(img/js_svg@2_light.svg);
     }
-
-.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.add {
-    background-image: url(img/round-plus_16@2_light.png);
-}
-
-.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info ul {
-    background-color: rgba(0, 120, 212, 0.06);
-    color: #333;
-    border-color: rgba(0, 120, 212, 0.3);
-    border-left-color: #0078d4;
-}
-
-    .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.add .folder-mode-info ul li::marker {
-        color: #0078d4;
+    .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node .copy-button.add-button {
+        background-image: url(img/round-plus_16@2_light.png);
     }
 
 .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.view {
     background: none;
-    padding-left: 24px;
-}
-
-.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.view.add {
-    background-image: url(img/round-plus_16@2_light.png);
-    background-repeat: no-repeat;
-    background-position: left 3px;
-    background-size: 16px 16px;
     padding-left: 24px;
 }
 
@@ -2600,10 +2627,6 @@ body.colorscheme-light .datalinq-code-editor-code-panel .datalinq-code-editor-co
 
 .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.folder > .icon {
     filter: none;
-}
-
-.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node button.new-folder-btn {
-    filter: brightness(0);
 }
 
 .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.found > .tree-nodes {

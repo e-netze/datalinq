@@ -244,6 +244,45 @@
             dataLinqCode.events.fire('refresh-ui');
         });
 
+        var closeSavedTabs = function ($candidates) {
+            $candidates.each(function (i, tab) {
+                var $tab = $(tab);
+
+                // tabs without close button (start) and tabs with unsaved changes stay open
+                if ($tab.children('.close-button').length === 0 || $tab.hasClass('dirty')) {
+                    return;
+                }
+
+                var id = $tab.attr('data-id');
+                var selected = $tab.hasClass('selected');
+                $tab.remove();
+
+                dataLinqCode.events.fire('tab-removed', { id: id, selected: selected });
+            });
+
+            checkSize($tabs);
+        };
+
+        $tabs.on('contextmenu', function (e) {
+            if (!dataLinqCode.ui.contextMenu) {
+                return;
+            }
+
+            e.preventDefault();
+
+            var $allTabs = $tabs.children('.datalinq-code-tab');
+            var $tab = $(e.target).closest('.datalinq-code-tab');
+            var canClose = $tab.length > 0 && $tab.children('.close-button').length > 0;
+
+            dataLinqCode.ui.contextMenu(e, [
+                canClose ? { text: 'Close', action: function () { $tab.children('.close-button').trigger('click'); } } : null,
+                $tab.length > 0 ? { text: 'Close others', action: function () { closeSavedTabs($allTabs.not($tab)); } } : null,
+                $tab.length > 0 ? { text: 'Close to the right', action: function () { closeSavedTabs($tab.nextAll('.datalinq-code-tab')); } } : null,
+                '-',
+                { text: 'Close all', action: function () { closeSavedTabs($allTabs); } }
+            ]);
+        });
+
         var el = document.querySelector('.datalinq-code-tabs');
         var sortable = Sortable.create(el, {
             animation: 150,
@@ -350,69 +389,10 @@
             .addClass('datalinq-code-open-tabs')
             .appendTo($parent);
 
-        var menuRowAdded = false;
-
         $tabs.children('.datalinq-code-tab').each(function (i, tab) {
             var $tab = $(tab);
 
             var id = $tab.attr('data-id');
-
-            if (menuRowAdded == false && id.indexOf('_') != 0) {
-                menuRowAdded = true;
-
-                var $menu = $("<li>")
-                    .addClass('datalinq-code-tab')
-                    .css('text-align', 'right')
-                    .appendTo($ul);
-
-                $("<button>")
-                    .addClass('datalinq-code-button cancel')
-                    .text('Close selected')
-                    .appendTo($menu)
-                    .click(function () {
-                        $(this).closest('.datalinq-code-open-tabs').children('.datalinq-code-tab').each(function (i, li) {
-                            var $li = $(li), $tab = $li.data("$tab");
-
-                            if (!$tab || $tab.attr('data-id').indexOf('_') == 0) {
-                                return;
-                            }
-
-                            var $checkbox = $li.children('.checkbox');
-
-                            if ($checkbox.hasClass('checked') === true) {
-                                $tab.children('.close-button').trigger('click');
-                            }
-                        });
-
-                        $(null).dataLinq_code_modal('close');
-                    });
-
-                $("<div>")
-                    .addClass('checkbox')
-                    .appendTo($menu)
-                    .click(function (e) {
-                        e.stopPropagation();
-
-                        var $this = $(this);
-                        $this.toggleClass('checked');
-                        var checked = $this.hasClass('checked');
-
-                        $this.closest('.datalinq-code-open-tabs').children('.datalinq-code-tab').each(function (i, li) {
-                            var $li = $(li), $tab = $li.data("$tab");
-
-                            if (!$tab || $tab.attr('data-id').indexOf('_') == 0) {
-                                return;
-                            }
-
-                            var $checkbox = $li.children('.checkbox');
-
-                            if (($checkbox.hasClass('checked') === true && checked === false) ||
-                                ($checkbox.hasClass('checked') === false && checked === true)) {
-                                $checkbox.trigger('click');
-                            }
-                        });
-                    });
-            }
 
             var $li = $("<li>")
                 .data("$tab", $tab)
@@ -434,20 +414,6 @@
                     .addClass('subtext')
                     .text(id)
                     .appendTo($li);
-
-                $("<div>")
-                    .addClass('checkbox')
-                    .appendTo($li)
-                    .click(function (e) {
-                        e.stopPropagation();
-
-                        var $this = $(this);
-                        if ($this.parent().hasClass('dirty') || $this.parent().hasClass('errors')) {
-                            return;
-                        }
-
-                        $this.toggleClass('checked');
-                    });
             }
         });
     };

@@ -26,6 +26,9 @@
         }
     };
     var initUI = function (parent, options) {
+        // share the context menu with other ui components (e.g. editor tabs)
+        dataLinqCode.ui.contextMenu = showContextMenu;
+
         var $parent = $(parent).addClass('datalinq-code-tree-holder');
 
         if (options.$toolbar) {
@@ -67,118 +70,321 @@
                     }
                     setFilter($this.data('$tree'), $this.val())
                 });
+
+            var $searchInput = options.$toolbar.find('.datalinq-tree-search-input');
+
+            $("<div>")
+                .addClass('tree-tool new-folder')
+                .attr('title', 'New folder')
+                .insertBefore($searchInput)
+                .click(function (e) {
+                    e.stopPropagation();
+                    actions.newFolder($parent);
+                });
+
+            if (dataLinqCode.privileges.createEndpoints()) {
+                $("<div>")
+                    .addClass('tree-tool new-endpoint')
+                    .attr('title', 'New endpoint')
+                    .insertBefore($searchInput)
+                    .click(function (e) {
+                        e.stopPropagation();
+                        actions.newEndpoint($parent, null);
+                    });
+            }
         }
 
-        var $tree = createTreeNode("","<div>")
+        var $tree = createTreeNode("", "<div>")
             .addClass('datalinq-code-tree')
             .appendTo($parent);
 
-        dataLinqCode.events.on('document-deleted', function (channel) {
-            refreshSilent($parent);
+        $parent.on('contextmenu', function (e) {
+            e.preventDefault();
+
+            showContextMenu(e, [
+                _foldersEnabled ? { text: 'New folder', action: function () { actions.newFolder($parent); } } : null,
+                dataLinqCode.privileges.createEndpoints() ? { text: 'New endpoint', action: function () { actions.newEndpoint($parent, null); } } : null
+            ]);
         });
 
-        var $treeHolder = $('.datalinq-code-tree');
-        initDragAndDrop($treeHolder);
+        dataLinqCode.events.on('document-deleted', function (channel, args) {
+            if (args && args.id && args.id.split('@').length === 1 && removeEndpointFromFolders(args.id)) {
+                saveFolders(function () { refreshSilent($parent); });
+            } else {
+                refreshSilent($parent);
+            }
+        });
 
         refresh($parent);
     };
 
-    var collectEndpointStructure = function () {
-        var structure = {};
-        var noFolderEndpoints = [];
+    /****** Folder structure ******/
 
-        var $treeHolder = $('.tree-node.datalinq-code-tree');
-        var $rootUl = $treeHolder.find('> ul.tree-nodes');
+    var _folderStructure = {};
+    var _foldersEnabled = true;
 
-        $rootUl.children('li').each(function () {
-            var $li = $(this);
-
-            if ($li.hasClass('endpoint') && !$li.hasClass('add')) {
-                var endpointName = $li.find('> .label').text().trim();
-                noFolderEndpoints.push(endpointName);
-            } 
-            else if ($li.hasClass('folder')) {
-                var folderName = $li.find('> .label').text().trim();
-                var folderEndpoints = [];
-
-                $li.find('> ul.tree-nodes > li.tree-node.endpoint').each(function () {
-                    var endpointName = $(this).find('> .label').text().trim();
-                    folderEndpoints.push(endpointName);
-                });
-
-                structure[folderName] = folderEndpoints;
-            }
-        });
-
-        if (noFolderEndpoints.length > 0) {
-            structure['no folder'] = noFolderEndpoints;
+    var parseFolderStructure = function (folderStructure) {
+        if (!folderStructure || folderStructure === 'null') {
+            return {};
         }
 
-        return structure;
+        if (typeof folderStructure === 'string') {
+            folderStructure = JSON.parse(folderStructure);
+        }
+
+        var result = {};
+        for (var folderName in folderStructure) {
+            if (folderStructure.hasOwnProperty(folderName) && folderName !== 'no folder') {
+                result[folderName] = (folderStructure[folderName] || []).slice();
+            }
+        }
+        return result;
     };
 
-    var initDragAndDrop = function ($treeHolder) {
-        var $allTreeNodes = $treeHolder.find('ul.tree-nodes');
+    var saveFolders = function (callback) {
+        dataLinqCode.api.saveFolderStructure(_folderStructure, function (result) {
+            if (callback) {
+                callback(result);
+            }
+        });
+    };
 
-        $allTreeNodes.each(function () {
-            var $ul = $(this);
+    var removeEndpointFromFolders = function (endPoint) {
+        var changed = false;
+        for (var folderName in _folderStructure) {
+            var index = $.inArray(endPoint, _folderStructure[folderName]);
+            if (index >= 0) {
+                _folderStructure[folderName].splice(index, 1);
+                changed = true;
+            }
+        }
+        return changed;
+    };
 
-            if ($ul[0].sortable) {
-                $ul[0].sortable.destroy();
+    /****** Context menu ******/
+
+    var closeContextMenu = function () {
+        $('.datalinq-code-contextmenu').remove();
+    };
+
+    $(document)
+        .on('mousedown', function (e) {
+            if ($(e.target).closest('.datalinq-code-contextmenu').length === 0) {
+                closeContextMenu();
+            }
+        })
+        .on('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeContextMenu();
+            }
+        });
+    $(window).on('blur resize', closeContextMenu);
+    document.addEventListener('scroll', closeContextMenu, true);
+
+    var showContextMenu = function (e, items) {
+        closeContextMenu();
+
+        // remove empty entries and leading/trailing/duplicate separators
+        var cleaned = [];
+        $.each(items, function (i, item) {
+            if (!item) return;
+            if (item === '-' && (cleaned.length === 0 || cleaned[cleaned.length - 1] === '-')) return;
+            cleaned.push(item);
+        });
+        while (cleaned.length > 0 && cleaned[cleaned.length - 1] === '-') {
+            cleaned.pop();
+        }
+        if (cleaned.length === 0) {
+            return;
+        }
+
+        var $container = $('.datalinq-code-ide').first();
+        var $menu = $("<ul>")
+            .addClass('datalinq-code-contextmenu')
+            .appendTo($container.length ? $container : $('body'))
+            .on('contextmenu', function (e) { e.preventDefault(); });
+
+        $.each(cleaned, function (i, item) {
+            if (item === '-') {
+                $("<li>").addClass('separator').appendTo($menu);
+                return;
             }
 
-            var isDragEnabled = $('.new-folder-btn').hasClass('new-folder-active');
+            $("<li>")
+                .addClass('item')
+                .toggleClass('danger', item.danger === true)
+                .text(item.text)
+                .appendTo($menu)
+                .click(function (ev) {
+                    ev.stopPropagation();
+                    closeContextMenu();
+                    item.action();
+                });
+        });
 
-            var lastDropTarget = null;
+        var x = e.clientX, y = e.clientY;
+        var maxX = window.innerWidth - $menu.outerWidth() - 4;
+        var maxY = window.innerHeight - $menu.outerHeight() - 4;
+        $menu.css({ left: Math.max(0, Math.min(x, maxX)), top: Math.max(0, Math.min(y, maxY)) });
+    };
 
-            var sortableInstance = new Sortable($ul[0], {
-                group: 'tree-nodes',
-                animation: 150,
-                fallbackOnBody: true,
-                swapThreshold: 0.65,
-                draggable: '.tree-node',
-                disabled: !isDragEnabled,
+    /****** Actions ******/
 
-                onMove: function (evt) {
-                    var dropTarget = evt.related;
-                    var draggedItem = evt.dragged;
+    var validateName = function (value) {
+        return value ? null : 'Please enter a name.';
+    };
 
-                    lastDropTarget = dropTarget;
+    var handleResult = function (result, onSuccess) {
+        if (result.success == true) {
+            onSuccess(result);
+        } else {
+            dataLinqCode.ui.alert("Error", (result.error_message || 'Unknown error'));
+        }
+    };
 
-                    if ($(draggedItem).hasClass('folder')) {
-                        return false;
-                    }
+    var actions = {
+        newFolder: function ($parent) {
+            if (!_foldersEnabled) return;
 
-                    if ($(dropTarget).hasClass('folder')) {
-                        return false;
-                    }
-
-                    return true;
-                },
-
-                onEnd: function (evt) {
-                    var draggedItem = evt.item;
-                    var $draggedItem = $(draggedItem);
-
-                    var labelText = $draggedItem.find('> .label').first().text();
-
-                    if (lastDropTarget && $(lastDropTarget).hasClass('folder')) {
-                        if ($draggedItem.hasClass('folder')) {
-                            lastDropTarget = null;
-                            return; 
-                        }
-
-                        var $lastDropTarget = $(lastDropTarget);
-                        addEndPointNode($lastDropTarget, labelText, [])
-                        $draggedItem.remove();
-                    }
-
-                    lastDropTarget = null;
+            dataLinqCode.ui.prompt('New folder', 'Name of the new folder:', '', function (name) {
+                _folderStructure[name] = [];
+                saveFolders(function () { refreshSilent($parent); });
+            }, {
+                validate: function (value) {
+                    if (!value) return 'Please enter a name.';
+                    if (value === 'no folder' || _folderStructure.hasOwnProperty(value)) return 'A folder with this name already exists.';
+                    return null;
                 }
             });
+        },
 
-            $ul[0].sortable = sortableInstance;
-        });
+        renameFolder: function ($parent, folderName) {
+            dataLinqCode.ui.prompt('Rename folder', 'New name of the folder:', folderName, function (name) {
+                if (name === folderName) return;
+
+                var renamed = {};
+                for (var key in _folderStructure) {
+                    renamed[key === folderName ? name : key] = _folderStructure[key];
+                }
+                _folderStructure = renamed;
+                saveFolders(function () { refreshSilent($parent); });
+            }, {
+                validate: function (value) {
+                    if (!value) return 'Please enter a name.';
+                    if (value !== folderName && (value === 'no folder' || _folderStructure.hasOwnProperty(value))) return 'A folder with this name already exists.';
+                    return null;
+                }
+            });
+        },
+
+        deleteFolder: function ($parent, folderName) {
+            dataLinqCode.ui.confirm('Delete folder', 'Delete folder "' + folderName + '"? Its endpoints will be moved to the root.', function () {
+                delete _folderStructure[folderName];
+                saveFolders(function () { refreshSilent($parent); });
+            });
+        },
+
+        newEndpoint: function ($parent, folderName) {
+            if (!dataLinqCode.privileges.createEndpoints()) return;
+
+            var options = { validate: validateName };
+            var folders = Object.keys(_folderStructure).sort();
+            if (_foldersEnabled && folders.length > 0) {
+                options.select = {
+                    label: 'Folder:',
+                    items: [{ value: '', text: '(no folder)' }].concat($.map(folders, function (f) { return { value: f, text: f }; })),
+                    value: folderName || ''
+                };
+            }
+
+            dataLinqCode.ui.prompt('New endpoint', 'Name of the new endpoint:', '', function (name, selectedFolder) {
+                dataLinqCode.api.createEndPoint(name, function (result) {
+                    handleResult(result, function () {
+                        dataLinqCode.addAppFilterPrefixIfCurrentlyUsed(result.endPoint.split('-')[0]);
+
+                        if (selectedFolder && _folderStructure[selectedFolder]) {
+                            _folderStructure[selectedFolder].push(result.endPoint);
+                            saveFolders(function () { refreshSilent($parent); });
+                        } else {
+                            refreshSilent($parent);
+                        }
+                    });
+                });
+            }, options);
+        },
+
+        moveEndpoint: function ($parent, endPoint) {
+            if (!_foldersEnabled) return;
+
+            var currentFolder = '';
+            for (var key in _folderStructure) {
+                if ($.inArray(endPoint, _folderStructure[key]) >= 0) {
+                    currentFolder = key;
+                    break;
+                }
+            }
+
+            var folders = Object.keys(_folderStructure).sort();
+
+            dataLinqCode.ui.prompt('Move endpoint', 'Move endpoint "' + endPoint + '" to:', '', function (value, selectedFolder) {
+                if (selectedFolder === currentFolder) return;
+
+                removeEndpointFromFolders(endPoint);
+                if (selectedFolder && _folderStructure[selectedFolder]) {
+                    _folderStructure[selectedFolder].push(endPoint);
+                }
+                saveFolders(function () { refreshSilent($parent); });
+            }, {
+                noInput: true,
+                select: {
+                    items: [{ value: '', text: '(no folder)' }].concat($.map(folders, function (f) { return { value: f, text: f }; })),
+                    value: currentFolder
+                }
+            });
+        },
+
+        newQuery: function ($parent, endPoint) {
+            if (!dataLinqCode.privileges.createQueries()) return;
+
+            dataLinqCode.ui.prompt('New query', 'Name of the new query in endpoint "' + endPoint + '":', '', function (name) {
+                dataLinqCode.api.createQuery(endPoint, name, function (result) {
+                    handleResult(result, function () { refreshSilent($parent); });
+                });
+            }, { validate: validateName });
+        },
+
+        newView: function ($parent, endPoint, query) {
+            if (!dataLinqCode.privileges.createViews()) return;
+
+            dataLinqCode.ui.prompt('New view', 'Name of the new view in query "' + endPoint + '@' + query + '":', '', function (name) {
+                dataLinqCode.api.createView(endPoint, query, name, function (result) {
+                    handleResult(result, function () { refreshSilent($parent); });
+                });
+            }, { validate: validateName });
+        },
+
+        deleteItem: function (id) {
+            dataLinqCode.events.fire('delete-document', { id: id });
+        },
+
+        run: function (id) {
+            window.open(dataLinqCode.buildRunUrl(id));
+        },
+
+        copyId: function (id) {
+            navigator.clipboard.writeText(id);
+        }
+    };
+
+    var appendAddButton = function ($node, title, onClick) {
+        $("<div>")
+            .addClass('copy-button add-button')
+            .attr('title', title)
+            .appendTo($node)
+            .click(function (e) {
+                e.stopPropagation();
+                onClick();
+            });
     };
 
     var setFilter = function ($parent, filter) {
@@ -231,235 +437,120 @@
         });
     }
 
-    var refresh = function ($parent) {
-        var $tree = $parent.children('.datalinq-code-tree');
+var refresh = function ($parent) {
+    if (dataLinqCode.privileges.createEndpoints()) {
+        dataLinqCode.setAppPrefixFilters([]);
+    }
 
-        if (dataLinqCode.privileges.createEndpoints() && $tree.find('.tree-node.endpoint.add').length === 0) {
-            addEndPointNode($tree, null);
-            dataLinqCode.setAppPrefixFilters([]);
+    if (dataLinqCode.privileges.useAppPrefixFilters() === true) {
+        dataLinqCode.api.getEndPointPrefixes(function (prefixes) {
+            $('body').dataLinq_code_modal({
+                title: 'Select Application Prefixes...',
+                onload: function ($content) {
+                    renderEndPointPrefixesList($parent, $content, prefixes);
+                }
+            });
+        });
+    } else {
+        refrehTree($parent, null);
+    }
+};
+var refreshSilent = function ($parent) {
+    refrehTree($parent, dataLinqCode.getAppPrefixFilters());
+};
+var refrehTree = function ($parent, prefixes) {
+    var $tree = $parent.children('.datalinq-code-tree');
+
+    dataLinqCode.setAppPrefixFilters(prefixes);
+
+    var collapsedRoutes = [];
+    $tree.find('.tree-node.collapsed').each(function (i, node) {
+        collapsedRoutes.push($(node).data('data-route'));
+    });
+
+    $tree.empty();
+
+    dataLinqCode.api.getEndPoints(prefixes, function (endPoints) {
+        // folders are only supported, if all endpoints are shown (no app prefix filter)
+        _foldersEnabled = prefixes == null;
+        $('.tree-tool.new-folder').toggle(_foldersEnabled);
+
+        if (!_foldersEnabled) {
+            $.each(endPoints, function (i, endPoint) {
+                addEndPointNode($tree, endPoint, collapsedRoutes);
+            });
+            return;
         }
 
-        if (dataLinqCode.privileges.useAppPrefixFilters() === true) {
-            dataLinqCode.api.getEndPointPrefixes(function (prefixes) {
-                $('body').dataLinq_code_modal({
-                    title: 'Select Application Prefixes...',
-                    onload: function ($content) {
-                        renderEndPointPrefixesList($parent, $content, prefixes);
+        dataLinqCode.api.getFolderStructure(function (folderStructure) {
+            _folderStructure = parseFolderStructure(folderStructure);
+
+            var renderedEndpoints = {};
+
+            $.each(Object.keys(_folderStructure).sort(), function (i, folderName) {
+                var $folder = createTreeNodeFolder(folderName)
+                    .data('data-folder', folderName)
+                    .data('data-route', folderName)
+                    .data('search-text', folderName.toLowerCase());
+
+                if ($.inArray(folderName, collapsedRoutes) >= 0) {
+                    $folder.addClass('collapsed');
+                    $folder.data('is_collapsed', true);
+                }
+
+                addToNodes($folder, $tree);
+                attachFolderEventHandlers($folder);
+
+                $.each(_folderStructure[folderName], function (j, endpointName) {
+                    if ($.inArray(endpointName, endPoints) >= 0 && !renderedEndpoints[endpointName]) {
+                        addEndPointNode($folder, endpointName, collapsedRoutes);
+                        renderedEndpoints[endpointName] = true;
                     }
                 });
             });
-        } else {
-            refrehTree($parent, null);
-        }
-    };
-    var refreshSilent = function ($parent) {
-        refrehTree($parent, dataLinqCode.getAppPrefixFilters());
-    };
-    var refrehTree = function ($parent, prefixes) {
-        var $tree = $parent.children('.datalinq-code-tree');
 
-        dataLinqCode.setAppPrefixFilters(prefixes);
-
-        var collapsedRoutes = [];
-        $tree.find('.tree-node.collapsed').each(function (i, node) {
-            collapsedRoutes.push($(node).data('data-route'));
-        });
-
-        $tree.empty();
-
-        dataLinqCode.api.getEndPoints(prefixes, function (endPoints) {
-            if (dataLinqCode.privileges.createEndpoints()) {
-                addEndPointNode($tree, null);
-            }
-
-            if (prefixes != null) {
-                $('.new-folder-btn')
-                    //.prop('disabled', true)
-                    //.addClass('disabled')
-                    //.css('pointer-events', 'none');
-                    .remove();
-
-                $.each(endPoints, function (i, endPoint) {
+            $.each(endPoints, function (i, endPoint) {
+                if (!renderedEndpoints[endPoint]) {
                     addEndPointNode($tree, endPoint, collapsedRoutes);
-                });
-            } else {
-                dataLinqCode.api.getFolderStructure(function (folderStructure) {
-
-                    if (folderStructure === 'null') {
-                        $.each(endPoints, function (i, endPoint) {
-                            addEndPointNode($tree, endPoint, collapsedRoutes);
-                        });
-                        return;
-                    }
-
-                    if (typeof folderStructure === 'string') {
-                        folderStructure = JSON.parse(folderStructure);
-                    }
-
-                    var foldersMap = {};
-                    var renderedEndpoints = {}; 
-
-                    for (var folderName in folderStructure) {
-                        if (!folderStructure.hasOwnProperty(folderName)) continue;
-
-                        var endpoints = folderStructure[folderName];
-
-                        if (folderName === "no folder") {
-                            continue;
-                        }
-
-                        var $folder = createTreeNodeFolder(folderName)
-                            .data('data-folder', folderName)
-                            .data('data-route', folderName);
-
-                        if ($.inArray($folder.data('data-route'), collapsedRoutes) >= 0) {
-                            $folder.addClass('collapsed');
-                            $folder.data('is_collapsed', true);
-                        }
-
-                        $folder.data('search-text', folderName.toLowerCase());
-                        addToNodes($folder, $tree);
-
-                        attachFolderEventHandlers($folder);
-
-                        foldersMap[folderName] = $folder;
-
-                        for (var i = 0; i < endpoints.length; i++) {
-                            var endpointName = endpoints[i];
-
-                            var endPoint = null;
-                            for (var j = 0; j < endPoints.length; j++) {
-                                if (endPoints[j] === endpointName) {
-                                    endPoint = endPoints[j];
-                                    break;
-                                }
-                            }
-
-                            if (endPoint) {
-                                addEndPointNode($folder, endPoint, []);
-                                renderedEndpoints[endpointName] = true; 
-                            }
-                        }
-                    }
-
-                    if (folderStructure["no folder"]) {
-                        var noFolderEndpoints = folderStructure["no folder"];
-                        for (var i = 0; i < noFolderEndpoints.length; i++) {
-                            var endpointName = noFolderEndpoints[i];
-
-                            var endPoint = null;
-                            for (var j = 0; j < endPoints.length; j++) {
-                                if (endPoints[j] === endpointName) {
-                                    endPoint = endPoints[j];
-                                    break;
-                                }
-                            }
-
-                            if (endPoint) {
-                                addEndPointNode($tree, endPoint, collapsedRoutes);
-                                renderedEndpoints[endpointName] = true; 
-                            }
-                        }
-                    }
-
-                    for (var k = 0; k < endPoints.length; k++) {
-                        var endPoint = endPoints[k];
-
-                        if (!renderedEndpoints[endPoint]) {
-                            addEndPointNode($tree, endPoint, collapsedRoutes);
-                        }
-                    }
-                });
-            }
-        });
-    };
-
-    var attachFolderEventHandlers = function ($folder) {
-        $folder.click(function (e) {
-            e.stopPropagation();
-
-            if (e.originalEvent.layerY < 24) {
-                var $this = $(this);
-                if (e.originalEvent.layerX < 30) {
-                    $this.toggleClass('collapsed');
-                    $this.data('is_collapsed', $this.hasClass('collapsed'));
-                } else {
-
-                    if (!$('.new-folder-btn').hasClass('new-folder-active')) {
-                        return;
-                    }
-
-                    var $label = $this.find('> .label');
-                    var currentName = $label.text();
-
-                    var $input = $('<input type="text"/>')
-                        .val(currentName)
-                        .css({
-                            'width': '100%',
-                            'background': 'transparent',
-                            'border': '1px solid #fff',
-                            'color': 'inherit',
-                            'padding': '2px 4px'
-                        }).on('click', function (e) {
-                            e.stopPropagation();
-                        });
-
-                    $label.hide();
-                    $label.after($input);
-                    $input.focus().select();
-
-                    var saveRename = function () {
-                        var newName = $input.val().trim();
-
-                        if (newName && newName !== currentName) {
-                            $label.text(newName);
-                            $this.data('data-folder', newName);
-                            $this.data('data-route', newName);
-                            $this.data('search-text', newName.toLowerCase());
-                        }
-
-                        $input.remove();
-                        $label.show();
-                    };
-
-                    $input.on('keyup', function (e) {
-                        if (e.which == 13) {
-                            saveRename();
-                        } else if (e.which == 27) {
-                            $input.remove();
-                            $label.show();
-                        }
-                    }).on('blur', function () {
-                        saveRename();
-                    });
                 }
-            }
+            });
         });
+    });
+};
 
-        $folder.on('contextmenu', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
+var attachFolderEventHandlers = function ($folder) {
+    var folderName = $folder.data('data-folder');
 
-            if (!$('.new-folder-btn').hasClass('new-folder-active')) {
-                return;
-            }
+    if (dataLinqCode.privileges.createEndpoints()) {
+        appendAddButton($folder, 'New endpoint', function () {
+            actions.newEndpoint($folder.closest('.datalinq-code-tree-holder'), folderName);
+        });
+    }
 
+    $folder.click(function (e) {
+        e.stopPropagation();
+
+        if (e.originalEvent.layerY < 24) {
             var $this = $(this);
-            var folderName = $this.find('> .label').text();
+            $this.toggleClass('collapsed');
+            $this.data('is_collapsed', $this.hasClass('collapsed'));
+        }
+    });
 
-            if (confirm('Delete folder "' + folderName + '" and move all of its content back?')) {
-                var $parentUl = $this.parent('ul.tree-nodes');
+    $folder.on('contextmenu', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-                var $endpointsInFolder = $this.find('ul.tree-nodes > .tree-node.endpoint');
+        var $parent = $folder.closest('.datalinq-code-tree-holder');
 
-                $endpointsInFolder.each(function () {
-                    $(this).appendTo($parentUl);
-                });
-
-                $this.remove();
-            }
-        });
-    };
+        showContextMenu(e, [
+            dataLinqCode.privileges.createEndpoints() ? { text: 'New endpoint', action: function () { actions.newEndpoint($parent, folderName); } } : null,
+            '-',
+            { text: 'Rename', action: function () { actions.renameFolder($parent, folderName); } },
+            { text: 'Delete', danger: true, action: function () { actions.deleteFolder($parent, folderName); } }
+        ]);
+    });
+};
 
     var createTreeNodeFolder = function (folderName, element) {
         var $node = $(element || "<li>")
@@ -493,269 +584,162 @@
         return $node;
     };
 
-    var createTreeNode = function (label, element, asInput) {
+    var createTreeNode = function (label, element) {
         var $node = $(element || "<li>")
             .addClass("tree-node");
 
         if (label) {
             $("<div>").addClass('icon').appendTo($node);
-            if (asInput == true) {
-                $("<input type='text'/>")
-                    .attr('placeholder', label)
-                    .appendTo($node);
-            } else {
-                var $label = $("<div>").addClass('label').text(label).appendTo($node);
+            var $label = $("<div>").addClass('label').text(label).appendTo($node);
 
-                $node.on('mousemove', function (e) {
-                    $(this).closest('.datalinq-code-tree-holder').find('.tree-node').removeClass('mouseover');
-                    e.stopPropagation();
-                    if (e.originalEvent.layerY >= 0 && e.originalEvent.layerY <= 32) {
-                        $(this).addClass('mouseover');
-                    } else {
-                        $(this).removeClass('mouseover');
-                    }
-                }).on('mouseleave', function (e) {
+            $node.on('mousemove', function (e) {
+                $(this).closest('.datalinq-code-tree-holder').find('.tree-node').removeClass('mouseover');
+                e.stopPropagation();
+                if (e.originalEvent.layerY >= 0 && e.originalEvent.layerY <= 32) {
+                    $(this).addClass('mouseover');
+                } else {
                     $(this).removeClass('mouseover');
-                });
+                }
+            }).on('mouseleave', function (e) {
+                $(this).removeClass('mouseover');
+            });
 
-                var $copyButton = $("<div>")
-                    .addClass('copy-button')
-                    .appendTo($node)
-                    .mouseout(function () {
-                        $(this).find('.tooltiptext').removeClass('show');
-                    })
-                    .click(function (e) {
-                        e.stopPropagation();
-
-                        var route = $(this).closest('.tree-node').data('data-route');
-                        navigator.clipboard.writeText(route);
-
-                        if (route.length > 20)
-                            route = route.substr(0, 20) + '...';
-
-                        $(this)
-                            .find('.tooltiptext')
-                            .text("Copied route: " + route)
-                            .addClass('show');
-                    });
-
-                $("<span>")
-                    .addClass('tooltiptext')
-                    .text('Copy placeholder')
-                    .appendTo($copyButton);
-            }
         }
 
         return $node;
     };
 
-    var createTreeNodeEndpoint = function (label, element, asInput, endpoint) {
+    var createTreeNodeEndpoint = function (label, element, endpoint) {
         var $node = $(element || "<li>")
             .addClass("tree-node");
 
         if (label) {
             $("<div>").addClass('icon').appendTo($node);
-            if (asInput == true) {
-                // Create input
-                $("<input type='text'/>")
-                    .attr('placeholder', label)
-                    .appendTo($node);
+            var $label = $("<div>").addClass('label').text(label).appendTo($node);
 
-                let $folderModeInfo = $("<ul>").appendTo($("<div>")
-                    .addClass("folder-mode-info")
-                    .appendTo($node));
-                $("<li>").text("Click the button to create a new folder.").appendTo($folderModeInfo);
-                $("<li>").text("Click a folder to rename.").appendTo($folderModeInfo);
-                $("<li>").text("Right click a folder to delete (projects will be moved to root node).").appendTo($folderModeInfo);
-                $("<li>").text("Drag and drop endpoints into folders to organize.").appendTo($folderModeInfo); 
-                $("<li>").text("Right click the button to disable folder mode.").appendTo($folderModeInfo);
-                $("<button type='button'/>")
-                    .addClass('new-folder-btn') 
-                    .attr('title', 'Right click to activate folder-mode to organize endpoints.')
-                    .appendTo($node);
-            } else {
-                var $label = $("<div>").addClass('label').text(label).appendTo($node);
-
-                $node.on('mousemove', function (e) {
-                    $(this).closest('.datalinq-code-tree-holder').find('.tree-node').removeClass('mouseover');
-                    e.stopPropagation();
-                    if (e.originalEvent.layerY >= 0 && e.originalEvent.layerY <= 32) {
-                        $(this).addClass('mouseover');
-                    } else {
-                        $(this).removeClass('mouseover');
-                    }
-                }).on('mouseleave', function (e) {
+            $node.on('mousemove', function (e) {
+                $(this).closest('.datalinq-code-tree-holder').find('.tree-node').removeClass('mouseover');
+                e.stopPropagation();
+                if (e.originalEvent.layerY >= 0 && e.originalEvent.layerY <= 32) {
+                    $(this).addClass('mouseover');
+                } else {
                     $(this).removeClass('mouseover');
+                }
+            }).on('mouseleave', function (e) {
+                $(this).removeClass('mouseover');
+            });
+
+
+            // --- Added CSS Button ---
+            var $cssButton = $("<div>")
+                .addClass('copy-button css-button')
+                .appendTo($node)
+                .mouseout(function () {
+                    $(this).find('.tooltiptext').removeClass('show');
+                })
+                .click(function (e) {
+                    e.stopPropagation();
+
+                    dataLinqCode.events.fire('open-endpoint-css', {
+                        id: endpoint
+                    });
+
                 });
 
-                var $copyButton = $("<div>")
-                    .addClass('copy-button')
-                    .appendTo($node)
-                    .mouseout(function () {
-                        $(this).find('.tooltiptext').removeClass('show');
-                    })
-                    .click(function (e) {
-                        e.stopPropagation();
+            $("<span>")
+                .addClass('tooltiptext')
+                .text('CSS')
+                .appendTo($cssButton);
 
-                        var route = $(this).closest('.tree-node').data('data-route');
-                        navigator.clipboard.writeText(route);
+            // --- Added JS Button ---
+            var $jsButton = $("<div>")
+                .addClass('copy-button js-button')
+                .appendTo($node)
+                .mouseout(function () {
+                    $(this).find('.tooltiptext').removeClass('show');
+                })
+                .click(function (e) {
+                    e.stopPropagation();
 
-                        if (route.length > 20)
-                            route = route.substr(0, 20) + '...';
-
-                        $(this)
-                            .find('.tooltiptext')
-                            .text("Copied route: " + route)
-                            .addClass('show');
+                    dataLinqCode.events.fire('open-endpoint-js', {
+                        id: endpoint
                     });
+                });
 
-                $("<span>")
-                    .addClass('tooltiptext')
-                    .text('Copy placeholder')
-                    .appendTo($copyButton);
-
-                // --- Added CSS Button ---
-                var $cssButton = $("<div>")
-                    .addClass('copy-button css-button')
-                    .appendTo($node)
-                    .mouseout(function () {
-                        $(this).find('.tooltiptext').removeClass('show');
-                    })
-                    .click(function (e) {
-                        e.stopPropagation();
-
-                        dataLinqCode.events.fire('open-endpoint-css', {
-                            id: endpoint
-                        });
-
-                    });
-
-                $("<span>")
-                    .addClass('tooltiptext')
-                    .text('CSS')
-                    .appendTo($cssButton);
-
-                // --- Added JS Button ---
-                var $jsButton = $("<div>")
-                    .addClass('copy-button js-button')
-                    .appendTo($node)
-                    .mouseout(function () {
-                        $(this).find('.tooltiptext').removeClass('show');
-                    })
-                    .click(function (e) {
-                        e.stopPropagation();
-
-                        dataLinqCode.events.fire('open-endpoint-js', {
-                            id: endpoint
-                        });
-                    });
-
-                $("<span>")
-                    .addClass('tooltiptext')
-                    .text('JS')
-                    .appendTo($jsButton);
-            }
+            $("<span>")
+                .addClass('tooltiptext')
+                .text('JS')
+                .appendTo($jsButton);
         }
 
         return $node;
     };
 
-    var createTreeNodeView = function (label, element, asInput, endpoint, query, view) {
+    var createTreeNodeView = function (label, element, endpoint, query, view) {
         var $node = $(element || "<li>")
             .addClass("tree-node");
 
         if (label) {
             $("<div>").addClass('icon').appendTo($node);
-            if (asInput == true) {
-                $("<input type='text'/>")
-                    .attr('placeholder', label)
-                    .appendTo($node);
-            } else {
-                var $label = $("<div>").addClass('label').text(label).appendTo($node);
+            var $label = $("<div>").addClass('label').text(label).appendTo($node);
 
-                $node.on('mousemove', function (e) {
-                    $(this).closest('.datalinq-code-tree-holder').find('.tree-node').removeClass('mouseover');
-                    e.stopPropagation();
-                    if (e.originalEvent.layerY >= 0 && e.originalEvent.layerY <= 32) {
-                        $(this).addClass('mouseover');
-                    } else {
-                        $(this).removeClass('mouseover');
-                    }
-                }).on('mouseleave', function (e) {
+            $node.on('mousemove', function (e) {
+                $(this).closest('.datalinq-code-tree-holder').find('.tree-node').removeClass('mouseover');
+                e.stopPropagation();
+                if (e.originalEvent.layerY >= 0 && e.originalEvent.layerY <= 32) {
+                    $(this).addClass('mouseover');
+                } else {
                     $(this).removeClass('mouseover');
+                }
+            }).on('mouseleave', function (e) {
+                $(this).removeClass('mouseover');
+            });
+
+
+            // --- Added CSS Button ---
+            var $cssButton = $("<div>")
+                .addClass('copy-button css-button')
+                .appendTo($node)
+                .mouseout(function () {
+                    $(this).find('.tooltiptext').removeClass('show');
+                })
+                .click(function (e) {
+                    e.stopPropagation();
+
+                    dataLinqCode.events.fire('open-view-css', {
+                        endpoint: endpoint,
+                        query: query,
+                        view: view
+                    });
+
                 });
 
-                var $copyButton = $("<div>")
-                    .addClass('copy-button')
-                    .appendTo($node)
-                    .mouseout(function () {
-                        $(this).find('.tooltiptext').removeClass('show');
-                    })
-                    .click(function (e) {
-                        e.stopPropagation();
+            $("<span>")
+                .addClass('tooltiptext')
+                .text('Copy CSS code')
+                .appendTo($cssButton);
 
-                        var route = $(this).closest('.tree-node').data('data-route');
-                        navigator.clipboard.writeText(route);
+            // --- Added JS Button ---
+            var $jsButton = $("<div>")
+                .addClass('copy-button js-button')
+                .appendTo($node)
+                .mouseout(function () {
+                    $(this).find('.tooltiptext').removeClass('show');
+                })
+                .click(function (e) {
+                    e.stopPropagation();
 
-                        if (route.length > 20)
-                            route = route.substr(0, 20) + '...';
-
-                        $(this)
-                            .find('.tooltiptext')
-                            .text("Copied route: " + route)
-                            .addClass('show');
+                    dataLinqCode.events.fire('open-view-js', {
+                        endpoint: endpoint,
+                        query: query,
+                        view: view
                     });
+                });
 
-                $("<span>")
-                    .addClass('tooltiptext')
-                    .text('Copy placeholder')
-                    .appendTo($copyButton);
-
-                // --- Added CSS Button ---
-                var $cssButton = $("<div>")
-                    .addClass('copy-button css-button')
-                    .appendTo($node)
-                    .mouseout(function () {
-                        $(this).find('.tooltiptext').removeClass('show');
-                    })
-                    .click(function (e) {
-                        e.stopPropagation();
-
-                        dataLinqCode.events.fire('open-view-css', {
-                            endpoint: endpoint,
-                            query: query,
-                            view: view
-                        });
-
-                    });
-
-                $("<span>")
-                    .addClass('tooltiptext')
-                    .text('Copy CSS code')
-                    .appendTo($cssButton);
-
-                // --- Added JS Button ---
-                var $jsButton = $("<div>")
-                    .addClass('copy-button js-button')
-                    .appendTo($node)
-                    .mouseout(function () {
-                        $(this).find('.tooltiptext').removeClass('show');
-                    })
-                    .click(function (e) {
-                        e.stopPropagation();
-
-                        dataLinqCode.events.fire('open-view-js', {
-                            endpoint: endpoint,
-                            query: query,
-                            view: view
-                        });
-                    });
-
-                $("<span>")
-                    .addClass('tooltiptext')
-                    .text('Copy JS code')
-                    .appendTo($jsButton);
-            }
+            $("<span>")
+                .addClass('tooltiptext')
+                .text('Copy JS code')
+                .appendTo($jsButton);
         }
 
         return $node;
@@ -772,7 +756,7 @@
     }
 
     var addEndPointNode = function ($parent, endPoint, collapsedRoutes) {
-        var $node = createTreeNodeEndpoint(endPoint || 'New endpoint...', null, endPoint === null, endPoint)
+        var $node = createTreeNodeEndpoint(endPoint, null, endPoint)
             .addClass('endpoint')
             .data('data-endpoint', endPoint)
             .data('data-route', endPoint);
@@ -792,9 +776,6 @@
             $node.addClass('loading-' + endPoint);
             dataLinqCode.api.getQueries($node.data('data-endpoint'), function (queries) {
                 $node.removeClass('loading-' + endPoint);
-                if (dataLinqCode.privileges.createQueries()) {
-                    addQueryNode($node, $node.data('data-endpoint'), null);
-                }
 
                 $.each(queries, function (i, query) {
                     addQueryNode($node, $node.data('data-endpoint'), query, collapsedRoutes);
@@ -815,92 +796,32 @@
                 }
             });
 
-        } else {
-            $node
-                .addClass('add')
-                .click(function (e) {
-                    e.stopPropagation();
-                })
-                .find('input').on('keyup', function (e) {
-                    if (e.which == 13) {
-                        var $this = $(this);
-
-                        var id = $this.val();
-                        //console.log('create endpoint ' + id);
-                        $this.val('');
-
-                        dataLinqCode.api.createEndPoint(id, function (result) {
-                            if (result.success == true) {
-                                dataLinqCode.addAppFilterPrefixIfCurrentlyUsed(result.endPoint.split('-')[0]);
-                                refreshSilent($this.closest('.datalinq-code-tree-holder'));
-                            } else {
-                                dataLinqCode.ui.alert("Error", (result.error_message || 'Unknown error'));
-                            }
-                        });
-                    }
+            if (dataLinqCode.privileges.createQueries()) {
+                appendAddButton($node, 'New query', function () {
+                    actions.newQuery($node.closest('.datalinq-code-tree-holder'), endPoint);
                 });
+            }
 
-            $('.new-folder-btn').on('contextmenu', function (e) {
+            $node.on('contextmenu', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
 
-                var $button = $(this);
-                var wasActive = $button.hasClass('new-folder-active');
+                var $holder = $node.closest('.datalinq-code-tree-holder');
 
-                $button.toggleClass('new-folder-active');
-
-                var isNowActive = $button.hasClass('new-folder-active');
-                if (isNowActive) {
-                    $button.closest('.datalinq-code-tree').addClass('new-folder-mode');
-                } else {
-                    $button.closest('.datalinq-code-tree').removeClass('new-folder-mode');
-                }
-
-                if (wasActive && !isNowActive) {
-                    var endpointStructure = collectEndpointStructure();
-                    dataLinqCode.api.saveFolderStructure(endpointStructure, function (result) {
-                        console.log('Structure saved:', result);
-                    });
-                }
-
-                initDragAndDrop($('.datalinq-code-tree'));
-            });
-
-            $('.new-folder-btn').on('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                var $button = $(this);
-
-                if (!$button.hasClass('new-folder-active')) {
-                    return;
-                }
-
-                var $folder = createTreeNodeFolder("newFolder")
-                    .data('data-folder', 'newFolder')
-                    .data('data-route', 'newFolder');
-
-                if ($.inArray($folder.data('data-route'), collapsedRoutes) >= 0) {
-                    $folder.addClass('collapsed');
-                    $folder.data('is_collapsed', true);
-                }
-
-                $folder.data('search-text', 'newFolder'.toLowerCase());
-
-                addToNodes($folder, $parent);
-
-                initDragAndDrop($('.datalinq-code-tree'));
-
-                attachFolderEventHandlers($folder);
-
-                e.preventDefault();
-                e.stopPropagation();
+                showContextMenu(e, [
+                    dataLinqCode.privileges.createQueries() ? { text: 'New query', action: function () { actions.newQuery($holder, endPoint); } } : null,
+                    '-',
+                    _foldersEnabled && Object.keys(_folderStructure).length > 0 ? { text: 'Move to folder...', action: function () { actions.moveEndpoint($holder, endPoint); } } : null,
+                    { text: 'Copy ID', action: function () { actions.copyId(endPoint); } },
+                    '-',
+                    dataLinqCode.privileges.deleteEndpoints() ? { text: 'Delete', danger: true, action: function () { actions.deleteItem(endPoint); } } : null
+                ]);
             });
         }
     };
 
     var addQueryNode = function ($parent, endPoint, query, collapsedRoutes) {
-        var $node = createTreeNode(query || 'New query/data...', null, query === null)
+        var $node = createTreeNode(query, null)
             .addClass('query')
             .data('data-endpoint', endPoint)
             .data('data-query', query)
@@ -930,10 +851,6 @@
                     $node.addClass('has-children');
                 }
 
-                if (dataLinqCode.privileges.createViews()) {
-                    addViewNode($node, $node.data('data-endpoint'), $node.data('data-query'), null);
-                }
-
                 $.each(views, function (i, view) {
                     addViewNode($node, $node.data('data-endpoint'), $node.data('data-query'), view);
                 });
@@ -954,29 +871,30 @@
                     }
                 }
             })
-        } else {
-            $node
-                .addClass('add')
-                .click(function (e) {
-                    e.stopPropagation();
-                })
-                .find('input').on('keyup', function (e) {
-                    if (e.which == 13) {
-                        var $this = $(this), $node = $this.closest('.query');
 
-                        var id = $this.val();
-                        //console.log('create query ' + id);
-                        $this.val('');
+            var queryId = endPoint + '@' + query;
 
-                        dataLinqCode.api.createQuery($node.data('data-endpoint'), id, function (result) {
-                            if (result.success == true) {
-                                refreshSilent($this.closest('.datalinq-code-tree-holder'));
-                            } else {
-                                dataLinqCode.ui.alert("Error", (result.error_message || 'Unknown error'));
-                            }
-                        });
-                    }
+            if (dataLinqCode.privileges.createViews()) {
+                appendAddButton($node, 'New view', function () {
+                    actions.newView($node.closest('.datalinq-code-tree-holder'), endPoint, query);
                 });
+            }
+
+            $node.on('contextmenu', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var $holder = $node.closest('.datalinq-code-tree-holder');
+
+                showContextMenu(e, [
+                    dataLinqCode.privileges.createViews() ? { text: 'New view', action: function () { actions.newView($holder, endPoint, query); } } : null,
+                    '-',
+                    { text: 'Run (new tab)', action: function () { actions.run(queryId); } },
+                    { text: 'Copy ID', action: function () { actions.copyId(queryId); } },
+                    '-',
+                    dataLinqCode.privileges.deleteQueries() ? { text: 'Delete', danger: true, action: function () { actions.deleteItem(queryId); } } : null
+                ]);
+            });
         }
     };
 
@@ -989,7 +907,7 @@
     });
 
     var addViewNode = function ($parent, endPoint, query, view) {
-        var $node = createTreeNodeView(view || 'New view...', null, view === null, endPoint, query, view)
+        var $node = createTreeNodeView(view, null, endPoint, query, view)
             .addClass('view')
             .data('data-endpoint', endPoint)
             .data('data-query', query)
@@ -1003,6 +921,20 @@
         addToNodes($node, $parent);
 
         if (view) {
+            var viewId = endPoint + '@' + query + '@' + view;
+
+            $node.on('contextmenu', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                showContextMenu(e, [
+                    { text: 'Run (new tab)', action: function () { actions.run(viewId); } },
+                    { text: 'Copy ID', action: function () { actions.copyId(viewId); } },
+                    '-',
+                    dataLinqCode.privileges.deleteViews() ? { text: 'Delete', danger: true, action: function () { actions.deleteItem(viewId); } } : null
+                ]);
+            });
+
             $node.off('click').on('click', function (e) {
                 e.stopPropagation();
 
@@ -1062,30 +994,6 @@
                     }
                 }
             });
-        }
-        else {
-            $node
-                .addClass('add')
-                .click(function (e) {
-                    e.stopPropagation();
-                })
-                .find('input').on('keyup', function (e) {
-                    if (e.which == 13) {
-                        var $this = $(this), $node = $this.closest('.view');
-
-                        var id = $this.val();
-                        //console.log('create view ' + id);
-                        $this.val('');
-
-                        dataLinqCode.api.createView($node.data('data-endpoint'), $node.data('data-query'), id, function (result) {
-                            if (result.success == true) {
-                                refreshSilent($this.closest('.datalinq-code-tree-holder'));
-                            } else {
-                                dataLinqCode.ui.alert("Error", (result.error_message || 'Unknown error'));
-                            }
-                        });
-                    }
-                });
         }
     };
 

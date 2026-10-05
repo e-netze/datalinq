@@ -533,7 +533,7 @@ var dataLinqCode = new function ($) {
         $tree.find('.tree-node').not('.folder').each(function (i, node) {
             var $node = $(node);
             var route = $node.data('data-route');
-            if (!$node.hasClass('add') && route) {
+            if (route) {
                 documents.push({
                     id: route,
                     isOpen: $editor.dataLinqCode_editor('isOpen', { id: route })
@@ -1209,7 +1209,7 @@ var dataLinqCode = new function ($) {
 
             $('body').dataLinq_code_modal({
                 title: title,
-                height: '220px',
+                height: options.select ? (options.noInput === true ? '260px' : '340px') : '220px',
                 width: '640px',
                 id: 'datalinq-code-prompt',
                 onload: function ($content) {
@@ -1223,7 +1223,25 @@ var dataLinqCode = new function ($) {
                         .attr('type', 'text')
                         .addClass('datalinq-code-prompt-input')
                         .val(defaultValue || '')
+                        .toggle(options.noInput !== true)
                         .appendTo($content);
+
+                    var $select = null;
+                    if (options.select) {
+                        if (options.select.label) {
+                            $("<p>").text(options.select.label).appendTo($content);
+                        }
+
+                        $select = $("<select>")
+                            .addClass('datalinq-code-prompt-select')
+                            .appendTo($content);
+
+                        $.each(options.select.items || [], function (i, item) {
+                            $("<option>").attr('value', item.value).text(item.text).appendTo($select);
+                        });
+
+                        $select.val(options.select.value || '');
+                    }
 
                     var $error = $("<div>")
                         .addClass('datalinq-code-prompt-error')
@@ -1246,7 +1264,7 @@ var dataLinqCode = new function ($) {
                         $('body').dataLinq_code_modal('close', { id: 'datalinq-code-prompt' });
 
                         if (onConfirm) {
-                            onConfirm(value);
+                            onConfirm(value, $select ? $select.val() : undefined);
                         }
                     };
 
@@ -1269,7 +1287,13 @@ var dataLinqCode = new function ($) {
                             e.preventDefault();
                             submit();
                         }
-                    }).focus();
+                    });
+
+                    if (options.noInput === true && $select) {
+                        $select.focus();
+                    } else {
+                        $input.focus();
+                    }
                 }
             });
         }
