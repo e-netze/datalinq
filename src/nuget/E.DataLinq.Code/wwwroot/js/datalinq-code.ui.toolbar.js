@@ -55,7 +55,7 @@
             .data('event', 'save-current-document')
             .addClass('datalinq-code-toolbutton save-current')
             .data('refresh-ui', function (args) {
-                return args.currentDoc && args.currentDoc.indexOf('_preview:') !== 0 && args.dirtyDocs &&
+                return args.currentDoc && args.dirtyDocs &&
                     $.inArray(args.currentDoc, args.dirtyDocs) >= 0;
             })
             .appendTo($parent);

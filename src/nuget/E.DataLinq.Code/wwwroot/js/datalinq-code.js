@@ -1425,7 +1425,7 @@ var dataLinqCode = new function ($) {
             const tabs = document.querySelectorAll('.datalinq-code-tab[data-id]');
             const tabIds = Array.from(tabs)
                 .map(tab => tab.getAttribute('data-id'))
-                .filter(id => id !== '_start' && id.indexOf('_preview:') !== 0);
+                .filter(id => id !== '_start');
             localStorage.setItem('datalinq-open-tabs', JSON.stringify(tabIds));
 
             // save the individual width of sidebar of user

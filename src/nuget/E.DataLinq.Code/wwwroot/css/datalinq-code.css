@@ -217,9 +217,19 @@ body {
                     background-image: url(img/js_svg@1.svg);
                     background-size: 16px 16px;
                 }
-                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.preview {
-                    background-image: url(img/triangle-right_32@1.png);
-                    background-size: 16px 16px;
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.with-preview {
+                    box-shadow: inset 0 -2px 0 #5badff;
+                }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab .preview-indicator {
+                    display: inline-block;
+                    margin-left: 6px;
+                    padding: 0 5px;
+                    border-radius: 3px;
+                    background-color: #5badff;
+                    color: #fff;
+                    font-size: 10px;
+                    line-height: 14px;
+                    vertical-align: middle;
                 }
                 .datalinq-code-ide .datalinq-code-content .datalinq-code-editor-frame.preview {
                     background-color: #fff;
@@ -627,7 +637,6 @@ body {
 
         .datalinq-code-tree .tree-nodes .tree-node.folder {
             background-image: url(img/new-folder.svg);
-            filter: brightness(0) invert(1);
         }
 
         .datalinq-code-tree .tree-nodes .tree-node {
@@ -704,6 +713,7 @@ body {
             }
             .datalinq-code-tree .tree-nodes .tree-node.folder > .icon {
                 background-image: url(img/folder-icon.svg);
+                filter: brightness(0) invert(1);
             }
 
             .datalinq-code-tree .tree-nodes .tree-node .delete {
@@ -937,7 +947,15 @@ body {
 
             .datalinq-code-tree .tree-nodes .tree-node.view {
                 background: none;
-                padding-left: 4px;
+                padding-left: 24px;
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node.view.add {
+                background-image: url(img/round-plus_16@1.png);
+                background-repeat: no-repeat;
+                background-position: left 3px;
+                background-size: 16px 16px;
+                padding-left: 24px;
             }
 
                 .datalinq-code-tree .tree-nodes .tree-node.view:hover {
@@ -2361,7 +2379,15 @@ body {
 
 .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.view {
     background: none;
-    padding-left: 4px;
+    padding-left: 24px;
+}
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.view.add {
+    background-image: url(img/round-plus_16@2_light.png);
+    background-repeat: no-repeat;
+    background-position: left 3px;
+    background-size: 16px 16px;
+    padding-left: 24px;
 }
 
 .datalinq-code-ide.colorscheme-light .datalinq-code-tree .tree-nodes .tree-node.has-children {

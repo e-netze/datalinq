@@ -95,28 +95,47 @@
         dataLinqCode.events.on('open-copilot', function (channel, args) {
             var $tab = showOrAddTab($tabs, 'DataLinq Copilot', 'copilot');
         });
+        var closePreview = function (viewId) {
+            var previewId = previewPrefix + viewId;
+            delete previewUrls[previewId];
+            delete previewScrolls[previewId];
+            $editor.children(".datalinq-code-editor-frame[data-id='" + previewId + "']").remove();
+            $tabs.children(".datalinq-code-tab[data-id='" + viewId + "']")
+                .removeClass('with-preview')
+                .children('.preview-indicator').remove();
+        };
+
         dataLinqCode.events.on('open-view-preview', function (channel, args) {
             var previewId = previewPrefix + args.id;
-            var exists = $tabs.children(".datalinq-code-tab[data-id='" + previewId + "']").length > 0;
+            var $viewTab = $tabs.children(".datalinq-code-tab[data-id='" + args.id + "']");
+            if ($viewTab.length === 0) {
+                return;
+            }
 
-            previewUrls[previewId] = args.url;
-            suppressPreviewCleanup = true;
-            var $previewTab = showOrAddTab($tabs, 'Preview: ' + args.id.split('@')[2], previewId, 'preview');
+            var exists = !!previewUrls[previewId];
+            var prevCtrl = ctrlPressed;
 
             if (exists) {
-                reloadPreviewFrame(previewId);
-            }
-
-            var $viewTab = $tabs.children(".datalinq-code-tab[data-id='" + args.id + "']");
-            if ($viewTab.length > 0) {
-                var prevCtrl = ctrlPressed;
+                closePreview(args.id);
                 ctrlPressed = false;
                 $viewTab.trigger('click');
-                ctrlPressed = true;
-                $previewTab.trigger('click');
                 ctrlPressed = prevCtrl;
+                return;
             }
-            suppressPreviewCleanup = false;
+
+            previewUrls[previewId] = args.url;
+            $viewTab.addClass('with-preview');
+            if ($viewTab.children('.preview-indicator').length === 0) {
+                $("<span>")
+                    .addClass('preview-indicator')
+                    .attr('title', 'Live Preview')
+                    .text('Live')
+                    .insertBefore($viewTab.children('.close-button'));
+            }
+
+            ctrlPressed = false;
+            $viewTab.trigger('click');
+            ctrlPressed = prevCtrl;
         });
         dataLinqCode.events.on('document-saved', function (channel, args) {
             if (!args || typeof args.id !== 'string') {
@@ -137,22 +156,11 @@
                 return;
             }
 
-            if ($tabs.children(".datalinq-code-tab[data-id='" + viewId + "']").length > 0) {
-                previewUrls[previewId] = dataLinqCode.buildRunUrl(viewId);
-            }
+            previewUrls[previewId] = dataLinqCode.buildRunUrl(viewId);
             reloadPreviewFrame(previewId);
         });
         dataLinqCode.events.on('tab-selected', function (channel, args) {
             showOrAddEditorFrame($editor, args.id);
-
-            // live preview tabs are temporary -> remove them once they are no longer shown
-            if (!suppressPreviewCleanup) {
-                $tabs.children('.datalinq-code-tab.preview:not(.selected)').each(function () {
-                    var id = $(this).attr('data-id');
-                    $(this).remove();
-                    dataLinqCode.events.fire('tab-removed', { id: id, selected: false });
-                });
-            }
 
             checkSize($tabs);
             dataLinqCode.events.fire('refresh-ui');
@@ -164,14 +172,8 @@
             $(".datalinq-code-editor-frame[data-id='" + args.id + "']").remove();
 
             // closing a view also closes its live preview
-            if (args.id.indexOf(previewPrefix) !== 0 && args.id.split('@').length === 3) {
-                var $previewTab = $tabs.children(".datalinq-code-tab[data-id='" + previewPrefix + args.id + "']");
-                if ($previewTab.length > 0) {
-                    var previewSelected = $previewTab.hasClass('selected');
-                    $previewTab.remove();
-                    dataLinqCode.events.fire('tab-removed', { id: previewPrefix + args.id, selected: previewSelected });
-                    return;
-                }
+            if (args.id.split('@').length === 3) {
+                closePreview(args.id);
             }
 
             var remainingFrames = getOrderedSelectedFrames($tabs, $editor);
@@ -231,8 +233,7 @@
             $parent.children('.datalinq-code-tabs').children('.datalinq-code-tab').each(function (i, tab) {
                 var $tab = $(tab);
                 var id = $tab.attr('data-id');
-                var docId = id.indexOf(previewPrefix) === 0 ? id.substring(previewPrefix.length) : id;
-                if (docId === args.id || docId.indexOf(args.id + '@') === 0) {
+                if (id === args.id || id.indexOf(args.id + '@') === 0) {
                     var selected = $tab.hasClass('selected');
                     $tab.remove();
                     dataLinqCode.events.fire('tab-removed', { id: id, selected: selected });
@@ -561,6 +562,16 @@
             }
         }
 
+        const previewId = previewPrefix + id;
+        if (previewUrls[previewId] && $editor.children(`.datalinq-code-editor-frame[data-id='${previewId}']`).length === 0) {
+            $("<iframe>")
+                .addClass('datalinq-code-editor-frame preview')
+                .attr('data-id', previewId)
+                .attr('allow', 'clipboard-write')
+                .attr('src', previewUrls[previewId])
+                .appendTo($editor);
+        }
+
         const isSelected = $frame.hasClass('selected');
         const selectedCount = $editor.children(".datalinq-code-editor-frame.selected").length;
 
@@ -588,7 +599,6 @@
 
     var previewPrefix = '_preview:';
     var previewUrls = {};
-    var suppressPreviewCleanup = false;
 
     function reloadPreviewFrame(previewId) {
         var $frame = $(".datalinq-code-editor-frame[data-id='" + previewId + "']");
@@ -677,9 +687,12 @@
     function getOrderedSelectedFrames($tabs, $editor) {
         return $tabs.children(".datalinq-code-tab.selected")
             .sort((a, b) => +$(a).attr('data-selected-at') - +$(b).attr('data-selected-at'))
-            .map(function () {
-                return $editor.children(`.datalinq-code-editor-frame[data-id='${$(this).attr('data-id')}']`)[0];
-            }).get().filter(Boolean).slice(0, 3);
+            .get()
+            .flatMap(function (tab) {
+                const id = $(tab).attr('data-id');
+                const ids = $(tab).hasClass('with-preview') ? [id, previewPrefix + id] : [id];
+                return ids.map(frameId => $editor.children(`.datalinq-code-editor-frame[data-id='${frameId}']`)[0]);
+            }).filter(Boolean).slice(0, 3);
     }
 
     function layoutFrames($editor, frames) {
