@@ -1,0 +1,89 @@
+/*
+ * PDF report - Base layout, page wrappers and paper sizes (A1-A6, landscape).
+ */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #5f6670;
+}
+
+.main {
+    min-height: 100vh;
+    padding: 30px;
+    padding-top: 5px;
+    box-sizing: border-box;
+    background-color: #5f6670;
+}
+
+.reportModeHeading {
+    text-align: center;
+    color: #5badff;
+    font-family: Verdana,Tahoma,Arial,sans-serif;
+}
+
+.pages-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+    justify-items: center;
+    max-width: 100%;
+}
+
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.page {
+    --w: 210mm;
+    --h: 297mm;
+
+    width: var(--w);
+    height: var(--h);
+
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+}
+
+.page.size-A1 {
+    --w: 594mm;
+    --h: 841mm;
+}
+
+.page.size-A2 {
+    --w: 420mm;
+    --h: 594mm;
+}
+
+.page.size-A3 {
+    --w: 297mm;
+    --h: 420mm;
+}
+
+.page.size-A4 {
+    --w: 210mm;
+    --h: 297mm;
+}
+
+.page.size-A5 {
+    --w: 148mm;
+    --h: 210mm;
+}
+
+.page.size-A6 {
+    --w: 105mm;
+    --h: 148mm;
+}
+
+.page.horizontal {
+    width: var(--h);
+    height: var(--w);
+}

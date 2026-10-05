@@ -351,6 +351,37 @@ dataLinqCode.implementEventController(dataLinqCodeEditor);
                 $('.switch-to.code').css('display', 'block');
             });
 
+        var $pdfReportMode = $("input[type='checkbox'][name='PDFReportMode']");
+        var $pdfReportEditing = $("input[type='checkbox'][name='PDFReportEditing']");
+
+        if ($pdfReportMode.length && $pdfReportEditing.length) {
+            var $pdfEditing = $("<div>")
+                .addClass('switch-button pdf-editing')
+                .prependTo($parent)
+                .click(function (e) {
+                    e.stopPropagation();
+                    $pdfReportEditing.prop('checked', !$pdfReportEditing.prop('checked'));
+                    updatePdfEditingButton();
+                    dataLinqCodeEditor.setDirty();
+                    dataLinqCodeEditor.submitForm();
+                });
+
+            var updatePdfEditingButton = function () {
+                var isPdfReport = $pdfReportMode.prop('checked');
+                var isEditing = $pdfReportEditing.prop('checked');
+
+                $pdfEditing
+                    .css('display', isPdfReport ? 'inline-block' : 'none')
+                    .toggleClass('active', isEditing)
+                    .attr('title', isEditing ? 'PDF editing mode: on (click to disable)' : 'PDF editing mode: off (click to enable)');
+                $parent.toggleClass('has-pdf-editing', isPdfReport);
+            };
+
+            $pdfReportMode.on('change', updatePdfEditingButton);
+            $pdfReportEditing.on('change', updatePdfEditingButton);
+            updatePdfEditingButton();
+        }
+
         $("<div>")
             .addClass('switch-button settings')
             .appendTo($parent)

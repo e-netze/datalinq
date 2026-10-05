@@ -1,0 +1,212 @@
+/*
+ * PDF report - Draggable elements (@PDF.NewDraggable) and snapping guides.
+ */
+
+.element {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    box-sizing: border-box; /* Important! */
+    z-index: 3;
+}
+
+    /* Add specific styling for chart containers */
+    .element:has(.datalinq-chart-canvas) {
+        padding: 0; /* Remove padding for chart elements */
+        overflow: hidden; /* Prevent overflow */
+    }
+
+.datalinq-chart-canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.element:hover {
+    /*border: 2px dashed #5badff;*/
+}
+
+.element.dragging {
+    opacity: 0.8;
+    /*border: 2px solid #5badff;*/
+}
+
+.element.element-snapped {
+    /*border: 2px solid #5badff;*/
+}
+
+.element.element-snapped {
+    /*border: 2px dotted #5badff;*/
+}
+
+.element.snap-target {
+    /*border: 2px solid #5badff;*/
+}
+
+.snap-guide-line-x {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background-color: #5badff;
+    display: none;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.snap-guide-line-y {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: #5badff;
+    display: none;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Margin guides (editing mode, see js/pdf-report/margin-guides.js) */
+.margin-guide-line {
+    position: absolute;
+    display: none;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+    .margin-guide-line.margin-left,
+    .margin-guide-line.margin-right {
+        top: 0;
+        height: 100%;
+        border-left: 1px dashed #e08a00;
+    }
+
+    .margin-guide-line.margin-right {
+        transform: translateX(1px);
+    }
+
+    .margin-guide-line.margin-top,
+    .margin-guide-line.margin-bottom {
+        left: 0;
+        width: 100%;
+        border-top: 1px dashed #e08a00;
+    }
+
+    .margin-guide-line.margin-bottom {
+        transform: translateY(1px);
+    }
+
+.pdf-margin-guides-control {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pdf-margin-guides-panel {
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 2px;
+    color: #fff;
+    font-size: 12px;
+}
+
+.pdf-margin-guides-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    cursor: pointer;
+}
+
+    .pdf-margin-guides-row > span:first-of-type {
+        width: 3.5em;
+    }
+
+.pdf-margin-guides-mm {
+    width: 4em;
+    text-align: right;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 2px 4px;
+}
+
+/* Custom guides (editing mode, see js/pdf-report/custom-guides.js) */
+.custom-guide-line {
+    position: absolute;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+    .custom-guide-line.vertical {
+        top: 0;
+        height: 100%;
+        border-left: 1px dashed #9c27b0;
+    }
+
+    .custom-guide-line.horizontal {
+        left: 0;
+        width: 100%;
+        border-top: 1px dashed #9c27b0;
+    }
+
+.pdf-custom-guides-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.pdf-custom-guides-section.standalone {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.pdf-custom-guides-title {
+    font-weight: bold;
+}
+
+.pdf-custom-guides-orientation {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 2px 4px;
+}
+
+    .pdf-custom-guides-orientation option {
+        color: #000;
+    }
+
+.pdf-custom-guides-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+    .pdf-custom-guides-list li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+    }
+
+    .pdf-custom-guides-list .pdf-custom-guides-empty {
+        opacity: 0.6;
+        font-style: italic;
+    }
+
+@media print {
+    .margin-guide-line,
+    .custom-guide-line {
+        display: none !important;
+    }
+}

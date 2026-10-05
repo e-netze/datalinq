@@ -17,7 +17,10 @@ dataLinq.events.on('onpageloaded', function () {
 
     document.body.classList.add('modal-open');
 
-    // Hides the modal and restores page scrolling.
+    /**
+     * Hides the modal and restores page scrolling.
+     * @returns {void}
+     */
     function closeModal() {
         modal.classList.add('hidden');
         document.body.classList.remove('modal-open');

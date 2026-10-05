@@ -108,18 +108,52 @@ ______      _        _     _
 {
     <script src="@(ViewData["contentRootUrl"])/lib/pdf-lib/pdf-lib.min.js"></script>
     <script src="@(ViewData["contentRootUrl"])/lib/html-to-image/html-to-image.js"></script>
-    <link href="@(ViewData["contentRootUrl"])/css/datalinq/datalinq-pdf-report.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
-    <script src="@(ViewData["contentRootUrl"])/js/datalinq-pdf-report.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
+    @* PDF report styles; the order matters (same cascade as a single stylesheet). *@
+    @foreach (var pdfReportCss in new[] {
+        "layout.css",
+        "elements.css",
+        "page-decorations.css",
+        "page-navigator.css",
+        "print.css",
+        "compatibility-modal.css",
+        "loading-overlay.css" })
+    {
+        <link href="@(ViewData["contentRootUrl"])/css/datalinq/pdf-report/@(pdfReportCss)?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+    }
+
+    @* PDF report scripts are classic scripts sharing one global scope; the order matters (main.js last). *@
+    @foreach (var pdfReportScript in new[] {
+        "config.js",
+        "loading-overlay.js",
+        "zoom.js",
+        "view-state.js",
+        "page-navigator.js",
+        "pdf-export.js",
+        "page-decorations.js",
+        "page-templates.js",
+        "draggable-widths.js",
+        "page-structure.js",
+        "editing-mode.js",
+        "dynamic-page-stacking.js",
+        "pagination.js",
+        "pagination-builders.js",
+        "auto-download.js",
+        "main.js" })
+    {
+        <script src="@(ViewData["contentRootUrl"])/js/pdf-report/@(pdfReportScript)?@(DataLinqVersion.JsVersion)"></script>
+    }
 }
 
 @if(Model.PDFCompatibilityNotice)
 {
-    <script src="@(ViewData["contentRootUrl"])/js/datalinq-pdf-report.compatibilityNotice.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
+    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/compatibility-notice.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
 }
 
 @if (Model.PDFReportEditing)
 {
-    <script src="@(ViewData["contentRootUrl"])/js/datalinq-pdf-report.editing.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
+    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/margin-guides.js?@(DataLinqVersion.JsVersion)"></script>
+    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/custom-guides.js?@(DataLinqVersion.JsVersion)"></script>
+    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/editing.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
 }
 
 <script type="text/javascript">

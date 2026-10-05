@@ -1,0 +1,121 @@
+/*
+ * PDF report - Floating page navigator, zoom controls and editing toolbar.
+ */
+
+.pdf-page-navigator {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 99990;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(40, 44, 52, 0.9);
+    color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    font-family: Verdana, Tahoma, Arial, sans-serif;
+    font-size: 13px;
+}
+
+    .pdf-page-navigator button {
+        background: transparent;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 2px 8px;
+    }
+
+        .pdf-page-navigator button:hover {
+            background: #5badff;
+        }
+
+        .pdf-page-navigator button:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+    .pdf-page-navigator .pdf-nav-controls {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .pdf-page-navigator .datalinq-button-pdf {
+        width: 100%;
+        padding: 4px 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .pdf-page-navigator .pdf-nav-controls {
+        justify-content: space-between;
+    }
+
+    .pdf-page-navigator .pdf-nav-prev,
+    .pdf-page-navigator .pdf-nav-next,
+    .pdf-page-navigator .pdf-zoom-in,
+    .pdf-page-navigator .pdf-zoom-out {
+        flex: none;
+        width: 28px;
+        height: 24px;
+        padding: 0;
+        text-align: center;
+        line-height: 1;
+    }
+
+    .pdf-page-navigator .pdf-nav-input,
+    .pdf-page-navigator .pdf-zoom-controls .pdf-zoom-reset {
+        flex: none;
+        width: 3.5em;
+        height: 24px;
+        box-sizing: border-box;
+    }
+
+    .pdf-page-navigator .pdf-zoom-controls .pdf-zoom-reset {
+        padding: 0;
+        text-align: center;
+    }
+
+    .pdf-page-navigator .datalinq-button-pdf + .datalinq-button-pdf {
+        margin-top: -4px;
+    }
+
+.pdf-page-navigator.pdf-editing-toolbar {
+    right: auto;
+    left: 20px;
+}
+
+    .pdf-editing-toolbar button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+    }
+
+        .pdf-editing-toolbar button.active {
+            background: #5badff;
+            border-color: #5badff;
+        }
+
+    .pdf-page-navigator .pdf-nav-input {
+        width: 3.5em;
+        text-align: right;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        padding: 2px 4px;
+        -moz-appearance: textfield;
+    }
+
+        .pdf-page-navigator .pdf-nav-input::-webkit-outer-spin-button,
+        .pdf-page-navigator .pdf-nav-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }

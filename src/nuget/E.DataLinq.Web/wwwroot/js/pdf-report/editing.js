@@ -4,6 +4,9 @@
  * Enables drag-and-drop positioning of @DLH.NewPdfElement blocks with optional
  * snapping (to page-center guides or to other elements) and a right-click action
  * that copies an element's coordinates as a ready-to-paste helper call.
+ *
+ * Only included by Report.cshtml when editing mode is on; its presence is what
+ * isPdfReportEditingMode (editing-mode.js) checks for.
  */
 
 // Distance in pixels within which a dragged element snaps to a guide or another element.
@@ -32,6 +35,11 @@ dataLinq.events.on('onpageloaded', function () {
 
         element.addEventListener('mousedown', startDrag);
 
+        /**
+         * Starts dragging: remembers the pointer and current translate offset.
+         * @param {MouseEvent} e The mousedown event.
+         * @returns {void}
+         */
         function startDrag(e) {
             isDragging = true;
             element.classList.add('dragging');
@@ -50,6 +58,12 @@ dataLinq.events.on('onpageloaded', function () {
             e.preventDefault();
         }
 
+        /**
+         * Moves the element with the pointer, clamped to the page. With Ctrl held it
+         * snaps to the visible center guides, otherwise to other elements.
+         * @param {MouseEvent} e The mousemove event.
+         * @returns {void}
+         */
         function drag(e) {
             if (!isDragging) return;
 
@@ -81,14 +95,11 @@ dataLinq.events.on('onpageloaded', function () {
             let isSnapped = false;
             let snapInfo = null;
 
-            const verticalLine = page.querySelector('.vertical-middle-line');
-            const horizontalLine = page.querySelector('.horizontal-middle-line');
-            const verticalLineVisible = verticalLine && window.getComputedStyle(verticalLine).display === 'block';
-            const horizontalLineVisible = horizontalLine && window.getComputedStyle(horizontalLine).display === 'block';
-            const guideLinesVisible = verticalLineVisible || horizontalLineVisible;
+            const snapLines = getVisibleSnapLines(page, pageRect);
+            const guideLinesVisible = snapLines.x.length > 0 || snapLines.y.length > 0;
 
             if (e.ctrlKey && guideLinesVisible) {
-                const snapped = applySnapping(newX, newY, elementRect, pageRect, verticalLineVisible, horizontalLineVisible);
+                const snapped = applyGuideSnapping(newX, newY, elementRect, snapLines);
                 newX = snapped.x;
                 newY = snapped.y;
                 isSnapped = snapped.snapped;
@@ -122,58 +133,29 @@ dataLinq.events.on('onpageloaded', function () {
             element.setAttribute('data-y', newY);
         }
 
-        function applySnapping(x, y, elementRect, pageRect, snapToVerticalLine, snapToHorizontalLine) {
-            const elementWidth = elementRect.width;
-            const elementHeight = elementRect.height;
+        /**
+         * Snaps the element to the visible guide lines (page center and margin guides).
+         * @param {number} x Proposed x offset.
+         * @param {number} y Proposed y offset.
+         * @param {DOMRect} elementRect Bounding rect of the dragged element.
+         * @param {{x: Array, y: Array}} snapLines Visible lines from getVisibleSnapLines.
+         * @returns {{x: number, y: number, snapped: boolean}} Resulting position.
+         */
+        function applyGuideSnapping(x, y, elementRect, snapLines) {
+            const snappedX = snapAxisToLines(x, elementRect.width, snapLines.x, SNAP_THRESHOLD);
+            const snappedY = snapAxisToLines(y, elementRect.height, snapLines.y, SNAP_THRESHOLD);
 
-            const elementLeft = x;
-            const elementRight = x + elementWidth;
-            const elementCenterX = x + elementWidth / 2;
-
-            const elementTop = y;
-            const elementBottom = y + elementHeight;
-            const elementCenterY = y + elementHeight / 2;
-
-            const pageCenterX = pageRect.width / 2;
-            const pageCenterY = pageRect.height / 2;
-
-            let snappedX = x;
-            let snappedY = y;
-            let snapped = false;
-
-            if (snapToVerticalLine) {
-                if (Math.abs(elementLeft - pageCenterX) < SNAP_THRESHOLD) {
-                    snappedX = pageCenterX;
-                    snapped = true;
-                }
-                else if (Math.abs(elementRight - pageCenterX) < SNAP_THRESHOLD) {
-                    snappedX = pageCenterX - elementWidth;
-                    snapped = true;
-                }
-                else if (Math.abs(elementCenterX - pageCenterX) < SNAP_THRESHOLD) {
-                    snappedX = pageCenterX - elementWidth / 2;
-                    snapped = true;
-                }
-            }
-
-            if (snapToHorizontalLine) {
-                if (Math.abs(elementTop - pageCenterY) < SNAP_THRESHOLD) {
-                    snappedY = pageCenterY;
-                    snapped = true;
-                }
-                else if (Math.abs(elementBottom - pageCenterY) < SNAP_THRESHOLD) {
-                    snappedY = pageCenterY - elementHeight;
-                    snapped = true;
-                }
-                else if (Math.abs(elementCenterY - pageCenterY) < SNAP_THRESHOLD) {
-                    snappedY = pageCenterY - elementHeight / 2;
-                    snapped = true;
-                }
-            }
-
-            return { x: snappedX, y: snappedY, snapped: snapped };
+            return { x: snappedX.value, y: snappedY.value, snapped: snappedX.snapped || snappedY.snapped };
         }
 
+        /**
+         * Snaps the element's edges/center to the edges/centers of other elements on the page.
+         * @param {number} x Proposed x offset.
+         * @param {number} y Proposed y offset.
+         * @param {HTMLElement} draggedElement The element being dragged.
+         * @param {HTMLElement} page The page containing the element.
+         * @returns {{x: number, y: number, snapped: boolean, snapInfo: object|null}} Resulting position and guide info.
+         */
         function applyElementSnapping(x, y, draggedElement, page) {
             const pageRect = page.getBoundingClientRect();
             const draggedRect = draggedElement.getBoundingClientRect();
@@ -273,6 +255,11 @@ dataLinq.events.on('onpageloaded', function () {
             };
         }
 
+        /**
+         * Shows the snap guide lines for the current snap target.
+         * @param {object} snapInfo Snap info returned by applyElementSnapping.
+         * @returns {void}
+         */
         function showSnapGuides(snapInfo) {
             page.querySelectorAll('.element.snap-target').forEach(el => {
                 el.classList.remove('snap-target');
@@ -297,6 +284,10 @@ dataLinq.events.on('onpageloaded', function () {
             }
         }
 
+        /**
+         * Hides both snap guide lines.
+         * @returns {void}
+         */
         function hideSnapGuides() {
             snapLineX.style.display = 'none';
             snapLineY.style.display = 'none';
@@ -306,6 +297,10 @@ dataLinq.events.on('onpageloaded', function () {
             });
         }
 
+        /**
+         * Ends dragging and removes the document-level listeners.
+         * @returns {void}
+         */
         function stopDrag() {
             isDragging = false;
             element.classList.remove('dragging');
@@ -343,6 +338,13 @@ dataLinq.events.on('onpageloaded', function () {
         }
     });
 
+    /**
+     * Shows a short-lived toast message near the mouse position.
+     * @param {string} message Text to show.
+     * @param {number} mouseX Client x position.
+     * @param {number} mouseY Client y position.
+     * @returns {void}
+     */
     function showToast(message, mouseX, mouseY) {
         const toast = document.createElement('div');
         toast.textContent = message;
@@ -376,11 +378,55 @@ dataLinq.events.on('onpageloaded', function () {
             }, 300);
         }, 1000);
     }
-    // Ctrl+M toggles the page-center guide lines used for snapping.
-    $(document).on('keydown', function (e) {
-        if (e.ctrlKey && e.key === 'm') {
-            e.preventDefault();
-            $('.vertical-middle-line, .horizontal-middle-line').toggle();
-        }
-    });
+    initializeEditingToolbar();
 });
+
+/**
+ * Creates the floating editing toolbar (styled like the page navigator) with a
+ * button that toggles the page center guide lines and the margin guides control
+ * (see margin-guides.js).
+ * @returns {void}
+ */
+function initializeEditingToolbar() {
+    if (document.querySelector('.pdf-editing-toolbar')) return;
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'pdf-page-navigator pdf-editing-toolbar';
+
+    const guidesButton = document.createElement('button');
+    guidesButton.type = 'button';
+    guidesButton.className = 'pdf-editing-guides';
+    guidesButton.innerHTML =
+        '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+        '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21" stroke-dasharray="2 2"/><line x1="3" y1="12" x2="21" y2="12" stroke-dasharray="2 2"/></svg>' +
+        '<span>Center guides</span>';
+
+    const guideLines = () => document.querySelectorAll('.vertical-middle-line, .horizontal-middle-line');
+    const guidesVisible = () => Array.from(guideLines())
+        .some(line => window.getComputedStyle(line).display !== 'none');
+
+    const updateButton = () => {
+        const visible = guidesVisible();
+        guidesButton.classList.toggle('active', visible);
+        guidesButton.title = visible
+            ? 'Hide page center guides (Ctrl + drag snaps to them)'
+            : 'Show page center guides (Ctrl + drag snaps to them)';
+    };
+
+    guidesButton.addEventListener('click', () => {
+        const show = !guidesVisible();
+        guideLines().forEach(line => line.style.display = show ? 'block' : 'none');
+        updateButton();
+    });
+
+    toolbar.appendChild(guidesButton);
+
+    applyMarginGuideSettings();
+    toolbar.appendChild(createMarginGuidesControl());
+
+    renderCustomGuides();
+    toolbar.appendChild(createCustomGuidesControl());
+
+    document.body.appendChild(toolbar);
+    updateButton();
+}

@@ -968,7 +968,9 @@ body {
     position: absolute;
     right: 4px;
     bottom: 40px;
-    width: 72px;
+    width: auto;
+    white-space: nowrap;
+    font-size: 0; /* no gaps between inline-block buttons */
     height: 36px;
     box-sizing: border-box;
     z-index: 100;
@@ -998,6 +1000,18 @@ body {
         .datalinq-code-editor-switcher .switch-button.settings {
             background-image: url(img/settings_26@1.png);
         }
+
+        .datalinq-code-editor-switcher .switch-button.pdf-editing {
+            vertical-align: top;
+            opacity: .55;
+            /* document with folded corner + pencil (pdf layout editing) */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5'/%3E%3Cpath d='M13 3v5h5'/%3E%3Cpath d='M18 8l-5-5'/%3E%3Cpath d='M7 12h6M7 15h3'/%3E%3Cpath d='M19.5 13.5a1.4 1.4 0 0 1 2 2L16 21l-2.7.7.7-2.7z'/%3E%3C/svg%3E");
+        }
+
+            .datalinq-code-editor-switcher .switch-button.pdf-editing.active {
+                opacity: 1;
+                background-color: #5badff;
+            }
 
 .datalinq-code-editor-code-panel {
     position: absolute;
