@@ -1,4 +1,4 @@
-﻿@using E.DataLinq.Code.Extensions
+@using E.DataLinq.Code.Extensions
 @using E.DataLinq.Code.Services
 @using E.DataLinq.Core.Models
 @using E.DataLinq.Core
@@ -15,9 +15,9 @@
     var features = ViewData["Features"] as FeaturesResult ?? new FeaturesResult();
 }
 
-<script src="~/_content/E.DataLinq.Code/js/datalinq-code-compile.js?@(DataLinqVersion.JsVersion)"></script>
-<script src="~/_content/E.DataLinq.Code/js/datalinq-code-version-control.js?@(DataLinqVersion.JsVersion)"></script>
-<script src="~/_content/E.DataLinq.Code/js/datalinq-code.ui.modal.js?@(DataLinqVersion.JsVersion)"></script>
+<script src="~/_content/E.DataLinq.Code/js/datalinq-code/compile/compiler.js?@(DataLinqVersion.JsVersion)"></script>
+<script src="~/_content/E.DataLinq.Code/js/datalinq-code/git/version-control-frame.js?@(DataLinqVersion.JsVersion)"></script>
+<script src="~/_content/E.DataLinq.Code/js/datalinq-code/ui/modal.js?@(DataLinqVersion.JsVersion)"></script>
 
 
 @if (!String.IsNullOrEmpty(Options.ProjectWebSite))

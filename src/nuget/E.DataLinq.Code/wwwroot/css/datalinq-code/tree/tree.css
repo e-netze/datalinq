@@ -1,0 +1,334 @@
+/* DataLinq Code - Sidebar and document tree */
+
+.datalinq-code-ide .datalinq-code-sidebar .datalinq-code-tree-top {
+    height: 100px;
+    background-color: #222;
+}
+
+    .datalinq-code-ide .datalinq-code-sidebar .datalinq-code-tree-top .datalinq-code-tee-title {
+        height: 60px;
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        right: 60px;
+        font-size: 24px;
+        padding: 16px;
+        z-index: 1;
+        color: #5badff;
+        box-sizing: border-box;
+        cursor:pointer;
+    }
+
+    .datalinq-code-ide .datalinq-code-sidebar .datalinq-code-tree-top .datalinq-code-tree-collapse-button {
+        width: 60px;
+        height: 60px;
+        position: absolute;
+        right: 0px;
+        top: 0px;
+        background-color: #333;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-image: url(../../img/triangle-left-up_32@1.png);
+        cursor: pointer;
+        z-index: 2
+    }
+    .datalinq-code-ide .datalinq-code-sidebar .datalinq-code-tree-top .datalinq-code-tree-toolbar {
+        width: 100%;
+        height: 40px;
+        position: absolute;
+        left: 0px;
+        top: 60px;
+        background-color: #333;
+        padding: 10px 10px 10px 5px;
+        box-sizing: border-box;
+    }
+
+.datalinq-code-ide .datalinq-code-sidebar .datalinq-code-tree-container {
+    position: absolute;
+    top: 100px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    overflow: auto;
+}
+
+.datalinq-code-tree {
+    padding: 8px;
+    overflow: auto;
+}
+
+    .datalinq-code-tree .tree-nodes {
+        list-style: none;
+        margin:0px;
+        padding:0px;
+        display:none;
+    }
+
+    .datalinq-code-tree .tree-nodes.collapsed {
+        list-style: none;
+        margin: 0px;
+        padding: 0px;
+        display: none;
+    }
+
+        .datalinq-code-tree .tree-nodes .tree-node.folder {
+            background-image: url(../../img/new-folder.svg);
+        }
+
+        .datalinq-code-tree .tree-nodes .tree-node {
+            position:relative;
+            cursor:pointer;
+            padding:2px 2px 2px 24px;
+            background-image :url(../../img/triangle-down_16@1.png);
+            background-repeat:no-repeat;
+            background-position: left 3px;
+            background-size:16px 16px;
+            white-space:nowrap;
+        }
+            .datalinq-code-tree .tree-nodes .tree-node.has-children {
+                background-image: url(../../img/triangle-filled-down_16@1.png);
+            }
+            .datalinq-code-tree .tree-nodes .tree-node.collapsed {
+                background-image: url(../../img/triangle-right-down_16@1.png);
+            }
+            .datalinq-code-tree .tree-nodes .tree-node.has-children.collapsed {
+                background-image: url(../../img/triangle-filled-right-down_16@1.png);
+            }
+            .datalinq-code-tree .tree-nodes .tree-node.hidden {
+                display: none;
+            }
+            .datalinq-code-tree .tree-nodes .tree-node.found {
+                color:#ff7;
+            }
+            .datalinq-code-tree .tree-nodes .tree-node.found > .tree-nodes {
+                color: #eee;
+            }
+            .datalinq-code-tree .tree-nodes .tree-node > .icon {
+                width: 20px;
+                height: 20px;
+                display: inline-block;
+                vertical-align: top;
+                background-repeat: no-repeat;
+                background-position: center;
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node.endpoint > .icon {
+                background-image:url(../../img/endpoint_16@1.png);
+            }
+            .datalinq-code-tree .tree-nodes .tree-node.query > .icon {
+                background-image: url(../../img/query_16@1.png);
+            }
+            .datalinq-code-tree .tree-nodes .tree-node.view > .icon {
+                background-image: url(../../img/code-markup_16@1.png);
+            }
+            .datalinq-code-tree .tree-nodes .tree-node.folder > .icon {
+                background-image: url(../../img/folder-icon.svg);
+                filter: brightness(0) invert(1);
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node .delete {
+                position: absolute;
+                right: 2px;
+                top: 2px;
+                width: 24px;
+                height: 24px;
+                border-radius: 4px;
+                cursor: pointer;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-image: url(../../img/trashcan-x_16@1.png);
+                background-color: #777;
+                display: none;
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node:hover .delete {
+                display: block;
+            }
+
+                .datalinq-code-tree .tree-nodes .tree-node:hover .delete:hover {
+                    background-color: #555;
+                }
+
+            .datalinq-code-tree .tree-nodes .tree-node[class*="loading-"],
+            .datalinq-code-tree .tree-nodes .tree-node.has-children[class*="loading-"] {
+                background-image: url(../../img/loader/spinning-line-black-16@1.gif) !important;
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node .copy-button {
+                position: absolute;
+                right: 2px;
+                top: 2px;
+                width: 24px;
+                height: 24px;
+                background-position: center;
+                background-size: 16px 16px;
+                background-repeat: no-repeat;
+                background-image: url(../../img/copy_16@1.png);
+                cursor: pointer;
+                display: none;
+                border-radius: 4px;
+            }
+
+                .datalinq-code-tree .tree-nodes .tree-node .copy-button.css-button {
+                    right: 28px; /* shifted left by 26px from the copy button */
+                    top: 2px;
+                    width: 24px;
+                    height: 24px;
+                    background-position: center;
+                    background-size: 16px 16px;
+                    background-repeat: no-repeat;
+                    background-image: url(../../img/css_svg@2.svg); /* You need to provide this icon */
+                    cursor: pointer;
+                    display: none;
+                    border-radius: 4px;
+                }
+
+                .datalinq-code-tree .tree-nodes .tree-node .copy-button.js-button {
+                    right: 54px; /* shifted left by 26px from css-button */
+                    top: 2px;
+                    width: 24px;
+                    height: 24px;
+                    background-position: center;
+                    background-size: 16px 16px;
+                    background-repeat: no-repeat;
+                    background-image: url(../../img/js_svg@2.svg); /* You need to provide this icon */
+                    cursor: pointer;
+                    display: none;
+                    border-radius: 4px;
+                }
+
+            .datalinq-code-tree .tree-nodes .tree-node .copy-button.add-button {
+                background-image: url(../../img/round-plus_16@1.png);
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node.view > .copy-button.css-button {
+                right: 2px;
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node.view > .copy-button.js-button {
+                right: 28px;
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node.mouseover > .copy-button {
+                display: block;
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node.mouseover > .copy-button:hover {
+                background-color: #777;
+            }
+
+                .datalinq-code-tree .tree-nodes .tree-node.mouseover > .copy-button .tooltiptext {
+                    visibility: hidden;
+                    width: 240px;
+                    background-color: #000;
+                    color: #fff;
+                    text-align: center;
+                    border-radius: 6px;
+                    padding: 5px;
+                    position: absolute;
+                    z-index: 1;
+                    bottom: 150%;
+                    left: 50%;
+                    margin-left: -235px;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+
+                    .datalinq-code-tree .tree-nodes .tree-node:hover > .copy-button .tooltiptext::after {
+                        content: "";
+                        position: absolute;
+                        top: 100%;
+                        right: 10px;
+                        margin-left: -5px;
+                        border-width: 5px;
+                        border-style: solid;
+                        border-color: #000 transparent transparent transparent;
+                    }
+
+                .datalinq-code-tree .tree-nodes .tree-node:hover > .copy-button:hover .tooltiptext.show {
+                    visibility: visible;
+                    opacity: 0.8;
+                }
+
+            .datalinq-code-tree .tree-nodes .tree-node > .label {
+                height: 22px;
+                display: inline-block;
+            }
+
+            .datalinq-code-tree .tree-nodes .tree-node:hover {
+                background-color: rgba(91, 173, 255, 0.10);
+                border-radius: 4px;
+                transition: background-color 0.15s ease;
+            }
+
+@media (-webkit-min-device-pixel-ratio: 1.5),
+(min-resolution: 144dpi) {
+    .datalinq-code-tree .tree-nodes .tree-node.endpoint > .icon {
+            background-image: url(../../img/endpoint_16@2.png);
+            background-size: 16px 16px;
+        }
+
+        .datalinq-code-tree .tree-nodes .tree-node.query > .icon {
+            background-image: url(../../img/query_16@2.png);
+            background-size: 16px 16px;
+        }
+
+        .datalinq-code-tree .tree-nodes .tree-node.view > .icon {
+            background-image: url(../../img/code-markup_16@2.png);
+            background-size: 16px 16px;
+        }
+
+        .datalinq-code-tree .tree-nodes .tree-node .copy-button {
+            background-image: url(../../img/copy_16@2.png);
+        }
+
+        .datalinq-code-tree .tree-nodes .tree-node .copy-button.add-button {
+            background-image: url(../../img/round-plus_16@2.png);
+        }
+}
+
+
+
+            .datalinq-code-tree .tree-nodes .tree-node {
+                background-image: url(../../img/triangle-down_16@2.png);
+            }
+                .datalinq-code-tree .tree-nodes .tree-node.has-children {
+                    background-image: url(../../img/triangle-filled-down_16@2.png);
+                }
+                .datalinq-code-tree .tree-nodes .tree-node.collapsed {
+                    background-image: url(../../img/triangle-right-down_16@2.png);
+                }
+                .datalinq-code-tree .tree-nodes .tree-node.has-children.collapsed {
+                    background-image: url(../../img/triangle-filled-right-down_16@2.png);
+                }
+
+            .datalinq-code-tree .tree-nodes .tree-node.view {
+                background: none;
+                padding-left: 24px;
+            }
+
+                .datalinq-code-tree .tree-nodes .tree-node.view:hover {
+                    background-color: rgba(91, 173, 255, 0.10);
+                    border-radius: 4px;
+                    transition: background-color 0.15s ease;
+                }
+
+                .datalinq-code-tree .tree-nodes .tree-node label:hover {
+                    color: #eee;
+                }
+
+                .datalinq-code-tree .tree-nodes .tree-node.found:hover {
+                    color: #ffa;
+                }
+
+    .datalinq-code-tree > .tree-nodes {
+        display: block;
+    }
+
+    .datalinq-code-tree  > .tree-nodes,
+    .tree-node.collapsed > .tree-nodes {
+        display: block;
+    }
+

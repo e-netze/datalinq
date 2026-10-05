@@ -10,25 +10,13 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
     <title>@ViewBag.Title</title>
-    <environment names="Development">
-        <link href="~/_content/E.DataLinq.Code/css/datalinq-code.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
-    </environment>
-
-    <environment names="Staging,Production">
-        <link href="~/_content/E.DataLinq.Code/css/datalinq-code.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
-    </environment>
+    @await Html.PartialAsync("_DataLinqCodeStyles")
 </head>
 <body style="overflow:auto">
 
     <script src="~/_content/E.DataLinq.Code/lib/jquery/jquery.min.js"></script>
     <script src="~/_content/E.DataLinq.Code/lib/sortablejs/Sortable.min.js"></script>
-    <script src="~/_content/E.DataLinq.Code/js/datalinq-code.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="~/_content/E.DataLinq.Code/js/datalinq-code.events.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="~/_content/E.DataLinq.Code/js/datalinq-code.ui.tree.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="~/_content/E.DataLinq.Code/js/datalinq-code.ui.editor.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="~/_content/E.DataLinq.Code/js/datalinq-code.ui.modal.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="~/_content/E.DataLinq.Code/js/datalinq-code.ui.toolbar.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="~/_content/E.DataLinq.Code/js/datalinq-code.ui.blockframe.js?@(DataLinqVersion.JsVersion)"></script>
+    @await Html.PartialAsync("_DataLinqCodeScripts")
 
     @RenderBody()
 

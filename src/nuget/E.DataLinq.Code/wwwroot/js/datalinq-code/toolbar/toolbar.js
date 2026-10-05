@@ -1,0 +1,205 @@
+/**
+ * DataLinq Code - toolbar
+ *
+ * jQuery plugin $.fn.dataLinqCode_toolbar: IDE toolbar buttons firing dataLinqCode events.
+ * Depends on: core
+ */
+(function ($) {
+    "use strict";
+    $.fn.dataLinqCode_toolbar = function (method) {
+        if (methods[method]) {
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+        }
+        else if (typeof method === 'object' || !method) {
+            return methods.init.apply(this, arguments);
+        }
+        else {
+            $.error('Method ' + method + ' does not exist on jQuery.dataLinqCode_toolbar');
+        }
+    };
+    var defaults = {
+        
+    };
+    var methods = {
+        init: function (options) {
+            var settings = $.extend({}, defaults, options);
+            return this.each(function () {
+                new initUI(this, settings);
+            });
+        }
+    };
+
+    var isPdfReportView = function (id) {
+        if (!id || id.indexOf('_') === 0 || id.split('@').length !== 3) {
+            return false;
+        }
+
+        var frame = $(".datalinq-code-editor-frame[data-id='" + id + "']")[0];
+        try {
+            var checkbox = frame && frame.contentDocument &&
+                frame.contentDocument.querySelector("input[type='checkbox'][name='PDFReportMode']");
+            return !!(checkbox && checkbox.checked);
+        } catch (e) {
+            return false;
+        }
+    };
+
+    var initUI = function (parent, options) {
+        var $parent = $(parent);
+
+        var features = window.datalinqFeatures ?? {};
+
+        $("<div><div class='text'>Check syntax</div></div>")
+            .data('event', 'verify-current-document')
+            .addClass('datalinq-code-toolbutton verify-current')
+            .data('refresh-ui', function (args) {
+                return args.currentDoc && args.currentDoc.indexOf('_') !== 0 && args.currentDoc.split('@').length === 3;
+            })
+            .appendTo($parent);
+
+        $("<div><div class='text'>Save Document</div></div>")
+            .data('event', 'save-current-document')
+            .addClass('datalinq-code-toolbutton save-current')
+            .data('refresh-ui', function (args) {
+                return args.currentDoc && args.dirtyDocs &&
+                    $.inArray(args.currentDoc, args.dirtyDocs) >= 0;
+            })
+            .appendTo($parent);
+
+        $("<div><div class='text'>Save all Docs</div></div>")
+            .data('event', 'save-all-documents')
+            .addClass('datalinq-code-toolbutton save-all')
+            .data('refresh-ui', function (args) {
+                if (!args.dirtyDocs || args.dirtyDocs.length == 0)
+                    return false;
+
+                if (args.dirtyDocs.length == 1 && $.inArray(args.currentDoc, args.dirtyDocs) < 0)
+                    return true;
+
+                if (args.dirtyDocs.length > 1)
+                    return true;
+
+                return false;
+            })
+            .appendTo($parent);
+
+        $("<div><div class='text'>Simple Preview</div></div>")
+            .data('event', 'run-current-document')
+            .addClass('datalinq-code-toolbutton run')
+            .data('refresh-ui', function (args) {
+                return args.currentDoc &&
+                    args.currentDoc.indexOf('_') !== 0 &&
+                    args.currentDoc.indexOf('@_css') < 0;
+            })
+            .appendTo($parent);
+
+        $("<div><div class='text'>Preview in tab</div></div>")
+            .data('event', 'run-current-document-in-tab')
+            .addClass('datalinq-code-toolbutton run-in-tab')
+            .data('refresh-ui', function (args) {
+                return args.currentDoc &&
+                    args.currentDoc.indexOf('_') !== 0 &&
+                    args.currentDoc.indexOf('@_css') < 0;
+            })
+            .appendTo($parent);
+
+        $("<div><div class='text'>Live Preview</div></div>")
+            .data('event', 'run-current-document-in-code-tab')
+            .addClass('datalinq-code-toolbutton run-in-code-tab')
+            .css('display', 'none')
+            .data('visible', function (args) {
+                return isPdfReportView(args.currentDoc);
+            })
+            .appendTo($parent);
+
+        if (features.VersionControl) {
+            $("<div><div class='text'>Push Snapshot</div></div>")
+                .data('event', 'push-snapshot')
+                .addClass('datalinq-code-toolbutton push-snapshot disabled')
+                .data('base-image', '_content/E.DataLinq.Code/css/img/git_32')
+                .data('refresh-ui', function (args) {
+                    if (!args.currentDoc || args.currentDoc.indexOf('_') === 0 || ![2, 3].includes(args.currentDoc.split('@').length)) {
+                        return false;
+                    }
+
+                    if (args.gitStatuses && args.gitStatuses[args.currentDoc]) {
+                        var status = args.gitStatuses[args.currentDoc];
+                        return status === "up-to-date" || status === "outdated";
+                    }
+
+                    return false;
+                })
+                .appendTo($parent);
+        }
+
+        $("<div><div class='text'>DataLinq Helper</div></div>")
+            .data('event', 'toggle-help')
+            .addClass('datalinq-code-toolbutton help')
+            .appendTo($parent);
+
+        $("<div><div class='text'>DataLinq Settings</div></div>")
+            .data('event', 'toggle-settings')
+            .addClass('datalinq-code-toolbutton settings')
+            .appendTo($parent);
+
+        if (features.Copilot) {
+            $("<div><div class='text'>DataLinq Copilot</div></div>")
+                .data('event', 'toggle-copilot')
+                .addClass('datalinq-code-toolbutton copilot')
+                .appendTo($parent);
+        }
+
+        var $logout = $("<div>")
+            .data('event', 'logout')
+            .addClass('datalinq-code-toolbutton logout')
+            .appendTo($parent);
+
+        $("<div>")
+            .text(dataLinqCode.loginUsername() || '???')
+            .appendTo($logout);
+        $("<div>")
+            .text('Logout...')
+            .appendTo($logout);
+
+        $parent
+            .children('.datalinq-code-toolbutton')
+            .click(function (e) {
+                e.stopPropagation();
+                if (!$(this).hasClass('disabled')) {
+                    dataLinqCode.events.fire($(this).data('event'));
+                }
+            });
+
+        dataLinqCode.events.on('refresh-ui-elements', function (channel, args) {
+            $parent.children('.datalinq-code-toolbutton').each(function (i, button) {
+                var $button = $(button);
+                var func = $button.data('refresh-ui');
+
+                if (func && func(args) === false) {
+                    $button.addClass('disabled');
+                } else {
+                    $button.removeClass('disabled');
+                }
+
+                var visibleFunc = $button.data('visible');
+                if (visibleFunc) {
+                    $button.css('display', visibleFunc(args) ? '' : 'none');
+                }
+
+                var baseImage = $button.data('base-image');
+                if (baseImage && args.gitStatuses && args.currentDoc) {
+                    var status = args.gitStatuses[args.currentDoc];
+                    var imageSuffix = '@1'; 
+
+                    if (status === 'up-to-date') {
+                        imageSuffix = '@3'; 
+                    } else if (status === 'outdated') {
+                        imageSuffix = '@2'; 
+                    }
+
+                    $button.css('background-image', 'url(' + baseImage + imageSuffix + '.svg)');
+                }
+            });
+        });
+    };
+})(jQuery);

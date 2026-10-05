@@ -1,0 +1,221 @@
+/* DataLinq Code - Start page: heading, tiles, progress, compile output */
+
+.datalinq-code-heading {
+    justify-items: center;
+}
+
+.datalinq-code-heading h1 {
+    font-size: 30px;
+    margin-bottom: 10px;
+    color: #5badff;
+    font-weight: 600;
+}
+
+    .datalinq-code-heading p {
+        font-size: 14px;
+        line-height: 1.5;
+        color: #ddd;
+        flex-grow: 1;
+    }
+
+.datalinq-code-tiles {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background-color: #777;
+    overflow: auto;
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-content: space-between;
+}
+
+    .datalinq-code-tiles .datalinq-code-tile {
+        width: 320px;
+        min-height: 160px;
+        background-color: #555;
+        color: #fff;
+        padding: 20px;
+        border-radius: 16px;
+        cursor: pointer;
+        box-sizing: border-box;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+        transition: transform 0.2s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+        .datalinq-code-tiles .datalinq-code-tile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(90, 173, 255, 0.4);
+        }
+
+        .datalinq-code-tiles .datalinq-code-tile h1 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #5badff;
+            font-weight: 600;
+        }
+
+        .datalinq-code-tiles .datalinq-code-tile p {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #ddd;
+            flex-grow: 1;
+        }
+
+.progress-placeholder {
+    height: 10px;
+    background: #333;
+    margin-top: 12px;
+    border-radius: 4px;
+}
+
+.datalinq-code-hidden-developer-content {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #ccc;
+}
+
+    .datalinq-code-hidden-developer-content label {
+        margin-left: 6px;
+        cursor: pointer;
+    }
+
+
+.datalinq-code-progress {
+    display: inline-block;
+    width: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+    .datalinq-code-progress .progressbar-holder {
+        height: 12px;
+        width: 100%;
+        border: 1px solid #777;
+        box-sizing: border-box;
+    }
+        .datalinq-code-progress .progressbar-holder .progressbar {
+            height: 10px;
+            width: 0%;
+            background-color: #5badff;
+        }
+
+    .datalinq-code-progress .progresstext {
+        font-size: 10.5px;
+        margin: 4px 0px;
+    }
+
+.datalinq-commit-history{
+    margin-top:25px;
+}
+
+.datalinq-code-output {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 55%;
+    background: linear-gradient(to bottom, #444, #575757);
+    overflow: auto;
+    box-shadow: inset 0 6px 12px rgba(0, 0, 0, 0.4);
+    border-top: 2px solid #222;
+    padding: 12px;
+    font-family: "Segoe UI", "Open Sans", sans-serif;
+    display: flex;
+}
+
+.datalinq-success-container,
+.datalinq-error-container {
+    display: inline-block;
+    vertical-align: top;
+    overflow: auto;
+    padding: 0 6px;
+}
+
+.datalinq-error-container {
+    border-right: 1px solid #555;
+}
+
+.datalinq-code-compile-item.datalinq-pending {
+    opacity: 0.6;
+}
+
+.datalinq-success-container .datalinq-code-compile-item {
+    border-left: 3px solid #4CAF50;
+}
+
+.datalinq-error-container .datalinq-code-compile-item {
+    border-left: 3px solid #f44336;
+}
+
+    .datalinq-code-output .datalinq-code-compile-item {
+        padding: 12px 12px 12px 40px;
+        background-position: 12px center;
+        background-repeat: no-repeat;
+        background-image: url(../../img/loader/spinning-line-black-16@1.gif);
+        background-size: 16px 16px;
+        box-sizing: border-box;
+        color: #efefef;
+        cursor: pointer;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        background-color: #555;
+        transition: background 0.3s, color 0.3s;
+        width: 50%;
+        justify-self: center;
+    }
+
+        .datalinq-code-output .datalinq-code-compile-item:hover {
+            background-color: #666;
+            color: #ddd;
+        }
+
+        /* SUCCESS STATE */
+        .datalinq-code-output .datalinq-code-compile-item.success {
+            background-image: url(../../img/check_16@1.png);
+            background-color: #3a3a3a;
+            border-left: 4px solid #5badff;
+            width: 50%;
+            justify-self:center;
+        }
+
+        /* ERROR STATE */
+        .datalinq-code-output .datalinq-code-compile-item.has-errors {
+            background-color: #4a1f1f;
+            background-image: url(../../img/warning_red_16@1.png);
+            border-left: 4px solid #f66;
+            color: #ffdddd;
+            width: 50%;
+            justify-self: center;
+        }
+
+            .datalinq-code-output .datalinq-code-compile-item.has-errors ul {
+                padding-left: 20px;
+                margin-top: 8px;
+                list-style-type: disc;
+            }
+
+                .datalinq-code-output .datalinq-code-compile-item.has-errors ul li {
+                    font-size: 13px;
+                    padding: 4px 0;
+                    border-top: 1px solid #a66;
+                    color: #ffcaca;
+                }
+
+/* Retina/high-DPI support */
+@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+    .datalinq-code-output .datalinq-code-compile-item.success {
+        background-image: url(../../img/check_16@2.png);
+    }
+
+    .datalinq-code-output .datalinq-code-compile-item.has-errors {
+        background-image: url(../../img/warning_red_16@2.png);
+    }
+}
+

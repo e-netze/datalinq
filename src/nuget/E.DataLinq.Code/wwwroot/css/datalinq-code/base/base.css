@@ -1,0 +1,268 @@
+/* DataLinq Code - Base: page, variables, IDE layout, resize handles, buttons */
+
+html {
+    font-size: 14px;
+    font-family: "Segoe UI", "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+:root {
+    --float-gap: 20px;
+    --float-radius: 10px;
+    --toolbar-height: 60px;
+}
+
+.datalinq-code-body {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    bottom: 0px;
+    right: 0px;
+    background: linear-gradient(to bottom, #444, #333);
+}
+
+.resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    left: 300px; /* start at sidebar width */
+    cursor: ew-resize;
+    background-color: rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.resize-handle--x {
+    position: absolute;
+    top: var(--float-gap);
+    left: 300px; /* Initial sidebar width */
+    margin-left: calc(var(--float-gap) + (var(--float-gap) - 5px) / 2);
+    width: 5px;
+    height: var(--toolbar-height); /* Only draggable in the toolbar area */
+    cursor: ew-resize;
+    z-index: 10;
+    background-color: transparent;
+}
+
+    .resize-handle--x::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 1px;
+        width: 3px;
+        height: 100%;
+        background-color: #888;
+        opacity: 0.5;
+    }
+
+    .datalinq-code-body .datalinq-code-ide {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        bottom: 0px;
+        right: 0px;
+    }
+
+    .datalinq-code-body .datalinq-code-help {
+        position: absolute;
+        top: 0px;
+        width: 0px;
+        bottom: 0px;
+        right: 0px;
+    }
+
+        .datalinq-code-body .datalinq-code-help > #help-frame {
+            position: absolute;
+            top: 0px;
+            width: 0px;
+            bottom: 0px;
+            right: 0px;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+    .datalinq-code-body.showhelp .datalinq-code-ide {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        bottom: 0px;
+        right: 600px;
+    }
+
+    .datalinq-code-body.showhelp .datalinq-code-help {
+        position: absolute;
+        top: 0px;
+        width: 600px;
+        bottom: 0px;
+        right: 0px;
+    }
+
+
+.datalinq-code-ide .datalinq-code-toolbar {
+    position: absolute;
+    top: var(--float-gap);
+    left: calc(var(--sidebar-width, 300px) + 2 * var(--float-gap));
+    right: var(--float-gap);
+    height: var(--toolbar-height);
+    border-radius: var(--float-radius);
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.datalinq-code-ide .datalinq-code-sidebar {
+    position: absolute;
+    top: var(--float-gap);
+    bottom: var(--float-gap);
+    left: var(--float-gap);
+    width: var(--sidebar-width, 300px);
+    border-radius: var(--float-radius);
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    min-width: 300px;
+    max-width: 500px;
+}
+
+.datalinq-code-ide .datalinq-code-content {
+    position: absolute;
+    top: calc(var(--toolbar-height) + 2 * var(--float-gap));
+    bottom: var(--float-gap);
+    left: calc(var(--sidebar-width, 300px) + 2 * var(--float-gap));
+    right: var(--float-gap);
+    border-radius: var(--float-radius);
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+    .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs {
+        position: absolute;
+        top: 0px;
+        height: 40px;
+        left: 0px;
+        right: 0px;
+        background-color: #555;
+        white-space: nowrap;
+        box-sizing: border-box;
+        border-bottom: 2px solid #000;
+    }
+
+            .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab-selector {
+                position: absolute;
+                top: 0px;
+                height: 32px;
+                width: 30px;
+                right: 0px;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: 26px 26px;
+                background-image: url(../../img/triangle-down_26@1.png);
+                cursor: pointer;
+            }
+
+        .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab {
+            position: relative;
+            display: inline-block;
+            background-color: #333;
+            background-repeat: no-repeat;
+            background-position: 4px center;
+            color: #ccc;
+            font-size: 1em;
+            cursor: pointer;
+            padding: 5px 28px 0px 28px;
+            border-right: 1px solid #000;
+            border-top: 2px solid transparent; /* Reserve space for highlight */
+            box-sizing: border-box;
+            height: 32px;
+            transition: border-top 0.2s ease;
+        }
+
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab:hover {
+                    background-color: #3a3a3a;
+                    color: #eee;
+                }
+
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab:last-child {
+                    border-right: none;
+                }
+
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.start {
+                    background-image: url(../../img/home_16@1.png);
+                    background-size: 16px 16px;
+                }
+
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.endpoint {
+                    background-image: url(../../img/endpoint_16@1.png);
+                    background-size: 16px 16px;
+                }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.query {
+                    background-image: url(../../img/query_16@1.png);
+                    background-size: 16px 16px;
+                }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.view {
+                    background-image: url(../../img/code_svg@1.svg);
+                    background-size: 16px 16px;
+                }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.viewcss {
+                    background-image: url(../../img/css_svg@1.svg);
+                    background-size: 16px 16px;
+                }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.viewjs {
+                    background-image: url(../../img/js_svg@1.svg);
+                    background-size: 16px 16px;
+                }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab.with-preview {
+                    box-shadow: inset 0 -2px 0 #5badff;
+                }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-tabs .datalinq-code-tab .preview-indicator {
+                    display: inline-block;
+                    margin-left: 6px;
+                    padding: 0 5px;
+                    border-radius: 3px;
+                    background-color: #5badff;
+                    color: #fff;
+                    font-size: 10px;
+                    line-height: 14px;
+                    vertical-align: middle;
+                }
+                .datalinq-code-ide .datalinq-code-content .datalinq-code-editor-frame.preview {
+                    background-color: #fff;
+                }
+
+.dragging {
+    background-color: #5badff !important;
+    opacity: 0.8;
+    border: 1px solid #4b9ad1;
+    box-shadow: 0 0 5px rgba(91, 173, 255, 0.5);
+    transition: background-color 0.2s, opacity 0.2s, box-shadow 0.2s;
+}
+
+/****** Buttons *********/
+.datalinq-code-button {
+    background-color: #5badff;
+    color: #fff;
+    min-width: 100px;
+    border: none;
+    border-radius: 6px;
+    padding: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+    .datalinq-code-button:hover {
+        filter: brightness(85%);
+    }
+    
+    .datalinq-code-button.cancel {
+        background-color: #606060;
+    }

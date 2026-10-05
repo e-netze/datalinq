@@ -1,0 +1,205 @@
+/* DataLinq Code - Modal dialogs and message boxes */
+
+/******* Modal Dialog **************/
+.datalinq-code-modal {
+    font-family: Verdana,Tahoma,Arial,sans-serif;
+    font-family: Verdana,Tahoma,Arial,sans-serif;
+    font-size: .73em;
+    background-color: #ffffff;
+    margin: 0px;
+    scrollbar-base-color: #ffffff;
+    scrollbar-shadow-color: #ffffff;
+    scrollbar-track-color: #ffffff;
+    scrollbar-arrow-color: #000000;
+    scrollbar-face-color: #bcbbbb;
+    scrollbar-highlight-color: #ffffff;
+    scrollbar-darkshadow-color: #ffffff;
+}
+
+    .datalinq-code-modal h1,
+    .datalinq-code-modal h2,
+    .datalinq-code-modal h3,
+    .datalinq-code-modal h4,
+    .datalinq-code-modal h5,
+    .datalinq-code-modal h6 {
+        font-family: Verdana,Tahoma,Arial,sans-serif;
+    }
+
+    .datalinq-code-modal,
+    .datalinq-code-modal *,
+    .datalinq-code-modal *::before,
+    .datalinq-code-modal *::after {
+        box-sizing: content-box;
+    }
+
+.datalinq-code-modal-title {
+    color: #fff;
+    background-color: #5badff;
+    border-bottom: 1px solid #777;
+    font-size: 16px;
+    /*font-weight: bold;*/
+    padding: 12px;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    height: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    border-radius: 5px 5px 0px 0px;
+    text-overflow: ellipsis;
+    padding-right: 32px;
+}
+
+.datalinq-code-modal-input {
+    border: 1px solid #000;
+    border-radius: 4px;
+    background: #777;
+    color: #eee;
+    font-size: 1em;
+    margin: 2px 0 16px 0px;
+    padding: 5px;
+    width: 400px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.datalinq-code-modal-commit-form {
+    justify-self: center;
+}
+
+.datalinq-code-modal-body {
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+    border-radius: 5px;
+}
+
+    .datalinq-code-modal-body.enlargeable .datalinq-code-modal-title {
+        cursor: pointer;
+        background-image: url('../../../img/next-26.png');
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+    }
+
+    .datalinq-code-modal-body.enlargeable.modal-large .datalinq-code-modal-title {
+        background-image: url('../../../img/back-26.png');
+    }
+
+    .datalinq-code-modal-body.enlargeable .datalinq-code-modal-title.has-closebutton {
+        background-position: right 40px center;
+    }
+
+.datalinq-code-modal-content {
+    z-index: 1;
+    position: absolute;
+    overflow: auto;
+    left: 0px;
+    top: 38px;
+    right: 0px;
+    bottom: 0px;
+    padding: 0px 10px;
+}
+
+    .datalinq-code-modal-content .datalinq-code-modal-content-fill {
+        margin: 0px -10px;
+    }
+
+.datalinq-code-modal-body.center .datalinq-code-modal-content {
+    padding: 10px 15px;
+}
+
+    .datalinq-code-modal-body.center .datalinq-code-modal-content .datalinq-code-modal-content-fill {
+        padding: -10px -15px;
+    }
+
+
+.datalinq-code-modal-resize {
+    cursor: pointer;
+    background: url(../../../img/maximize-dialog-26.png) no-repeat center;
+    position: absolute;
+    top: 0px;
+    right: 44px;
+    width: 44px;
+    height: 44px;
+    margin: 0px;
+    padding: 0px;
+}
+
+.datalinq-code-modal-body.maximized {
+    margin: 8px;
+}
+
+@media (max-width: 600px) {
+    .datalinq-code-modal-body.maximized {
+        margin: 2px;
+    }
+}
+
+.datalinq-code-modal-body.maximized .datalinq-code-modal-resize {
+    background: url(../../../img/minimize-dialog-26.png) no-repeat center;
+}
+
+.datalinq-code-modal-close {
+    cursor: pointer;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 44px;
+    height: 44px;
+    background-image: url(../../img/close_26@1.png);
+    background-repeat: no-repeat;
+    background-position: center center;
+    /*background-color: rgba(226,226,226,.7);*/
+}
+
+    .datalinq-code-modal-close:hover {
+        background-color: #ff0101;
+    }
+
+.datalinq-code-modal-body.animate {
+    transition: opacity .3s ease-in, height .3s ease-in, width .3s ease-in, left .3s ease-in, top .3s ease-in
+}
+
+.datalinq-code-messagebox-content {
+    color: #fff;
+    font-size: 14px;
+    position: relative;
+}
+
+    .datalinq-code-messagebox-content .button-bar {
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        height: 60px;
+        bottom: 0px;
+        box-sizing: border-box;
+        padding: 5px 20px;
+        text-align: right;
+    }
+
+    .datalinq-code-messagebox-content .datalinq-code-prompt-input {
+        box-sizing: border-box;
+        width: 100%;
+        margin-top: 8px;
+        padding: 6px 8px;
+        background-color: #333;
+        color: #eee;
+        border: 1px solid #555;
+        font-size: 14px;
+    }
+
+    .datalinq-code-messagebox-content .datalinq-code-prompt-error {
+        color: #ff6b6b;
+        font-size: 12px;
+        min-height: 16px;
+        margin-top: 6px;
+    }
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-messagebox-content .datalinq-code-prompt-input {
+    background-color: #fff;
+    color: #222;
+    border: 1px solid #bbb;
+}
+
+.datalinq-code-buttons-bar-right {
+    text-align: right;
+}

@@ -1,0 +1,222 @@
+/* DataLinq Code - Tree collapsed, context menu, prompt select, tree toolbar */
+
+/******* Tree Collapsed ********/
+.datalinq-code-ide.tree-collapsed .datalinq-code-sidebar {
+    overflow: hidden;
+    width: 60px;
+    bottom: auto;
+    height: var(--toolbar-height);
+}
+
+.datalinq-code-ide.tree-collapsed .datalinq-code-sidebar .datalinq-code-tree-toolbar {
+    display: none;
+}
+
+.datalinq-code-ide.tree-collapsed .datalinq-code-content {
+    left: var(--float-gap);
+}
+
+.datalinq-code-ide.tree-collapsed .datalinq-code-toolbar {
+    /*left: 60px;*/
+}
+
+.datalinq-code-ide.tree-collapsed .datalinq-code-sidebar .datalinq-code-tree-top .datalinq-code-tree-collapse-button {
+    background-color: #393939;
+    background-image: url(../../img/triangle-right-down_32@1.png)
+}
+
+.datalinq-code-ide.tree-collapsed .resize-handle--x {
+    display: none;
+}
+
+/****** Tree Context Menu *****/
+
+.datalinq-code-contextmenu {
+    position: fixed;
+    z-index: 10000;
+    min-width: 180px;
+    padding: 4px 0;
+    margin: 0;
+    list-style: none;
+    background-color: #252526;
+    color: #ddd;
+    border: 1px solid #454545;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    font-size: 0.9em;
+    user-select: none;
+}
+
+    .datalinq-code-contextmenu .item {
+        padding: 5px 16px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+        .datalinq-code-contextmenu .item:hover {
+            background-color: #04395e;
+            color: #fff;
+        }
+
+        .datalinq-code-contextmenu .item.danger:hover {
+            background-color: #8b1d1d;
+        }
+
+    .datalinq-code-contextmenu .separator {
+        height: 1px;
+        margin: 4px 0;
+        background-color: #454545;
+    }
+
+.datalinq-code-ide.colorscheme-light .datalinq-code-contextmenu,
+.colorscheme-light .datalinq-code-contextmenu {
+    background-color: #f8f8f8;
+    color: #222;
+    border-color: #ccc;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+    .colorscheme-light .datalinq-code-contextmenu .item:hover {
+        background-color: #cce4f7;
+        color: #000;
+    }
+
+    .colorscheme-light .datalinq-code-contextmenu .item.danger:hover {
+        background-color: #f4c7c7;
+    }
+
+    .colorscheme-light .datalinq-code-contextmenu .separator {
+        background-color: #ccc;
+    }
+
+.datalinq-code-prompt-select {
+    display: block;
+    width: auto;
+    min-width: 240px;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 6px 28px 6px 8px;
+    margin-bottom: 8px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #333;
+    color: #eee;
+    border: 1px solid #777;
+    border-radius: 4px;
+    background-image: url(../../img/triangle-down_16@1.png);
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    background-size: 16px 16px;
+    cursor: pointer;
+    outline: none;
+}
+
+    .datalinq-code-prompt-select:focus {
+        border-color: #58a6ff;
+    }
+
+    .datalinq-code-prompt-select option {
+        background-color: #252526;
+        color: #eee;
+    }
+
+.colorscheme-light .datalinq-code-prompt-select {
+    background-color: #fff;
+    color: #222;
+    border-color: #ccc;
+}
+
+    .colorscheme-light .datalinq-code-prompt-select option {
+        background-color: #fff;
+        color: #222;
+    }
+
+/****** Tree Toolbar *****/
+
+.tree-tool {
+    width: 26px;
+    height: 26px;
+    display: inline-block;
+    box-sizing: border-box;
+    cursor: pointer;
+    border: 1px solid #777;
+    border-radius: 4px;
+    margin-right: 4px;
+    vertical-align: top;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    background-color: #333;
+}
+
+    .tree-tool.expand-all {
+        background-image: url(../../img/triangle-up_16@1.png);
+    }
+
+    .tree-tool.new-folder {
+        position: relative;
+    }
+
+        .tree-tool.new-folder::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url(../../img/new-folder.svg);
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            filter: brightness(0) invert(1);
+        }
+
+.colorscheme-light .tree-tool.new-folder::before {
+    filter: none;
+}
+
+    .tree-tool.new-endpoint {
+        background-image: url(../../img/round-plus_16@1.png);
+    }
+
+.datalinq-tree-search-input {
+    width: calc( 100% - 30px);
+}
+
+.tree-tool.new-folder ~ .datalinq-tree-search-input {
+    width: calc( 100% - 90px);
+}
+
+.datalinq-tree-search-input {
+    box-sizing: border-box;
+    background: transparent;
+    border: 1px solid #777;
+    border-radius: 4px;
+    color: #fff;
+    padding: 4px;
+    background-size: 16px 16px;
+    background-position: right 5px center;
+    background-repeat: no-repeat;
+    background-image: url(../../img/magnifier_16@1.png);
+    background-color: #333;
+    cursor: pointer;
+}
+
+    .datalinq-tree-search-input.has-value {
+        background-image: url(../../img/close_16@1.png);
+    }
+
+    .datalinq-tree-search-input:focus {
+        outline: none;
+    }
+
+@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+    .tree-tool.expand-all {
+        background-image: url(../../img/triangle-up_16@2.png);
+    }
+
+    .datalinq-tree-search-input {
+        background-image: url(../../img/magnifier_16@2.png);
+    }
+
+        .datalinq-tree-search-input.has-value {
+            background-image: url(../../img/close_16@2.png);
+        }
+}

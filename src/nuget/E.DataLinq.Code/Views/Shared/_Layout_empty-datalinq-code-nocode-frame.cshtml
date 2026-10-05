@@ -11,15 +11,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
     <title>@ViewBag.Title</title>
-    <environment names="Development">
-        <link href="~/_content/E.DataLinq.Code/css/datalinq-code.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
-        <link href="~/_content/E.DataLinq.Code/css/datalinq-code-typeahead.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
-    </environment>
-
-    <environment names="Staging,Production">
-        <link href="~/_content/E.DataLinq.Code/css/datalinq-code.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
-        <link href="~/_content/E.DataLinq.Code/css/datalinq-code-typeahead.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
-    </environment>
+    @await Html.PartialAsync("_DataLinqCodeStyles")
+    <link href="~/_content/E.DataLinq.Code/css/datalinq-code/ui/typeahead.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
 
     <style>
     #datalinq-code-editor-frame {

@@ -1,0 +1,242 @@
+/* DataLinq Code - Toolbar */
+
+/******* Tools *************/
+.datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton {
+    background-repeat: no-repeat;
+    background-size: 16px;
+    background-position: center 4px;
+    width: 50px;
+    height: 50px;
+    margin: 5px 0px 0px 5px;
+    display: inline-block;
+    cursor: pointer;
+    background-color: #222;
+    border-radius: 6px;
+    border: 1px solid #000;
+    box-sizing: border-box;
+    transition: .3s ease-in-out all;
+    vertical-align: top;
+    overflow: hidden;
+}
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton .text {
+        width: 48px;
+        color: #aaa;
+        font-size: 8.5px;
+        text-align: center;
+        opacity: 1.0;
+        margin-top: 24px;
+        transition: .3s ease-in-out all;
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton:hover {
+        background-color: #333;
+        background-size: 32px;
+        background-position: center;
+    }
+
+        .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton:hover .text {
+            opacity: 0;
+            margin-top: 50px;
+        }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.disabled {
+        opacity: .6;
+        cursor: unset;
+        filter: grayscale(100%);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.verify-current {
+        background-image: url(../../img/checkbox-checked_32@1.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.save-current {
+        background-image:url(../../img/disk-white_32@1.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.save-all {
+        background-image: url(../../img/disks-white_32@1.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.run {
+        background-image: url(../../img/triangle-right_32@1.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.run-in-tab {
+        background-image: url(../../img/round-right_32@1.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.run-in-code-tab {
+        background-image: url(../../img/triangle-right-down_32@1.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.push-snapshot {
+        background-image: url(../../img/git_32@1.svg);  
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.colorscheme {
+        background-image: url(../../img/darkmode_32@1.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.sandbox {
+        background-image: url(../../img/sandbox_32@1.png);
+        float: right;
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.copilot {
+        background-image: url(../../img/copilot_32@1.png);
+        float: right;
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.help {
+        background-image: url(../../img/help_32@1.png);
+        float:right;
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.key-value-store {
+        background-image: url(../../img/keyvalue_32@1.svg);
+        float: right;
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.settings {
+        background-image: url(../../img/settings_32@1.svg);
+        float: right;
+    }
+
+    .datalinq-code-settings-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px;
+    }
+
+        .datalinq-code-settings-list .datalinq-code-settings-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border: 1px solid #3a3f44;
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: rgb(73 73 73);
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .datalinq-code-settings-list .datalinq-code-settings-item:hover {
+            background-color: rgba(91, 173, 255, 0.12);
+            border-color: #5badff;
+        }
+
+        .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-icon {
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 28px 28px;
+        }
+
+            .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-icon.key-value-store {
+                background-image: url(../../img/keyvalue_32@1.svg);
+            }
+
+            .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-icon.error-page {
+                background-image: url(../../img/error_32@1.svg);
+            }
+
+            .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-icon.colorscheme {
+                background-image: url(../../img/darkmode_32@1.png);
+            }
+
+            .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-icon.sandbox {
+                background-image: url(../../img/sandbox_32@1.png);
+            }
+
+        .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-text .title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-text .desc {
+            font-size: 12px;
+            color: #9aa0a6;
+        }
+
+    .datalinq-code-error-page-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        box-sizing: border-box;
+        padding-bottom:7px;
+    }
+
+        .datalinq-code-error-page-toolbar .datalinq-code-error-page-select {
+            flex: 1 1 auto;
+            max-width: 320px;
+            height: 26px;
+            padding: 2px 6px;
+            background-color: #333;
+            color: #eee;
+            border: 1px solid #555;
+        }
+
+        .datalinq-code-error-page-toolbar .datalinq-code-button {
+            flex: 0 0 auto;
+            margin:0;
+        }
+
+        .datalinq-code-error-page-toolbar .datalinq-code-button.align-right {
+            margin-left: auto;
+        }
+
+    .datalinq-code-modal.colorscheme-light .datalinq-code-error-page-toolbar .datalinq-code-error-page-select {
+        background-color: #fff;
+        color: #222;
+        border: 1px solid #bbb;
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.logout {
+        background-image: url(../../img/account_32@1.png);
+        width: 120px;
+        background-position: 6px center;
+        padding: 10px 42px;
+        font-size: 12px;
+        overflow: hidden;
+        color: #aaa;
+        float: right;
+    }
+
+@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.save-current {
+        background-image: url(../../img/disk-white_32@2.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.save-all {
+        background-image: url(../../img/disks-white_32@2.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.run {
+        background-image: url(../../img/triangle-right_32@2.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.run-in-tab {
+        background-image: url(../../img/round-right_32@2.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.run-in-code-tab {
+        background-image: url(../../img/triangle-right-down_32@2.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.colorscheme {
+        background-image: url(../../img/darkmode_32@2.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.help {
+        background-image: url(../../img/help_32@2.png);
+    }
+
+    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.logout {
+        background-image: url(../../img/account_32@2.png);
+    }
+}

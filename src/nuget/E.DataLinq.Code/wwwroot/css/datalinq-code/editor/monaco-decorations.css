@@ -1,0 +1,12 @@
+/* DataLinq Code - Monaco decorations */
+
+/***** Monaco Decoration ********/
+.errorLineDecoration {
+    background: red;
+    width: 5px !important;
+    margin-left: 3px;
+}
+
+.datalinq-code-hidden-developer-content {
+    display: none;
+}

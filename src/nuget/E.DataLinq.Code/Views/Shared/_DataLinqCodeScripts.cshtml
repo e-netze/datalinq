@@ -1,0 +1,56 @@
+@using E.DataLinq.Core
+@*
+    DataLinq Code - IDE scripts (main window). Order:
+      1. core (namespace first)   2. api   3. feature members (api/ui)
+      4. feature handlers (registered via dataLinqCode.features.register, initialized by start())
+      5. app bootstrap            6. jQuery UI plugins
+    To add a feature: create <feature>/<feature>-handlers.js and add it to section 4.
+*@
+@{
+    var scripts = new[]
+    {
+        // 1. core
+        "core/namespace.js",
+        "core/event-controller.js",
+        "core/utils.js",
+        "core/privileges.js",
+        "core/keyboard-shortcuts.js",
+
+        // 2. api
+        "api/api-client.js",
+        "documents/documents-api.js",
+        "git/git-api.js",
+        "key-value-store/key-value-store-api.js",
+
+        // 3. state & dialogs
+        "documents/workspace-state.js",
+        "ui/dialogs.js",
+        "git/push-dialog.js",
+        "error-pages/error-page-editor.js",
+        "settings/settings-dialog.js",
+        "key-value-store/key-value-store-dialog.js",
+
+        // 4. feature handlers
+        "git/git-handlers.js",
+        "documents/document-handlers.js",
+        "theme/theme-handlers.js",
+        "help/help-handlers.js",
+        "copilot/copilot-handlers.js",
+        "session/session-handlers.js",
+        "session/workspace-persistence.js",
+
+        // 5. bootstrap
+        "core/app.js",
+
+        // 6. plugins
+        "tree/tree.js",
+        "editor/editor.js",
+        "ui/modal.js",
+        "toolbar/toolbar.js",
+        "ui/blockframe.js"
+    };
+}
+@foreach (var script in scripts)
+{
+    <script src="@Url.Content("~/_content/E.DataLinq.Code/js/datalinq-code/" + script)?@(DataLinqVersion.JsVersion)"></script>
+}

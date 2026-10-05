@@ -1,0 +1,87 @@
+/* DataLinq Code - Autocomplete multiselect and blockframe */
+
+.datalinq-autocomplete-multiselect {
+
+}
+
+    .datalinq-autocomplete-multiselect .datalinq-autocomplete-multiselect-prefix {
+        width: auto;
+        text-align: right;
+    }
+
+    .datalinq-autocomplete-multiselect .datalinq-autocomplete-multiselect-input {
+        width: 240px;
+    }
+
+    .datalinq-autocomplete-multiselect .add-button {
+        font-weight: bold;
+        height: 28px;
+        position: relative;
+        top: -7px;
+    }
+
+    .datalinq-autocomplete-multiselect .datalinq-autocomplete-multiselect-value-conatiner {
+
+    }
+
+        .datalinq-autocomplete-multiselect .datalinq-autocomplete-multiselect-value-conatiner .datalinq-autocomplete-multiselect-value-item {
+            border: 1px solid #aaa;
+            background: #555;
+            padding: 5px;
+            margin: 2px;
+            display: inline-block;
+        }
+
+            .datalinq-autocomplete-multiselect .datalinq-autocomplete-multiselect-value-conatiner .datalinq-autocomplete-multiselect-value-item .close-button {
+                width: 20px;
+                height: 20px;
+                background: #333;
+                color: white;
+                float: right;
+                font-weight: bold;
+                text-align: center;
+                border-radius: 3px;
+                cursor: pointer;
+                margin-left: 5px;
+                background-repeat:no-repeat;
+                background-position:center;
+                background-image:url(../../img/close_16@1.png);
+            }
+
+.datalinq-code-blockframe-blocker {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    background-color: rgba(100,100,100,0.5);
+    z-index: 9999;
+}
+
+    .datalinq-code-blockframe-blocker .datalinq-code-blockframe-close {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        width: 36px;
+        height: 36px;
+        background-repeat:no-repeat;
+        background-position:center;
+        background-image:url(../../img/close_26@1.png);
+        background-size:26px 26px;
+        z-index: 2;
+        cursor:pointer;
+    }
+
+        .datalinq-code-blockframe-blocker .datalinq-code-blockframe-close:hover {
+            opacity:.5;
+        }
+
+    .datalinq-code-blockframe-blocker .datalinq-code-blockframe-content {
+        position: absolute;
+        left: 50px;
+        top: 50px;
+        right: 50px;
+        bottom: 50px;
+        background-color:white;
+    }
+
