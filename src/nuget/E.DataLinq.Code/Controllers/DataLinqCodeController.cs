@@ -123,18 +123,11 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
     #region Api
 
-    async public Task<IActionResult> GetEndPointPrefixes()
+    async public Task<IActionResult> GetEndPoints()
     {
         return base.JsonObject(_client == null ?
             null :
-            await _client.GetEndPointPrefixes());
-    }
-
-    async public Task<IActionResult> GetEndPoints(string filters = null)
-    {
-        return base.JsonObject(_client == null ?
-            null :
-            await _client.GetEndPoints(filters?.Split(',')));
+            await _client.GetEndPoints(null));
     }
 
     async public Task<IActionResult> GetQueries(string endPoint)

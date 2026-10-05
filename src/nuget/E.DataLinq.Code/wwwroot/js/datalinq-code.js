@@ -408,20 +408,8 @@ var dataLinqCode = new function ($) {
             this.post('deleteConstant', { key: key, environment: environment }, callback);
         };
 
-        this.getEndPointPrefixes = function (callback) {
-            this.get('getEndPointPrefixes', callback);
-        };
-        this.getEndPoints = function (filters, callback) {
-            let filtersArg = '';
-
-            if (Array.isArray(filters)) {
-                if (filters.length === 0) {
-                    return callback([]);
-                }
-                filtersArg = filters.toString();
-            }
-
-            this.get('getEndPoints?filters=' + filtersArg, callback)
+        this.getEndPoints = function (callback) {
+            this.get('getEndPoints', callback)
         };
         this.getQueries = function (endPoint, callback) {
             this.get('getQueries?endPoint=' + endPoint, callback);
@@ -474,7 +462,7 @@ var dataLinqCode = new function ($) {
         this.deleteEndpoints = function () { return _userPrivileges.deleteEndpoints === true; };
         this.deleteQueries = function () { return _userPrivileges.deleteQueries === true; };
         this.deleteViews = function () { return _userPrivileges.deleteViews === true; };
-        this.useAppPrefixFilters = function () { return _userPrivileges.useAppPrefixFilters === true; };
+        this.useEndpointSelection = function () { return _userPrivileges.useAppPrefixFilters === true; };
     };
 
     this.timer = function (callback, duration, arg) {
@@ -544,31 +532,18 @@ var dataLinqCode = new function ($) {
         return documents;
     };
 
-    // App Prefix
-    var _appPrefixFilters = null;
-    this.getAppPrefixFilters = function () {
-        return dataLinqCode.privileges.useAppPrefixFilters() ? _appPrefixFilters : null;
+    // Endpoint selection (null = all endpoints)
+    var _endpointSelection = null;
+    this.getEndpointSelection = function () {
+        return _endpointSelection;
     };
-    this.setAppPrefixFilters = function (prefixes) {
-        if (dataLinqCode.privileges.useAppPrefixFilters()) {
-            _appPrefixFilters = Array.isArray(prefixes) ? prefixes : null;
-
-            console.log('setAppPrefixFilters', _appPrefixFilters);
+    this.setEndpointSelection = function (endPoints) {
+        _endpointSelection = Array.isArray(endPoints) ? endPoints.slice() : null;
+    };
+    this.addEndpointToSelectionIfActive = function (endPoint) {
+        if (_endpointSelection !== null && $.inArray(endPoint, _endpointSelection) < 0) {
+            _endpointSelection.push(endPoint);
         }
-    };
-    this.addAppFilterPrefix = function (prefix) {
-        if (dataLinqCode.privileges.useAppPrefixFilters()) {
-            _appPrefixFilters = _appPrefixFilters || [];
-            if ($.inArray(prefix, _appPrefixFilters) < 0) {
-                _appPrefixFilters.push(prefix);
-            }
-        }
-    };
-    this.addAppFilterPrefixIfCurrentlyUsed = function (prefix) {
-        if (_appPrefixFilters === null)
-            return;
-
-        return this.addAppFilterPrefix(prefix);
     };
 
     this.bindDocumentEvents = function (doc) {

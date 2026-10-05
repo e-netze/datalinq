@@ -1,4 +1,4 @@
-﻿(function ($) {
+(function ($) {
     "use strict";
     $.fn.dataLinqCode_tree = function (method) {
         if (methods[method]) {
@@ -300,7 +300,7 @@
             dataLinqCode.ui.prompt('New endpoint', 'Name of the new endpoint:', '', function (name, selectedFolder) {
                 dataLinqCode.api.createEndPoint(name, function (result) {
                     handleResult(result, function () {
-                        dataLinqCode.addAppFilterPrefixIfCurrentlyUsed(result.endPoint.split('-')[0]);
+                        dataLinqCode.addEndpointToSelectionIfActive(result.endPoint);
 
                         if (selectedFolder && _folderStructure[selectedFolder]) {
                             _folderStructure[selectedFolder].push(result.endPoint);
@@ -438,17 +438,15 @@
     }
 
 var refresh = function ($parent) {
-    if (dataLinqCode.privileges.createEndpoints()) {
-        dataLinqCode.setAppPrefixFilters([]);
-    }
-
-    if (dataLinqCode.privileges.useAppPrefixFilters() === true) {
-        dataLinqCode.api.getEndPointPrefixes(function (prefixes) {
-            $('body').dataLinq_code_modal({
-                title: 'Select Application Prefixes...',
-                onload: function ($content) {
-                    renderEndPointPrefixesList($parent, $content, prefixes);
-                }
+    if (dataLinqCode.privileges.useEndpointSelection() === true) {
+        dataLinqCode.api.getEndPoints(function (endPoints) {
+            dataLinqCode.api.getFolderStructure(function (folderStructure) {
+                $('body').dataLinq_code_modal({
+                    title: 'Select folders / endpoints...',
+                    onload: function ($content) {
+                        renderEndpointSelectionTree($parent, $content, endPoints || [], parseFolderStructure(folderStructure));
+                    }
+                });
             });
         });
     } else {
@@ -456,12 +454,15 @@ var refresh = function ($parent) {
     }
 };
 var refreshSilent = function ($parent) {
-    refrehTree($parent, dataLinqCode.getAppPrefixFilters());
+    refrehTree($parent, dataLinqCode.getEndpointSelection());
 };
-var refrehTree = function ($parent, prefixes) {
+var refrehTree = function ($parent, selection) {
     var $tree = $parent.children('.datalinq-code-tree');
 
-    dataLinqCode.setAppPrefixFilters(prefixes);
+    dataLinqCode.setEndpointSelection(selection);
+    var isSelected = function (endPoint) {
+        return selection == null || $.inArray(endPoint, selection) >= 0;
+    };
 
     var collapsedRoutes = [];
     $tree.find('.tree-node.collapsed').each(function (i, node) {
@@ -470,17 +471,11 @@ var refrehTree = function ($parent, prefixes) {
 
     $tree.empty();
 
-    dataLinqCode.api.getEndPoints(prefixes, function (endPoints) {
-        // folders are only supported, if all endpoints are shown (no app prefix filter)
-        _foldersEnabled = prefixes == null;
-        $('.tree-tool.new-folder').toggle(_foldersEnabled);
+    dataLinqCode.api.getEndPoints(function (endPoints) {
+        endPoints = $.grep(endPoints || [], isSelected);
 
-        if (!_foldersEnabled) {
-            $.each(endPoints, function (i, endPoint) {
-                addEndPointNode($tree, endPoint, collapsedRoutes);
-            });
-            return;
-        }
+        _foldersEnabled = true;
+        $('.tree-tool.new-folder').toggle(_foldersEnabled);
 
         dataLinqCode.api.getFolderStructure(function (folderStructure) {
             _folderStructure = parseFolderStructure(folderStructure);
@@ -488,6 +483,13 @@ var refrehTree = function ($parent, prefixes) {
             var renderedEndpoints = {};
 
             $.each(Object.keys(_folderStructure).sort(), function (i, folderName) {
+                var folderEndpoints = $.grep(_folderStructure[folderName], function (endpointName) {
+                    return $.inArray(endpointName, endPoints) >= 0;
+                });
+                if (selection != null && folderEndpoints.length === 0) {
+                    return;
+                }
+
                 var $folder = createTreeNodeFolder(folderName)
                     .data('data-folder', folderName)
                     .data('data-route', folderName)
@@ -1035,42 +1037,126 @@ var attachFolderEventHandlers = function ($folder) {
     }
 
 
-    var renderEndPointPrefixesList = function ($parent, $content, prefixes) {
-        var $tree = $parent.children('.datalinq-code-tree');
-        var currentPrefixes = dataLinqCode.getAppPrefixFilters();
+    var renderEndpointSelectionTree = function ($parent, $content, endPoints, folderStructure) {
+        var currentSelection = dataLinqCode.getEndpointSelection();
 
-        let $ul = $("<ul>")
-            .addClass('datalinq-code-app-prefixes')
+        var $filter = $("<input>")
+            .addClass('datalinq-code-modal-input datalinq-code-endpoint-select-filter')
+            .attr('placeholder', 'Search for folders, endpoints...')
             .appendTo($content);
 
-        $.each(prefixes, function (prefix, endPointIds) {
+        let $ul = $("<ul>")
+            .addClass('datalinq-code-app-prefixes datalinq-code-endpoint-select')
+            .appendTo($content);
 
+        var addRow = function ($target, text, subtext, cssClass) {
             var $li = $("<li>")
-                .addClass('datalinq-code-app-prefix')
-                .data('app-prefix', prefix)
-                .appendTo($ul)
+                .addClass('datalinq-code-app-prefix ' + cssClass)
+                .appendTo($target);
+
+            $("<div>").addClass('icon').appendTo($li);
+            $("<div>").addClass('text').text(text).appendTo($li);
+            if (subtext) {
+                $("<div>").addClass('subtext').text(subtext).appendTo($li);
+            }
+            $("<div>").addClass('checkbox').appendTo($li);
+
+            return $li;
+        };
+
+        var updateFolderState = function ($folderLi) {
+            var $children = $folderLi.data('$children').children('.endpoint');
+            var checked = $children.filter('.checked').length;
+            $folderLi
+                .toggleClass('checked', checked > 0 && checked === $children.length)
+                .toggleClass('partial', checked > 0 && checked < $children.length);
+        };
+
+        var addEndpointRow = function ($target, endPoint, $folderLi) {
+            var $li = addRow($target, endPoint, null, 'endpoint')
+                .data('endpoint', endPoint)
                 .click(function (e) {
                     e.stopPropagation();
                     $(this).toggleClass('checked');
+                    if ($folderLi) {
+                        updateFolderState($folderLi);
+                    }
                 });
 
-            if (currentPrefixes && $.inArray(prefix, currentPrefixes) >= 0) {
+            if (currentSelection && $.inArray(endPoint, currentSelection) >= 0) {
                 $li.addClass('checked');
             }
+            return $li;
+        };
+
+        var renderedEndpoints = {};
+
+        $.each(Object.keys(folderStructure).sort(), function (i, folderName) {
+            var folderEndpoints = $.grep(folderStructure[folderName], function (endPoint) {
+                return $.inArray(endPoint, endPoints) >= 0 && !renderedEndpoints[endPoint];
+            });
+            if (folderEndpoints.length === 0) {
+                return;
+            }
+
+            var $folderLi = addRow($ul, folderName, folderEndpoints.length + ' endpoint(s)', 'folder')
+                .click(function (e) {
+                    e.stopPropagation();
+                    var check = !$(this).hasClass('checked');
+                    $(this).data('$children').children('.endpoint').toggleClass('checked', check);
+                    updateFolderState($(this));
+                });
+
+            var $children = $("<ul>")
+                .addClass('datalinq-code-endpoint-select-children')
+                .appendTo($ul)
+                .hide();
+            $folderLi
+                .addClass('collapsed')
+                .data('$children', $children);
 
             $("<div>")
-                .addClass('text')
-                .text(prefix)
-                .appendTo($li);
+                .addClass('expander')
+                .prependTo($folderLi)
+                .click(function (e) {
+                    e.stopPropagation();
+                    $folderLi.toggleClass('collapsed');
+                    $children.toggle(!$folderLi.hasClass('collapsed'));
+                });
 
-            $("<div>")
-                .addClass('subtext')
-                .text(endPointIds)
-                .appendTo($li);
+            $.each(folderEndpoints, function (j, endPoint) {
+                addEndpointRow($children, endPoint, $folderLi);
+                renderedEndpoints[endPoint] = true;
+            });
 
-            $("<div>")
-                .addClass('checkbox')
-                .appendTo($li); 
+            updateFolderState($folderLi);
+        });
+
+        $.each(endPoints, function (i, endPoint) {
+            if (!renderedEndpoints[endPoint]) {
+                addEndpointRow($ul, endPoint, null);
+            }
+        });
+
+        $filter.on('keyup', function () {
+            var term = ($(this).val() || '').toLowerCase();
+
+            $ul.children('.endpoint').each(function () {
+                var $li = $(this);
+                $li.toggle(!term || $li.data('endpoint').toLowerCase().indexOf(term) >= 0);
+            });
+            $ul.children('.folder').each(function () {
+                var $folderLi = $(this), $children = $folderLi.data('$children');
+                var folderMatch = !term || $folderLi.children('.text').text().toLowerCase().indexOf(term) >= 0;
+                var anyChild = false;
+                $children.children('.endpoint').each(function () {
+                    var match = folderMatch || $(this).data('endpoint').toLowerCase().indexOf(term) >= 0;
+                    $(this).toggle(match);
+                    anyChild = anyChild || match;
+                });
+                $folderLi.toggle(anyChild);
+                $children.toggle(anyChild && (!!term || !$folderLi.hasClass('collapsed')));
+            });
         });
 
         let $buttons = $("<div>")
@@ -1092,19 +1178,17 @@ var attachFolderEventHandlers = function ($folder) {
             .text('Open selected')
             .appendTo($buttons)
             .click(function () {
-                var prefixes = [];
+                var selection = [];
 
-                $content.find('.datalinq-code-app-prefix.checked').each(function (i, li) {
-                    prefixes.push($(li).data('app-prefix'));
+                $ul.find('.endpoint.checked').each(function (i, li) {
+                    var endPoint = $(li).data('endpoint');
+                    if ($.inArray(endPoint, selection) < 0) {
+                        selection.push(endPoint);
+                    }
                 });
 
-                //if (prefixes.length === 0) {
-                //    alert('Nothing selected');
-                //    return;
-                //}
-
                 $(null).dataLinq_code_modal('close');
-                refrehTree($parent, prefixes);
+                refrehTree($parent, selection);
             });
     };
 })(jQuery);

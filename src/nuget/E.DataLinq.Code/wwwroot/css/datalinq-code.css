@@ -307,6 +307,91 @@ body {
             background-color:#333;
         }
 
+.datalinq-code-modal-input.datalinq-code-endpoint-select-filter {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 8px 0;
+}
+
+    .datalinq-code-modal-input.datalinq-code-endpoint-select-filter::placeholder {
+        color: #ddd;
+        opacity: 1;
+    }
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-modal-input.datalinq-code-endpoint-select-filter::placeholder {
+    color: #888;
+}
+
+.datalinq-code-endpoint-select .datalinq-code-app-prefix {
+    background-image: none;
+    padding-left: 30px;
+}
+
+.datalinq-code-endpoint-select .datalinq-code-app-prefix.endpoint {
+    height: 32px;
+}
+
+.datalinq-code-endpoint-select .datalinq-code-app-prefix.folder {
+    font-weight: bold;
+    padding-left: 48px;
+}
+
+.datalinq-code-endpoint-select .datalinq-code-app-prefix .icon {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    width: 14px;
+    height: 14px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 14px 14px;
+}
+
+.datalinq-code-endpoint-select .datalinq-code-app-prefix.endpoint .icon {
+    background-image: url(img/endpoint_16@1.png);
+}
+
+.datalinq-code-endpoint-select .datalinq-code-app-prefix.folder .icon {
+    left: 28px;
+    background-image: url(img/folder-icon.svg);
+    filter: brightness(0) invert(1);
+}
+
+.datalinq-code-endpoint-select .datalinq-code-app-prefix.folder .expander {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 20px;
+    height: 22px;
+    line-height: 22px;
+    font-size: 18px;
+    text-align: center;
+    color: #ccc;
+}
+
+    .datalinq-code-endpoint-select .datalinq-code-app-prefix.folder .expander::before {
+        content: '\25BE';
+    }
+
+    .datalinq-code-endpoint-select .datalinq-code-app-prefix.folder.collapsed .expander::before {
+        content: '\25B8';
+    }
+
+.datalinq-code-modal.colorscheme-light .datalinq-code-endpoint-select .datalinq-code-app-prefix.folder .icon {
+    filter: none;
+}
+
+.datalinq-code-endpoint-select .datalinq-code-app-prefix.partial .checkbox {
+    opacity: .6;
+    background-image: url(img/checkbox-checked_16@1.png);
+}
+
+.datalinq-code-endpoint-select-children {
+    list-style: none;
+    padding: 0 0 0 20px;
+}
+
         .datalinq-code-open-tabs .datalinq-code-tab.query {
             background-image: url(img/query_16@1.png);
         }
