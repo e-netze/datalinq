@@ -361,11 +361,29 @@ dataLinqCode.implementEventController(dataLinqCodeEditor);
         var $pdfReportEditing = $("input[type='checkbox'][name='PDFReportEditing']");
 
         if ($pdfReportMode.length && $pdfReportEditing.length) {
+            var pdfEditingEnvironment = null;
+            dataLinqCode.api.getKeyValueStoreEnvironments(function (result) {
+                pdfEditingEnvironment = (result && result.current) || null;
+            });
+
+            var isPdfEditingAllowed = function () {
+                return pdfEditingEnvironment === 'Development' || pdfEditingEnvironment === 'Test';
+            };
+
+            var showPdfEditingNotAllowed = function () {
+                dataLinqCode.ui.alert('PDF editing mode', 'PDF editing mode is only available in Development and Test environments' +
+                    (pdfEditingEnvironment ? ' (current environment: ' + pdfEditingEnvironment + ').' : '.'));
+            };
+
             var $pdfEditing = $("<div>")
                 .addClass('switch-button pdf-editing')
                 .prependTo($parent)
                 .click(function (e) {
                     e.stopPropagation();
+                    if (!$pdfReportEditing.prop('checked') && !isPdfEditingAllowed()) {
+                        showPdfEditingNotAllowed();
+                        return;
+                    }
                     $pdfReportEditing.prop('checked', !$pdfReportEditing.prop('checked'));
                     updatePdfEditingButton();
                     dataLinqCodeEditor.setDirty();
@@ -384,7 +402,13 @@ dataLinqCode.implementEventController(dataLinqCodeEditor);
             };
 
             $pdfReportMode.on('change', updatePdfEditingButton);
-            $pdfReportEditing.on('change', updatePdfEditingButton);
+            $pdfReportEditing.on('change', function () {
+                if ($pdfReportEditing.prop('checked') && !isPdfEditingAllowed()) {
+                    $pdfReportEditing.prop('checked', false);
+                    showPdfEditingNotAllowed();
+                }
+                updatePdfEditingButton();
+            });
             updatePdfEditingButton();
         }
 

@@ -8,6 +8,7 @@ using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using E.DataLinq.Web.Services.TokenCache;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -28,12 +29,14 @@ public class DataLinqController : DataLinqBaseController
     private readonly IDataLinqCodeIdentityService _dataLinqCodeIdentity;
     private readonly IDataLinqLogger _datalinqLogger;
     private readonly IDataLinqCacheTokenService _tokenService;
+    private readonly DataLinqOptions _options;
 
     public DataLinqController(ILogger<DataLinqController> logger,
                               DataLinqService datalinq,
                               IHostUrlHelper hostUrlHelper,
                               IEnumerable<IDataLinqCustomSelectArgumentsProvider> customArgumentProviders,
                               IDataLinqCacheTokenService tokenService,
+                              IOptions<DataLinqOptions> options,
                               IHostAuthenticationService hostAuthenication = null,
                               IDataLinqCodeIdentityService dataLinqCodeIdentity = null,
                               IDataLinqLogger datalinqLogger = null)
@@ -43,6 +46,7 @@ public class DataLinqController : DataLinqBaseController
         _datalinq = datalinq;
         _customArgumentProviders = customArgumentProviders;
         _tokenService = tokenService;
+        _options = options.Value;
         _hostAuthentication = hostAuthenication;
         _dataLinqCodeIdentity = dataLinqCodeIdentity;
         _datalinqLogger = datalinqLogger ?? new DataLinqNullLogger();
@@ -170,7 +174,9 @@ public class DataLinqController : DataLinqBaseController
                     IncludedJsLibraries = (endPointQueryView.IncludedJsLibraries ?? JsLibrary.LegacyDefaultNames).Split(','),
                     PDFReportMode = endPointQueryView.PDFReportMode,
                     PDFCompatibilityNotice = endPointQueryView.PDFCompatibilityNotice,
-                    PDFReportEditing = endPointQueryView.PDFReportEditing
+                    PDFReportEditing = endPointQueryView.PDFReportEditing &&
+                                            (_options.EnvironmentType == DataLinq.Core.DataLinqEnvironmentType.Test ||
+                                             _options.EnvironmentType == DataLinq.Core.DataLinqEnvironmentType.Development)
                 });
             }
         }
