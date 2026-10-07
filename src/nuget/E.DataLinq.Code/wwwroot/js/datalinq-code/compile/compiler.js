@@ -6,6 +6,191 @@
  */
 window.dataLinqCode = window.dataLinqCode || window.parent.dataLinqCode;
 
+/**
+ * Shared results panel: summary chips, filter, search and a grouped, scrollable list.
+ * Errors are pinned to the top, the running item is always visible.
+ */
+datalinqResultsPanel = function ($output, title, total, onItemClick) {
+    var items = {};
+    var counts = { ok: 0, error: 0 };
+    var filter = 'all';
+    var search = '';
+
+    $output.empty().addClass('datalinq-results-host');
+
+    var $panel = $("<div>").addClass('datalinq-results').appendTo($output);
+    var $header = $("<div>").addClass('datalinq-results-header').appendTo($panel);
+
+    var $titleRow = $("<div>").addClass('datalinq-results-title-row').appendTo($header);
+    $("<div>").addClass('datalinq-results-title').text(title).appendTo($titleRow);
+    var $state = $("<div>").addClass('datalinq-results-state running').text('Running…').appendTo($titleRow);
+
+    var $bar = $("<div>").addClass('datalinq-results-bar').appendTo($header);
+    var $barOk = $("<div>").addClass('ok').appendTo($bar);
+    var $barErr = $("<div>").addClass('error').appendTo($bar);
+
+    var $toolbar = $("<div>").addClass('datalinq-results-toolbar').appendTo($header);
+    var $chips = $("<div>").addClass('datalinq-results-chips').appendTo($toolbar);
+
+    var chip = function (key, label) {
+        var $c = $("<button type='button'>").addClass('datalinq-results-chip ' + key).attr('data-filter', key)
+            .append($("<span>").addClass('label').text(label))
+            .append($("<span>").addClass('count').text('0'))
+            .appendTo($chips)
+            .on('click', function () {
+                filter = key;
+                $chips.children().removeClass('active');
+                $(this).addClass('active');
+                applyFilter();
+            });
+        return $c;
+    };
+    var $chipAll = chip('all', 'All').addClass('active');
+    var $chipErr = chip('error', 'Errors');
+    var $chipOk = chip('ok', 'OK');
+    var $chipPending = chip('pending', 'Pending');
+
+    $("<input type='search' placeholder='Filter by name…'>").addClass('datalinq-results-search')
+        .appendTo($toolbar)
+        .on('input', function () {
+            search = ($(this).val() || '').toLowerCase();
+            applyFilter();
+        });
+
+    var $list = $("<div>").addClass('datalinq-results-list').appendTo($panel);
+    var $groupError = $("<div>").addClass('datalinq-results-group error').appendTo($list);
+    var $groupOk = $("<div>").addClass('datalinq-results-group ok').appendTo($list);
+    var $groupRunning = $("<div>").addClass('datalinq-results-group running').appendTo($list);
+    var $empty = $("<div>").addClass('datalinq-results-empty').text('No matching items').hide().appendTo($list);
+
+    var followTail = true;
+    $list.on('scroll', function () {
+        followTail = this.scrollHeight - this.scrollTop - this.clientHeight < 40;
+    });
+    var autoScroll = function () {
+        if (followTail) {
+            $list.scrollTop($list[0].scrollHeight);
+        }
+    };
+
+    var refresh = function () {
+        var done = counts.ok + counts.error;
+        $chipAll.find('.count').text(total);
+        $chipOk.find('.count').text(counts.ok);
+        $chipErr.find('.count').text(counts.error);
+        $chipPending.find('.count').text(Math.max(0, total - done));
+        $barOk.css('width', (total ? counts.ok / total * 100 : 0) + '%');
+        $barErr.css('width', (total ? counts.error / total * 100 : 0) + '%');
+        $chipErr.toggleClass('has-items', counts.error > 0);
+    };
+
+    var matches = function ($item) {
+        var status = $item.attr('data-status');
+        if (filter === 'pending' && status !== 'pending') return false;
+        if (filter === 'error' && status !== 'error') return false;
+        if (filter === 'ok' && status !== 'ok') return false;
+        if (search && $item.attr('data-id').toLowerCase().indexOf(search) < 0) return false;
+        return true;
+    };
+
+    var applyFilter = function () {
+        var visible = 0;
+        $.each(items, function (id, $item) {
+            var m = matches($item);
+            $item.toggle(m);
+            if (m) visible++;
+        });
+        $empty.toggle(visible === 0 && Object.keys(items).length > 0);
+    };
+
+    var renderName = function (id) {
+        var $name = $("<div>").addClass('datalinq-results-name');
+        $.each(id.split('@'), function (i, part) {
+            if (i > 0) $("<span>").addClass('sep').text('›').appendTo($name);
+            $("<span>").addClass('part part-' + i).text(part).appendTo($name);
+        });
+        return $name;
+    };
+
+    this.start = function (id) {
+        var $item = $("<div>")
+            .addClass('datalinq-results-item pending')
+            .attr('data-id', id)
+            .attr('data-status', 'pending')
+            .append($("<span>").addClass('icon'))
+            .append(renderName(id))
+            .append($("<span>").addClass('badge').text('Running'))
+            .appendTo($groupRunning);
+
+        if (onItemClick) {
+            $item.addClass('clickable').attr('title', 'Open ' + id).on('click', function (e) {
+                if ($(e.target).closest('.datalinq-results-details').length) return;
+                onItemClick(id);
+            });
+        }
+
+        items[id] = $item;
+        $item.toggle(matches($item));
+        refresh();
+        autoScroll();
+    };
+
+    this.success = function (id, label) {
+        var $item = items[id];
+        if (!$item) return;
+        counts.ok++;
+        $item.removeClass('pending').addClass('ok').attr('data-status', 'ok');
+        $item.find('.badge').text(label || 'OK');
+        $item.appendTo($groupOk);
+        $item.toggle(matches($item));
+        refresh();
+    };
+
+    this.error = function (id, label, messages) {
+        var $item = items[id];
+        if (!$item) return;
+        counts.error++;
+        $item.removeClass('pending').addClass('error').attr('data-status', 'error');
+        $item.find('.badge').text(label || 'Error');
+
+        if (messages && messages.length) {
+            var $details = $("<ul>").addClass('datalinq-results-details');
+            $.each(messages, function (i, msg) {
+                $("<li>").addClass(msg.warning ? 'warning' : 'error')
+                    .append($("<span>").addClass('level').text(msg.warning ? 'WARNING' : 'ERROR'))
+                    .append($("<span>").addClass('text').text(msg.text))
+                    .appendTo($details);
+            });
+            $item.append($details);
+        }
+
+        $item.appendTo($groupError);
+        $item.toggle(matches($item));
+        refresh();
+    };
+
+    this.finish = function () {
+        $state.removeClass('running')
+            .addClass(counts.error > 0 ? 'error' : 'ok')
+            .text(counts.error > 0
+                ? counts.error + ' of ' + total + ' failed'
+                : 'All ' + total + ' passed');
+        if (counts.error > 0) {
+            $chipErr.trigger('click');
+        }
+    };
+
+    refresh();
+};
+
+var datalinqOpenDocument = function (id) {
+    var ids = id.split('@');
+    if (ids.length === 2)
+        dataLinqCode.events.fire('open-query', { endpoint: ids[0], query: ids[1] });
+    else if (ids.length === 3)
+        dataLinqCode.events.fire('open-view', { endpoint: ids[0], query: ids[1], view: ids[2] });
+};
+
 datalinqChangedDateChecker = function () {
     this.transmitter = {};
     dataLinqCode.implementEventController(this.transmitter);
@@ -59,74 +244,26 @@ datalinqChangedDateChecker = function () {
     };
 
     this.run = function ($output) {
-        $output.empty();
-
-        var $successContainer = $("<div>").addClass('datalinq-success-container');
-        var $errorContainer = $("<div>").addClass('datalinq-error-container');
-
-        $output.append($errorContainer).append($successContainer);
-
-        $successContainer.css('width', '50%');
-        $errorContainer.css('width', '50%');
+        var panel = new datalinqResultsPanel($output, 'Snapshot Status', viewDocuments.length, datalinqOpenDocument);
 
         this.transmitter.events.on('start-check', function (channel, args) {
-            var $item = $("<div>")
-                .addClass('datalinq-code-compile-item datalinq-pending')
-                .attr('data-id', args.id)
-                .text(args.id)
-                .appendTo($errorContainer) 
-                .click(function () {
-                    var ids = $(this).attr('data-id').split('@');
-                    if (ids.length == 2)
-                        dataLinqCode.events.fire('open-query', { endpoint: ids[0], query: ids[1] });
-                    else
-                        dataLinqCode.events.fire('open-view', { endpoint: ids[0], query: ids[1], view: ids[2] });
-                });
-
+            panel.start(args.id);
             me.transmitter.events.fire('progress-change', { pos: viewIndex, text: args.id });
         });
 
         this.transmitter.events.on('check-finished', function (channel, args) {
-            var $item = $output.find(".datalinq-code-compile-item[data-id='" + args.id + "']");
-
-            $item.removeClass('datalinq-pending');
-
             if (args.result === true) {
-                $item.addClass('success');
-                $item.append($("<div>").addClass('status-info').text('Up to date'));
-                $item.appendTo($successContainer); 
+                panel.success(args.id, 'Up to date');
             } else {
-                $item.addClass('has-errors');
-
-                var $ul = $("<ul>").appendTo($item);
-
-                if (!args.result) {
-                    $("<li>")
-                        .text(("Outdated"))
-                        .appendTo($ul);
-                }
+                panel.error(args.id, 'Outdated');
             }
-
-            updateContainerLayout();
 
             me.transmitter.events.fire('progress-change', { pos: viewIndex, text: '' });
         });
 
-        function updateContainerLayout() {
-            var hasSuccess = $successContainer.children().length > 0;
-            var hasErrors = $errorContainer.children().length > 0;
-
-            if (hasSuccess && hasErrors) {
-                $successContainer.css('width', '50%').show();
-                $errorContainer.css('width', '50%').show();
-            } else if (hasSuccess) {
-                $successContainer.css('width', '100%').show();
-                $errorContainer.hide();
-            } else if (hasErrors) {
-                $errorContainer.css('width', '100%').show();
-                $successContainer.hide();
-            }
-        }
+        this.transmitter.events.on('finished-progress', function () {
+            panel.finish();
+        });
 
         this.transmitter.events.fire('start-progress', { max: viewDocuments.length });
 
@@ -180,77 +317,29 @@ datalinqCodeCompiler = function () {
     }
 
     this.run = function ($output) {
-        $output.empty();
-
-        var $successContainer = $("<div>").addClass('datalinq-success-container');
-        var $errorContainer = $("<div>").addClass('datalinq-error-container');
-
-        $output.append($errorContainer).append($successContainer);
-
-        $successContainer.css('width', '50%');
-        $errorContainer.css('width', '50%');
+        var panel = new datalinqResultsPanel($output, 'Verify All Views', viewDocuments.length, datalinqOpenDocument);
 
         this.transmitter.events.on('start-compile', function (channel, args) {
-            var $item = $("<div>")
-                .addClass('datalinq-code-compile-item datalinq-pending')
-                .attr('data-id', args.id)
-                .text(args.id)
-                .appendTo($errorContainer) 
-                .click(function () {
-                    var ids = $(this).attr('data-id').split('@');
-                    dataLinqCode.events.fire('open-view', {
-                        endpoint: ids[0],
-                        query: ids[1],
-                        view: ids[2]
-                    });
-                });
-
+            panel.start(args.id);
             me.transmitter.events.fire('progress-change', { pos: viewIndex, text: args.id });
         });
 
         this.transmitter.events.on('compile-finished', function (channel, args) {
-            var $item = $output.find(".datalinq-code-compile-item[data-id='" + args.id + "']");
-
-            $item.removeClass('datalinq-pending');
-
             if (args.result.success === true) {
-                $item.addClass('success');
-                $item.append($("<div>").addClass('status-info').text('Compiled'));
-                $item.appendTo($successContainer);
+                panel.success(args.id, 'Compiled');
             } else {
-                $item.addClass('has-errors');
-
-                var $ul = $("<ul>").appendTo($item);
-
-                if (args.result.compiler_errors && args.result.compiler_errors.length > 0) {
-                    $.each(args.result.compiler_errors, function (i, error) {
-                        $("<li>")
-                            .text((error.is_warning ? "WARNING" : "ERROR") + " " + error.error_text)
-                            .appendTo($ul);
-                    });
-                }
+                var messages = $.map(args.result.compiler_errors || [], function (error) {
+                    return { warning: error.is_warning, text: error.error_text };
+                });
+                panel.error(args.id, 'Failed', messages);
             }
-
-            updateContainerLayout();
 
             me.transmitter.events.fire('progress-change', { pos: viewIndex, text: '' });
         });
 
-        function updateContainerLayout() {
-            var hasSuccess = $successContainer.children().length > 0;
-            var hasErrors = $errorContainer.children().length > 0;
-
-            if (hasSuccess && hasErrors) {
-                $successContainer.css('width', '50%').show();
-                $errorContainer.css('width', '50%').show();
-            } else if (hasSuccess) {
-                $successContainer.css('width', '100%').show();
-                $errorContainer.hide();
-            } else if (hasErrors) {
-                $errorContainer.css('width', '100%').show();
-                $successContainer.hide();
-            }
-        }
+        this.transmitter.events.on('finished-progress', function () {
+            panel.finish();
+        });
 
         this.transmitter.events.fire('start-progress', { max: viewDocuments.length });
 
@@ -307,75 +396,41 @@ datalinqEntityLoader = function (rewrite) {
     }
 
     this.run = function ($output) {
-        $output.empty();
-
-        var $successContainer = $("<div>").addClass('datalinq-success-container');
-        var $errorContainer = $("<div>").addClass('datalinq-error-container');
-
-        $output.append($errorContainer).append($successContainer);
-
-        $successContainer.css('width', '50%');
-        $errorContainer.css('width', '50%');
-
         var total = endpointDocuments.length + queryDocuments.length + viewDocuments.length;
-        var progress = 0;
+        var progress = 0, finished = 0;
+
+        var panel = new datalinqResultsPanel($output, 'Try Load All Documents', total, datalinqOpenDocument);
 
         this.transmitter.events.on('start-load', function (channel, args) {
-            var $item = $("<div>")
-                .addClass('datalinq-code-compile-item datalinq-pending')
-                .attr('data-id', args.id)
-                .text(args.id)
-                .appendTo($errorContainer);
-
+            panel.start(args.id);
             me.transmitter.events.fire('progress-change', { pos: progress++, text: args.id });
         });
 
         this.transmitter.events.on('load-finished', function (channel, args) {
-            var $item = $output.find(".datalinq-code-compile-item[data-id='" + args.id + "']");
-
-            $item.removeClass('datalinq-pending');
-
             if (args.result.success === true) {
-                $item.addClass('success');
-                $item.append($("<div>").addClass('status-info').text('Loaded'));
-                $item.appendTo($successContainer);
+                panel.success(args.id, 'Loaded');
             } else {
-                $item.addClass('has-errors');
-
-                if (args.result.error_message) {
-                    var $ul = $("<ul>").appendTo($item);
-                    $("<li>")
-                        .text("ERROR: " + args.result.error_message)
-                        .appendTo($ul);
-                }
+                panel.error(args.id, 'Failed', args.result.error_message
+                    ? [{ warning: false, text: args.result.error_message }]
+                    : []);
             }
 
-            updateContainerLayout();
-
+            finished++;
             me.transmitter.events.fire('progress-change', { pos: progress, text: '' });
 
-            if (progress === total) {
+            if (finished === total) {
                 me.transmitter.events.fire('finished-progress');
+                panel.finish();
             }
         });
 
-        function updateContainerLayout() {
-            var hasSuccess = $successContainer.children().length > 0;
-            var hasErrors = $errorContainer.children().length > 0;
-
-            if (hasSuccess && hasErrors) {
-                $successContainer.css('width', '50%').show();
-                $errorContainer.css('width', '50%').show();
-            } else if (hasSuccess) {
-                $successContainer.css('width', '100%').show();
-                $errorContainer.hide();
-            } else if (hasErrors) {
-                $errorContainer.css('width', '100%').show();
-                $successContainer.hide();
-            }
-        }
-
         this.transmitter.events.fire('start-progress', { max: total });
+
+        if (total === 0) {
+            me.transmitter.events.fire('finished-progress');
+            panel.finish();
+            return;
+        }
 
         verifyNextDocument(endpointDocuments);
         verifyNextDocument(queryDocuments);

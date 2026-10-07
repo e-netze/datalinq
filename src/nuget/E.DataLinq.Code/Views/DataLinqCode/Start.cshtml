@@ -89,16 +89,27 @@
 
         });
 
+        let _isRunning = false;
+        function startRun(runner, progressSelector) {
+            if (_isRunning) return;
+            _isRunning = true;
+            $('.datalinq-code-tiles').addClass('is-running');
+            runner.transmitter.events.on('finished-progress', function () {
+                _isRunning = false;
+                $('.datalinq-code-tiles').removeClass('is-running');
+            });
+            $(progressSelector).dataLinqCode_compile_progress({ transmitter: runner.transmitter });
+            runner.run($('.datalinq-code-output'));
+        }
+
         function compileAllViews() {
-            var compiler = new datalinqCodeCompiler();
-            $("#compiler-progress").dataLinqCode_compile_progress({ transmitter: compiler.transmitter });
-            compiler.run($('.datalinq-code-output'));
+            if (_isRunning) return;
+            startRun(new datalinqCodeCompiler(), "#compiler-progress");
         };
 
         function loadAllViews() {
-            var compiler = new datalinqEntityLoader($("#load_all_views_rewrite").is(":checked"));
-            $("#load-progress").dataLinqCode_compile_progress({ transmitter: compiler.transmitter });
-            compiler.run($('.datalinq-code-output'));
+            if (_isRunning) return;
+            startRun(new datalinqEntityLoader($("#load_all_views_rewrite").is(":checked")), "#load-progress");
         };
 
         function initializeGit()
@@ -108,9 +119,8 @@
 
         function checkGitStatus()
         {
-            var checker = new datalinqChangedDateChecker();
-            $("#changed-check-progress").dataLinqCode_compile_progress({ transmitter: checker.transmitter });
-            checker.run($('.datalinq-code-output'));
+            if (_isRunning) return;
+            startRun(new datalinqChangedDateChecker(), "#changed-check-progress");
         }
 
         let _versionClicks=0;
@@ -121,15 +131,5 @@
                 $('.datalinq-code-hidden-developer-content').removeClass('datalinq-code-hidden-developer-content');
             }
         };
-
-        const output = document.querySelector('.datalinq-code-output');
-
-        if (output) {
-          const observer = new MutationObserver(() => {
-            output.scrollTop = output.scrollHeight;
-          });
-
-          observer.observe(output, { childList: true });
-        }
     </script>
 }

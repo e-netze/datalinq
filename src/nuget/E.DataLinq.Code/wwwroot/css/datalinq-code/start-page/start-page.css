@@ -219,3 +219,258 @@
     }
 }
 
+/* Results panel (verify / load / snapshot status) */
+.datalinq-code-tiles.is-running .datalinq-code-tile {
+    cursor: progress;
+}
+
+    .datalinq-code-tiles.is-running .datalinq-code-tile:hover {
+        transform: none;
+    }
+.datalinq-code-output.datalinq-results-host {
+    overflow: hidden;
+    padding: 12px 16px;
+    box-sizing: border-box;
+}
+
+.datalinq-results {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    min-height: 0;
+    background: #2f2f2f;
+    border: 1px solid #222;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+    color: #eee;
+}
+
+.datalinq-results-header {
+    flex: 0 0 auto;
+    padding: 12px 16px 10px 16px;
+    border-bottom: 1px solid #222;
+    background: #383838;
+}
+
+.datalinq-results-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.datalinq-results-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #5badff;
+}
+
+.datalinq-results-state {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #555;
+}
+
+    .datalinq-results-state.running { background: rgba(91, 173, 255, 0.2); color: #8cc6ff; }
+    .datalinq-results-state.ok { background: rgba(76, 175, 80, 0.2); color: #8fdc92; }
+    .datalinq-results-state.error { background: rgba(244, 67, 54, 0.2); color: #ff9a92; }
+
+.datalinq-results-bar {
+    display: flex;
+    height: 6px;
+    margin: 10px 0;
+    border-radius: 3px;
+    background: #555;
+    overflow: hidden;
+}
+
+    .datalinq-results-bar > div {
+        height: 100%;
+        width: 0;
+        transition: width 0.25s ease;
+    }
+
+    .datalinq-results-bar .ok { background: #4caf50; }
+    .datalinq-results-bar .error { background: #f44336; }
+
+.datalinq-results-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.datalinq-results-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.datalinq-results-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid #555;
+    background: transparent;
+    color: #ddd;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+    .datalinq-results-chip .count {
+        min-width: 18px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: #555;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .datalinq-results-chip:hover { border-color: #5badff; }
+    .datalinq-results-chip.active { background: #5badff; border-color: #5badff; color: #fff; }
+    .datalinq-results-chip.active .count { background: rgba(0, 0, 0, 0.25); }
+    .datalinq-results-chip.error.has-items .count { background: #f44336; color: #fff; }
+    .datalinq-results-chip.ok .count { color: #8fdc92; }
+    .datalinq-results-chip.ok.active .count { color: #fff; }
+
+.datalinq-results-search {
+    flex: 0 1 240px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background: #2a2a2a;
+    color: #eee;
+    font-size: 12px;
+    outline: none;
+}
+
+    .datalinq-results-search:focus { border-color: #5badff; }
+
+.datalinq-results-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 6px 0;
+}
+
+.datalinq-results-item {
+    display: grid;
+    grid-template-columns: 20px 1fr auto;
+    align-items: center;
+    column-gap: 10px;
+    padding: 7px 16px;
+    border-left: 3px solid transparent;
+    font-size: 13px;
+}
+
+    .datalinq-results-item.clickable { cursor: pointer; }
+    .datalinq-results-item:hover { background: rgba(255, 255, 255, 0.05); }
+
+    .datalinq-results-item .icon {
+        width: 16px;
+        height: 16px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 16px 16px;
+    }
+
+    .datalinq-results-item.pending .icon { background-image: url(../../img/loader/spinning-line-black-16@1.gif); }
+    .datalinq-results-item.ok .icon { background-image: url(../../img/check_16@1.png); }
+    .datalinq-results-item.error .icon { background-image: url(../../img/warning_red_16@1.png); }
+
+    .datalinq-results-item.pending { border-left-color: #5badff; background: rgba(91, 173, 255, 0.08); }
+    .datalinq-results-item.error { border-left-color: #f44336; background: rgba(244, 67, 54, 0.08); }
+    .datalinq-results-item.ok { border-left-color: transparent; }
+
+.datalinq-results-name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+    .datalinq-results-name .part-0 { color: #aaa; }
+    .datalinq-results-name .part-1 { color: #ddd; }
+    .datalinq-results-name .part-2 { color: #fff; font-weight: 600; }
+    .datalinq-results-name .sep { color: #777; margin: 0 6px; }
+
+.datalinq-results-item .badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #444;
+    color: #ccc;
+}
+
+.datalinq-results-item.ok .badge { background: rgba(76, 175, 80, 0.2); color: #8fdc92; }
+.datalinq-results-item.error .badge { background: rgba(244, 67, 54, 0.25); color: #ff9a92; }
+
+.datalinq-results-details {
+    grid-column: 2 / 4;
+    list-style: none;
+    margin: 6px 0 2px 0;
+    padding: 0;
+    cursor: text;
+    user-select: text;
+}
+
+    .datalinq-results-details li {
+        display: flex;
+        gap: 8px;
+        padding: 4px 8px;
+        margin-top: 4px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.25);
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+        .datalinq-results-details li .level { font-weight: 700; flex: 0 0 auto; }
+        .datalinq-results-details li.error .level { color: #ff8a80; }
+        .datalinq-results-details li.warning .level { color: #ffc107; }
+
+.datalinq-results-empty {
+    padding: 20px;
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+}
+
+/* light mode */
+body.colorscheme-light .datalinq-results { background: #fff; border-color: #ddd; color: #222; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1); }
+body.colorscheme-light .datalinq-results-header { background: #f6f7f9; border-bottom-color: #e3e3e3; }
+body.colorscheme-light .datalinq-results-bar { background: #e3e3e3; }
+body.colorscheme-light .datalinq-results-chip { border-color: #ccc; color: #333; }
+body.colorscheme-light .datalinq-results-chip .count { background: #e9e9e9; }
+body.colorscheme-light .datalinq-results-chip.active { color: #fff; }
+body.colorscheme-light .datalinq-results-chip.active .count { background: rgba(0, 0, 0, 0.15); }
+body.colorscheme-light .datalinq-results-chip.ok .count { color: #2e7d32; }
+body.colorscheme-light .datalinq-results-search { background: #fff; border-color: #ccc; color: #222; }
+body.colorscheme-light .datalinq-results-item:hover { background: rgba(0, 0, 0, 0.04); }
+body.colorscheme-light .datalinq-results-name .part-0 { color: #777; }
+body.colorscheme-light .datalinq-results-name .part-1 { color: #444; }
+body.colorscheme-light .datalinq-results-name .part-2 { color: #111; }
+body.colorscheme-light .datalinq-results-item .badge { background: #eee; color: #555; }
+body.colorscheme-light .datalinq-results-item.ok .badge { color: #2e7d32; }
+body.colorscheme-light .datalinq-results-item.error .badge { color: #c62828; }
+body.colorscheme-light .datalinq-results-state.ok { color: #2e7d32; }
+body.colorscheme-light .datalinq-results-state.error { color: #c62828; }
+body.colorscheme-light .datalinq-results-state.running { color: #1e6fc2; }
+body.colorscheme-light .datalinq-results-details li { background: #fbeaea; color: #222; }
+body.colorscheme-light .datalinq-results-details li.error .level { color: #c62828; }
+body.colorscheme-light .datalinq-results-details li.warning .level { color: #b26a00; }
+
+@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+    .datalinq-results-item.ok .icon { background-image: url(../../img/check_16@2.png); }
+    .datalinq-results-item.error .icon { background-image: url(../../img/warning_red_16@2.png); }
+}
+
