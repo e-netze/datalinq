@@ -446,8 +446,9 @@ div.datalinq-filter-field-wrapper:focus {
 .datalinq-splashscreen-logo {
     width: 100%;
     height: 70px;
-    background: url(../img/datalinq-splash-logo.png) no-repeat center center;
-    background-size: contain;
+    background-color: #5badff;
+    -webkit-mask: url(../img/datalinq-splash-logo.png) no-repeat center / contain;
+    mask: url(../img/datalinq-splash-logo.png) no-repeat center / contain;
 }
 
 .datalinq-splashscreen-text {

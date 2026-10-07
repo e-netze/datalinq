@@ -19,6 +19,14 @@
         cursor:pointer;
     }
 
+    .datalinq-code-ide .datalinq-code-sidebar .datalinq-code-tree-top .datalinq-code-tee-title .datalinq-code-tee-title-logo {
+        position: absolute;
+        inset: 6px;
+        background-color: #5badff;
+        -webkit-mask: url(../../img/datalinq-splash-logo.png) no-repeat center / contain;
+        mask: url(../../img/datalinq-splash-logo.png) no-repeat center / contain;
+    }
+
     .datalinq-code-ide .datalinq-code-sidebar .datalinq-code-tree-top .datalinq-code-tree-collapse-button {
         width: 60px;
         height: 60px;
