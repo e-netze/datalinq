@@ -256,10 +256,6 @@ function createMarginGuidesControl() {
         panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
     });
 
-    if (typeof createCustomGuidesSection === 'function') {
-        panel.appendChild(createCustomGuidesSection());
-    }
-
     container.append(button, panel);
     updateButton();
     return container;
