@@ -43,6 +43,18 @@
     /*border: 2px solid #5badff;*/
 }
 
+/* Element outlines (editing mode toggle, see js/pdf-report/editing.js) */
+body.pdf-show-element-outlines .element {
+    outline: 1px dashed #5badff;
+    outline-offset: 0;
+}
+
+@media print {
+    body.pdf-show-element-outlines .element {
+        outline: none;
+    }
+}
+
 .snap-guide-line-x {
     position: absolute;
     top: 0;

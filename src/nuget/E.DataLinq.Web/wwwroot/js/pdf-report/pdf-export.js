@@ -35,6 +35,9 @@ async function onDownloadButtonClick() {
 async function downloadPDFMethod() {
     const pages = [...document.querySelectorAll('.page')];
     const restoreZoom = suspendZoom();
+    // Editing outlines never end up in the PDF.
+    const outlinesShown = document.body.classList.contains('pdf-show-element-outlines');
+    document.body.classList.remove('pdf-show-element-outlines');
 
     try {
         let completed = 0;
@@ -108,6 +111,7 @@ async function downloadPDFMethod() {
         console.error('PDF generation failed:', error);
     } finally {
         restoreZoom();
+        if (outlinesShown) document.body.classList.add('pdf-show-element-outlines');
         removeLoadingOverlay();
 
         if (window.parent !== window) {

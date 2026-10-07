@@ -421,6 +421,28 @@ function initializeEditingToolbar() {
 
     toolbar.appendChild(guidesButton);
 
+    const outlinesButton = document.createElement('button');
+    outlinesButton.type = 'button';
+    outlinesButton.className = 'pdf-editing-guides pdf-editing-outlines';
+    outlinesButton.innerHTML =
+        '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+        '<rect x="4" y="4" width="16" height="16" rx="1" stroke-dasharray="3 2"/></svg>' +
+        '<span>Element outlines</span>';
+
+    const updateOutlinesButton = () => {
+        const active = document.body.classList.contains('pdf-show-element-outlines');
+        outlinesButton.classList.toggle('active', active);
+        outlinesButton.title = active ? 'Hide draggable element outlines' : 'Show draggable element outlines';
+    };
+
+    outlinesButton.addEventListener('click', () => {
+        document.body.classList.toggle('pdf-show-element-outlines');
+        updateOutlinesButton();
+    });
+
+    toolbar.appendChild(outlinesButton);
+    updateOutlinesButton();
+
     applyMarginGuideSettings();
     toolbar.appendChild(createMarginGuidesControl());
 
