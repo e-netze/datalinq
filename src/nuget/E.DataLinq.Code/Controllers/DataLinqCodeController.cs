@@ -642,6 +642,9 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     [HttpGet]
     async public Task<IActionResult> GetFolderStructure()
     {
+        Response.Headers.CacheControl = "no-store, no-cache";
+        Response.Headers.Pragma = "no-cache";
+
         return base.JsonObject(_client == null ?
             null :
             await _client.GetFolderStructure());

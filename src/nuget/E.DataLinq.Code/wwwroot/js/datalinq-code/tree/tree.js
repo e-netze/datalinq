@@ -128,6 +128,7 @@
 
     var _folderStructure = {};
     var _foldersEnabled = true;
+    var _folderSelection = null;
 
     var parseFolderStructure = function (folderStructure) {
         if (!folderStructure || folderStructure === 'null') {
@@ -254,6 +255,9 @@
 
             dataLinqCode.ui.prompt('New folder', 'Name of the new folder:', '', function (name) {
                 _folderStructure[name] = [];
+                if (_folderSelection !== null && $.inArray(name, _folderSelection) < 0) {
+                    _folderSelection.push(name);
+                }
                 saveFolders(function () { refreshSilent($parent); });
             }, {
                 validate: function (value) {
@@ -273,6 +277,9 @@
                     renamed[key === folderName ? name : key] = _folderStructure[key];
                 }
                 _folderStructure = renamed;
+                if (_folderSelection !== null) {
+                    _folderSelection = $.map(_folderSelection, function (f) { return f === folderName ? name : f; });
+                }
                 saveFolders(function () { refreshSilent($parent); });
             }, {
                 validate: function (value) {
@@ -462,8 +469,16 @@ var refresh = function ($parent) {
 var refreshSilent = function ($parent) {
     refrehTree($parent, dataLinqCode.getEndpointSelection());
 };
-var refrehTree = function ($parent, selection) {
+var refrehTree = function ($parent, selection, folderSelection) {
     var $tree = $parent.children('.datalinq-code-tree');
+
+    if (selection == null) {
+        _folderSelection = null;
+    } else if (folderSelection !== undefined) {
+        _folderSelection = Array.isArray(folderSelection) ? folderSelection.slice() : [];
+    } else if (_folderSelection === null) {
+        _folderSelection = [];
+    }
 
     dataLinqCode.setEndpointSelection(selection);
     var isSelected = function (endPoint) {
@@ -492,7 +507,7 @@ var refrehTree = function ($parent, selection) {
                 var folderEndpoints = $.grep(_folderStructure[folderName], function (endpointName) {
                     return $.inArray(endpointName, endPoints) >= 0;
                 });
-                if (selection != null && folderEndpoints.length === 0) {
+                if (selection != null && folderEndpoints.length === 0 && $.inArray(folderName, _folderSelection) < 0) {
                     return;
                 }
 
@@ -1072,6 +1087,7 @@ var attachFolderEventHandlers = function ($folder) {
 
         var updateFolderState = function ($folderLi) {
             var $children = $folderLi.data('$children').children('.endpoint');
+            if ($children.length === 0) return;
             var checked = $children.filter('.checked').length;
             $folderLi
                 .toggleClass('checked', checked > 0 && checked === $children.length)
@@ -1101,14 +1117,11 @@ var attachFolderEventHandlers = function ($folder) {
             var folderEndpoints = $.grep(folderStructure[folderName], function (endPoint) {
                 return $.inArray(endPoint, endPoints) >= 0 && !renderedEndpoints[endPoint];
             });
-            if (folderEndpoints.length === 0) {
-                return;
-            }
-
             var $folderLi = addRow($ul, folderName, folderEndpoints.length + ' endpoint(s)', 'folder')
                 .click(function (e) {
                     e.stopPropagation();
                     var check = !$(this).hasClass('checked');
+                    $(this).toggleClass('checked', check).removeClass('partial');
                     $(this).data('$children').children('.endpoint').toggleClass('checked', check);
                     updateFolderState($(this));
                 });
@@ -1135,6 +1148,10 @@ var attachFolderEventHandlers = function ($folder) {
                 renderedEndpoints[endPoint] = true;
             });
 
+            if (folderEndpoints.length === 0 && currentSelection && _folderSelection && $.inArray(folderName, _folderSelection) >= 0) {
+                $folderLi.addClass('checked');
+            }
+
             updateFolderState($folderLi);
         });
 
@@ -1160,7 +1177,7 @@ var attachFolderEventHandlers = function ($folder) {
                     $(this).toggle(match);
                     anyChild = anyChild || match;
                 });
-                $folderLi.toggle(anyChild);
+                $folderLi.toggle(anyChild || folderMatch);
                 $children.toggle(anyChild && (!!term || !$folderLi.hasClass('collapsed')));
             });
         });
@@ -1193,8 +1210,13 @@ var attachFolderEventHandlers = function ($folder) {
                     }
                 });
 
+                var folderSelection = [];
+                $ul.children('.folder.checked, .folder.partial').each(function (i, li) {
+                    folderSelection.push($(li).children('.text').text());
+                });
+
                 $(null).dataLinq_code_modal('close');
-                refrehTree($parent, selection);
+                refrehTree($parent, selection, folderSelection);
             });
     };
 })(jQuery);
