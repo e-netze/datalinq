@@ -146,6 +146,8 @@ function initializePageNavigator() {
 
     initializeZoom(nav, () => pageList[(current || 1) - 1], saveViewState);
 
+    initializeMobileView(nav, pageList, goTo, () => current || 1);
+
     restoreViewState(pageList);
 
     let saveTimer = null;

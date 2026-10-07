@@ -163,3 +163,78 @@ body.modal-open {
 .hidden {
     display: none !important;
 }
+
+/* Phones / small screens (and the PDF mobile view): compact card that always fits the screen. */
+.modal-container {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+@media (max-width: 600px), (max-height: 600px) {
+    .modal-overlay {
+        padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+        box-sizing: border-box;
+    }
+
+    .modal-container {
+        width: 100%;
+        max-width: 480px;
+        border-radius: 12px;
+    }
+
+    .modal-logo {
+        height: 56px;
+        margin-top: 16px;
+    }
+
+    .modal-content {
+        padding: 12px 18px;
+    }
+
+        .modal-content h2 {
+            font-size: 19px;
+            margin-bottom: 10px;
+        }
+
+        .modal-content p {
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+    .browser-list {
+        padding: 12px 14px;
+        margin: 12px 0;
+    }
+
+        .browser-list h3 {
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        .browser-list li {
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+
+    .modal-buttons {
+        flex-direction: column-reverse;
+        gap: 10px;
+        padding: 4px 18px 18px;
+    }
+
+    .modal-button {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 16px;
+        transform: none;
+    }
+
+        .modal-button.decline,
+        .modal-button.accept:hover {
+            transform: none;
+        }
+}

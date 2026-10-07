@@ -13,7 +13,12 @@
  * @returns {Promise<void>} Resolves when the PDF has been generated.
  */
 async function onDownloadButtonClick() {
-    this.textContent = 'Generating PDF ...';
+    if (this.closest('.pdf-mobile-toolbar')) {
+        // Compact toolbar: no room for the text, show a spinner instead.
+        this.innerHTML = '<span class="pdf-mobile-spinner" aria-label="Generating PDF"></span>';
+    } else {
+        this.textContent = 'Generating PDF ...';
+    }
     this.disabled = true;
 
     showLoadingOverlay();

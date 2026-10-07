@@ -1,0 +1,240 @@
+/*
+ * PDF report - Mobile view (phones/tablets, see mobile-view.js).
+ */
+
+/* Screen only: these rules are more specific than print.css and must not leak into printing. */
+@media screen {
+    body.pdf-mobile-view .main {
+        padding: 8px 8px calc(80px + env(safe-area-inset-bottom)) 8px;
+    }
+
+    body.pdf-mobile-view .pages-container {
+        gap: 12px;
+    }
+}
+
+/* Busy indicator of the download button in the compact toolbar. */
+.pdf-mobile-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    box-sizing: border-box;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: pdf-mobile-spin 0.8s linear infinite;
+}
+
+@keyframes pdf-mobile-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Bottom toolbar */
+.pdf-page-navigator.pdf-mobile-toolbar {
+    left: 50%;
+    right: auto;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0;
+    padding: 4px 6px;
+    width: max-content;
+    max-width: calc(100vw - 12px);
+    box-sizing: border-box;
+    border-radius: 24px;
+    font-size: 14px;
+    touch-action: manipulation;
+}
+
+    .pdf-mobile-toolbar .pdf-nav-controls {
+        flex: none;
+        gap: 0;
+    }
+
+        .pdf-mobile-toolbar .pdf-nav-controls + .pdf-nav-controls {
+            border-left: 1px solid rgba(255, 255, 255, 0.25);
+            padding-left: 2px;
+            margin-left: 2px;
+        }
+
+    .pdf-mobile-toolbar button,
+    .pdf-mobile-toolbar .pdf-nav-prev,
+    .pdf-mobile-toolbar .pdf-nav-next,
+    .pdf-mobile-toolbar .pdf-zoom-in,
+    .pdf-mobile-toolbar .pdf-zoom-out {
+        width: 36px;
+        min-width: 0;
+        height: 40px;
+        padding: 0;
+        border: none;
+        border-radius: 20px;
+        font-size: 15px;
+    }
+
+        .pdf-mobile-toolbar button:hover {
+            background: transparent;
+        }
+
+        .pdf-mobile-toolbar button:active {
+            background: rgba(91, 173, 255, 0.6);
+        }
+
+    .pdf-mobile-toolbar .pdf-nav-input {
+        width: 2.6em;
+        height: 32px;
+        text-align: center;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .pdf-mobile-toolbar .pdf-nav-total {
+        white-space: nowrap;
+        padding: 0 4px;
+    }
+
+    .pdf-mobile-toolbar .pdf-zoom-controls .pdf-zoom-reset {
+        width: auto;
+        min-width: 44px;
+        height: 40px;
+        padding: 0 2px;
+        font-size: 12px;
+    }
+
+    .pdf-mobile-toolbar .datalinq-button-pdf {
+        flex: none;
+        width: 36px;
+        height: 40px;
+        padding: 0;
+        margin: 0;
+        transform: none;
+        background: transparent;
+        color: #fff;
+    }
+
+        .pdf-mobile-toolbar .pdf-zoom-controls + .datalinq-button-pdf {
+            width: 41px;
+            margin-left: 2px;
+            padding-left: 4px;
+            border-left: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 0 20px 20px 0;
+        }
+
+        .pdf-mobile-toolbar .datalinq-button-pdf + .datalinq-button-pdf {
+            margin-top: 0;
+        }
+
+        .pdf-mobile-toolbar .datalinq-button-pdf span:not(.pdf-mobile-spinner) {
+            display: none;
+        }
+
+        .pdf-mobile-toolbar .datalinq-button-pdf svg {
+            width: 18px;
+            height: 18px;
+        }
+
+/* Narrow phones: drop the zoom +/- buttons (pinch and the fit button remain). */
+@media (max-width: 360px) {
+    .pdf-mobile-toolbar .pdf-zoom-in,
+    .pdf-mobile-toolbar .pdf-zoom-out {
+        display: none;
+    }
+}
+
+/* Go-to-page bottom sheet */
+.pdf-mobile-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99995;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+    .pdf-mobile-sheet-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+.pdf-mobile-sheet {
+    width: 100%;
+    max-width: 480px;
+    box-sizing: border-box;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    background: rgb(40, 44, 52);
+    color: #fff;
+    border-radius: 16px 16px 0 0;
+    font-family: Verdana, Tahoma, Arial, sans-serif;
+    transform: translateY(100%);
+    transition: transform 0.2s ease;
+}
+
+.pdf-mobile-sheet-backdrop.open .pdf-mobile-sheet {
+    transform: translateY(0);
+}
+
+.pdf-mobile-sheet-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.pdf-mobile-sheet-form,
+.pdf-mobile-sheet-shortcuts {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pdf-mobile-sheet-shortcuts {
+    margin-top: 12px;
+}
+
+.pdf-mobile-sheet-input {
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    box-sizing: border-box;
+    padding: 0 12px;
+    font-size: 18px; /* >= 16px prevents iOS auto-zoom on focus */
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+}
+
+.pdf-mobile-sheet-total {
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+.pdf-mobile-sheet button {
+    height: 44px;
+    padding: 0 16px;
+    font-size: 15px;
+    color: #fff;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+}
+
+.pdf-mobile-sheet .pdf-mobile-sheet-go {
+    background: #5badff;
+    border-color: #5badff;
+}
+
+.pdf-mobile-sheet-shortcuts button {
+    flex: 1;
+}
+
+@media print {
+    .pdf-mobile-sheet-backdrop {
+        display: none !important;
+    }
+}
