@@ -10,6 +10,7 @@
  *       defaultText: 'New paragraph',
  *       create: function (text) { return htmlElement; },   // content of the new .element
  *       textTarget: function (element) { return node|null; } // editable text node of an existing element
+ *       formatting: { inline: true, block: true }            // optional, rich text toolbar (see text-format.js)
  *   });
  *
  *   pdfEditContextMenu.register({
@@ -21,7 +22,8 @@
  *   });
  *
  * New elements are inserted into the view source by the DataLinq Code editor
- * (element.add -> element.added / element.add-failed); text edits are sent as element.text.
+ * (element.add -> element.added / element.add-failed); text edits are sent as element.text
+ * (with formatting: additionally html (allow-listed markup), style (block styles) and format: 1).
  * The preview only sends the type id and plain text; the IDE builds the Razor source.
  *
  * Only included by Report.cshtml when editing mode is on (Development/Test only).
@@ -133,6 +135,7 @@ window.pdfEditContextMenu = (function () {
 
 (function () {
     const MAX_TEXT_LENGTH = 4000;
+    const MAX_HTML_LENGTH = 20000;
 
     // ---- helpers --------------------------------------------------------------------------
 
@@ -332,6 +335,7 @@ window.pdfEditContextMenu = (function () {
         node.childNodes.forEach(n => {
             if (n.nodeName === 'BR') text += '\n';
             else if (n.nodeType === Node.ELEMENT_NODE && /^(DIV|P)$/.test(n.nodeName)) text += '\n' + readText(n);
+            else if (n.nodeType === Node.ELEMENT_NODE) text += readText(n);
             else text += n.textContent;
         });
         return text;
@@ -359,7 +363,24 @@ window.pdfEditContextMenu = (function () {
         const node = found.node;
         if (node.isContentEditable) return;
 
+        const formatting = found.type.formatting && window.pdfEditTextFormat ? found.type.formatting : null;
+        const formatKey = () => JSON.stringify({
+            html: pdfEditTextFormat.serialize(node),
+            style: pdfEditTextFormat.getBlockStyle(node)
+        });
+
         const originalText = normalizeText(readText(node));
+        const originalHtml = node.innerHTML;
+        const originalStyle = node.getAttribute('style');
+        const originalFormat = formatting ? formatKey() : null;
+        let finished = false;
+
+        const restore = function () {
+            node.innerHTML = originalHtml;
+            if (originalStyle === null) node.removeAttribute('style');
+            else node.setAttribute('style', originalStyle);
+        };
+
         node.setAttribute('contenteditable', 'true');
         node.setAttribute('spellcheck', 'false');
         element.classList.add('pdf-edit-text-editing');
@@ -372,6 +393,9 @@ window.pdfEditContextMenu = (function () {
         selection.addRange(range);
 
         const finish = function (commit) {
+            if (finished) return;
+            finished = true;
+            if (formatting) pdfEditTextFormat.toolbar.detach();
             node.removeEventListener('keydown', onKeyDown);
             node.removeEventListener('blur', onBlur);
             node.removeAttribute('contenteditable');
@@ -379,21 +403,41 @@ window.pdfEditContextMenu = (function () {
             element.classList.remove('pdf-edit-text-editing');
 
             const text = normalizeText(readText(node));
-            if (!commit || !text || text === originalText) {
-                writeText(node, originalText);
-                return;
-            }
-            writeText(node, text);
-
-            const index = parseInt(element.getAttribute('data-dl-edit-index'), 10);
-            if (!Number.isInteger(index)) return;
-
-            bridge.send('element.text', {
-                index: index,
+            const payload = {
+                index: parseInt(element.getAttribute('data-dl-edit-index'), 10),
                 originalX: parseFloat(element.getAttribute('data-dl-edit-ox')) || 0,
                 originalY: parseFloat(element.getAttribute('data-dl-edit-oy')) || 0,
                 text: text
-            });
+            };
+
+            if (formatting) {
+                if (!commit || !text) {
+                    restore();
+                    return;
+                }
+                pdfEditTextFormat.sanitize(node);
+                if (formatKey() === originalFormat) {
+                    restore();
+                    return;
+                }
+                payload.html = node.innerHTML;
+                payload.style = pdfEditTextFormat.getBlockStyle(node);
+                payload.format = 1;
+                if (payload.html.length > MAX_HTML_LENGTH) {
+                    restore();
+                    notify('The formatted text is too long.');
+                    return;
+                }
+            } else {
+                if (!commit || !text || text === originalText) {
+                    writeText(node, originalText);
+                    return;
+                }
+                writeText(node, text);
+            }
+
+            if (!Number.isInteger(payload.index)) return;
+            bridge.send('element.text', payload);
         };
 
         const onKeyDown = function (e) {
@@ -410,10 +454,22 @@ window.pdfEditContextMenu = (function () {
                 finish(false);
             }
         };
-        const onBlur = () => finish(true);
+        const onBlur = function (e) {
+            // focus moved into the formatting toolbar (select, color picker) -> keep editing
+            if (formatting && pdfEditTextFormat.toolbar.contains(e.relatedTarget)) return;
+            finish(true);
+        };
 
         node.addEventListener('keydown', onKeyDown);
         node.addEventListener('blur', onBlur);
+
+        if (formatting) {
+            pdfEditTextFormat.toolbar.attach(node, element, {
+                formatting: formatting,
+                onLeave: () => finish(true),
+                onCancel: () => finish(false)
+            });
+        }
     };
 
     document.addEventListener('dblclick', function (e) {

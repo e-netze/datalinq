@@ -167,6 +167,7 @@
 
     var ELEMENT_TYPE = /^[a-z][a-z0-9-]{0,31}$/;
     var MAX_TEXT_LENGTH = 4000;
+    var MAX_HTML_LENGTH = 20000;
 
     var isValidText = function (text) {
         return typeof text === 'string' && text.length <= MAX_TEXT_LENGTH;
@@ -220,12 +221,27 @@
             return;
         }
 
+        // optional formatting (format 1): html = allow-listed markup, style = block styles
+        var html = null, style = null;
+        if (payload.format === 1 && typeof payload.html === 'string' && payload.html.length <= MAX_HTML_LENGTH) {
+            html = payload.html;
+            if (payload.style && typeof payload.style === 'object' && !Array.isArray(payload.style)) {
+                style = {};
+                Object.keys(payload.style).slice(0, 20).forEach(function (key) {
+                    var value = payload.style[key];
+                    if (typeof value === 'string' && value.length <= 200) style[key] = value;
+                });
+            }
+        }
+
         dataLinqCode.events.fire('pdf-element-text', {
             id: ctx.viewId,
             index: payload.index,
             originalX: payload.originalX,
             originalY: payload.originalY,
-            text: payload.text
+            text: payload.text,
+            html: html,
+            style: style
         });
     });
 

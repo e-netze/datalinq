@@ -131,6 +131,88 @@ body.pdf-edit-placing .page * {
     }
 }
 
+/* Rich text formatting toolbar (see js/pdf-report/text-format.js) */
+.pdf-edit-format-toolbar {
+    position: fixed;
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    font: 13px sans-serif;
+    color: #333;
+    white-space: nowrap;
+}
+
+    .pdf-edit-format-toolbar button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 4px;
+        border: none;
+        border-radius: 3px;
+        background: none;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+    }
+
+        .pdf-edit-format-toolbar button:hover {
+            background: #e8f2ff;
+        }
+
+        .pdf-edit-format-toolbar button.active {
+            background: #cfe4ff;
+        }
+
+    .pdf-edit-format-toolbar select {
+        height: 24px;
+        font: 12px sans-serif;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        background: #fff;
+    }
+
+.pdf-edit-format-separator {
+    width: 1px;
+    height: 18px;
+    margin: 0 3px;
+    background: #ddd;
+}
+
+.pdf-edit-format-color {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+}
+
+    .pdf-edit-format-color input[type="color"] {
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        background: none;
+        cursor: pointer;
+    }
+
+    .pdf-edit-format-color button {
+        min-width: 16px;
+        padding: 0 2px;
+    }
+
+@media print {
+    .pdf-edit-format-toolbar {
+        display: none !important;
+    }
+}
+
 @media print {
     body.pdf-show-element-outlines .element {
         outline: none;

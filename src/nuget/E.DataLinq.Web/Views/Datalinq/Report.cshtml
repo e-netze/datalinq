@@ -154,16 +154,22 @@ ______      _        _     _
 @if (Model.PDFReportEditing)
 {
     <link href="@(ViewData["contentRootUrl"])/css/datalinq/pdf-report/edit-dialog.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
-    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/margin-guides.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/custom-guides.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/edit-bridge.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/add-elements.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/edit-dialog.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/edit-actions.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/tools/new-page.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/tools/report-options.js?@(DataLinqVersion.JsVersion)"></script>
-    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/tools/paragraph.js?@(DataLinqVersion.JsVersion)"></script>
-        <script src="@(ViewData["contentRootUrl"])/js/pdf-report/tools/heading.js?@(DataLinqVersion.JsVersion)"></script>
+    @* PDF editing scripts (classic scripts, shared global scope); the order matters (editing.js last). *@
+    @foreach (var pdfEditScript in new[] {
+        "margin-guides.js",
+        "custom-guides.js",
+        "edit-bridge.js",
+        "text-format.js",
+        "add-elements.js",
+        "edit-dialog.js",
+        "edit-actions.js",
+        "tools/new-page.js",
+        "tools/report-options.js",
+        "tools/paragraph.js",
+        "tools/heading.js" })
+    {
+        <script src="@(ViewData["contentRootUrl"])/js/pdf-report/@(pdfEditScript)?@(DataLinqVersion.JsVersion)"></script>
+    }
     <script src="@(ViewData["contentRootUrl"])/js/pdf-report/editing.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
 }
 

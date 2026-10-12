@@ -309,7 +309,26 @@ dataLinqCodeEditor = new function () {
             return;
         }
 
-        var target = pdfDraggableSource.findText(_editor.getModel().getValue(), args);
+        var source = _editor.getModel().getValue();
+
+        // formatted text (bold, colors, ...) -> replace the whole text element (opening tag + content)
+        if (typeof args.html === 'string' && typeof pdfRichText !== 'undefined') {
+            var block = pdfDraggableSource.findFormattedText(source, args);
+            var attributes = block ? pdfRichText.mergeStyleAttribute(block.attributes, args.style) : null;
+            var content = pdfRichText.toSource(args.html);
+            if (block && attributes !== null && content) {
+                _applyPdfEdit(block.start, block.innerEnd, '<' + block.tag + attributes + '>' + content);
+                return;
+            }
+            var hasStyle = args.style && Object.keys(args.style).length > 0;
+            if (hasStyle || /<(strong|em|u|s|span)\b/i.test(content)) {
+                dataLinqCode.ui.alert('PDF editing mode',
+                    'Could not apply the formatting: the text element was not found in the source or its tag contains Razor code.');
+                return;
+            }
+        }
+
+        var target = pdfDraggableSource.findText(source, args);
         if (!target) {
             dataLinqCode.ui.alert('PDF editing mode',
                 'Could not find the matching plain text of the element in the source (it may have been edited since the last run or contains Razor code).');

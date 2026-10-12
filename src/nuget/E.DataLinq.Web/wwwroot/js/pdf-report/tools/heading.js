@@ -20,6 +20,8 @@
             variantLabel: 'H' + level,
             icon: icon,
             defaultText: 'New heading',
+            // rich text toolbar while editing (see text-format.js)
+            formatting: { inline: true, block: true },
             // item of the level picker: "Heading 1" rendered at (scaled) heading size
             preview: function () {
                 const span = document.createElement('span');
@@ -36,7 +38,7 @@
             textTarget: function (element) {
                 const children = element.children;
                 return children.length === 1 && children[0].tagName === tag &&
-                    Array.from(children[0].children).every(c => c.tagName === 'BR')
+                    pdfEditTextFormat.isFormattedTextNode(children[0])
                     ? children[0]
                     : null;
             }

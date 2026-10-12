@@ -311,4 +311,35 @@ var pdfDraggableSource = new function () {
         }
         return null;
     };
+
+    /**
+     * Finds the formatted text element inside a draggable (template.formattedPattern:
+     * group 1 = tag name, group 2 = attributes, group 3 = allow-listed inner content).
+     * @param {string} source view source
+     * @param {{index:number, originalX:number, originalY:number}} args
+     * @returns {{start:number, innerEnd:number, tag:string, attributes:string}|null}
+     */
+    this.findFormattedText = function (source, args) {
+        var call = this.findCall(source, args);
+        var end = call ? nthMatch(endDraggablePattern, source, 0, call.argsEnd) : null;
+        if (!end) {
+            return null;
+        }
+
+        var body = source.substring(call.argsEnd, end.index);
+        for (var type in elementTemplates) {
+            var pattern = elementTemplates[type].formattedPattern;
+            var m = pattern ? pattern.exec(body) : null;
+            if (m) {
+                var start = call.argsEnd + m.index;
+                return {
+                    start: start,
+                    innerEnd: start + m[0].length - ('</' + m[1] + '>').length,
+                    tag: m[1],
+                    attributes: m[2] || ''
+                };
+            }
+        }
+        return null;
+    };
 }();
