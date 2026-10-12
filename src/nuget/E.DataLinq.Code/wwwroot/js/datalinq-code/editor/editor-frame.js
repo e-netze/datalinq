@@ -178,6 +178,11 @@ dataLinqCodeEditor = new function () {
         dataLinqCode.events.on('before-run-document', _event_before_run_document);
         dataLinqCode.events.on('destroy-editor', _event_destroy_editor);
         dataLinqCode.events.on('theme-changed', _event_theme_changed, this);
+        dataLinqCode.events.on('pdf-draggable-moved', _event_pdf_draggable_moved);
+        dataLinqCode.events.on('pdf-element-add', _event_pdf_element_add);
+        dataLinqCode.events.on('pdf-element-text', _event_pdf_element_text);
+        dataLinqCode.events.on('pdf-element-delete', _event_pdf_element_delete);
+        dataLinqCode.events.on('pdf-source-action', _event_pdf_source_action);
 
         dataLinqCode.bindDocumentEvents(window.document);
 
@@ -219,11 +224,146 @@ dataLinqCodeEditor = new function () {
             dataLinqCode.events.off('verify-document', _event_verify_document);
             dataLinqCode.events.off('before-run-document', _event_before_run_document);
             dataLinqCode.events.off('theme-changed', _event_theme_changed);
+            dataLinqCode.events.off('pdf-draggable-moved', _event_pdf_draggable_moved);
+            dataLinqCode.events.off('pdf-element-add', _event_pdf_element_add);
+            dataLinqCode.events.off('pdf-element-text', _event_pdf_element_text);
+            dataLinqCode.events.off('pdf-element-delete', _event_pdf_element_delete);
+            dataLinqCode.events.off('pdf-source-action', _event_pdf_source_action);
             //dataLinqCode.events.off('destroy-editor', _event_destroy_editor);
 
             _id = null;
         }
     }
+
+    // PDF editing mode: an element was dragged in the live preview -> update its helper call.
+    var _event_pdf_draggable_moved = function (channel, args) {
+        if (!_editor || !args || args.id !== _id) {
+            return;
+        }
+        if (!$("input[type='checkbox'][name='PDFReportEditing']").prop('checked')) {
+            return;
+        }
+
+        var model = _editor.getModel();
+        var call = pdfDraggableSource.findCall(model.getValue(), args);
+        if (!call) {
+            dataLinqCode.ui.alert('PDF editing mode',
+                'Could not find the matching draggable in the source (it may have been edited since the last run). ' +
+                'New position: x: ' + pdfDraggableSource.formatNumber(args.x) + ', y: ' + pdfDraggableSource.formatNumber(args.y));
+            return;
+        }
+
+        var start = model.getPositionAt(call.argsStart), end = model.getPositionAt(call.argsEnd);
+        var range = new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column);
+        var text = 'x: ' + pdfDraggableSource.formatNumber(args.x) + ', y: ' + pdfDraggableSource.formatNumber(args.y);
+
+        _editor.pushUndoStop();
+        _editor.executeEdits('pdf-editing-mode', [{ range: range, text: text, forceMoveMarkers: true }]);
+        _editor.pushUndoStop();
+
+        _editor.revealLineInCenterIfOutsideViewport(start.lineNumber);
+    };
+
+    var _isPdfEditingOn = function () {
+        return $("input[type='checkbox'][name='PDFReportEditing']").prop('checked');
+    };
+
+    var _applyPdfEdit = function (offsetStart, offsetEnd, text) {
+        var model = _editor.getModel();
+        var start = model.getPositionAt(offsetStart), end = model.getPositionAt(offsetEnd);
+
+        _editor.pushUndoStop();
+        _editor.executeEdits('pdf-editing-mode', [{
+            range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+            text: text,
+            forceMoveMarkers: true
+        }]);
+        _editor.pushUndoStop();
+
+        _editor.revealLineInCenterIfOutsideViewport(start.lineNumber);
+    };
+
+    // PDF editing mode: an element (paragraph, ...) was added in the live preview -> insert its source.
+    var _event_pdf_element_add = function (channel, args) {
+        if (!_editor || !args || args.id !== _id || !_isPdfEditingOn()) {
+            return;
+        }
+        args.handled = true;
+
+        var result = { id: args.id, requestId: args.requestId, success: false };
+        var insert = pdfDraggableSource.buildInsert(_editor.getModel().getValue(), args);
+        if (!insert) {
+            result.message = 'Could not find the matching page (EndPage) in the source or the element type is not supported.';
+        } else {
+            _applyPdfEdit(insert.offset, insert.offset, insert.text);
+            result.success = true;
+            result.index = insert.index;
+        }
+
+        dataLinqCode.events.fire('pdf-element-add-result', result);
+    };
+
+    // PDF editing mode: the text of an element was edited in the live preview -> replace it in the source.
+    var _event_pdf_element_text = function (channel, args) {
+        if (!_editor || !args || args.id !== _id || !_isPdfEditingOn()) {
+            return;
+        }
+
+        var target = pdfDraggableSource.findText(_editor.getModel().getValue(), args);
+        if (!target) {
+            dataLinqCode.ui.alert('PDF editing mode',
+                'Could not find the matching plain text of the element in the source (it may have been edited since the last run or contains Razor code).');
+            return;
+        }
+
+        _applyPdfEdit(target.start, target.end, pdfDraggableSource.escapeText(args.text));
+    };
+
+    // PDF editing mode: generic source action (new page, ...) registered by pdf-editing/tools/*.js.
+    var _event_pdf_source_action = function (channel, args) {
+        if (!_editor || !args || args.id !== _id || !_isPdfEditingOn()) {
+            return;
+        }
+        args.handled = true;
+
+        var result = { id: args.id, requestId: args.requestId, success: false };
+        var action = pdfDraggableSource.getAction(args.action);
+        var edit = null;
+        try {
+            edit = action ? action(_editor.getModel().getValue(), args.args) : null;
+        } catch (e) {
+            console.error('PDF editing mode: source action failed', args.action, e);
+        }
+
+        if (edit && typeof edit.text === 'string') {
+            _applyPdfEdit(edit.start, edit.end, edit.text);
+            result.success = true;
+        } else if (edit && edit.data && typeof edit.data === 'object') {
+            result.data = edit.data;
+            result.success = true;
+        } else {
+            result.message = (edit && edit.message) ||
+                (action ? 'The action is not supported.' : 'Unknown source action \'' + args.action + '\' (reload DataLinq Code to load the latest editing tools).');
+        }
+
+        dataLinqCode.events.fire('pdf-source-action-result', result);
+    };
+
+    // PDF editing mode: an element was deleted in the live preview
+    var _event_pdf_element_delete = function (channel, args) {
+        if (!_editor || !args || args.id !== _id || !_isPdfEditingOn()) {
+            return;
+        }
+
+        var target = pdfDraggableSource.findElement(_editor.getModel().getValue(), args);
+        if (!target) {
+            dataLinqCode.ui.alert('PDF editing mode',
+                'Could not find the matching draggable in the source (it may have been edited since the last run).');
+            return;
+        }
+
+        _applyPdfEdit(target.start, target.end, '');
+    };
 
     var _event_theme_changed = function (channel, args) {
         if (_editor) {

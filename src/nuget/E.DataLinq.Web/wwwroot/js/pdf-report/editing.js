@@ -2,8 +2,8 @@
  * PDF report editing mode (client side).
  *
  * Enables drag-and-drop positioning of @DLH.NewPdfElement blocks with optional
- * snapping (to page-center guides or to other elements) and a right-click action
- * that copies an element's coordinates as a ready-to-paste helper call.
+ * snapping (to page-center guides or to other elements). New positions are sent
+ * to the DataLinq Code editor by edit-bridge.js.
  *
  * Only included by Report.cshtml when editing mode is on; its presence is what
  * isPdfReportEditingMode (editing-mode.js) checks for.
@@ -15,15 +15,34 @@ const SNAP_THRESHOLD = 15;
 // Wait until the DataLinq core client-side logic has finished before wiring up editing.
 dataLinq.events.on('onpageloaded', function () {
 
-    // Drag-and-drop + snapping for each @DLH.NewPdfElement on the page.
-    const elements = document.querySelectorAll('.element');
+    initializeEditingToolbar();
 
-    elements.forEach(element => {
+    // Drag-and-drop + snapping for each draggable on the page (see enablePdfElementDragging).
+    document.querySelectorAll('.element').forEach(element => {
+        try {
+            enablePdfElementDragging(element);
+        } catch (e) {
+            console.error('PDF editing mode: could not enable dragging', element, e);
+        }
+    });
+});
+
+/**
+ * Enables drag-and-drop + snapping for one draggable (.element). Also used for elements
+ * created at runtime (see add-elements.js).
+ * @param {HTMLElement} element The draggable.
+ * @returns {void}
+ */
+function enablePdfElementDragging(element) {
+        if (element.dataset.dlDragEnabled) return;
+        element.dataset.dlDragEnabled = 'true';
+
         let isDragging = false;
         let startX, startY;
         let initialX = 0, initialY = 0;
 
         const page = element.closest('.page');
+        if (!page) return;
 
         let snapLineX = document.createElement('div');
         snapLineX.className = 'snap-guide-line-x';
@@ -41,6 +60,9 @@ dataLinq.events.on('onpageloaded', function () {
          * @returns {void}
          */
         function startDrag(e) {
+            // Only left button; no dragging while text is being edited (see add-elements.js).
+            if (e.button !== 0 || element.querySelector('[contenteditable="true"]')) return;
+
             isDragging = true;
             element.classList.add('dragging');
 
@@ -54,6 +76,10 @@ dataLinq.events.on('onpageloaded', function () {
 
             document.addEventListener('mousemove', drag);
             document.addEventListener('mouseup', stopDrag);
+
+            // preventDefault() below also prevents the default focus change, so focus the
+            // report explicitly (e.g. to receive Ctrl+Z when embedded in the live preview).
+            window.focus();
 
             e.preventDefault();
         }
@@ -308,78 +334,41 @@ dataLinq.events.on('onpageloaded', function () {
             hideSnapGuides();
             document.removeEventListener('mousemove', drag);
             document.removeEventListener('mouseup', stopDrag);
+
+            // Notify listeners (e.g. edit-bridge.js -> DataLinq Code editor) about the new position.
+            const matrix = new DOMMatrix(window.getComputedStyle(element).transform);
+            if (matrix.m41 !== initialX || matrix.m42 !== initialY) {
+                element.dispatchEvent(new CustomEvent('datalinq-pdf:drag-end', { bubbles: true }));
+            }
         }
-    });
+}
 
-    // Right-click a @DLH.NewPdfElement to copy its coordinates as a helper call.
-    document.addEventListener('contextmenu', function (e) {
-        const element = e.target.closest('.element');
+const EDITING_TOOLBAR_STORAGE_KEY = 'datalinq-pdf-editing-toolbar:' + window.location.pathname;
 
-        if (element) {
-            e.preventDefault();
-
-            const x = element.getAttribute('data-x');
-            const y = element.getAttribute('data-y');
-
-            const textToCopy = `@PDF.NewDraggable(x: ${x}, y: ${y})`;
-
-            const copied = navigator.clipboard && window.isSecureContext
-                ? navigator.clipboard.writeText(textToCopy)
-                : Promise.reject();
-
-            copied.catch(() => {
-                // Fallback for embedded frames (e.g. the live preview) without clipboard permission.
-                if (!dataLinq.copyToClipboard(textToCopy)) throw new Error('copy failed');
-            }).then(() => {
-                showToast('Copied!', e.clientX, e.clientY);
-            }).catch(() => {
-                showToast('Failed to copy element location!', e.clientX, e.clientY);
-            });
-        }
-    });
-
-    /**
-     * Shows a short-lived toast message near the mouse position.
-     * @param {string} message Text to show.
-     * @param {number} mouseX Client x position.
-     * @param {number} mouseY Client y position.
-     * @returns {void}
-     */
-    function showToast(message, mouseX, mouseY) {
-        const toast = document.createElement('div');
-        toast.textContent = message;
-        toast.style.cssText = `
-        position: fixed;
-        left: ${mouseX}px;
-        top: ${mouseY}px;
-        background-color: #333;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 4px;
-        font-size: 14px;
-        z-index: 10000;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        transform: translate(-50%, -100%);
-        margin-top: -10px;
-        pointer-events: none;
-    `;
-
-        document.body.appendChild(toast);
-
-        setTimeout(() => {
-            toast.style.opacity = '1';
-        }, 10);
-
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => {
-                document.body.removeChild(toast);
-            }, 300);
-        }, 1000);
+/**
+ * Loads the toggle state of the editing toolbar (center guides, element outlines), kept
+ * per report in sessionStorage so it survives live-preview reloads.
+ * @returns {{centerGuides?: boolean, outlines?: boolean}}
+ */
+function loadEditingToolbarState() {
+    try {
+        const stored = JSON.parse(sessionStorage.getItem(EDITING_TOOLBAR_STORAGE_KEY));
+        return stored && typeof stored === 'object' ? stored : {};
+    } catch {
+        return {};
     }
-    initializeEditingToolbar();
-});
+}
+
+/**
+ * Merges the given values into the stored toggle state.
+ * @param {{centerGuides?: boolean, outlines?: boolean}} values
+ * @returns {void}
+ */
+function saveEditingToolbarState(values) {
+    try {
+        sessionStorage.setItem(EDITING_TOOLBAR_STORAGE_KEY, JSON.stringify(Object.assign(loadEditingToolbarState(), values)));
+    } catch { }
+}
 
 /**
  * Creates the floating editing toolbar (styled like the page navigator) with a
@@ -417,6 +406,7 @@ function initializeEditingToolbar() {
         const show = !guidesVisible();
         guideLines().forEach(line => line.style.display = show ? 'block' : 'none');
         updateButton();
+        saveEditingToolbarState({ centerGuides: show });
     });
 
     toolbar.appendChild(guidesButton);
@@ -438,7 +428,32 @@ function initializeEditingToolbar() {
     outlinesButton.addEventListener('click', () => {
         document.body.classList.toggle('pdf-show-element-outlines');
         updateOutlinesButton();
+        saveEditingToolbarState({ outlines: document.body.classList.contains('pdf-show-element-outlines') });
     });
+
+    document.body.classList.toggle('pdf-show-element-outlines', loadEditingToolbarState().outlines === true);
+
+    // Applies the stored center guide state and the margin/custom guides to all (also later rendered) pages.
+    const applyGuidesToPages = () => {
+        const showCenter = loadEditingToolbarState().centerGuides === true;
+        guideLines().forEach(line => line.style.display = showCenter ? 'block' : 'none');
+        applyMarginGuideSettings();
+        renderCustomGuides();
+        updateButton();
+    };
+
+    let reapplyPending = false;
+    new MutationObserver(mutations => {
+        const pagesAdded = mutations.some(m => Array.from(m.addedNodes).some(n =>
+            n instanceof Element && (n.classList.contains('page') || n.querySelector('.page'))));
+        if (!pagesAdded || reapplyPending) return;
+
+        reapplyPending = true;
+        requestAnimationFrame(() => {
+            reapplyPending = false;
+            applyGuidesToPages();
+        });
+    }).observe(document.body, { childList: true, subtree: true });
 
     toolbar.appendChild(outlinesButton);
     updateOutlinesButton();
@@ -450,5 +465,20 @@ function initializeEditingToolbar() {
     toolbar.appendChild(createCustomGuidesControl());
 
     document.body.appendChild(toolbar);
-    updateButton();
+    applyGuidesToPages();
+
+    // Separate toolbar for adding elements (paragraph, ...), see add-elements.js.
+    if (typeof createAddElementsControl === 'function') {
+        try {
+            const addToolbar = document.createElement('div');
+            addToolbar.className = 'pdf-page-navigator pdf-editing-toolbar pdf-adding-toolbar';
+            addToolbar.appendChild(createAddElementsControl());
+            if (window.pdfEditActions && pdfEditActions.all().length > 0) {
+                addToolbar.appendChild(pdfEditActions.createControl());
+            }
+            document.body.appendChild(addToolbar);
+        } catch (e) {
+            console.error('PDF editing mode: could not create the add elements toolbar', e);
+        }
+    }
 }

@@ -91,6 +91,11 @@
     left: 20px;
 }
 
+.pdf-page-navigator.pdf-adding-toolbar {
+    top: 20px;
+    bottom: auto;
+}
+
     .pdf-editing-toolbar button {
         display: inline-flex;
         align-items: center;

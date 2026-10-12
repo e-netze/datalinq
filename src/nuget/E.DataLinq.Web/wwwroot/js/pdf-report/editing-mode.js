@@ -6,11 +6,14 @@
  */
 
 /**
- * Checks whether editing mode is active (the editing script has been included by the view).
+ * Checks whether editing mode is active (the editing script has been included by the view
+ * and the report is shown inside the DataLinq Code live preview, never in a top level tab).
  * @returns {boolean} True when the PDF report editing script is present on the page.
  */
 function isPdfReportEditingMode() {
-    return !!document.querySelector('script[src*="pdf-report/editing.js"]');
+    let framed;
+    try { framed = window.self !== window.top; } catch { framed = true; }
+    return framed && !!document.querySelector('script[src*="pdf-report/editing.js"]');
 }
 
 // In editing mode only a preview of each table is rendered (header + first rows) so

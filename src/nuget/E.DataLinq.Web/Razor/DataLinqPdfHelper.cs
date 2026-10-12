@@ -185,6 +185,8 @@ public class DataLinqPdfHelper
         double defaultMarginBottom = dynamicTableOptions.DefaultMarginBottom;
         bool repeatHeader = dynamicTableOptions.RepeatHeader;
 
+        int editPage = _pageIndex++;
+
         return _razor.RawString(
             HtmlBuilder.Create()
                 .AppendDiv(d =>
@@ -209,6 +211,7 @@ public class DataLinqPdfHelper
                     d.AppendDiv(d2 =>
                     {
                         d2.AddClass("page");
+                        d2.AddAttribute("data-dl-edit-page", editPage.ToString(CultureInfo.InvariantCulture));
 
                         switch (paperSize)
                         {
@@ -366,11 +369,14 @@ public class DataLinqPdfHelper
     /// </returns>
     public object NewDraggable(double x = 0, double y = 0)
     {
+        int editIndex = _draggableIndex++;
+
         return _razor.RawString(
             HtmlBuilder.Create()
                 .AppendDiv(d =>
                 {
                     d.AddClass("element");
+                    d.AddAttribute("data-dl-edit-index", editIndex.ToString(CultureInfo.InvariantCulture));
                     if (x is not 0 || y is not 0)
                     {
                         d.AddAttribute("data-x", x.ToString(CultureInfo.InvariantCulture));
@@ -382,6 +388,13 @@ public class DataLinqPdfHelper
                 .BuildHtmlString()
         );
     }
+
+    // Occurrence index of the draggable within this render. Used by the PDF editing mode
+    // (live preview <-> DataLinq Code) to locate the matching helper call in the view source.
+    private int _draggableIndex = 0;
+
+    // Occurrence index of the page within this render (PDF editing mode: locate the matching EndPage).
+    private int _pageIndex = 0;
 
     /// <summary>
     /// de: Schließt das aktuelle PDF-Element.

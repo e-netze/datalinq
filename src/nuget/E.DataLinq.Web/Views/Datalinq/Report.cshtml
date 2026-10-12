@@ -1,4 +1,4 @@
-﻿@using E.DataLinq.Core
+@using E.DataLinq.Core
 @using E.DataLinq.Web
 @using E.DataLinq.Web.Extensions
 
@@ -153,8 +153,17 @@ ______      _        _     _
 
 @if (Model.PDFReportEditing)
 {
+    <link href="@(ViewData["contentRootUrl"])/css/datalinq/pdf-report/edit-dialog.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
     <script src="@(ViewData["contentRootUrl"])/js/pdf-report/margin-guides.js?@(DataLinqVersion.JsVersion)"></script>
     <script src="@(ViewData["contentRootUrl"])/js/pdf-report/custom-guides.js?@(DataLinqVersion.JsVersion)"></script>
+    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/edit-bridge.js?@(DataLinqVersion.JsVersion)"></script>
+    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/add-elements.js?@(DataLinqVersion.JsVersion)"></script>
+    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/edit-dialog.js?@(DataLinqVersion.JsVersion)"></script>
+    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/edit-actions.js?@(DataLinqVersion.JsVersion)"></script>
+    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/tools/new-page.js?@(DataLinqVersion.JsVersion)"></script>
+    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/tools/report-options.js?@(DataLinqVersion.JsVersion)"></script>
+    <script src="@(ViewData["contentRootUrl"])/js/pdf-report/tools/paragraph.js?@(DataLinqVersion.JsVersion)"></script>
+        <script src="@(ViewData["contentRootUrl"])/js/pdf-report/tools/heading.js?@(DataLinqVersion.JsVersion)"></script>
     <script src="@(ViewData["contentRootUrl"])/js/pdf-report/editing.js?@(DataLinqVersion.JsVersion)" id="datalinq-script"></script>
 }
 

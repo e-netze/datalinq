@@ -6,6 +6,18 @@
  */
 
 const PDF_VIEW_STATE_KEY = 'datalinq-pdf-view:' + window.location.pathname;
+const PDF_VIEW_FOCUS_KEY = 'datalinq-pdf-focus:' + window.location.pathname;
+
+/**
+ * Makes the next restoreViewState scroll to the given source page (data-dl-edit-page, zero based).
+ * @param {number} sourcePage
+ * @returns {void}
+ */
+function requestViewFocus(sourcePage) {
+    try {
+        sessionStorage.setItem(PDF_VIEW_FOCUS_KEY, JSON.stringify({ sourcePage: Math.max(0, sourcePage | 0) }));
+    } catch { }
+}
 
 /**
  * Saves zoom and scroll position to sessionStorage. The position is stored as page
@@ -41,10 +53,19 @@ function saveViewState(pageList) {
  * @returns {void}
  */
 function restoreViewState(pageList) {
-    let state = null;
+    let state = null, focus = null;
     try {
         state = JSON.parse(sessionStorage.getItem(PDF_VIEW_STATE_KEY));
+        // one-shot target page requested before a reload (e.g. a page inserted in editing mode)
+        focus = JSON.parse(sessionStorage.getItem(PDF_VIEW_FOCUS_KEY));
+        sessionStorage.removeItem(PDF_VIEW_FOCUS_KEY);
     } catch { }
+    if (focus && Number.isInteger(focus.sourcePage)) {
+        // first rendered page of the requested source page (NewPage index), fallback: last page
+        let index = pageList.findIndex(p => parseInt(p.getAttribute('data-dl-edit-page'), 10) === focus.sourcePage);
+        if (index < 0) index = pageList.length - 1;
+        state = Object.assign({}, state, { page: index, offset: 0.5 });
+    }
     if (!state) return;
 
     if (typeof state.zoom === 'number' && state.zoom !== 1) {

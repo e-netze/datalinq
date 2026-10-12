@@ -592,6 +592,13 @@
         return result;
     };
 
+    if (dataLinqCode.previewBridge) {
+        dataLinqCode.previewBridge.setFrameResolver(function (source) {
+            var previewId = findPreviewIdBySource(source);
+            return previewId ? previewId.substring(previewPrefix.length) : null;
+        });
+    }
+
     window.addEventListener('message', function (event) {
         var data = event.data;
         if (!data || (!data.datalinqPreviewScroll && !data.datalinqPreviewReady)) {

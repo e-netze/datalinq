@@ -49,6 +49,88 @@ body.pdf-show-element-outlines .element {
     outline-offset: 0;
 }
 
+/* Add elements / text editing / context menu (see js/pdf-report/add-elements.js) */
+body.pdf-edit-placing .page,
+body.pdf-edit-placing .page * {
+    cursor: crosshair !important;
+}
+
+.element.pdf-edit-pending {
+    opacity: 0.6;
+}
+
+.element.pdf-edit-text-editing {
+    cursor: text;
+    user-select: text;
+    outline: 1px solid #5badff;
+}
+
+    .element.pdf-edit-text-editing [contenteditable="true"] {
+        outline: none;
+        user-select: text;
+    }
+
+.pdf-edit-add-elements {
+    display: contents;
+}
+
+.pdf-edit-variant-picker-title {
+    padding: 3px 8px 5px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 2px;
+}
+
+.pdf-edit-variant-picker button > * {
+    margin: 0;
+    line-height: 1.2;
+    font-family: inherit;
+    color: inherit;
+}
+
+.pdf-edit-variant-picker button:focus {
+    outline: none;
+    background: #e8f2ff;
+}
+
+.pdf-edit-context-menu {
+    position: fixed;
+    z-index: 10000;
+    min-width: 140px;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    font: 13px sans-serif;
+}
+
+    .pdf-edit-context-menu button {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        padding: 5px 8px;
+        border: none;
+        background: none;
+        text-align: left;
+        cursor: pointer;
+        color: #333;
+    }
+
+        .pdf-edit-context-menu button:hover {
+            background: #e8f2ff;
+        }
+
+@media print {
+    .pdf-edit-context-menu {
+        display: none !important;
+    }
+}
+
 @media print {
     body.pdf-show-element-outlines .element {
         outline: none;

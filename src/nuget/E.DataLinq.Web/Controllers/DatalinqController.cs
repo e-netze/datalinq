@@ -176,7 +176,8 @@ public class DataLinqController : DataLinqBaseController
                     PDFCompatibilityNotice = endPointQueryView.PDFCompatibilityNotice,
                     PDFReportEditing = endPointQueryView.PDFReportEditing &&
                                             (_options.EnvironmentType == DataLinq.Core.DataLinqEnvironmentType.Test ||
-                                             _options.EnvironmentType == DataLinq.Core.DataLinqEnvironmentType.Development)
+                                             _options.EnvironmentType == DataLinq.Core.DataLinqEnvironmentType.Development) &&
+                                            IsFramedRequest()
                 });
             }
         }
@@ -186,6 +187,15 @@ public class DataLinqController : DataLinqBaseController
 
             return await JsonViewSuccess(false, ex.Message);
         }
+    }
+
+    // PDF editing mode is only available inside the DataLinq Code live preview (iframe),
+    // never when the view is opened directly in a browser tab.
+    private bool IsFramedRequest()
+    {
+        string dest = Request.Headers["Sec-Fetch-Dest"].ToString();
+        return dest.Equals("iframe", StringComparison.OrdinalIgnoreCase) ||
+               dest.Equals("frame", StringComparison.OrdinalIgnoreCase);
     }
 
     [HttpPost]
