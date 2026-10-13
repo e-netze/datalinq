@@ -32,7 +32,8 @@ function limitTableRowsForEditing(root = document, removeRows = true) {
     const restore = [];
 
     // only tables on dynamic pages (dynamic table splitting) are shortened, static tables render completely
-    root.querySelectorAll('.page table').forEach(table => {
+    // (tables created as static tables in editing mode are never shortened)
+    root.querySelectorAll('.page table:not(.pdf-table-static)').forEach(table => {
         if (!table.closest('.page-wrapper.dynamic')) return;
         const thead = table.querySelector(':scope > thead');
         const bodyRows = Array.from(table.querySelectorAll(':scope > tbody > tr, :scope > tr'));

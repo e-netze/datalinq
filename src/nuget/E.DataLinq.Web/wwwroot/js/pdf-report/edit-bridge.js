@@ -146,6 +146,7 @@ window.dataLinqEditBridge = (function () {
         element.style.transform = `translate(${position.x}px, ${position.y}px)`;
         element.setAttribute('data-x', position.x);
         element.setAttribute('data-y', position.y);
+        if (typeof limitDraggableToPage === 'function') limitDraggableToPage(element);
     };
 
     // Undo/redo of moves (Ctrl+Z / Ctrl+Y or Ctrl+Shift+Z) while the preview has the focus.

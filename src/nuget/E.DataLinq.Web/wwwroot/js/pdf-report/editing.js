@@ -157,6 +157,7 @@ function enablePdfElementDragging(element) {
 
             element.setAttribute('data-x', newX);
             element.setAttribute('data-y', newY);
+            limitDraggableToPage(element);
         }
 
         /**

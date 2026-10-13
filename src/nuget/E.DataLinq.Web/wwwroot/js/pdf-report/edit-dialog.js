@@ -25,7 +25,7 @@
  *       ]
  *   }).then(values => { if (values) ... });   // null if cancelled
  *
- * Field types: choice (radio cards), select, checkbox, number, text, heading (section title).
+ * Field types: choice (radio cards), select, checkbox, number, text, color, heading (section title).
  * Only included by Report.cshtml when editing mode is on (Development/Test only).
  */
 window.pdfEditDialog = (function () {
@@ -99,6 +99,9 @@ window.pdfEditDialog = (function () {
             if (field.min !== undefined) input.min = field.min;
             if (field.max !== undefined) input.max = field.max;
             input.step = field.step ?? 'any';
+        } else if (field.type === 'color') {
+            input.type = 'color';
+            input.value = field.value || '#000000';
         } else {
             input.type = 'text';
             input.value = field.value ?? '';
@@ -300,8 +303,21 @@ window.pdfEditDialog = (function () {
         });
     };
 
+    /**
+     * Opens a confirmation in the dialog style.
+     * @returns {Promise<boolean>}
+     */
+    const confirm = function (options) {
+        return open({
+            title: options.title || 'Confirm',
+            submitLabel: options.confirmLabel || 'Continue',
+            steps: [{ description: options.message || '', fields: [] }]
+        }).then(r => r !== null);
+    };
+
     return {
         open: open,
+        confirm: confirm,
         close: () => close(null),
         isOpen: () => !!current
     };

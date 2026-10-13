@@ -8,6 +8,8 @@
     user-select: none;
     box-sizing: border-box; /* Important! */
     z-index: 3;
+    /* max-width = space to the right page edge (draggable-widths.js) -> long words wrap too */
+    overflow-wrap: break-word;
 }
 
     /* Add specific styling for chart containers */
@@ -112,6 +114,36 @@ dl-token.pdf-edit-token-variable {
 .pdf-edit-variant-picker button > ol {
     padding-left: 18px;
 }
+
+/* static tables (editing mode tool "Table"): column widths from <colgroup>, row height on the rows */
+table.pdf-table-static {
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+    table.pdf-table-static th,
+    table.pdf-table-static td {
+        overflow-wrap: break-word;
+        vertical-align: top;
+    }
+
+    /* border chosen in the table properties (css variable on the table) */
+    table.pdf-table-static[style*="--dl-table-border"],
+    table.pdf-table-static[style*="--dl-table-border"] > * > tr > th,
+    table.pdf-table-static[style*="--dl-table-border"] > * > tr > td {
+        border: var(--dl-table-border);
+    }
+
+    table.pdf-table-static th.pdf-edit-col-resize,
+    table.pdf-table-static td.pdf-edit-col-resize,
+    body.pdf-edit-col-resizing,
+    body.pdf-edit-col-resizing * {
+        cursor: col-resize !important;
+    }
+
+    .element.pdf-edit-text-editing table.pdf-table-static [contenteditable="true"] {
+        background: rgba(91, 173, 255, 0.08);
+    }
 
 .pdf-edit-add-elements {
     display: contents;

@@ -213,6 +213,7 @@ window.pdfEditContextMenu = (function () {
         element.setAttribute('data-dl-edit-oy', y);
         element.appendChild(type.create(text));
         page.appendChild(element);
+        if (typeof limitDraggableToPage === 'function') limitDraggableToPage(element);
 
         if (typeof enablePdfElementDragging === 'function') {
             enablePdfElementDragging(element);
@@ -634,6 +635,15 @@ window.pdfEditContextMenu = (function () {
     if (bridge && bridge.isConnected()) showPlaceholders();
     document.addEventListener('datalinq-edit:connected', () => setTimeout(showPlaceholders, 0));
     if (window.dataLinq && dataLinq.events) dataLinq.events.on('onpageloaded', () => setTimeout(showPlaceholders, 0));
+
+    // pages are overflow: hidden, but the caret of an edited text can still scroll them -> keep pages fixed
+    document.addEventListener('scroll', function (e) {
+        const page = e.target instanceof Element && e.target.classList.contains('page') ? e.target : null;
+        if (page && (page.scrollLeft || page.scrollTop)) {
+            page.scrollLeft = 0;
+            page.scrollTop = 0;
+        }
+    }, true);
 
     document.addEventListener('dblclick', function (e) {
         const element = e.target instanceof Element ? e.target.closest('.page .element') : null;

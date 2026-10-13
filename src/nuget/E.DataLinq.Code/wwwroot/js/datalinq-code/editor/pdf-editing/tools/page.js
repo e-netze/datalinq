@@ -10,7 +10,13 @@
  */
 (function () {
     var PAPER_SIZES = ['A4', 'A1', 'A2', 'A3', 'A5', 'A6'];
-    var TEMPLATE_ID = /^[\w\-@.]{0,200}$/;
+    // endpoint@query@view, optionally with a query string incl. interpolations, e.g. id@q@v?eid={@eid}
+    var TEMPLATE_ID = /^[\w\-@.]{0,200}(\?[^"\\\r\n]{0,400})?$/;
+
+    // interpolated string ($"...") if the id contains {expression}
+    var templateIdLiteral = function (id) {
+        return (/[{}]/.test(id) ? '$"' : '"') + id + '"';
+    };
 
     var isNumber = function (v) { return typeof v === 'number' && isFinite(v) && v >= 0 && v <= 10000; };
     var num = function (v) { return pdfDraggableSource.formatNumber(v); };
@@ -21,7 +27,7 @@
         if (o.usePageTemplate || o.templateId) {
             var template = [];
             if (o.usePageTemplate) template.push('UsePageTemplate = true');
-            if (o.templateId) template.push('TemplateId = "' + o.templateId + '"');
+            if (o.templateId) template.push('TemplateId = ' + templateIdLiteral(o.templateId));
             args.push('pageTemplateOptions: new PageTemplateOptions { ' + template.join(', ') + ' }');
         }
 
@@ -122,7 +128,7 @@
             return m ? parseFloat(m[1]) : fallback;
         };
         var paperSize = /\bPaperSize\.(\w+)/.exec(text);
-        var templateId = /\bTemplateId\s*=\s*(?:\$@|@\$|\$|@)?"([^"{}]*)"/.exec(text);
+        var templateId = /\bTemplateId\s*=\s*(?:\$@|@\$|\$|@)?"([^"\r\n]*)"/.exec(text);
 
         return {
             paperSize: paperSize && PAPER_SIZES.indexOf(paperSize[1]) >= 0 ? paperSize[1] : 'A4',

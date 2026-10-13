@@ -834,6 +834,7 @@ window.pdfEditTextFormat = (function () {
         if (Array.isArray(formatting.commands) && formatting.commands.indexOf(command.id) < 0) return false;
         const scope = command.scope || 'both';
         if (scope === 'list') return !!formatting.list;
+        if (scope === 'cell') return !!formatting.cell;
         if (scope === 'inline') return formatting.inline !== false;
         if (scope === 'block') return formatting.block !== false;
         return formatting.inline !== false || formatting.block !== false;
@@ -1094,10 +1095,25 @@ window.pdfEditTextFormat = (function () {
     });
 
     registerCommand({
-        id: 'background', label: 'Background color', group: 'color', type: 'color', scope: 'both',
-        icon: svg('<path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/>'),
-        apply: (ctx, value) => ctx.api.setStyle(ctx, 'background-color', value),
+        id: 'background', label: 'Text highlight color', group: 'color', type: 'color', scope: 'both',
+        icon: svg('<path d="M4 20h16"/><path d="M8 16l1-4 8-8 3 3-8 8-4 1z"/>'),
+        apply: (ctx, value) => {
+            // table cells: the cell background is a separate command, highlight only marks selected text
+            if (ctx.node.matches('td, th') && (!ctx.range || ctx.range.collapsed)) return;
+            ctx.api.setStyle(ctx, 'background-color', value);
+        },
         state: ctx => ctx.api.styleValue(ctx, 'background-color')
+    });
+
+    registerCommand({
+        id: 'cell-background', label: 'Cell background color', group: 'cell', type: 'color', scope: 'cell',
+        icon: svg('<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/>'),
+        apply: (ctx, value) => {
+            if (value) ctx.node.style.setProperty('background-color', value);
+            else ctx.node.style.removeProperty('background-color');
+            if (!ctx.node.getAttribute('style')) ctx.node.removeAttribute('style');
+        },
+        state: ctx => ctx.node.style.getPropertyValue('background-color')
     });
 
     [

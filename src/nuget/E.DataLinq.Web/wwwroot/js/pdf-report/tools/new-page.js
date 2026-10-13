@@ -26,8 +26,8 @@
             { type: 'heading', label: 'Page template' },
             { name: 'usePageTemplate', label: 'Use page template', type: 'checkbox', value: o.usePageTemplate },
             {
-                name: 'templateId', label: 'Template id', type: 'text', value: o.templateId, placeholder: 'endpoint@query@view',
-                pattern: /^[\w\-@.]{0,200}$/, showIf: v => v.usePageTemplate
+                name: 'templateId', label: 'Template id', type: 'text', value: o.templateId, placeholder: 'endpoint@query@view?param={@var}',
+                pattern: /^[\w\-@.]{0,200}(\?[^"\\\r\n]{0,400})?$/, showIf: v => v.usePageTemplate
             },
 
             { type: 'heading', label: 'Dynamic table' },
