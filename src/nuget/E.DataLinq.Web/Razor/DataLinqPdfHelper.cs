@@ -363,11 +363,15 @@ public class DataLinqPdfHelper
     /// de: Die vertikale Verschiebung des Elements in Pixeln. Standard ist 0.
     /// en: The vertical offset of the element in pixels. Default is 0.
     /// </param>
+    /// <param name="layer">
+    /// de: Die Ebene des Elements. Elemente mit höherer Ebene werden über Elementen mit niedrigerer Ebene angezeigt. Standard ist 0.
+    /// en: The layer of the element. Elements on a higher layer are displayed above elements on a lower layer. Default is 0.
+    /// </param>
     /// <returns>
     /// de: Gibt ein rohes HTML-Objekt mit dem öffnenden Container des PDF-Elements zurück.
     /// en: Returns a raw HTML object with the opening container of the PDF element.
     /// </returns>
-    public object NewDraggable(double x = 0, double y = 0)
+    public object NewDraggable(double x = 0, double y = 0, int layer = 0)
     {
         int editIndex = _draggableIndex++;
 
@@ -382,6 +386,12 @@ public class DataLinqPdfHelper
                         d.AddAttribute("data-x", x.ToString(CultureInfo.InvariantCulture));
                         d.AddAttribute("data-y", y.ToString(CultureInfo.InvariantCulture));
                         d.AddStyle("transform", $"translate({x.ToString(CultureInfo.InvariantCulture)}px, {y.ToString(CultureInfo.InvariantCulture)}px)");
+                    }
+                    if (layer is not 0)
+                    {
+                        // default .element z-index is 3 -> layer 0 keeps the previous behavior
+                        d.AddAttribute("data-dl-layer", layer.ToString(CultureInfo.InvariantCulture));
+                        d.AddStyle("z-index", (3L + layer).ToString(CultureInfo.InvariantCulture));
                     }
 
                 }, WriteTags.OpenOnly)

@@ -8,7 +8,7 @@ var pdfDraggableSource = new function () {
     var TOLERANCE = 0.01;
 
     var parseArgs = function (argsText) {
-        var result = { x: 0, y: 0 };
+        var result = { x: 0, y: 0, layer: 0, layerText: '' };
         if (!argsText.trim()) {
             return result;
         }
@@ -16,12 +16,18 @@ var pdfDraggableSource = new function () {
         var parts = argsText.split(','), positional = 0;
         for (var i = 0; i < parts.length; i++) {
             var m = /^\s*(?:(\w+)\s*:)?\s*(.*?)\s*$/.exec(parts[i]);
-            var name = m[1] || (positional === 0 ? 'x' : positional === 1 ? 'y' : null);
+            var name = m[1] || (positional === 0 ? 'x' : positional === 1 ? 'y' : positional === 2 ? 'layer' : null);
             if (!m[1]) positional++;
+            if (name === 'layer') {
+                result.layerText = m[2];
+                result.layer = /^[-+]?\d+$/.test(m[2]) ? parseInt(m[2], 10) : NaN;   // expressions -> not editable
+                continue;
+            }
             if (name !== 'x' && name !== 'y') continue;
 
             var value = /^[-+]?(\d+(\.\d*)?|\.\d+)$/.test(m[2]) ? parseFloat(m[2]) : NaN;   // expressions -> not editable
             result[name] = value;
+            result[name + 'Text'] = m[2];
         }
         return result;
     };
@@ -31,9 +37,27 @@ var pdfDraggableSource = new function () {
         while ((m = regex.exec(source)) !== null) {
             var argsStart = m.index + m[0].indexOf('(') + 1;
             var coords = parseArgs(m[1]);
-            calls.push({ start: m.index, argsStart: argsStart, argsEnd: argsStart + m[1].length, x: coords.x, y: coords.y });
+            calls.push({
+                start: m.index, argsStart: argsStart, argsEnd: argsStart + m[1].length, x: coords.x, y: coords.y,
+                xText: coords.xText, yText: coords.yText, layer: coords.layer, layerText: coords.layerText
+            });
         }
         return calls;
+    };
+
+    /**
+     * Builds the arguments of a draggable call (named arguments, layer only if not 0).
+     * x/y/layer: numbers or raw source expressions (strings).
+     * @returns {string}
+     */
+    this.buildArgs = function (x, y, layer) {
+        var self = this;
+        var text = function (v) { return typeof v === 'number' ? self.formatNumber(v) : String(v); };
+        var result = 'x: ' + text(x) + ', y: ' + text(y);
+        if (layer !== undefined && layer !== null && layer !== '' && layer !== 0 && layer !== '0') {
+            result += ', layer: ' + text(layer);
+        }
+        return result;
     };
 
     var matches = function (call, x, y) {

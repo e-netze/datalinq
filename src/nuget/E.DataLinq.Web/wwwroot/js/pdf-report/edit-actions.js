@@ -116,6 +116,7 @@ window.pdfEditActions = (function () {
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'pdf-editing-guides pdf-edit-action';
+            button.dataset.actionId = action.id || '';
             button.title = action.title || action.label;
             button.innerHTML = (action.icon || '') + '<span></span>';
             button.querySelector('span').textContent = action.label;

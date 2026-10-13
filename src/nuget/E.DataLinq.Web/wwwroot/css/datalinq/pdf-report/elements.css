@@ -45,8 +45,9 @@
     /*border: 2px solid #5badff;*/
 }
 
-/* Element outlines (editing mode toggle, see js/pdf-report/editing.js) */
-body.pdf-show-element-outlines .element {
+/* Element outlines (editing mode toggle, see js/pdf-report/editing.js), always shown while dragging */
+body.pdf-show-element-outlines .element,
+body.pdf-element-dragging .element {
     outline: 1px dashed #5badff;
     outline-offset: 0;
 }
@@ -289,7 +290,8 @@ table.pdf-table-static {
 }
 
 @media print {
-    body.pdf-show-element-outlines .element {
+    body.pdf-show-element-outlines .element,
+    body.pdf-element-dragging .element {
         outline: none;
     }
 }

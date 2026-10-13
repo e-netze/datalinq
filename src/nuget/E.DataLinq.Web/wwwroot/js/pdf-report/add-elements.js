@@ -20,6 +20,7 @@
  *       label: 'My action',
  *       target: 'element',                         // optional, 'element' (default) | 'page' (empty page area) | 'report' (.main outside of pages)
  *       when: function (element) { return true; },  // optional, element = .element or .page
+ *       order: 0,                                   // optional, sort order in the menu (lower first, delete = 100)
  *       run: function (element) { ... }
  *   });
  *
@@ -72,7 +73,8 @@ window.pdfEditContextMenu = (function () {
         close();
 
         const available = actions.filter(a => (a.target || 'element') === target &&
-            (typeof a.when !== 'function' || a.when(element)));
+            (typeof a.when !== 'function' || a.when(element)))
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
         if (available.length === 0) return false;
 
         menu = document.createElement('div');
@@ -708,6 +710,7 @@ window.pdfEditContextMenu = (function () {
     pdfEditContextMenu.register({
         id: 'delete-element',
         label: 'Delete element',
+        order: 100,
         icon: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
             '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
         when: element => !!(bridge && bridge.isConnected() && !element.classList.contains('pdf-edit-pending') &&

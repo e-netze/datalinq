@@ -3179,8 +3179,8 @@ public class DataLinqHelper : IDataLinqHelper
         => Pdf.PrintPdfButton(id, buttonText, parameters);
 
     [ExcludeFromSnippets]
-    public object NewPdfElement(double x = 0, double y = 0)
-        => Pdf.NewDraggable(x, y);
+    public object NewPdfElement(double x = 0, double y = 0, int layer = 0)
+        => Pdf.NewDraggable(x, y, layer);
 
     [ExcludeFromSnippets]
     public object EndPdfElement()

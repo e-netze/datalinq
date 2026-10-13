@@ -255,7 +255,7 @@ dataLinqCodeEditor = new function () {
 
         var start = model.getPositionAt(call.argsStart), end = model.getPositionAt(call.argsEnd);
         var range = new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column);
-        var text = 'x: ' + pdfDraggableSource.formatNumber(args.x) + ', y: ' + pdfDraggableSource.formatNumber(args.y);
+        var text = pdfDraggableSource.buildArgs(args.x, args.y, call.layerText);
 
         _editor.pushUndoStop();
         _editor.executeEdits('pdf-editing-mode', [{ range: range, text: text, forceMoveMarkers: true }]);
@@ -563,7 +563,7 @@ dataLinqCode.implementEventController(dataLinqCodeEditor);
                         return;
                     }
                     $pdfReportEditing.prop('checked', !$pdfReportEditing.prop('checked'));
-                    updatePdfEditingButton();
+                    $pdfReportEditing[0].dispatchEvent(new Event('change'));
                     dataLinqCodeEditor.setDirty();
                     dataLinqCodeEditor.submitForm();
                 });

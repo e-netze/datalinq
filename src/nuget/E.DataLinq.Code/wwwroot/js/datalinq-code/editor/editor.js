@@ -488,7 +488,18 @@
                             dataLinqCode.events.fire('refresh-ui');
                         });
                     }
+                    var pdfEditingCheckbox = this.contentDocument &&
+                        this.contentDocument.querySelector("input[type='checkbox'][name='PDFReportEditing']");
+                    if (pdfEditingCheckbox) {
+                        pdfEditingCheckbox.addEventListener('change', function () {
+                            if (pdfEditingCheckbox.checked) {
+                                delete pdfSplitViews[id];
+                            }
+                            relayoutEditor($editor);
+                        });
+                    }
                 } catch (e) { }
+                relayoutEditor($editor);
                 dataLinqCode.events.fire('refresh-ui');
 
                 try {
@@ -571,6 +582,23 @@
 
     var previewPrefix = '_preview:';
     var previewUrls = {};
+
+    // PDF editing mode: views switched back to the 50/50 split (default is preview only)
+    var pdfSplitViews = {};
+
+    function isPdfEditingFrame(frame) {
+        try {
+            var doc = frame.contentDocument;
+            var checkbox = doc && doc.querySelector("input[type='checkbox'][name='PDFReportEditing']");
+            return !!(checkbox && checkbox.checked);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function relayoutEditor($editor) {
+        layoutFrames($editor, getOrderedSelectedFrames($('.datalinq-code-tabs'), $editor));
+    }
 
     function reloadPreviewFrame(previewId) {
         var $frame = $(".datalinq-code-editor-frame[data-id='" + previewId + "']");
@@ -677,11 +705,43 @@
     function layoutFrames($editor, frames) {
     $editor.find('.datalinq-frame-stack').remove();
     $editor.find('.datalinq-separator').remove();
-    $editor.children(".datalinq-code-editor-frame").hide().css({ flex: '', width: '', height: '', display: 'none' });
+    $editor.children('.datalinq-pdf-layout-toggle').remove();
+    $editor.removeClass('pdf-editing-preview');
+    $editor.children(".datalinq-code-editor-frame").removeClass('pdf-code-mini').hide().css({ flex: '', width: '', height: '', display: 'none' });
     $editor.css({ display: 'flex', flexDirection: 'row', width: '100%', height: '100%' });
 
     const count = frames.length;
     $editor.toggleClass('split', count > 1);
+
+    const pdfViewId = count === 2 &&
+        $(frames[1]).attr('data-id') === previewPrefix + $(frames[0]).attr('data-id') &&
+        isPdfEditingFrame(frames[0]) ? $(frames[0]).attr('data-id') : null;
+
+    if (pdfViewId) {
+        const splitView = !!pdfSplitViews[pdfViewId];
+        $('<div class="datalinq-pdf-layout-toggle"></div>')
+            .append($('<button type="button"></button>')
+                .text(splitView ? 'Preview only' : 'Show code (50/50)')
+                .attr('title', splitView ? 'Show the live preview only' : 'Show code and live preview side by side'))
+            .appendTo($editor)
+            .on('click', 'button', function (e) {
+                e.stopPropagation();
+                pdfSplitViews[pdfViewId] = !splitView;
+                relayoutEditor($editor);
+            });
+
+        if (!splitView) {
+            frames.forEach(frame => {
+                if (!$(frame).parent().is($editor)) {
+                    $(frame).detach().appendTo($editor);
+                }
+            });
+            $editor.removeClass('split').addClass('pdf-editing-preview');
+            $(frames[0]).addClass('pdf-code-mini').css({ display: 'block' }).show();
+            $(frames[1]).css({ flex: '1 1 100%', width: '100%', height: '98%', display: 'block' }).show();
+            return;
+        }
+    }
 
     if (count === 1) {
         const $frame = $(frames[0]);

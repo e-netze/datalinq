@@ -65,6 +65,7 @@ function enablePdfElementDragging(element) {
 
             isDragging = true;
             element.classList.add('dragging');
+            document.body.classList.add('pdf-element-dragging');
 
             const style = window.getComputedStyle(element);
             const matrix = new DOMMatrix(style.transform);
@@ -331,6 +332,7 @@ function enablePdfElementDragging(element) {
         function stopDrag() {
             isDragging = false;
             element.classList.remove('dragging');
+            document.body.classList.remove('pdf-element-dragging');
             element.classList.remove('element-snapped');
             hideSnapGuides();
             document.removeEventListener('mousemove', drag);
@@ -453,6 +455,7 @@ function initializeEditingToolbar() {
         requestAnimationFrame(() => {
             reapplyPending = false;
             applyGuidesToPages();
+            updateNoPageState();
         });
     }).observe(document.body, { childList: true, subtree: true });
 
@@ -464,6 +467,16 @@ function initializeEditingToolbar() {
 
     renderCustomGuides();
     toolbar.appendChild(createCustomGuidesControl());
+
+    // only one guides panel (margin / custom) open at a time, they would overlap otherwise
+    toolbar.addEventListener('click', e => {
+        const button = e.target instanceof Element ? e.target.closest('.pdf-margin-guides-control > button') : null;
+        if (!button) return;
+        const ownPanel = button.parentElement.querySelector('.pdf-margin-guides-panel');
+        toolbar.querySelectorAll('.pdf-margin-guides-panel').forEach(panel => {
+            if (panel !== ownPanel) panel.style.display = 'none';
+        });
+    }, true);
 
     document.body.appendChild(toolbar);
     applyGuidesToPages();
@@ -481,5 +494,25 @@ function initializeEditingToolbar() {
         } catch (e) {
             console.error('PDF editing mode: could not create the add elements toolbar', e);
         }
+    }
+
+    updateNoPageState();
+}
+
+/**
+ * While the report has no page yet, only the "new page" action is usable: all other
+ * editing toolbar buttons are disabled.
+ * @returns {void}
+ */
+function updateNoPageState() {
+    const hasPage = !!document.querySelector('.page');
+    document.querySelectorAll(
+        '.pdf-editing-toolbar > button, .pdf-editing-toolbar .pdf-margin-guides-control > button, .pdf-editing-toolbar .pdf-edit-add-elements > button'
+    ).forEach(button => {
+        if (button.dataset.actionId === 'new-page') return;
+        button.disabled = !hasPage;
+    });
+    if (!hasPage) {
+        document.querySelectorAll('.pdf-editing-toolbar .pdf-margin-guides-panel').forEach(panel => panel.style.display = 'none');
     }
 }

@@ -96,16 +96,82 @@
     bottom: auto;
 }
 
-    .pdf-editing-toolbar button {
-        display: inline-flex;
-        align-items: center;
+    /* editing toolbars: 2 column grid of square icon buttons, label shown on hover */
+    .pdf-page-navigator.pdf-editing-toolbar {
+        display: grid;
+        grid-template-columns: repeat(2, 40px);
+        grid-auto-rows: 40px;
         gap: 6px;
-        padding: 4px 8px;
+        padding: 8px;
     }
+
+        .pdf-editing-toolbar > button,
+        .pdf-editing-toolbar .pdf-margin-guides-control > button,
+        .pdf-editing-toolbar .pdf-edit-add-elements > button {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+        }
+
+            .pdf-editing-toolbar > button svg,
+            .pdf-editing-toolbar .pdf-margin-guides-control > button svg,
+            .pdf-editing-toolbar .pdf-edit-add-elements > button svg {
+                width: 22px;
+                height: 22px;
+            }
+
+            .pdf-editing-toolbar > button > span,
+            .pdf-editing-toolbar .pdf-margin-guides-control > button > span,
+            .pdf-editing-toolbar .pdf-edit-add-elements > button > span {
+                display: none;
+                position: absolute;
+                left: calc(100% + 10px);
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 1;
+                padding: 4px 8px;
+                white-space: nowrap;
+                pointer-events: none;
+                background: rgba(40, 44, 52, 0.95);
+                color: #fff;
+                border-radius: 4px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+                font-size: 12px;
+            }
+
+            .pdf-editing-toolbar > button:hover > span,
+            .pdf-editing-toolbar .pdf-margin-guides-control > button:hover > span,
+            .pdf-editing-toolbar .pdf-edit-add-elements > button:hover > span {
+                display: block;
+            }
+
+        .pdf-editing-toolbar button:disabled:hover {
+            background: transparent;
+        }
 
         .pdf-editing-toolbar button.active {
             background: #5badff;
             border-color: #5badff;
+        }
+
+        /* margin / custom guides settings pop out to the right of the toolbar */
+        .pdf-editing-toolbar .pdf-margin-guides-control {
+            position: static;
+        }
+
+        .pdf-editing-toolbar .pdf-margin-guides-panel {
+            position: absolute;
+            left: calc(100% + 8px);
+            top: 0;
+            min-width: 180px;
+            padding: 6px 10px;
+            background: rgba(40, 44, 52, 0.9);
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         }
 
     .pdf-page-navigator .pdf-nav-input {
