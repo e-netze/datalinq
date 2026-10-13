@@ -43,11 +43,13 @@
     @* PDF editing (source templates/actions for the PDF preview); pdf-source.js and rich-text.js first. *@
     @foreach (var pdfEditScript in new[] {
         "pdf-source.js",
+        "tokens.js",
         "rich-text.js",
         "tools/paragraph.js",
         "tools/page.js",
         "tools/report.js",
-        "tools/heading.js" })
+        "tools/heading.js",
+        "tools/list.js" })
     {
         <script src="@(Url.Content("~/_content/E.DataLinq.Code/js/datalinq-code/editor/pdf-editing/"))@(pdfEditScript)?@(DataLinqVersion.JsVersion)"></script>
     }

@@ -222,9 +222,11 @@
         }
 
         // optional formatting (format 1): html = allow-listed markup, style = block styles
-        var html = null, style = null;
+        var html = null, style = null, listTag = null;
         if (payload.format === 1 && typeof payload.html === 'string' && payload.html.length <= MAX_HTML_LENGTH) {
             html = payload.html;
+            // lists (see pdf-editing/tools/list.js): root tag after editing (ul <-> ol may have been switched)
+            if (payload.listTag === 'ul' || payload.listTag === 'ol') listTag = payload.listTag;
             if (payload.style && typeof payload.style === 'object' && !Array.isArray(payload.style)) {
                 style = {};
                 Object.keys(payload.style).slice(0, 20).forEach(function (key) {
@@ -241,7 +243,8 @@
             originalY: payload.originalY,
             text: payload.text,
             html: html,
-            style: style
+            style: style,
+            listTag: listTag
         });
     });
 

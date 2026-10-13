@@ -314,6 +314,25 @@ dataLinqCodeEditor = new function () {
         // formatted text (bold, colors, ...) -> replace the whole text element (opening tag + content)
         if (typeof args.html === 'string' && typeof pdfRichText !== 'undefined') {
             var block = pdfDraggableSource.findFormattedText(source, args);
+
+            // lists: replace the whole <ul|ol>..</ul|ol> (the type may have been switched)
+            var listTag = /^(ul|ol)$/.test(args.listTag) ? args.listTag
+                : (block && /^(ul|ol)$/i.test(block.tag) ? block.tag.toLowerCase() : null);
+            if (listTag) {
+                var listAttributes = block && /^(ul|ol)$/i.test(block.tag)
+                    ? pdfRichText.mergeStyleAttribute(block.attributes, args.style, pdfRichText.listBlockProperties)
+                    : null;
+                var listContent = pdfRichText.toSource(args.html, { list: true });
+                if (listAttributes !== null && listContent) {
+                    _applyPdfEdit(block.start, block.innerEnd + ('</' + block.tag + '>').length,
+                        '<' + listTag + listAttributes + '>' + listContent + '</' + listTag + '>');
+                } else {
+                    dataLinqCode.ui.alert('PDF editing mode',
+                        'Could not apply the list: the list element was not found in the source or its tag contains Razor code.');
+                }
+                return;
+            }
+
             var attributes = block ? pdfRichText.mergeStyleAttribute(block.attributes, args.style) : null;
             var content = pdfRichText.toSource(args.html);
             if (block && attributes !== null && content) {
@@ -321,7 +340,7 @@ dataLinqCodeEditor = new function () {
                 return;
             }
             var hasStyle = args.style && Object.keys(args.style).length > 0;
-            if (hasStyle || /<(strong|em|u|s|span)\b/i.test(content)) {
+            if (hasStyle || /<(strong|em|u|s|span)\b/i.test(content) || /<dl-token\b/i.test(args.html)) {
                 dataLinqCode.ui.alert('PDF editing mode',
                     'Could not apply the formatting: the text element was not found in the source or its tag contains Razor code.');
                 return;

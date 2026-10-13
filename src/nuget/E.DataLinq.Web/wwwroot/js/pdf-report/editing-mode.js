@@ -31,7 +31,9 @@ const EDITING_MORE_ROWS_TEXT = 'More data available outside of editing mode';
 function limitTableRowsForEditing(root = document, removeRows = true) {
     const restore = [];
 
+    // only tables on dynamic pages (dynamic table splitting) are shortened, static tables render completely
     root.querySelectorAll('.page table').forEach(table => {
+        if (!table.closest('.page-wrapper.dynamic')) return;
         const thead = table.querySelector(':scope > thead');
         const bodyRows = Array.from(table.querySelectorAll(':scope > tbody > tr, :scope > tr'));
 

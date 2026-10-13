@@ -334,7 +334,7 @@ window.pdfEditContextMenu = (function () {
         let text = '';
         node.childNodes.forEach(n => {
             if (n.nodeName === 'BR') text += '\n';
-            else if (n.nodeType === Node.ELEMENT_NODE && /^(DIV|P)$/.test(n.nodeName)) text += '\n' + readText(n);
+            else if (n.nodeType === Node.ELEMENT_NODE && /^(DIV|P|LI)$/.test(n.nodeName)) text += '\n' + readText(n);
             else if (n.nodeType === Node.ELEMENT_NODE) text += readText(n);
             else text += n.textContent;
         });
@@ -358,13 +358,39 @@ window.pdfEditContextMenu = (function () {
 
     const editText = function (element) {
         const found = pdfEditElementTypes.findText(element);
-        if (!found || element.classList.contains('pdf-edit-pending')) return;
+        if (!found || element.classList.contains('pdf-edit-pending') || found.node.isContentEditable) return;
+        if (!(found.type.formatting && window.pdfEditTextFormat && window.pdfEditActions)) {
+            startEditText(element, found, null);
+            return;
+        }
+        if (element.classList.contains('pdf-edit-loading')) return;
 
-        const node = found.node;
-        if (node.isContentEditable) return;
+        // placeholders (@DLH.QueryParameter, @var) are evaluated in the preview -> edit the source content
+        element.classList.add('pdf-edit-loading');
+        pdfEditActions.request('element.text-source', {
+            index: parseInt(element.getAttribute('data-dl-edit-index'), 10),
+            originalX: parseFloat(element.getAttribute('data-dl-edit-ox')) || 0,
+            originalY: parseFloat(element.getAttribute('data-dl-edit-oy')) || 0
+        }).then(result => {
+            element.classList.remove('pdf-edit-loading');
+            if (!result.success && /Razor code/.test(result.message)) {
+                notify(result.message);
+                return;
+            }
+            const data = result.success && result.data && typeof result.data.html === 'string' && result.data.tokens > 0 ? result.data : null;
+            startEditText(element, found, data ? data.html : null);
+        });
+    };
+
+    const startEditText = function (element, found, sourceHtml) {
+        let node = found.node;
+        const originalNode = node;
+        if (node.isContentEditable || !node.isConnected) return;
 
         const formatting = found.type.formatting && window.pdfEditTextFormat ? found.type.formatting : null;
+        const list = formatting && formatting.list ? pdfEditTextFormat.list : null;
         const formatKey = () => JSON.stringify({
+            tag: node.nodeName,
             html: pdfEditTextFormat.serialize(node),
             style: pdfEditTextFormat.getBlockStyle(node)
         });
@@ -372,10 +398,18 @@ window.pdfEditContextMenu = (function () {
         const originalText = normalizeText(readText(node));
         const originalHtml = node.innerHTML;
         const originalStyle = node.getAttribute('style');
+        if (sourceHtml !== null && formatting) {
+            node.innerHTML = sourceHtml;
+            pdfEditTextFormat.sanitize(node);
+        }
         const originalFormat = formatting ? formatKey() : null;
         let finished = false;
 
         const restore = function () {
+            if (node !== originalNode) {
+                node.replaceWith(originalNode);
+                node = originalNode;
+            }
             node.innerHTML = originalHtml;
             if (originalStyle === null) node.removeAttribute('style');
             else node.setAttribute('style', originalStyle);
@@ -398,6 +432,7 @@ window.pdfEditContextMenu = (function () {
             if (formatting) pdfEditTextFormat.toolbar.detach();
             node.removeEventListener('keydown', onKeyDown);
             node.removeEventListener('blur', onBlur);
+            node.removeEventListener('paste', onPaste);
             node.removeAttribute('contenteditable');
             node.removeAttribute('spellcheck');
             element.classList.remove('pdf-edit-text-editing');
@@ -415,6 +450,7 @@ window.pdfEditContextMenu = (function () {
                     restore();
                     return;
                 }
+                pdfEditTextFormat.convertTypedVariables(node);
                 pdfEditTextFormat.sanitize(node);
                 if (formatKey() === originalFormat) {
                     restore();
@@ -423,6 +459,7 @@ window.pdfEditContextMenu = (function () {
                 payload.html = node.innerHTML;
                 payload.style = pdfEditTextFormat.getBlockStyle(node);
                 payload.format = 1;
+                if (list) payload.listTag = node.nodeName.toLowerCase();
                 if (payload.html.length > MAX_HTML_LENGTH) {
                     restore();
                     notify('The formatted text is too long.');
@@ -440,7 +477,39 @@ window.pdfEditContextMenu = (function () {
             bridge.send('element.text', payload);
         };
 
+        const onListKeyDown = function (e) {
+            const li = list.itemAt(node);
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!li) {
+                    node.blur();
+                } else if (list.isEmptyItem(li) && list.depth(node, li) > 1) {
+                    list.outdent(node, li);
+                } else if (list.isEmptyItem(li) && list.isLastItem(node, li)) {
+                    list.removeItem(node, li);
+                    node.blur();
+                } else {
+                    list.splitItem(node, li);
+                }
+                return true;
+            }
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                if (li) {
+                    if (e.shiftKey) list.outdent(node, li); else list.indent(node, li);
+                }
+                return true;
+            }
+            if (e.key === 'Backspace' && li && list.isEmptyItem(li) && window.getSelection().isCollapsed) {
+                e.preventDefault();
+                list.removeItem(node, li);
+                return true;
+            }
+            return false;
+        };
+
         const onKeyDown = function (e) {
+            if (list && onListKeyDown(e)) return;
             if (e.key === 'Enter' && e.shiftKey) {
                 // keep the paragraph flat: <br> instead of nested <div>s
                 e.preventDefault();
@@ -457,20 +526,114 @@ window.pdfEditContextMenu = (function () {
         const onBlur = function (e) {
             // focus moved into the formatting toolbar (select, color picker) -> keep editing
             if (formatting && pdfEditTextFormat.toolbar.contains(e.relatedTarget)) return;
+            // a toolbar dialog (insert query parameter) is open -> keep editing
+            if (formatting && pdfEditTextFormat.isBusy()) return;
             finish(true);
+        };
+
+        // lists: paste as plain text (keeps the <li> structure intact)
+        const onPaste = function (e) {
+            if (!list) return;
+            e.preventDefault();
+            const text = (e.clipboardData ? e.clipboardData.getData('text/plain') : '').replace(/\s+/g, ' ');
+            if (text) document.execCommand('insertText', false, text);
         };
 
         node.addEventListener('keydown', onKeyDown);
         node.addEventListener('blur', onBlur);
+        node.addEventListener('paste', onPaste);
+
+        const toolbarOptions = {
+            formatting: formatting,
+            onLeave: () => finish(true),
+            onCancel: () => finish(false),
+            // lists: switching the root ul <-> ol replaces the edited node
+            replaceNode: function (newNode) {
+                node.removeEventListener('keydown', onKeyDown);
+                node.removeEventListener('blur', onBlur);
+                node.removeEventListener('paste', onPaste);
+                node.replaceWith(newNode);
+                node = newNode;
+                node.setAttribute('contenteditable', 'true');
+                node.setAttribute('spellcheck', 'false');
+                node.addEventListener('keydown', onKeyDown);
+                node.addEventListener('blur', onBlur);
+                node.addEventListener('paste', onPaste);
+                node.focus({ preventScroll: true });
+                pdfEditTextFormat.toolbar.attach(node, element, toolbarOptions);
+            }
+        };
 
         if (formatting) {
-            pdfEditTextFormat.toolbar.attach(node, element, {
-                formatting: formatting,
-                onLeave: () => finish(true),
-                onCancel: () => finish(false)
+            pdfEditTextFormat.toolbar.attach(node, element, toolbarOptions);
+        }
+    };
+
+    // editing mode: show placeholders (@DLH.QueryParameter, @var) as chips instead of their values
+    const showPlaceholders = function () {
+        if (!window.pdfEditTextFormat || !window.pdfEditActions || !bridge || !bridge.isConnected()) return;
+        // the source call is located by the original coordinates -> make sure they are recorded
+        if (typeof bridge.snapshotOriginals === 'function') bridge.snapshotOriginals();
+        const targets = [];
+        document.querySelectorAll('.page .element[data-dl-edit-index]').forEach(element => {
+            if (element.hasAttribute('data-dl-edit-placeholders')) return;
+            const found = pdfEditElementTypes.findText(element);
+            if (found && found.type.formatting) targets.push({ element: element, node: found.node });
+        });
+        for (let i = 0; i < targets.length; i += 100) {
+            const batch = targets.slice(i, i + 100);
+            pdfEditActions.request('elements.text-sources', {
+                elements: batch.map(t => ({
+                    index: parseInt(t.element.getAttribute('data-dl-edit-index'), 10),
+                    originalX: parseFloat(t.element.getAttribute('data-dl-edit-ox')) || 0,
+                    originalY: parseFloat(t.element.getAttribute('data-dl-edit-oy')) || 0
+                }))
+            }).then(result => {
+                if (!result.success || !result.data || !Array.isArray(result.data.items)) return;
+                result.data.items.forEach(item => {
+                    const t = batch.find(b => parseInt(b.element.getAttribute('data-dl-edit-index'), 10) === item.index);
+                    if (!t || typeof item.html !== 'string' || t.node.isContentEditable || !t.node.isConnected) return;
+                    t.node.innerHTML = item.html;
+                    pdfEditTextFormat.sanitize(t.node);
+                    t.element.setAttribute('data-dl-edit-placeholders', '1');
+                });
+            });
+        }
+
+        // static tables: placeholders in cells (cells matched by order, only if the cell count matches the source)
+        const tables = Array.from(document.querySelectorAll('.page .element[data-dl-edit-index]'))
+            .filter(el => !el.hasAttribute('data-dl-edit-table-placeholders') && el.querySelector('table'));
+        for (let i = 0; i < tables.length; i += 100) {
+            const batch = tables.slice(i, i + 100);
+            pdfEditActions.request('elements.table-sources', {
+                elements: batch.map(el => ({
+                    index: parseInt(el.getAttribute('data-dl-edit-index'), 10),
+                    originalX: parseFloat(el.getAttribute('data-dl-edit-ox')) || 0,
+                    originalY: parseFloat(el.getAttribute('data-dl-edit-oy')) || 0
+                }))
+            }).then(result => {
+                if (!result.success || !result.data || !Array.isArray(result.data.items)) return;
+                result.data.items.forEach(item => {
+                    const el = batch.find(b => parseInt(b.getAttribute('data-dl-edit-index'), 10) === item.index);
+                    if (!el || !Array.isArray(item.cells)) return;
+                    const cells = Array.from(el.querySelectorAll('table th, table td'))
+                        .filter(c => !c.closest('.pdf-editing-more-rows'));
+                    if (cells.length !== item.cellCount) return;
+                    item.cells.forEach(c => {
+                        const cell = cells[c.cell];
+                        if (!cell || typeof c.html !== 'string') return;
+                        cell.innerHTML = c.html;
+                        pdfEditTextFormat.sanitize(cell);
+                    });
+                    el.setAttribute('data-dl-edit-table-placeholders', '1');
+                });
             });
         }
     };
+    // run when the bridge is connected and whenever the report content (pages) has been loaded
+    if (bridge && bridge.isConnected()) showPlaceholders();
+    document.addEventListener('datalinq-edit:connected', () => setTimeout(showPlaceholders, 0));
+    if (window.dataLinq && dataLinq.events) dataLinq.events.on('onpageloaded', () => setTimeout(showPlaceholders, 0));
 
     document.addEventListener('dblclick', function (e) {
         const element = e.target instanceof Element ? e.target.closest('.page .element') : null;
