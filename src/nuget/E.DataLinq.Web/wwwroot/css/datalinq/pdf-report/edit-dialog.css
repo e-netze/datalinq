@@ -152,6 +152,24 @@
     display: none;
 }
 
+.pdf-edit-dialog-choices-icons {
+    flex-wrap: wrap;
+}
+
+    .pdf-edit-dialog-choices-icons .pdf-edit-dialog-choice {
+        flex: 0 0 auto;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+.pdf-edit-dialog-choice-icon {
+    display: inline-flex;
+}
+
 .pdf-edit-dialog-error {
     min-height: 0;
     padding: 0 18px;

@@ -12,6 +12,7 @@
  *       textTarget: function (element) { return node|null; } // editable text node of an existing element
  *       prompt: function () { return Promise<string|null>; } // optional, asks for settings before adding (result = text)
  *       saveAfterAdd: true                          // optional, save + reload the preview after the source was inserted
+ *       choose: function () { return Promise<string|null>; } // optional, asks for settings when the toolbar button is clicked (before placing)
  *       formatting: { inline: true, block: true }            // optional, rich text toolbar (see text-format.js)
  *   });
  *
@@ -196,10 +197,16 @@ window.pdfEditContextMenu = (function () {
         button.classList.add('active');
     };
 
-    const addElement = function (type, page, clientX, clientY) {
+    const addElement = function (type, page, clientX, clientY, presetText) {
         const sourcePage = pageIndexOf(page);
         if (sourcePage < 0) {
             notify('This page cannot be edited (no source page found).');
+            return;
+        }
+
+        // settings chosen before placing (see choose)
+        if (typeof presetText === 'string' && presetText) {
+            insertElement(type, page, sourcePage, clientX, clientY, presetText);
             return;
         }
 
@@ -257,7 +264,7 @@ window.pdfEditContextMenu = (function () {
         if (group.types.length > 1) {
             openVariantPicker(group, page, e.clientX, e.clientY);
         } else {
-            addElement(group.types[0], page, e.clientX, e.clientY);
+            addElement(group.types[0], page, e.clientX, e.clientY, group.presetText);
         }
     }, true);
 
@@ -753,6 +760,15 @@ window.pdfEditContextMenu = (function () {
                 e.stopPropagation();
                 if (placing === group) {
                     endPlacing();
+                } else if (group.types.length === 1 && typeof group.types[0].choose === 'function' &&
+                    bridge && bridge.isConnected()) {
+                    // e.g. shapes: choose the variant/settings in a modal first, then click on a page
+                    endPlacing();
+                    Promise.resolve(group.types[0].choose()).then(text => {
+                        if (typeof text !== 'string' || !text) return;
+                        group.presetText = text;
+                        startPlacing(group, button);
+                    });
                 } else {
                     startPlacing(group, button);
                 }

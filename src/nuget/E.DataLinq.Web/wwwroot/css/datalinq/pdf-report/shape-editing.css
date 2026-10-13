@@ -1,0 +1,72 @@
+/*
+ * PDF report editing mode - shapes ("Forms", see js/pdf-report/tools/shape.js).
+ * Only included by Report.cshtml when editing mode is on.
+ */
+
+.page .element .dl-shape {
+    display: block;
+}
+
+.pdf-edit-shape-handle {
+    position: absolute;
+    z-index: 5;
+    width: 8px;
+    height: 8px;
+    margin: -4px 0 0 -4px;
+    background: #fff;
+    border: 1px solid #1a73e8;
+    border-radius: 1px;
+    box-sizing: border-box;
+    display: none;
+}
+
+.page .element:hover > .pdf-edit-shape-handle,
+.page .element.pdf-edit-shape-resizing > .pdf-edit-shape-handle {
+    display: block;
+}
+
+body.pdf-element-dragging .pdf-edit-shape-handle {
+    display: none !important;
+}
+
+.pdf-edit-shape-handle-nw { left: 0; top: 0; cursor: nwse-resize; }
+.pdf-edit-shape-handle-n { left: 50%; top: 0; cursor: ns-resize; }
+.pdf-edit-shape-handle-ne { left: 100%; top: 0; cursor: nesw-resize; }
+.pdf-edit-shape-handle-e { left: 100%; top: 50%; cursor: ew-resize; }
+.pdf-edit-shape-handle-se { left: 100%; top: 100%; cursor: nwse-resize; }
+.pdf-edit-shape-handle-s { left: 50%; top: 100%; cursor: ns-resize; }
+.pdf-edit-shape-handle-sw { left: 0; top: 100%; cursor: nesw-resize; }
+.pdf-edit-shape-handle-w { left: 0; top: 50%; cursor: ew-resize; }
+
+.pdf-edit-shape-rotate {
+    left: 50%;
+    top: -18px;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    cursor: grab;
+}
+
+    .pdf-edit-shape-rotate::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 9px;
+        height: 9px;
+        border-left: 1px solid #1a73e8;
+    }
+
+body.pdf-edit-shape-rotating,
+body.pdf-edit-shape-rotating * { cursor: grabbing !important; }
+
+body.pdf-edit-shape-resizing-n, 
+body.pdf-edit-shape-resizing-e, body.pdf-edit-shape-resizing-w { cursor: ew-resize; }
+body.pdf-edit-shape-resizing-ne, body.pdf-edit-shape-resizing-sw { cursor: nesw-resize; }
+body.pdf-edit-shape-resizing-nw, body.pdf-edit-shape-resizing-se { cursor: nwse-resize; }
+
+@media print {
+    .pdf-edit-shape-handle {
+        display: none !important;
+    }
+}

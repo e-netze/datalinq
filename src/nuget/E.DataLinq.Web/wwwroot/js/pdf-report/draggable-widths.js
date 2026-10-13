@@ -49,7 +49,10 @@ function resolveDraggableWidths(root = document) {
             const specified = {
                 width: computed.width,
                 minWidth: computed.minWidth,
-                maxWidth: computed.maxWidth
+                maxWidth: computed.maxWidth,
+                height: computed.height,
+                minHeight: computed.minHeight,
+                maxHeight: computed.maxHeight
             };
 
             child.style.removeProperty('display');
@@ -60,7 +63,8 @@ function resolveDraggableWidths(root = document) {
             Object.entries(specified).forEach(([prop, value]) => {
                 const match = /^\s*(-?\d*\.?\d+)%\s*$/.exec(value || '');
                 if (match) {
-                    child.style[prop] = `${(pageWidth * parseFloat(match[1]) / 100)}px`;
+                    const base = /height/i.test(prop) ? page.clientHeight : pageWidth;
+                    if (base) child.style[prop] = `${(base * parseFloat(match[1]) / 100)}px`;
                 }
             });
         });

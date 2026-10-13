@@ -58,7 +58,9 @@ window.pdfEditDialog = (function () {
             const group = document.createElement('div');
             group.className = 'pdf-edit-dialog-choices';
             group.setAttribute('role', 'radiogroup');
-            normalizeOptions(field.options).forEach((o, i) => {
+            const options = normalizeOptions(field.options);
+            if (options.length && options.every(o => o.icon)) group.classList.add('pdf-edit-dialog-choices-icons');
+            options.forEach((o, i) => {
                 const label = document.createElement('label');
                 label.className = 'pdf-edit-dialog-choice';
                 const radio = document.createElement('input');
@@ -67,6 +69,17 @@ window.pdfEditDialog = (function () {
                 radio.value = o.value;
                 radio.checked = o.value === field.value || (field.value === undefined && i === 0);
                 label.appendChild(radio);
+                if (o.icon) {
+                    // icon only (trusted svg markup from the registering tool), the label becomes the tooltip
+                    const icon = document.createElement('span');
+                    icon.className = 'pdf-edit-dialog-choice-icon';
+                    icon.innerHTML = o.icon;
+                    label.appendChild(icon);
+                    label.title = o.label;
+                    radio.setAttribute('aria-label', o.label);
+                    group.appendChild(label);
+                    return;
+                }
                 const text = document.createElement('span');
                 text.textContent = o.label;
                 label.appendChild(text);
