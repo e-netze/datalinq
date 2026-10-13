@@ -10,6 +10,8 @@
  *       defaultText: 'New paragraph',
  *       create: function (text) { return htmlElement; },   // content of the new .element
  *       textTarget: function (element) { return node|null; } // editable text node of an existing element
+ *       prompt: function () { return Promise<string|null>; } // optional, asks for settings before adding (result = text)
+ *       saveAfterAdd: true                          // optional, save + reload the preview after the source was inserted
  *       formatting: { inline: true, block: true }            // optional, rich text toolbar (see text-format.js)
  *   });
  *
@@ -141,6 +143,7 @@ window.pdfEditContextMenu = (function () {
 
     const bridge = window.dataLinqEditBridge;
     const pending = {};
+    const pendingSave = {};   // requestId -> source page, types with saveAfterAdd (e.g. image: render the real content)
     let requestCounter = 0;
 
     const round = v => Math.round(v * 100) / 100;
@@ -198,11 +201,23 @@ window.pdfEditContextMenu = (function () {
             return;
         }
 
+        // types with a prompt (e.g. image) collect their settings first; the result is sent as text
+        if (typeof type.prompt === 'function') {
+            Promise.resolve(type.prompt()).then(text => {
+                if (typeof text === 'string' && text) insertElement(type, page, sourcePage, clientX, clientY, text);
+            });
+            return;
+        }
+        insertElement(type, page, sourcePage, clientX, clientY, type.defaultText || '');
+    };
+
+    const insertElement = function (type, page, sourcePage, clientX, clientY, text) {
+        if (!page.isConnected) return;
+
         const pageRect = page.getBoundingClientRect();
         const scale = page.offsetWidth > 0 ? pageRect.width / page.offsetWidth : 1;
         const x = round(Math.max(0, (clientX - pageRect.left) / scale));
         const y = round(Math.max(0, (clientY - pageRect.top) / scale));
-        const text = type.defaultText || '';
 
         const element = document.createElement('div');
         element.className = 'element pdf-edit-pending';
@@ -221,6 +236,7 @@ window.pdfEditContextMenu = (function () {
 
         const requestId = 'add-' + (++requestCounter);
         pending[requestId] = element;
+        if (type.saveAfterAdd) pendingSave[requestId] = sourcePage;
         bridge.send('element.add', { requestId: requestId, type: type.type, page: sourcePage, x: x, y: y, text: text });
     };
 
@@ -312,17 +328,24 @@ window.pdfEditContextMenu = (function () {
     if (bridge) {
         bridge.register('element.added', function (payload) {
             const element = pending[payload.requestId];
+            const saveSourcePage = pendingSave[payload.requestId];
             delete pending[payload.requestId];
+            delete pendingSave[payload.requestId];
             if (!element || !Number.isInteger(payload.index) || payload.index < 0) return;
 
             shiftIndices(payload.index, element);
             element.setAttribute('data-dl-edit-index', payload.index);
             element.classList.remove('pdf-edit-pending');
+
+            if (Number.isInteger(saveSourcePage) && window.pdfEditActions) {
+                pdfEditActions.saveAndReload(saveSourcePage);
+            }
         });
 
         bridge.register('element.add-failed', function (payload) {
             const element = pending[payload.requestId];
             delete pending[payload.requestId];
+            delete pendingSave[payload.requestId];
             if (element) element.remove();
             notify(typeof payload.message === 'string' ? payload.message : 'The element could not be added to the source.');
         });

@@ -213,3 +213,98 @@
         display: none !important;
     }
 }
+
+/* key/value list (keyvalue field): label above, full width list below */
+.pdf-edit-dialog-row.pdf-edit-dialog-keyvalue {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    margin-top: 12px;
+}
+
+    .pdf-edit-dialog-row.pdf-edit-dialog-keyvalue > label {
+        font-weight: 600;
+        color: #555;
+    }
+
+.pdf-edit-dialog-kv {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px;
+    border: 1px solid #e3e3e3;
+    border-radius: 6px;
+    background: #fafafa;
+}
+
+.pdf-edit-dialog-kv-empty {
+    padding: 2px 2px 4px;
+    color: #999;
+    font-style: italic;
+}
+
+    .pdf-edit-dialog-kv-empty:not(:only-of-type) {
+        display: none;
+    }
+
+.pdf-edit-dialog-kv-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) 26px;
+    gap: 4px;
+    align-items: center;
+}
+
+    .pdf-edit-dialog-row .pdf-edit-dialog-kv-row input[type=text] {
+        width: 100%;
+        box-sizing: border-box;
+        background: #fff;
+    }
+
+    .pdf-edit-dialog-kv-row .pdf-edit-dialog-kv-remove {
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        background: transparent;
+        color: #888;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+        .pdf-edit-dialog-kv-row .pdf-edit-dialog-kv-remove:hover {
+            border-color: #f0c4c4;
+            background: #fdecec;
+            color: #c62828;
+        }
+
+.pdf-edit-dialog-kv-add {
+    align-self: flex-start;
+    margin-top: 2px;
+    padding: 3px 8px;
+    border: 1px dashed #9cc7f0;
+    border-radius: 4px;
+    background: #fff;
+    color: #2f7bc6;
+    font: inherit;
+    cursor: pointer;
+}
+
+    .pdf-edit-dialog-kv-add:hover {
+        border-style: solid;
+        background: #eef6ff;
+    }
+
+/* image placeholder until the preview is refreshed (tools/image.js) */
+.pdf-edit-image-placeholder {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 80px;
+    min-height: 40px;
+    padding: 6px 10px;
+    border: 1px dashed #888;
+    color: #555;
+    font-size: 12px;
+}

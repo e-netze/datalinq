@@ -25,7 +25,8 @@
  *       ]
  *   }).then(values => { if (values) ... });   // null if cancelled
  *
- * Field types: choice (radio cards), select, checkbox, number, text, color, heading (section title).
+ * Field types: choice (radio cards), select, checkbox, number, text, color, heading (section title),
+ * keyvalue (list of { key, value } rows, optional keyPattern).
  * Only included by Report.cshtml when editing mode is on (Development/Test only).
  */
 window.pdfEditDialog = (function () {
@@ -44,6 +45,10 @@ window.pdfEditDialog = (function () {
                 const checked = input.querySelector('input:checked');
                 return checked ? checked.value : field.value;
             }
+            case 'keyvalue':
+                return Array.from(input.querySelectorAll('.pdf-edit-dialog-kv-row'))
+                    .map(r => ({ key: r.querySelector('.kv-key').value.trim(), value: r.querySelector('.kv-value').value }))
+                    .filter(p => p.key !== '' || p.value !== '');
             default: return input.value;
         }
     };
@@ -88,6 +93,70 @@ window.pdfEditDialog = (function () {
             return select;
         }
 
+        if (field.type === 'keyvalue') {
+            const list = document.createElement('div');
+            list.id = id;
+            list.className = 'pdf-edit-dialog-kv';
+            const changed = () => list.dispatchEvent(new Event('change', { bubbles: true }));
+            const createText = function (className, placeholder, value) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = className;
+                input.placeholder = placeholder;
+                input.spellcheck = false;
+                input.autocomplete = 'off';
+                input.value = value ?? '';
+                return input;
+            };
+            const addRow = function (pair) {
+                const row = document.createElement('div');
+                row.className = 'pdf-edit-dialog-kv-row';
+                const key = createText('kv-key', field.keyPlaceholder || 'Key', pair ? pair.key : '');
+                const value = createText('kv-value', field.valuePlaceholder || 'Value', pair ? pair.value : '');
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'pdf-edit-dialog-kv-remove';
+                remove.title = 'Remove';
+                remove.setAttribute('aria-label', 'Remove');
+                remove.textContent = '\u00d7';
+                remove.addEventListener('click', () => {
+                    const next = row.nextElementSibling;
+                    row.remove();
+                    (next && next.classList.contains('pdf-edit-dialog-kv-row') ? next.querySelector('.kv-key') : add).focus();
+                    changed();
+                });
+                // Enter: key -> value -> next/new row (instead of submitting the dialog, see onKeyDown)
+                key.pdfEditOnEnter = () => value.focus();
+                value.pdfEditOnEnter = () => {
+                    const next = row.nextElementSibling;
+                    if (next && next.classList.contains('pdf-edit-dialog-kv-row')) {
+                        next.querySelector('.kv-key').focus();
+                    } else {
+                        addRow(null).focus();
+                        changed();
+                    }
+                };
+                row.append(key, value, remove);
+                list.insertBefore(row, add);
+                return key;
+            };
+            const empty = document.createElement('div');
+            empty.className = 'pdf-edit-dialog-kv-empty';
+            empty.textContent = field.emptyText || 'None';
+            list.appendChild(empty);
+            const add = document.createElement('button');
+            add.type = 'button';
+            add.className = 'pdf-edit-dialog-kv-add';
+            add.textContent = '+ ' + (field.addLabel || 'Add');
+            add.addEventListener('click', () => {
+                addRow(null).focus();
+                changed();
+            });
+            list.appendChild(add);
+            (Array.isArray(field.value) ? field.value : []).forEach(addRow);
+            return list;
+        }
+
         const input = document.createElement('input');
         input.id = id;
         if (field.type === 'checkbox') {
@@ -127,6 +196,9 @@ window.pdfEditDialog = (function () {
         if (e.key === 'Escape') {
             e.preventDefault();
             close(null);
+        } else if (e.key === 'Enter' && typeof e.target.pdfEditOnEnter === 'function') {
+            e.preventDefault();
+            e.target.pdfEditOnEnter();
         } else if (e.key === 'Enter' && !(e.target instanceof HTMLButtonElement) && !(e.target instanceof HTMLSelectElement)) {
             e.preventDefault();
             current.next();
@@ -209,6 +281,10 @@ window.pdfEditDialog = (function () {
                     const v = values[r.field.name];
                     if (r.field.required && (v === '' || v === null || v === undefined)) return r.field.label + ' is required.';
                     if (r.field.pattern && typeof v === 'string' && !r.field.pattern.test(v)) return r.field.label + ': invalid value.';
+                    if (r.field.type === 'keyvalue' && Array.isArray(v)) {
+                        const bad = v.find(p => r.field.keyPattern ? !r.field.keyPattern.test(p.key) : p.key === '');
+                        if (bad) return r.field.label + ': invalid key "' + bad.key + '".';
+                    }
                     if (r.field.type === 'number' && ((r.field.min !== undefined && v < r.field.min) || (r.field.max !== undefined && v > r.field.max))) {
                         return r.field.label + ': out of range.';
                     }
