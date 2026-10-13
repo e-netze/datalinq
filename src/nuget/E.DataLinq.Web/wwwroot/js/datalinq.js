@@ -338,7 +338,7 @@ var dataLinq = new function () {
 
     this.downloadPDFSilently = function (id, existingQueryString = '', buttonId) {
         const separator = existingQueryString ? '&' : '';
-        const url = `/datalinq/report/${id}?${existingQueryString}${separator}_autoDownload=true`;
+        const url = `${dataLinq.baseUrl}/datalinq/report/${id}?${existingQueryString}${separator}_autoDownload=true`;
 
         const iframe = document.createElement('iframe');
         iframe.style.position = 'fixed';
