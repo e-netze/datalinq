@@ -688,7 +688,7 @@ public class DataLinqCodeController : DataLinqCodeBaseController
         }
     }
 
-    async public Task<IActionResult> CreateEndPointQueryView(string endPoint, string query, string view)
+    async public Task<IActionResult> CreateEndPointQueryView(string endPoint, string query, string view, bool pdfReport = false)
     {
         try
         {
@@ -697,7 +697,7 @@ public class DataLinqCodeController : DataLinqCodeBaseController
                 throw new Exception("datalinq endpoint no set");
             }
 
-            return base.JsonObject(await _client.CreateEndPointQueryView(endPoint, query, view));
+            return base.JsonObject(await _client.CreateEndPointQueryView(endPoint, query, view, pdfReport));
         }
         catch (Exception ex)
         {

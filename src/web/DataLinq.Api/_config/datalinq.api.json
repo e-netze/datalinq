@@ -12,9 +12,7 @@
     },
     "ImageRequestWhiteList": [
       "https://upload.wikimedia.org/",
-      "https://raw.githubusercontent.com/",
-      "https://gisags1.esn.at/",
-      "https://gisback1.esn.at/"
+      "https://raw.githubusercontent.com/"
     ],
     "SelectEngines": {
       "TextFileEngine_": {

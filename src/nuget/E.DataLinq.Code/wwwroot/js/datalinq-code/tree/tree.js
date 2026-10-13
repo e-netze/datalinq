@@ -366,13 +366,16 @@
             }, { validate: validateName });
         },
 
-        newView: function ($parent, endPoint, query) {
+        newView: function ($parent, endPoint, query, pdfReport) {
             if (!dataLinqCode.privileges.createViews()) return;
 
-            dataLinqCode.ui.prompt('New view', 'Name of the new view in query "' + endPoint + '@' + query + '":', '', function (name) {
+            var title = pdfReport ? 'New PDF report' : 'New view';
+            var label = pdfReport ? 'Name of the new PDF report view in query "' : 'Name of the new view in query "';
+
+            dataLinqCode.ui.prompt(title, label + endPoint + '@' + query + '":', '', function (name) {
                 dataLinqCode.api.createView(endPoint, query, name, function (result) {
                     handleResult(result, function () { refreshSilent($parent); });
-                });
+                }, pdfReport === true);
             }, { validate: validateName });
         },
 
@@ -911,6 +914,7 @@ var attachFolderEventHandlers = function ($folder) {
 
                 showContextMenu(e, [
                     dataLinqCode.privileges.createViews() ? { text: 'New view', action: function () { actions.newView($holder, endPoint, query); } } : null,
+                    dataLinqCode.privileges.createViews() ? { text: 'New PDF report', action: function () { actions.newView($holder, endPoint, query, true); } } : null,
                     '-',
                     { text: 'Run (new tab)', action: function () { actions.run(queryId); } },
                     { text: 'Copy ID', action: function () { actions.copyId(queryId); } },

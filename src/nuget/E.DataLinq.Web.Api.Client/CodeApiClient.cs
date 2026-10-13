@@ -836,9 +836,9 @@ public class CodeApiClient
         }
     }
 
-    async public Task<SuccessCreatedModel> CreateEndPointQueryView(string endPointId, string queryId, string viewId)
+    async public Task<SuccessCreatedModel> CreateEndPointQueryView(string endPointId, string queryId, string viewId, bool pdfReport = false)
     {
-        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/create/{endPointId}/{queryId}/{viewId}"))
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/create/{endPointId}/{queryId}/{viewId}{(pdfReport ? "?pdfReport=true" : "")}"))
         {
             ModifyHttpRequest(requestMessage);
 

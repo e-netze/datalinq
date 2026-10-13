@@ -769,7 +769,7 @@ public class DataLinqCodeApiController : ApiBaseController
 
     [HttpGet]
     [Route("create/{endPointId}/{queryId}/{viewId}")]
-    async public Task<IActionResult> CreateEndPointQueryView(string endPointId, string queryId, string viewId)
+    async public Task<IActionResult> CreateEndPointQueryView(string endPointId, string queryId, string viewId, [FromQuery] bool pdfReport = false)
     {
         return await SecureMethodHandler(async () =>
         {
@@ -827,6 +827,21 @@ For more information, see Help (?).
 @DLH.Table(Model.Records, max: 100)
 "
             };
+
+            if (pdfReport)
+            {
+                view.PDFReportMode = true;
+                view.Code = @"@PDF.BeginReport(fileName: ""dataLinqPdfReport"")
+
+    @PDF.NewPage()
+
+        @* new page *@
+
+    @PDF.EndPage()
+
+@PDF.EndReport()
+";
+            }
 
             return base.JsonObject(new SuccessCreatedModel(await _persistanceProvider.StoreEndPointQueryView(view))
             {

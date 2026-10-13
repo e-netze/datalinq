@@ -33,8 +33,8 @@
         this.createQuery = function (endPoint, query, callback) {
             this.get('createEndPointQuery', callback, { endPoint: endPoint, query: query });
         };
-        this.createView = function (endPoint, query, view, callback) {
-            this.get('createEndPointQueryView', callback, { endPoint: endPoint, query: query, view: view });
+        this.createView = function (endPoint, query, view, callback, pdfReport) {
+            this.get('createEndPointQueryView', callback, { endPoint: endPoint, query: query, view: view, pdfReport: pdfReport === true });
         };
 
         this.deleteEndPoint = function (endPoint, callback) {
