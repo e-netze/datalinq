@@ -1,0 +1,242 @@
+/*
+ * PDF report - form inputs (see js/pdf-report/tools/input.js and js/pdf-report/form-inputs.js).
+ * Settings are passed as custom properties on the .dl-input wrapper:
+ *   --dl-bw/--dl-bs/--dl-bc (border), --dl-bg (background), --dl-fg (text color), --dl-fs (font size), --dl-r (corner radius)
+ */
+
+.dl-input {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: var(--dl-fs, 12px);
+    color: var(--dl-fg, #1f2328);
+}
+
+    .dl-input[data-label-pos="left"] {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+
+.dl-input-label {
+    flex: 0 0 auto;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--dl-fg, #1f2328);
+    opacity: 0.8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dl-input[data-required="true"] .dl-input-label::after,
+.dl-input-checkbox[data-required="true"] .dl-input-check span::after {
+    content: ' *';
+    color: #c62828;
+}
+
+.dl-input .dl-input-control {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 4px 8px;
+    font: inherit;
+    color: inherit;
+    background: var(--dl-bg, #ffffff);
+    border: var(--dl-bw, 1px) var(--dl-bs, solid) var(--dl-bc, #c8ccd2);
+    border-radius: var(--dl-r, 4px);
+    outline: none;
+    box-shadow: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+    .dl-input .dl-input-control:focus,
+    .dl-input .dl-input-control:focus-within {
+        border-color: #1a73e8;
+        box-shadow: 0 0 0 2px rgba(26, 115, 232, .18);
+    }
+
+.dl-input textarea.dl-input-control {
+    resize: none;
+    line-height: 1.4;
+}
+
+.dl-input select.dl-input-control {
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: 24px;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 13px) 50%, calc(100% - 9px) 50%;
+    background-size: 4px 4px;
+    background-repeat: no-repeat;
+}
+
+.dl-input ::placeholder {
+    color: #9aa0a6;
+    opacity: 1;
+}
+
+/* checkbox / radio */
+.dl-input .dl-input-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    line-height: 1.3;
+}
+
+.dl-input-checkbox .dl-input-control,
+.dl-input-radio .dl-input-control {
+    padding: 2px 4px;
+}
+
+.dl-input-options {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 4px;
+    overflow: hidden;
+}
+
+    .dl-input-options .dl-input-check {
+        padding: 0;
+    }
+
+.dl-input input[type="checkbox"],
+.dl-input input[type="radio"] {
+    width: 1.15em;
+    height: 1.15em;
+    margin: 0;
+    flex: 0 0 auto;
+    accent-color: #1a73e8;
+}
+
+/* signature */
+.dl-input .dl-signature {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+    background-image: linear-gradient(var(--dl-bc, #c8ccd2), var(--dl-bc, #c8ccd2));
+    background-size: calc(100% - 24px) 1px;
+    background-position: 12px calc(100% - 18px);
+    background-repeat: no-repeat;
+    background-color: var(--dl-bg, #ffffff);
+}
+
+.dl-signature-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: crosshair;
+}
+
+.dl-signature-clear {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .06);
+    color: #5f6368;
+    font-size: 14px;
+    line-height: 20px;
+    cursor: pointer;
+    display: none;
+}
+
+.dl-signature[data-signed="true"] .dl-signature-clear {
+    display: block;
+}
+
+/* required, but empty */
+.dl-input.dl-input-invalid .dl-input-control {
+    border-color: #d93025 !important;
+    border-style: solid !important;
+    border-width: max(var(--dl-bw, 1px), 1px) !important;
+    background-color: #fdecea;
+    box-shadow: 0 0 0 2px rgba(217, 48, 37, .15);
+}
+
+.dl-input.dl-input-invalid .dl-input-label {
+    color: #d93025;
+}
+
+/* editing mode: the draggable gets the clicks */
+body.pdf-edit-inputs-inert .dl-input .dl-input-control,
+body.pdf-edit-inputs-inert .dl-input .dl-input-check {
+    pointer-events: none;
+}
+
+/* validation modal */
+.dl-input-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, .35);
+}
+
+.dl-input-modal {
+    max-width: 380px;
+    width: calc(100% - 32px);
+    padding: 20px 22px 16px;
+    border-radius: 8px;
+    background: #fff;
+    color: #1f2328;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+}
+
+    .dl-input-modal h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+    }
+
+    .dl-input-modal p {
+        margin: 0 0 16px;
+        font-size: 14px;
+        line-height: 1.45;
+    }
+
+    .dl-input-modal button {
+        float: right;
+        padding: 6px 16px;
+        border: none;
+        border-radius: 4px;
+        background: #1a73e8;
+        color: #fff;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+@media print {
+    .dl-input [data-noprint],
+    .dl-input-modal-backdrop {
+        display: none !important;
+    }
+
+    .dl-input .dl-input-control:focus,
+    .dl-input .dl-input-control:focus-within {
+        border-color: var(--dl-bc, #c8ccd2);
+        box-shadow: none;
+    }
+
+    .dl-input ::placeholder {
+        color: transparent;
+    }
+
+    .dl-input select.dl-input-control {
+        background-image: none;
+    }
+}

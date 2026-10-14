@@ -13,6 +13,9 @@
  * @returns {Promise<void>} Resolves when the PDF has been generated.
  */
 async function onDownloadButtonClick() {
+    // Required form inputs must be filled in first (see form-inputs.js).
+    if (window.pdfFormInputs && !pdfFormInputs.validateBeforeOutput()) return;
+
     if (this.closest('.pdf-mobile-toolbar')) {
         // Compact toolbar: no room for the text, show a spinner instead.
         this.innerHTML = '<span class="pdf-mobile-spinner" aria-label="Generating PDF"></span>';
@@ -57,7 +60,8 @@ async function downloadPDFMethod() {
                     backgroundColor: '#ffffff',
                     skipFonts: false,
                     // Editing guides (margin/custom lines) never end up in the PDF.
-                    filter: (node) => !(node.classList && (node.classList.contains('margin-guide-line') || node.classList.contains('custom-guide-line'))),
+                    filter: (node) => !(node.classList && (node.classList.contains('margin-guide-line') || node.classList.contains('custom-guide-line'))) &&
+                        !(node.hasAttribute && node.hasAttribute('data-noprint')),
                     onclone: (clonedDoc) => {
                         // Drop cross-origin stylesheets (e.g. Leaflet): reading their
                         // cssRules would throw a CORS error inside html-to-image.

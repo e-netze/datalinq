@@ -384,6 +384,7 @@ function initializeEditingToolbar() {
 
     const toolbar = document.createElement('div');
     toolbar.className = 'pdf-page-navigator pdf-editing-toolbar';
+    toolbar.appendChild(createEditingToolbarHeading('View & guides'));
 
     const guidesButton = document.createElement('button');
     guidesButton.type = 'button';
@@ -478,25 +479,43 @@ function initializeEditingToolbar() {
         });
     }, true);
 
-    document.body.appendChild(toolbar);
-    applyGuidesToPages();
+    // Both editing toolbars (adding elements + view/guides) share one dock, vertically centered on the left.
+    const dock = document.createElement('div');
+    dock.className = 'pdf-editing-dock';
+    document.body.appendChild(dock);
 
     // Separate toolbar for adding elements (paragraph, ...), see add-elements.js.
     if (typeof createAddElementsControl === 'function') {
         try {
             const addToolbar = document.createElement('div');
             addToolbar.className = 'pdf-page-navigator pdf-editing-toolbar pdf-adding-toolbar';
+            addToolbar.appendChild(createEditingToolbarHeading('Add & edit'));
             addToolbar.appendChild(createAddElementsControl());
             if (window.pdfEditActions && pdfEditActions.all().length > 0) {
                 addToolbar.appendChild(pdfEditActions.createControl());
             }
-            document.body.appendChild(addToolbar);
+            dock.appendChild(addToolbar);
         } catch (e) {
             console.error('PDF editing mode: could not create the add elements toolbar', e);
         }
     }
 
+    dock.appendChild(toolbar);
+    applyGuidesToPages();
+
     updateNoPageState();
+}
+
+/**
+ * Small section heading of an editing toolbar (spans both button columns).
+ * @param {string} text Heading text.
+ * @returns {HTMLDivElement} The heading element.
+ */
+function createEditingToolbarHeading(text) {
+    const heading = document.createElement('div');
+    heading.className = 'pdf-editing-toolbar-heading';
+    heading.textContent = text;
+    return heading;
 }
 
 /**

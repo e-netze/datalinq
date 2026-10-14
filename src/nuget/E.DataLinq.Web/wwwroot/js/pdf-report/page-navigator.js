@@ -58,7 +58,11 @@ function initializePageNavigator() {
         nav.appendChild(createPdfToolbarButton('downloadBtn', DOWNLOAD_BUTTON_HTML, onDownloadButtonClick));
     }
 
-    nav.appendChild(createPdfToolbarButton('printBtn', PRINT_BUTTON_HTML, () => window.print()));
+    nav.appendChild(createPdfToolbarButton('printBtn', PRINT_BUTTON_HTML, () => {
+        // Required form inputs must be filled in first (see form-inputs.js).
+        if (window.pdfFormInputs && !pdfFormInputs.validateBeforeOutput()) return;
+        window.print();
+    }));
 
     document.body.appendChild(nav);
 

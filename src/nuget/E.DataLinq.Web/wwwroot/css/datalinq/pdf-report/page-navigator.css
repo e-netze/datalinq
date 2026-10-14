@@ -96,11 +96,70 @@
     bottom: auto;
 }
 
-    /* editing toolbars: 2 column grid of square icon buttons, label shown on hover */
-    .pdf-page-navigator.pdf-editing-toolbar {
-        display: grid;
-        grid-template-columns: repeat(2, 40px);
-        grid-auto-rows: 40px;
+    /* editing mode: both editing toolbars stacked in one dock, vertically centered on the left */
+    .pdf-editing-dock {
+        position: fixed;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        z-index: 99990;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+        .pdf-editing-dock > .pdf-page-navigator.pdf-editing-toolbar {
+            position: relative;
+            left: auto;
+            right: auto;
+            top: auto;
+            bottom: auto;
+                    pointer-events: auto;
+                    border-radius: 0;
+                    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+                    grid-template-columns: repeat(2, 48px);
+                    justify-items: center;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                }
+
+            .pdf-editing-dock > .pdf-page-navigator.pdf-editing-toolbar:first-child {
+                border-radius: 6px 6px 0 0;
+                padding-bottom: 12px;
+            }
+
+            .pdf-editing-dock > .pdf-page-navigator.pdf-editing-toolbar:last-child {
+                border-radius: 0 0 6px 6px;
+            }
+
+            .pdf-editing-dock > .pdf-page-navigator.pdf-editing-toolbar:only-child {
+                border-radius: 6px;
+            }
+
+                    .pdf-editing-dock > .pdf-page-navigator.pdf-editing-toolbar + .pdf-page-navigator.pdf-editing-toolbar {
+                        border-top: 1px solid rgba(255, 255, 255, 0.15);
+                        padding-top: 10px;
+                    }
+
+            .pdf-editing-toolbar-heading {
+                grid-column: 1 / -1;
+                justify-self: center;
+                text-align: center;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.65);
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
+        /* editing toolbars: 2 column grid of square icon buttons, label shown on hover */
+        .pdf-page-navigator.pdf-editing-toolbar {
+            display: grid;
+            grid-template-columns: repeat(2, 40px);
+            grid-auto-rows: auto;
         gap: 6px;
         padding: 8px;
     }
