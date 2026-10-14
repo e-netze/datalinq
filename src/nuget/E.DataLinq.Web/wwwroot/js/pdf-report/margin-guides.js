@@ -191,6 +191,29 @@ function snapAxisToLines(start, size, lines, threshold) {
 }
 
 /**
+ * Snaps a single edge (used while resizing) to the visible guide lines of the page
+ * (center, margin and custom guides; not to other elements).
+ * @param {HTMLElement} page The page.
+ * @param {'x'|'y'} axis 'x' for vertical lines (left/right edges), 'y' for horizontal lines.
+ * @param {number} pos Edge position relative to the page (CSS px).
+ * @returns {{value: number, snapped: boolean}} Snapped edge position.
+ */
+function snapEdgeToGuides(page, axis, pos) {
+    const lines = getVisibleSnapLines(page, page.getBoundingClientRect())[axis];
+    const threshold = typeof SNAP_THRESHOLD === 'number' ? SNAP_THRESHOLD : 15;
+    let best = null;
+
+    lines.forEach(line => {
+        const distance = Math.abs(pos - line.pos);
+        if (distance < threshold && (!best || distance < best.distance)) {
+            best = { distance, value: line.pos };
+        }
+    });
+
+    return best ? { value: best.value, snapped: true } : { value: pos, snapped: false };
+}
+
+/**
  * Builds the "Margin guides" toolbar button plus its settings panel.
  * @returns {HTMLElement} Container holding the button and the (initially hidden) panel.
  */

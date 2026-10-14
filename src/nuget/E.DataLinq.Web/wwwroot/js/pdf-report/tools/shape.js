@@ -377,6 +377,26 @@ window.pdfEditShapes = (function () {
             w = Math.max(MIN_SIZE, w);
             h = Math.max(MIN_SIZE, h);
 
+            // Ctrl = snap the moving edges to the visible guide lines (as while dragging)
+            let snapped = false;
+            if (ev.ctrlKey && typeof snapEdgeToGuides === 'function') {
+                if (hasE) {
+                    const s = snapEdgeToGuides(page, 'x', baseLeft + start.x + w);
+                    if (s.snapped) { w = Math.max(MIN_SIZE, Math.min(s.value - baseLeft - start.x, maxRight - start.x)); snapped = true; }
+                } else if (hasW) {
+                    const s = snapEdgeToGuides(page, 'x', baseLeft + right - w);
+                    if (s.snapped) { w = Math.max(MIN_SIZE, Math.min(baseLeft + right - s.value, right - minX)); snapped = true; }
+                }
+                if (hasS) {
+                    const s = snapEdgeToGuides(page, 'y', baseTop + start.y + h);
+                    if (s.snapped) { h = Math.max(MIN_SIZE, Math.min(s.value - baseTop - start.y, maxBottom - start.y)); snapped = true; }
+                } else if (hasN) {
+                    const s = snapEdgeToGuides(page, 'y', baseTop + bottom - h);
+                    if (s.snapped) { h = Math.max(MIN_SIZE, Math.min(baseTop + bottom - s.value, bottom - minY)); snapped = true; }
+                }
+            }
+            element.classList.toggle('element-snapped', snapped);
+
             if (ev.shiftKey) {
                 if (horizontal && vertical) {
                     if (Math.abs(w - w0) / w0 >= Math.abs(h - h0) / Math.max(1, h0)) h = w / ratio;
@@ -417,6 +437,7 @@ window.pdfEditShapes = (function () {
             document.removeEventListener('mouseup', end);
             window.removeEventListener('blur', end);
             element.classList.remove('pdf-edit-shape-resizing');
+            element.classList.remove('element-snapped');
             document.body.classList.remove('pdf-edit-shape-resizing-' + dir);
             if (typeof limitDraggableToPage === 'function') limitDraggableToPage(element);
             if (!changed) return;

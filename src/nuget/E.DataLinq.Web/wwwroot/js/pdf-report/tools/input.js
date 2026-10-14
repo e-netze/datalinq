@@ -246,19 +246,41 @@
         const page = element.closest('.page');
         if (!node || !page || !isEditableInput(element)) return;
 
-        const scale = page.offsetWidth > 0 ? page.getBoundingClientRect().width / page.offsetWidth : 1;
+        const pageRect = page.getBoundingClientRect();
+        const scale = page.offsetWidth > 0 ? pageRect.width / page.offsetWidth : 1;
         const previous = readSettings(node);
         const w0 = node.offsetWidth, h0 = node.offsetHeight;
         const startX = e.clientX, startY = e.clientY;
         const horizontal = dir.indexOf('e') >= 0, vertical = dir.indexOf('s') >= 0;
+        // node position relative to the page (CSS px), used to snap the right/bottom edges
+        const nodeRect = node.getBoundingClientRect();
+        const nodeLeft = (nodeRect.left - pageRect.left) / scale;
+        const nodeTop = (nodeRect.top - pageRect.top) / scale;
         let changed = false;
 
         element.classList.add('pdf-edit-shape-resizing');
         document.body.classList.add('pdf-edit-shape-resizing-' + dir);
 
         const move = function (ev) {
-            const w = horizontal ? round(Math.max(MIN_SIZE, w0 + (ev.clientX - startX) / scale)) : w0;
-            const h = vertical ? round(Math.max(MIN_SIZE, h0 + (ev.clientY - startY) / scale)) : h0;
+            let w = horizontal ? Math.max(MIN_SIZE, w0 + (ev.clientX - startX) / scale) : w0;
+            let h = vertical ? Math.max(MIN_SIZE, h0 + (ev.clientY - startY) / scale) : h0;
+
+            // Ctrl = snap the moving edges to the visible guide lines (as while dragging)
+            let snapped = false;
+            if (ev.ctrlKey && typeof snapEdgeToGuides === 'function') {
+                if (horizontal) {
+                    const s = snapEdgeToGuides(page, 'x', nodeLeft + w);
+                    if (s.snapped) { w = Math.max(MIN_SIZE, s.value - nodeLeft); snapped = true; }
+                }
+                if (vertical) {
+                    const s = snapEdgeToGuides(page, 'y', nodeTop + h);
+                    if (s.snapped) { h = Math.max(MIN_SIZE, s.value - nodeTop); snapped = true; }
+                }
+            }
+            element.classList.toggle('element-snapped', snapped);
+
+            w = round(w);
+            h = round(h);
             node.style.width = w + 'px';
             node.style.height = h + 'px';
             changed = w !== w0 || h !== h0;
@@ -269,6 +291,7 @@
             document.removeEventListener('mouseup', end);
             window.removeEventListener('blur', end);
             element.classList.remove('pdf-edit-shape-resizing');
+            element.classList.remove('element-snapped');
             document.body.classList.remove('pdf-edit-shape-resizing-' + dir);
             if (typeof limitDraggableToPage === 'function') limitDraggableToPage(element);
             if (!changed) return;

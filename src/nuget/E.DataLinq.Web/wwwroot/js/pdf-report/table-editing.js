@@ -11,6 +11,7 @@
  *   pdfEditTable.createTable({ className, width, rowHeight, head: [[text]], body: [[text]] })  // preview DOM
  *
  * Editing: double click a cell = rich text (text-format.js toolbar), drag a column border = column widths,
+ * drag the outer right border = table width (columns scale proportionally, Ctrl = snap to guides),
  * context menu "Table properties..." = modal (columns, header rows, body rows, row height, width, border).
  *
  * Only included by Report.cshtml when editing mode is on (Development/Test only).
@@ -199,7 +200,8 @@ window.pdfEditTable = (function () {
 
     // ---- column widths (drag column borders) ------------------------------------------------
 
-    // column index left of the border at clientX, -1 if not on a (inner) border
+    // column index left of the border at clientX, -1 if not on a border;
+    // the last column index = the outer right border (resizes the whole table)
     const borderAt = function (ctx, clientX) {
         const row = ctx.cell.parentElement;
         const index = Array.from(row.cells).indexOf(ctx.cell);
@@ -208,7 +210,7 @@ window.pdfEditTable = (function () {
         if (clientX >= rect.right - HANDLE) col = index;
         else if (clientX <= rect.left + HANDLE) col = index - 1;
         const cols = ctx.table.querySelectorAll(':scope > colgroup > col');
-        return col >= 0 && col < cols.length - 1 ? col : -1;
+        return col >= 0 && col < cols.length ? col : -1;
     };
 
     let resizing = null;
@@ -224,13 +226,88 @@ window.pdfEditTable = (function () {
         const total = widths.reduce((s, w) => s + w, 0) || 1;
 
         resizing = { ctx, cols, col, scale, widths, total, startX: clientX, current: widths.map(w => w / total * 100) };
+        if (col === cols.length - 1) {
+            // outer right border -> whole table width (columns keep their % = scale proportionally)
+            const page = ctx.element.closest('.page');
+            const pageRect = page ? page.getBoundingClientRect() : rect;
+            resizing.table = {
+                page: page,
+                width0: ctx.table.offsetWidth,
+                left: (rect.left - pageRect.left) / scale,
+                width: ctx.table.offsetWidth,
+                originalStyle: ctx.table.style.width
+            };
+        }
         document.body.classList.add('pdf-edit-col-resizing');
         return true;
+    };
+
+    const onTableResizeMove = function (e) {
+        const r = resizing, t = r.table;
+        let width = Math.max(MIN_COLUMN * r.cols.length, t.width0 + (e.clientX - r.startX) / r.scale);
+        let snapped = false;
+        if (e.ctrlKey && t.page && typeof snapEdgeToGuides === 'function') {
+            const s = snapEdgeToGuides(t.page, 'x', t.left + width);
+            if (s.snapped) {
+                width = Math.max(MIN_COLUMN * r.cols.length, s.value - t.left);
+                snapped = true;
+            }
+        }
+        if (t.page) width = Math.min(width, t.page.offsetWidth - t.left);
+        t.width = roundLength(width);
+        r.ctx.table.style.width = t.width + 'px';
+        r.ctx.element.classList.toggle('element-snapped', snapped);
+    };
+
+    const onTableResizeEnd = async function (r) {
+        const t = r.table;
+        r.ctx.element.classList.remove('element-snapped');
+        if (Math.abs(t.width - t.width0) < 0.5) {
+            r.ctx.table.style.width = t.originalStyle;
+            return;
+        }
+
+        const args = elementArgs(r.ctx.element);
+        const current = await pdfEditActions.request(r.ctx.registration.actionPrefix + '.get', args);
+        if (!current.success || !current.data) {
+            r.ctx.table.style.width = t.originalStyle;
+            pdfEditActions.notify(current.message || 'The table could not be read.');
+            return;
+        }
+        const o = current.data;
+        const unit = o.widthUnit === 'mm' ? 'mm' : 'px';
+        const pxPerMm = typeof mmToPx === 'function' ? mmToPx(1) : 96 / 25.4;
+        const width = unit === 'mm' ? roundLength(t.width / pxPerMm) : roundLength(t.width);
+
+        const result = await pdfEditActions.request(r.ctx.registration.actionPrefix + '.set', Object.assign(args, {
+            table: {
+                columns: o.columns,
+                headRows: o.headRows,
+                bodyRows: o.bodyRows,
+                rowHeight: o.rowHeight || 0,
+                rowHeightUnit: o.rowHeightUnit || 'px',
+                width: width,
+                widthUnit: unit,
+                border: o.border || null
+            }
+        }));
+        if (!result.success) {
+            r.ctx.table.style.width = t.originalStyle;
+            pdfEditActions.notify(result.message || 'The table width could not be changed.');
+            return;
+        }
+
+        const page = pdfEditActions.pageOf(r.ctx.element.closest('.page'));
+        pdfEditActions.saveAndReload(page ? page.sourceIndex : undefined);
     };
 
     const onResizeMove = function (e) {
         if (!resizing) return;
         const r = resizing;
+        if (r.table) {
+            onTableResizeMove(e);
+            return;
+        }
         const pair = r.widths[r.col] + r.widths[r.col + 1];
         const left = Math.min(pair - MIN_COLUMN, Math.max(MIN_COLUMN, r.widths[r.col] + (e.clientX - r.startX) / r.scale));
         r.current[r.col] = left / r.total * 100;
@@ -244,6 +321,11 @@ window.pdfEditTable = (function () {
         const r = resizing;
         resizing = null;
         document.body.classList.remove('pdf-edit-col-resizing');
+
+        if (r.table) {
+            onTableResizeEnd(r);
+            return;
+        }
 
         const widths = r.current.map(w => Math.round(w * 100) / 100);
         pdfEditActions.request(r.ctx.registration.actionPrefix + '.widths', Object.assign(elementArgs(r.ctx.element), { widths: widths }))
