@@ -5,7 +5,9 @@
  *       selector: 'table.pdf-table-static',   // tables handled by this registration
  *       actionPrefix: 'table.static',         // source actions <prefix>.get | .set | .widths | .cell (DataLinq Code
  *                                             // editor/pdf-editing/table-source.js)
- *       label: 'Table'
+ *       label: 'Table',
+ *       cells: true,                          // false: no cell editing (e.g. dynamic tables)
+ *       properties: true                      // false: no "Table properties..." modal
  *   });
  *
  *   pdfEditTable.createTable({ className, width, rowHeight, head: [[text]], body: [[text]] })  // preview DOM
@@ -192,7 +194,7 @@ window.pdfEditTable = (function () {
     // capture phase: runs before the generic element double click (add-elements.js)
     document.addEventListener('dblclick', function (e) {
         const ctx = connected() ? contextOf(e.target) : null;
-        if (!ctx) return;
+        if (!ctx || ctx.registration.cells === false) return;
         e.preventDefault();
         e.stopPropagation();
         editCell(ctx);
@@ -454,7 +456,7 @@ window.pdfEditTable = (function () {
         label: 'Table properties...',
         icon: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
             '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 10h18"/><path d="M12 10v10"/></svg>',
-        when: element => connected() && !!editableElement(tableOf(element)),
+        when: element => connected() && !!editableElement(tableOf(element)) && registrationOf(tableOf(element)).properties !== false,
         run: editProperties
     });
 

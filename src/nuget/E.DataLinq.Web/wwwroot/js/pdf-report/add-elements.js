@@ -12,7 +12,10 @@
  *       textTarget: function (element) { return node|null; } // editable text node of an existing element
  *       prompt: function () { return Promise<string|null>; } // optional, asks for settings before adding (result = text)
  *       saveAfterAdd: true                          // optional, save + reload the preview after the source was inserted
- *       choose: function () { return Promise<string|null>; } // optional, asks for settings when the toolbar button is clicked (before placing)
+ *       choose: function () { return Promise<string|{type, text}|null>; } // optional, asks for settings when the toolbar button is clicked (before placing)
+ *                                                   // ({ type: 'other-type', text } places another (hidden) type instead)
+ *       canPlace: function (page) { return null|string; }   // optional, error message if the element can not be placed on the page
+ *       hidden: true                                // optional, no own toolbar button (only placed via choose of another type)
  *       formatting: { inline: true, block: true }            // optional, rich text toolbar (see text-format.js)
  *   });
  *
@@ -203,6 +206,11 @@ window.pdfEditContextMenu = (function () {
             notify('This page cannot be edited (no source page found).');
             return;
         }
+        const placeError = typeof type.canPlace === 'function' ? type.canPlace(page) : null;
+        if (placeError) {
+            notify(placeError);
+            return;
+        }
 
         // settings chosen before placing (see choose)
         if (typeof presetText === 'string' && presetText) {
@@ -264,7 +272,7 @@ window.pdfEditContextMenu = (function () {
         if (group.types.length > 1) {
             openVariantPicker(group, page, e.clientX, e.clientY);
         } else {
-            addElement(group.types[0], page, e.clientX, e.clientY, group.presetText);
+            addElement(group.presetType || group.types[0], page, e.clientX, e.clientY, group.presetText);
         }
     }, true);
 
@@ -739,7 +747,7 @@ window.pdfEditContextMenu = (function () {
         // types with the same "group" (e.g. heading h1..h6) share one button; the variant is
         // chosen from a small picker after clicking on the page
         const groups = [];
-        pdfEditElementTypes.all().forEach(type => {
+        pdfEditElementTypes.all().filter(type => !type.hidden).forEach(type => {
             const key = type.group || type.type;
             let group = groups.find(g => g.key === key);
             if (!group) {
@@ -764,8 +772,11 @@ window.pdfEditContextMenu = (function () {
                     bridge && bridge.isConnected()) {
                     // e.g. shapes: choose the variant/settings in a modal first, then click on a page
                     endPlacing();
-                    Promise.resolve(group.types[0].choose()).then(text => {
+                    Promise.resolve(group.types[0].choose()).then(result => {
+                        const other = result && typeof result === 'object' ? pdfEditElementTypes.get(result.type) : null;
+                        const text = other ? result.text : result;
                         if (typeof text !== 'string' || !text) return;
+                        group.presetType = other;
                         group.presetText = text;
                         startPlacing(group, button);
                     });

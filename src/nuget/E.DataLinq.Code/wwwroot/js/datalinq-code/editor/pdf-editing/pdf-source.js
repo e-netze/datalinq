@@ -115,7 +115,8 @@ var pdfDraggableSource = new function () {
     /**
      * Registers/overrides the source template of an element type.
      * @param {string} type
-     * @param {{content: function(string): string, textPattern: RegExp}} template
+     * @param {{content: function(string, {indent:string, newLine:string}): string, textPattern: RegExp}} template
+     *   content: indent = indent of the first line (multi line content), newLine = line break of the source
      */
     this.registerElementTemplate = function (type, template) {
         elementTemplates[type] = template;
@@ -159,7 +160,7 @@ var pdfDraggableSource = new function () {
 
         var text =
             inner + at + open + '(x: ' + this.formatNumber(args.x) + ', y: ' + this.formatNumber(args.y) + ')' + newLine +
-            inner + '    ' + template.content(args.text) + newLine +
+            inner + '    ' + template.content(args.text, { indent: inner + '    ', newLine: newLine }) + newLine +
             inner + at + close + '()' + newLine +
             (onOwnLine ? '' : indent);
 

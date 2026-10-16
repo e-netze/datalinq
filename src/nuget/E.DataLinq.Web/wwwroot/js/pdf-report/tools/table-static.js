@@ -30,6 +30,36 @@
                 body: [['Cell']]
             });
         },
+        // static or dynamic table (dynamic: see table-dynamic.js, only on dynamic pages)
+        choose: async function () {
+            const dynamicAvailable = !!document.querySelector('.page-wrapper.dynamic') && !!window.pdfEditDynamicTable;
+            const values = await pdfEditDialog.open({
+                title: 'Add table',
+                submitLabel: 'Next',
+                steps: [{
+                    title: 'Table type',
+                    fields: [{
+                        name: 'kind', label: 'Type', type: 'choice', value: 'static',
+                        options: [
+                            { value: 'static', label: 'Static', description: 'Fixed rows and cells, edited directly in the preview.' },
+                            {
+                                value: 'dynamic', label: 'Dynamic',
+                                description: dynamicAvailable
+                                    ? 'One row per record of a data source (@foreach).'
+                                    : 'Only available on dynamic pages (dynamic table splitting).'
+                            }
+                        ],
+                        validate: value => value === 'dynamic' && !dynamicAvailable
+                            ? 'Dynamic tables require a dynamic page (page option "Dynamic").'
+                            : null
+                    }]
+                }]
+            });
+            if (!values) return null;
+            if (values.kind !== 'dynamic') return 'Header';
+            const config = await pdfEditDynamicTable.configure(null);
+            return config ? { type: 'table-dynamic', text: JSON.stringify(config) } : null;
+        },
         // cells are edited by table-editing.js
         textTarget: () => null
     });

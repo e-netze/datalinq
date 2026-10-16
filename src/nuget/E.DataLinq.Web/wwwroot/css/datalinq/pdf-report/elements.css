@@ -117,13 +117,17 @@ dl-token.pdf-edit-token-variable {
 }
 
 /* static tables (editing mode tool "Table"): column widths from <colgroup>, row height on the rows */
-table.pdf-table-static {
+/* dynamic tables (Table -> Dynamic) share the layout, border and resize styles */
+table.pdf-table-static,
+table.pdf-table-dynamic {
     table-layout: fixed;
     border-collapse: collapse;
 }
 
     table.pdf-table-static th,
-    table.pdf-table-static td {
+    table.pdf-table-static td,
+    table.pdf-table-dynamic th,
+    table.pdf-table-dynamic td {
         overflow-wrap: break-word;
         vertical-align: top;
     }
@@ -131,12 +135,65 @@ table.pdf-table-static {
     /* border chosen in the table properties (css variable on the table) */
     table.pdf-table-static[style*="--dl-table-border"],
     table.pdf-table-static[style*="--dl-table-border"] > * > tr > th,
-    table.pdf-table-static[style*="--dl-table-border"] > * > tr > td {
+    table.pdf-table-static[style*="--dl-table-border"] > * > tr > td,
+    table.pdf-table-dynamic[style*="--dl-table-border"],
+    table.pdf-table-dynamic[style*="--dl-table-border"] > * > tr > th,
+    table.pdf-table-dynamic[style*="--dl-table-border"] > * > tr > td {
         border: var(--dl-table-border);
+    }
+
+    /* dynamic tables: border mode (data-dl-border, default all), alignment, header and row colors (css variables) */
+    table.pdf-table-dynamic[data-dl-border="outer"] > * > tr > th,
+    table.pdf-table-dynamic[data-dl-border="outer"] > * > tr > td,
+    table.pdf-table-dynamic[data-dl-border="header"] > * > tr > th,
+    table.pdf-table-dynamic[data-dl-border="header"] > * > tr > td {
+        border: none;
+    }
+
+    table.pdf-table-dynamic[data-dl-border="horizontal"],
+    table.pdf-table-dynamic[data-dl-border="header"] {
+        border: none;
+    }
+
+    table.pdf-table-dynamic[data-dl-border="horizontal"] > * > tr > th,
+    table.pdf-table-dynamic[data-dl-border="horizontal"] > * > tr > td,
+    table.pdf-table-dynamic[data-dl-border="outer-horizontal"] > * > tr > th,
+    table.pdf-table-dynamic[data-dl-border="outer-horizontal"] > * > tr > td {
+        border-left: none;
+        border-right: none;
+    }
+
+    table.pdf-table-dynamic[data-dl-border="header"] > thead > tr > th {
+        border-bottom: var(--dl-table-border);
+    }
+
+    table.pdf-table-dynamic th {
+        text-align: var(--dl-head-align, left);
+        vertical-align: var(--dl-head-valign, top);
+        font-size: var(--dl-head-size, 11px);
+        font-weight: var(--dl-head-weight, bold);
+        background-color: var(--dl-head-bg, transparent);
+        color: var(--dl-head-color, inherit);
+    }
+
+    table.pdf-table-dynamic td {
+        text-align: var(--dl-body-align, left);
+        vertical-align: var(--dl-body-valign, top);
+        font-size: var(--dl-body-size, 11px);
+    }
+
+    table.pdf-table-dynamic > tbody > tr:nth-child(odd) > td {
+        background-color: var(--dl-odd-bg, transparent);
+    }
+
+    table.pdf-table-dynamic > tbody > tr:nth-child(even) > td {
+        background-color: var(--dl-even-bg, transparent);
     }
 
     table.pdf-table-static th.pdf-edit-col-resize,
     table.pdf-table-static td.pdf-edit-col-resize,
+    table.pdf-table-dynamic th.pdf-edit-col-resize,
+    table.pdf-table-dynamic td.pdf-edit-col-resize,
     body.pdf-edit-col-resizing,
     body.pdf-edit-col-resizing * {
         cursor: col-resize !important;
