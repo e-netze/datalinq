@@ -157,6 +157,7 @@ ______      _        _     _
 {
     <link href="@(ViewData["contentRootUrl"])/css/datalinq/pdf-report/edit-dialog.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
     <link href="@(ViewData["contentRootUrl"])/css/datalinq/pdf-report/shape-editing.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
+    <link href="@(ViewData["contentRootUrl"])/css/datalinq/pdf-report/data-editing.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
     @* PDF editing scripts (classic scripts, shared global scope); the order matters (editing.js last). *@
     @foreach (var pdfEditScript in new[] {
         "margin-guides.js",
@@ -169,6 +170,7 @@ ______      _        _     _
         "table-editing.js",
         "tools/new-page.js",
         "tools/report-options.js",
+        "tools/data.js",
         "tools/paragraph.js",
         "tools/heading.js",
         "tools/list.js",

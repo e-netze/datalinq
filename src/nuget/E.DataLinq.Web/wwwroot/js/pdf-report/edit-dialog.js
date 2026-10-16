@@ -26,7 +26,9 @@
  *   }).then(values => { if (values) ... });   // null if cancelled
  *
  * Field types: choice (radio cards), select, checkbox, number, text, color, heading (section title),
- * keyvalue (list of { key, value } rows, optional keyPattern).
+ * keyvalue (list of { key, value } rows, optional keyPattern),
+ * custom ({ create: value => HTMLElement, read: element => value }; dispatch 'change' on the element when it changes).
+ * Any field may define validate: (value, values) => errorMessage|null.
  * Only included by Report.cshtml when editing mode is on (Development/Test only).
  */
 window.pdfEditDialog = (function () {
@@ -36,6 +38,7 @@ window.pdfEditDialog = (function () {
 
     const readValue = function (field, input) {
         switch (field.type) {
+            case 'custom': return typeof field.read === 'function' ? field.read(input) : field.value;
             case 'checkbox': return input.checked;
             case 'number': {
                 const n = parseFloat(input.value);
@@ -54,6 +57,12 @@ window.pdfEditDialog = (function () {
     };
 
     const createInput = function (field, id) {
+        if (field.type === 'custom') {
+            const element = field.create(field.value);
+            element.id = id;
+            return element;
+        }
+
         if (field.type === 'choice') {
             const group = document.createElement('div');
             group.className = 'pdf-edit-dialog-choices';
@@ -294,6 +303,10 @@ window.pdfEditDialog = (function () {
                     const v = values[r.field.name];
                     if (r.field.required && (v === '' || v === null || v === undefined)) return r.field.label + ' is required.';
                     if (r.field.pattern && typeof v === 'string' && !r.field.pattern.test(v)) return r.field.label + ': invalid value.';
+                    if (typeof r.field.validate === 'function') {
+                        const message = r.field.validate(v, values);
+                        if (message) return message;
+                    }
                     if (r.field.type === 'keyvalue' && Array.isArray(v)) {
                         const bad = v.find(p => r.field.keyPattern ? !r.field.keyPattern.test(p.key) : p.key === '');
                         if (bad) return r.field.label + ': invalid key "' + bad.key + '".';

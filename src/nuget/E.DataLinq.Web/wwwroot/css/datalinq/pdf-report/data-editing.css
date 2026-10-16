@@ -1,0 +1,296 @@
+/*
+ * PDF report editing mode - data toolbar section and data dialogs (see js/pdf-report/tools/data.js).
+ */
+
+.pdf-data-control {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    /* align with the outer edges of the 40px icon buttons centered in the 48px columns above */
+    justify-self: stretch;
+    margin: 0 4px;
+    box-sizing: border-box;
+}
+
+    .pdf-data-control > .pdf-data-action {
+        width: 100%;
+        box-sizing: border-box;
+        justify-content: flex-start;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        height: auto;
+        min-height: 32px;
+        padding: 4px 6px;
+        font-size: 11px;
+        line-height: 1.2;
+        text-align: left;
+    }
+
+        .pdf-data-control > .pdf-data-action > svg {
+            flex: 0 0 auto;
+        }
+
+        .pdf-data-control > .pdf-data-action > span {
+            min-width: 0;
+            white-space: normal;
+            overflow-wrap: break-word;
+        }
+
+    .pdf-data-list:empty {
+        display: none;
+    }
+
+.pdf-data-list {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 4px 0 0;
+    border-top: 1px solid rgba(128, 128, 128, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.pdf-data-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 4px 0;
+    border-radius: 4px;
+}
+
+.pdf-data-item-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+    .pdf-data-item-actions > .pdf-data-btn {
+        width: 100%;
+        box-sizing: border-box;
+        border-color: rgba(128, 128, 128, 0.5);
+        text-align: center;
+    }
+
+    .pdf-data-item:hover {
+        background: rgba(128, 128, 128, 0.15);
+    }
+
+.pdf-data-item-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+    .pdf-data-item-text > * {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+.pdf-data-item-title {
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.pdf-data-item-text small {
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+.pdf-data-btn {
+    border: 1px solid transparent;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 12px;
+    line-height: 18px;
+}
+
+    .pdf-data-btn:hover:not(:disabled) {
+        border-color: rgba(128, 128, 128, 0.5);
+        background: rgba(128, 128, 128, 0.12);
+    }
+
+    .pdf-data-btn:disabled {
+        opacity: 0.35;
+        cursor: default;
+    }
+
+    .pdf-data-btn.remove:hover:not(:disabled) {
+        color: #c62828;
+    }
+
+    .pdf-data-btn.primary {
+        border-color: #1e6fd9;
+        color: #1e6fd9;
+    }
+
+/* dialog */
+
+.pdf-edit-dialog:has(.pdf-data-pipeline),
+.pdf-edit-dialog:has(.pdf-data-preview) {
+    width: min(780px, calc(100vw - 32px));
+}
+
+.pdf-edit-dialog-custom {
+    flex-direction: column;
+    align-items: stretch !important;
+}
+
+.pdf-data-pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.pdf-data-ops {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pdf-data-op {
+    border: 1px solid #d5d8dd;
+    border-radius: 6px;
+    background: #fafbfc;
+}
+
+.pdf-data-op-header {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 6px;
+    border-bottom: 1px solid #e6e8eb;
+}
+
+.pdf-data-op-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.pdf-data-op-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+}
+
+.pdf-data-group {
+    flex: 1 1 100%;
+    border-left: 3px solid #1e6fd9;
+    padding-left: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+    .pdf-data-group .pdf-data-group {
+        border-left-color: #8e44ad;
+    }
+
+.pdf-data-group-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pdf-data-not {
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.pdf-data-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pdf-data-condition {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.pdf-data-pipeline input[type=text],
+.pdf-data-pipeline input[type=number],
+.pdf-data-pipeline select {
+    font: inherit;
+    font-size: 12px;
+    padding: 3px 5px;
+    border: 1px solid #c4c8ce;
+    border-radius: 4px;
+    background: #fff;
+    min-width: 0;
+}
+
+.pdf-data-pipeline input[type=number] {
+    width: 90px;
+}
+
+.pdf-data-column {
+    flex: 0 1 150px;
+}
+
+.pdf-data-value {
+    flex: 1 1 140px;
+}
+
+.pdf-data-wide {
+    flex: 1 1 auto;
+}
+
+.pdf-data-code {
+    font-family: Consolas, 'Courier New', monospace !important;
+}
+
+.pdf-data-hint {
+    font-size: 11px;
+    color: #777;
+}
+
+.pdf-data-empty {
+    font-size: 11px;
+    color: #888;
+    font-style: italic;
+    padding: 2px 0;
+}
+
+.pdf-data-add-op {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.pdf-data-preview {
+    width: 100%;
+}
+
+.pdf-data-preview-message:not(:empty) {
+    color: #c62828;
+    margin-bottom: 6px;
+}
+
+.pdf-data-preview-code {
+    margin: 0;
+    padding: 8px 10px;
+    max-height: 340px;
+    overflow: auto;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-radius: 6px;
+    font: 12px/1.45 Consolas, 'Courier New', monospace;
+    white-space: pre;
+}

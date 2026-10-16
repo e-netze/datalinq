@@ -501,6 +501,20 @@ function initializeEditingToolbar() {
     }
 
     dock.appendChild(toolbar);
+
+    // Data toolbar (Model.Records filter, records of other queries), see tools/data.js.
+    if (typeof createDataControl === 'function' && window.dataLinqEditBridge) {
+        try {
+            const dataToolbar = document.createElement('div');
+            dataToolbar.className = 'pdf-page-navigator pdf-editing-toolbar pdf-data-toolbar';
+            dataToolbar.appendChild(createEditingToolbarHeading('Data'));
+            dataToolbar.appendChild(createDataControl());
+            dock.appendChild(dataToolbar);
+        } catch (e) {
+            console.error('PDF editing mode: could not create the data toolbar', e);
+        }
+    }
+
     applyGuidesToPages();
 
     updateNoPageState();

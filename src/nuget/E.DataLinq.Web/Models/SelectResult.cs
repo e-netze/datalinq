@@ -99,10 +99,22 @@ public class SelectResult
     public object[] Result { get; set; }
 
     [JsonIgnore]
+    private IDictionary<string, object>[] _recordsOverride;
+
+    [JsonIgnore]
     public IDictionary<string, object>[] Records
     {
+        set
+        {
+            _recordsOverride = value ?? new IDictionary<string, object>[0];
+        }
         get
         {
+            if (_recordsOverride != null)
+            {
+                return _recordsOverride;
+            }
+
             var records = new List<IDictionary<string, object>>();
 
             foreach (var record in this.Result)
