@@ -66,6 +66,12 @@
     line-height: 1.4;
 }
 
+/* empty date field: no format text (dd.mm.yyyy), only the calendar icon */
+.dl-input input[type=date].dl-input-control:not([data-filled]):not(:focus),
+body.dl-input-output .dl-input input[type=date].dl-input-control:not([data-filled]) {
+    color: transparent;
+}
+
 .dl-input select.dl-input-control {
     -webkit-appearance: none;
     appearance: none;
@@ -233,6 +239,10 @@ body.pdf-edit-inputs-inert .dl-input .dl-input-check {
     }
 
     .dl-input ::placeholder {
+        color: transparent;
+    }
+
+    .dl-input input[type=date].dl-input-control:not([data-filled]) {
         color: transparent;
     }
 

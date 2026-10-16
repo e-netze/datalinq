@@ -106,6 +106,8 @@ window.pdfFormInputs = (function () {
         if (field) {
             field.querySelectorAll('input[type=checkbox], input[type=radio]').forEach(i => i.toggleAttribute('checked', i.checked));
         }
+        // empty date fields hide the format text (form-inputs.css)
+        if (e.target.matches('input[type=date].dl-input-control')) e.target.toggleAttribute('data-filled', e.target.value !== '');
         changed(e.target);
     }));
 
@@ -200,6 +202,7 @@ window.pdfFormInputs = (function () {
                 control.value = value;
                 // invalid values for number / date inputs are dropped by the browser -> placeholder
                 if (control.value === '') return;
+                if (control.type === 'date') control.setAttribute('data-filled', '');
                 if (control.tagName === 'TEXTAREA') control.textContent = value;
                 else control.setAttribute('value', control.value);
             }
@@ -216,5 +219,30 @@ window.pdfFormInputs = (function () {
         applyDefaults(n);
     }))).observe(document.documentElement, { childList: true, subtree: true });
 
-    return { validateBeforeOutput: validateBeforeOutput, applyDefault: applyDefault };
+    // ---- placeholders are never printed / downloaded (entered and default values are) ----------------
+
+    const hidePlaceholders = function () {
+        const restore = [];
+        document.querySelectorAll('.dl-input [placeholder]').forEach(el => {
+            const value = el.getAttribute('placeholder');
+            el.setAttribute('placeholder', '');
+            restore.push(() => el.setAttribute('placeholder', value));
+        });
+        document.querySelectorAll('.dl-input select.dl-input-control').forEach(select => {
+            const option = Array.from(select.options).find(o => o.value === '');
+            if (!option) return;
+            const text = option.textContent;
+            option.textContent = '';
+            restore.push(() => { option.textContent = text; });
+        });
+        document.body.classList.add('dl-input-output');
+        restore.push(() => document.body.classList.remove('dl-input-output'));
+        return () => restore.forEach(fn => fn());
+    };
+
+    let restorePrint = null;
+    window.addEventListener('beforeprint', () => { if (!restorePrint) restorePrint = hidePlaceholders(); });
+    window.addEventListener('afterprint', () => { if (restorePrint) { restorePrint(); restorePrint = null; } });
+
+    return { validateBeforeOutput: validateBeforeOutput, applyDefault: applyDefault, hidePlaceholders: hidePlaceholders };
 })();

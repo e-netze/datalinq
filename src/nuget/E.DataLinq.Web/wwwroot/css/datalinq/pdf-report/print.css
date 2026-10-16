@@ -2,6 +2,11 @@
  * PDF report - Print styles (window.print()).
  */
 
+/* black and white mode (toggle in the page navigator): view and print */
+body.pdf-grayscale .page {
+    filter: grayscale(1);
+}
+
 @media print {
     /* 1. Define the Standard A4 Page */
     @page {

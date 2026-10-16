@@ -52,6 +52,21 @@ function initializePageNavigator() {
     nav.className = 'pdf-page-navigator';
     nav.innerHTML = PAGE_NAVIGATOR_HTML;
 
+    // Color / black and white (applies to view, print and download, see pdf-export.js), above the download button
+    const COLOR_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>';
+    const colorBtn = createPdfToolbarButton('colorModeBtn', COLOR_ICON, () => setGrayscale(!document.body.classList.contains('pdf-grayscale')));
+    const setGrayscale = function (on) {
+        document.body.classList.toggle('pdf-grayscale', on);
+        colorBtn.innerHTML = COLOR_ICON + '<span>' + (on ? 'Black &amp; white' : 'Color') + '</span>';
+        colorBtn.title = on ? 'Black and white (click for color)' : 'Color (click for black and white)';
+        colorBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        try { localStorage.setItem('pdf-report-grayscale', on ? '1' : '0'); } catch { }
+    };
+    let grayscale = false;
+    try { grayscale = localStorage.getItem('pdf-report-grayscale') === '1'; } catch { }
+    setGrayscale(grayscale);
+    nav.appendChild(colorBtn);
+
     // The download button is only added here when the view requested a container
     // for it and did not render its own button.
     if (document.getElementById('downloadBtnContainer') && !document.getElementById('downloadBtn')) {
@@ -59,7 +74,7 @@ function initializePageNavigator() {
     }
 
     nav.appendChild(createPdfToolbarButton('printBtn', PRINT_BUTTON_HTML, () => {
-        // Required form inputs must be filled in first (see form-inputs.js).
+        // Required
         if (window.pdfFormInputs && !pdfFormInputs.validateBeforeOutput()) return;
         window.print();
     }));

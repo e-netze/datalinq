@@ -46,6 +46,8 @@ async function downloadPDFMethod() {
     // Editing outlines never end up in the PDF.
     const outlinesShown = document.body.classList.contains('pdf-show-element-outlines');
     document.body.classList.remove('pdf-show-element-outlines');
+    // Input placeholders never end up in the PDF (values do).
+    const restorePlaceholders = window.pdfFormInputs ? pdfFormInputs.hidePlaceholders() : () => { };
 
     try {
         let completed = 0;
@@ -58,6 +60,8 @@ async function downloadPDFMethod() {
                     pixelRatio: pixelRatio,
                     quality: quality,
                     backgroundColor: '#ffffff',
+                    // Black and white mode (page-navigator.js)
+                    style: document.body.classList.contains('pdf-grayscale') ? { filter: 'grayscale(1)' } : undefined,
                     skipFonts: false,
                     // Editing guides (margin/custom lines) never end up in the PDF.
                     filter: (node) => !(node.classList && (node.classList.contains('margin-guide-line') || node.classList.contains('custom-guide-line'))) &&
@@ -120,6 +124,7 @@ async function downloadPDFMethod() {
         console.error('PDF generation failed:', error);
     } finally {
         restoreZoom();
+        restorePlaceholders();
         if (outlinesShown) document.body.classList.add('pdf-show-element-outlines');
         removeLoadingOverlay();
 
