@@ -5,7 +5,9 @@
  *   'report.options.get': {} -> { data: options } (current @PDF.BeginReport(...) options)
  *   'report.options.set': { options } -> replaces the BeginReport(...) arguments
  *   options: { usePageNumbers, pageNumberPosition, pageNumberType, pageNumberSkipPages,
+ *              pageNumberOffsetX, pageNumberOffsetY,
  *              usePageDateTime, dateTimePosition, dateTimeFormat, dateTimeSkipPages,
+ *              dateTimeOffsetX, dateTimeOffsetY,
  *              quality, downloadButton, fileName }
  * Only non default options are written (named arguments).
  * Depends on: pdf-editing/pdf-source.js
@@ -17,6 +19,7 @@
     var DEFAULT_FORMAT = 'HH:mm dd.MM.yyyy';
 
     var isInt = function (v, max) { return Number.isInteger(v) && v >= 0 && v <= max; };
+    var isOffset = function (v) { return Number.isInteger(v) && v >= -10000 && v <= 10000; };
 
     // body of "new <className> { ... }" (or "new() { ... }" passed by name) in the arguments
     var initializer = function (text, className, argName) {
@@ -34,6 +37,10 @@
             var m = new RegExp('\\b' + name + '\\s*=\\s*(\\d+)\\b').exec(body);
             return m ? parseInt(m[1], 10) : fallback;
         };
+        var signedInt = function (body, name, fallback) {
+            var m = new RegExp('\\b' + name + '\\s*=\\s*(-?\\s*\\d+)\\b').exec(body);
+            return m ? parseInt(m[1].replace(/\s+/g, ''), 10) : fallback;
+        };
         var str = function (body, name, separator) {
             var m = new RegExp('\\b' + name + '\\s*' + separator + '\\s*(?:\\$@|@\\$|\\$|@)?"([^"{}]*)"').exec(body);
             return m ? m[1] : null;
@@ -48,10 +55,14 @@
             pageNumberPosition: int(numbers, 'Position', 0),
             pageNumberType: int(numbers, 'Type', 0),
             pageNumberSkipPages: int(numbers, 'SkipPages', 0),
+            pageNumberOffsetX: signedInt(numbers, 'OffsetX', 0),
+            pageNumberOffsetY: signedInt(numbers, 'OffsetY', 0),
             usePageDateTime: bool(dateTime, 'UsePageDateTime', false),
             dateTimePosition: int(dateTime, 'Position', 0),
             dateTimeFormat: str(dateTime, 'Format', '=') || DEFAULT_FORMAT,
             dateTimeSkipPages: int(dateTime, 'SkipPages', 0),
+            dateTimeOffsetX: signedInt(dateTime, 'OffsetX', 0),
+            dateTimeOffsetY: signedInt(dateTime, 'OffsetY', 0),
             quality: quality && QUALITIES.indexOf(quality[1]) >= 0 ? quality[1] : 'High',
             downloadButton: bool(text, 'download_button', false),
             fileName: str(text, 'fileName', ':') || 'dataLinqPdfReport'
@@ -65,10 +76,14 @@
             pageNumberPosition: isInt(raw.pageNumberPosition, 2) ? raw.pageNumberPosition : 0,
             pageNumberType: isInt(raw.pageNumberType, 1) ? raw.pageNumberType : 0,
             pageNumberSkipPages: isInt(raw.pageNumberSkipPages, 10000) ? raw.pageNumberSkipPages : 0,
+            pageNumberOffsetX: isOffset(raw.pageNumberOffsetX) ? raw.pageNumberOffsetX : 0,
+            pageNumberOffsetY: isOffset(raw.pageNumberOffsetY) ? raw.pageNumberOffsetY : 0,
             usePageDateTime: raw.usePageDateTime === true,
             dateTimePosition: isInt(raw.dateTimePosition, 2) ? raw.dateTimePosition : 0,
             dateTimeFormat: typeof raw.dateTimeFormat === 'string' && raw.dateTimeFormat.trim() ? raw.dateTimeFormat.trim() : DEFAULT_FORMAT,
             dateTimeSkipPages: isInt(raw.dateTimeSkipPages, 10000) ? raw.dateTimeSkipPages : 0,
+            dateTimeOffsetX: isOffset(raw.dateTimeOffsetX) ? raw.dateTimeOffsetX : 0,
+            dateTimeOffsetY: isOffset(raw.dateTimeOffsetY) ? raw.dateTimeOffsetY : 0,
             quality: QUALITIES.indexOf(raw.quality) >= 0 ? raw.quality : 'High',
             downloadButton: raw.downloadButton === true,
             fileName: typeof raw.fileName === 'string' && raw.fileName.trim() ? raw.fileName.trim() : 'dataLinqPdfReport'
@@ -84,6 +99,8 @@
             if (o.pageNumberPosition !== 0) numbers.push('Position = ' + o.pageNumberPosition);
             if (o.pageNumberType !== 0) numbers.push('Type = ' + o.pageNumberType);
             if (o.pageNumberSkipPages !== 0) numbers.push('SkipPages = ' + o.pageNumberSkipPages);
+            if (o.pageNumberOffsetX !== 0) numbers.push('OffsetX = ' + o.pageNumberOffsetX);
+            if (o.pageNumberOffsetY !== 0) numbers.push('OffsetY = ' + o.pageNumberOffsetY);
             args.push('pageNumberOptions: new PageNumberOptions { ' + numbers.join(', ') + ' }');
         }
 
@@ -92,6 +109,8 @@
             if (o.dateTimePosition !== 0) dateTime.push('Position = ' + o.dateTimePosition);
             if (o.dateTimeFormat !== DEFAULT_FORMAT) dateTime.push('Format = "' + o.dateTimeFormat + '"');
             if (o.dateTimeSkipPages !== 0) dateTime.push('SkipPages = ' + o.dateTimeSkipPages);
+            if (o.dateTimeOffsetX !== 0) dateTime.push('OffsetX = ' + o.dateTimeOffsetX);
+            if (o.dateTimeOffsetY !== 0) dateTime.push('OffsetY = ' + o.dateTimeOffsetY);
             args.push('pageDateTimeOptions: new PageDateTimeOptions { ' + dateTime.join(', ') + ' }');
         }
 

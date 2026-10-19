@@ -90,12 +90,16 @@ public class DataLinqPdfHelper
                         dOptions.AddAttribute("data-type", type.ToString());
                         dOptions.AddAttribute("data-skipPages", skipPages.ToString());
                         dOptions.AddAttribute("data-position", position.ToString());
+                        dOptions.AddAttribute("data-offset-x", pageNumberOptions.OffsetX.ToString(CultureInfo.InvariantCulture));
+                        dOptions.AddAttribute("data-offset-y", pageNumberOptions.OffsetY.ToString(CultureInfo.InvariantCulture));
                     }
                     if(usePageDateTime)
                     {
                         dOptions.AddClass("pdf-report-options");
                         dOptions.AddAttribute("data-datetime-skipPages", dateTimeSkipPages.ToString());
                         dOptions.AddAttribute("data-datetime-position", dateTimePosition.ToString());
+                        dOptions.AddAttribute("data-datetime-offset-x", pageDateTimeOptions.OffsetX.ToString(CultureInfo.InvariantCulture));
+                        dOptions.AddAttribute("data-datetime-offset-y", pageDateTimeOptions.OffsetY.ToString(CultureInfo.InvariantCulture));
                         dOptions.AddAttribute("data-datetime-format", DateTime.Now.ToString(format));
                     }
                 })

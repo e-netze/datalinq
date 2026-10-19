@@ -1,8 +1,10 @@
+
 /*
  * PDF report editing tool: image
  *
  * Asks for the GetImage settings (base url, path, parameters, html attributes) after placing
- * and sends them as JSON text. Existing images can be edited by double click or the context
+ * and sends them as JSON text. Kind 'embedded' stores an uploaded PNG/JPEG (re-encoded, max 200 KB,
+ * see tools/image-embed.js) as <img src="data:..."> in the source; src/srcset/on* attributes are not allowed.
  * menu ("Edit image"): the settings are read/written with the source actions image.get / image.set.
  * The source template and actions (@(await DLH.GetImage(...))) live in
  * DataLinq Code editor/pdf-editing/tools/image.js (same type id).
@@ -17,12 +19,25 @@
 	const KINDS = [
 		{ value: 'image', label: 'Image', description: 'Public image ' },
 		{ value: 'ags', label: 'AGS image', description: 'ArcGIS map/image ' },
-		{ value: 'secureAgs', label: 'Secure AGS image', description: 'ArcGIS service with token' }
+		{ value: 'secureAgs', label: 'Secure AGS image', description: 'ArcGIS service with token' },
+		{ value: 'embedded', label: 'Embedded image', description: 'Uploaded PNG/JPEG stored in the report (max 200 KB)' }
 	];
+
+	// attributes that must never be set on embedded images (src is the data URI, no event handlers)
+	// asp-*: Razor tag helpers; style: no functions/escapes/comments (blocks url(), u\72l(), image-set(), ...)
+	const FORBIDDEN_ATTRIBUTE = /^(src|srcset|on.*|asp-.*)$/i;
+	const UNSAFE_STYLE = /[\\(]|\/\*|expression|javascript:/i;
 
 	const isImage = v => v.kind === 'image';
 	const isAgs = v => v.kind === 'ags' || v.kind === 'secureAgs';
 	const isSecure = v => v.kind === 'secureAgs';
+	const isEmbedded = v => v.kind === 'embedded';
+
+	const validateEmbeddedAttributes = function (pairs, values) {
+		if (!isEmbedded(values)) return null;
+		const bad = (pairs || []).find(p => FORBIDDEN_ATTRIBUTE.test(p.key) || (p.key.toLowerCase() === 'style' && UNSAFE_STYLE.test(p.value)));
+		return bad ? 'HTML attributes: "' + bad.key + '" is not allowed for embedded images.' : null;
+	};
 
 	const openDialog = function (initial, submitLabel) {
 		initial = initial || {};
@@ -45,14 +60,23 @@
 					{ name: 'serviceName', label: 'Service name', type: 'text', value: initial.serviceName || '', placeholder: 'folder/service', required: true, showIf: isAgs },
 					{ name: 'usernameKey', label: 'Username key', type: 'text', value: initial.usernameKey || '', required: true, showIf: isSecure },
 					{ name: 'passwordKey', label: 'Password key', type: 'text', value: initial.passwordKey || '', required: true, showIf: isSecure },
-					{ name: 'parameters', label: 'Parameters', type: 'keyvalue', value: initial.parameters || [], keyPattern: IDENTIFIER, addLabel: 'Add parameter', emptyText: 'No parameters' },
-					{ name: 'htmlAttributes', label: 'HTML attributes', type: 'keyvalue', value: initial.htmlAttributes || [], keyPattern: ATTRIBUTE, keyPlaceholder: 'Attribute', addLabel: 'Add attribute', emptyText: 'No attributes' }
+					{
+						name: 'dataUrl', label: 'Image file', type: 'custom', value: initial.dataUrl || '', required: true, showIf: isEmbedded,
+						create: pdfImageEmbed.createField, read: pdfImageEmbed.readField,
+						validate: v => v && !pdfImageEmbed.isValidDataUrl(v) ? 'Image file: invalid image data.' : null
+					},
+					{ name: 'parameters', label: 'Parameters', type: 'keyvalue', value: initial.parameters || [], keyPattern: IDENTIFIER, addLabel: 'Add parameter', emptyText: 'No parameters', showIf: v => !isEmbedded(v) },
+					{ name: 'htmlAttributes', label: 'HTML attributes', type: 'keyvalue', value: initial.htmlAttributes || [], keyPattern: ATTRIBUTE, keyPlaceholder: 'Attribute', addLabel: 'Add attribute', emptyText: 'No attributes', validate: validateEmbeddedAttributes }
 				]
 			}]
 		}).then(values => {
 			if (!values) return null;
 			const trim = v => typeof v === 'string' ? v.trim() : v;
-			const result = { kind: values.kind, parameters: values.parameters || [], htmlAttributes: values.htmlAttributes || [] };
+			const result = { kind: values.kind, parameters: isEmbedded(values) ? [] : values.parameters || [], htmlAttributes: values.htmlAttributes || [] };
+			if (isEmbedded(values)) {
+				result.dataUrl = values.dataUrl;
+				return result;
+			}
 			['baseUrl', 'path', 'serviceType', 'serverKey', 'serviceName', 'usernameKey', 'passwordKey']
 				.forEach(name => { if (values[name] !== undefined) result[name] = trim(values[name]); });
 			return result;
@@ -136,7 +160,7 @@
 			const box = document.createElement('div');
 			box.className = 'pdf-edit-image-placeholder';
 			box.innerHTML = icon + '<span></span>';
-			config.path || config.serviceName || 'Image';
+			box.querySelector('span').textContent = config.kind === 'embedded' ? 'Embedded image' : config.path || config.serviceName || 'Image';
 			return box;
 		},
 		textTarget: function () {

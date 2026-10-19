@@ -37,7 +37,9 @@
                             name: 'pageNumberType', label: 'Format', type: 'select', value: String(o.pageNumberType || 0), showIf: pageNumbers,
                             options: [{ value: '0', label: 'n/total' }, { value: '1', label: 'n' }]
                         },
-                        { name: 'pageNumberSkipPages', label: 'Skip first pages', type: 'number', value: o.pageNumberSkipPages || 0, min: 0, step: 1, showIf: pageNumbers }
+                        { name: 'pageNumberSkipPages', label: 'Skip first pages', type: 'number', value: o.pageNumberSkipPages || 0, min: 0, step: 1, showIf: pageNumbers },
+                        { name: 'pageNumberOffsetX', label: 'Offset horizontal (px, - left / + right)', type: 'number', value: o.pageNumberOffsetX || 0, step: 1, showIf: pageNumbers },
+                        { name: 'pageNumberOffsetY', label: 'Offset vertical (px, - up / + down)', type: 'number', value: o.pageNumberOffsetY || 0, step: 1, showIf: pageNumbers }
                     ]
                 },
                 {
@@ -49,7 +51,9 @@
                             name: 'dateTimeFormat', label: 'Format', type: 'text', value: o.dateTimeFormat || 'HH:mm dd.MM.yyyy',
                             placeholder: 'HH:mm dd.MM.yyyy', pattern: /^[^"\\{}\r\n]{1,100}$/, showIf: dateTime
                         },
-                        { name: 'dateTimeSkipPages', label: 'Skip first pages', type: 'number', value: o.dateTimeSkipPages || 0, min: 0, step: 1, showIf: dateTime }
+                        { name: 'dateTimeSkipPages', label: 'Skip first pages', type: 'number', value: o.dateTimeSkipPages || 0, min: 0, step: 1, showIf: dateTime },
+                        { name: 'dateTimeOffsetX', label: 'Offset horizontal (px, - left / + right)', type: 'number', value: o.dateTimeOffsetX || 0, step: 1, showIf: dateTime },
+                        { name: 'dateTimeOffsetY', label: 'Offset vertical (px, - up / + down)', type: 'number', value: o.dateTimeOffsetY || 0, step: 1, showIf: dateTime }
                     ]
                 },
                 {
@@ -69,7 +73,11 @@
             pageNumberType: parseInt(values.pageNumberType, 10) || 0,
             pageNumberSkipPages: Math.max(0, Math.round(values.pageNumberSkipPages) || 0),
             dateTimePosition: parseInt(values.dateTimePosition, 10) || 0,
-            dateTimeSkipPages: Math.max(0, Math.round(values.dateTimeSkipPages) || 0)
+            dateTimeSkipPages: Math.max(0, Math.round(values.dateTimeSkipPages) || 0),
+            pageNumberOffsetX: Math.round(values.pageNumberOffsetX) || 0,
+            pageNumberOffsetY: Math.round(values.pageNumberOffsetY) || 0,
+            dateTimeOffsetX: Math.round(values.dateTimeOffsetX) || 0,
+            dateTimeOffsetY: Math.round(values.dateTimeOffsetY) || 0
         });
 
         const result = await pdfEditActions.request(create ? 'report.create' : 'report.options.set', { options: options });

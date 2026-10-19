@@ -171,9 +171,11 @@
     var ELEMENT_TYPE = /^[a-z][a-z0-9-]{0,31}$/;
     var MAX_TEXT_LENGTH = 4000;
     var MAX_HTML_LENGTH = 20000;
+    // images may contain an embedded data URI (max 200 KB -> ~273 KB base64), validated in pdf-editing/tools/image.js
+    var MAX_IMAGE_LENGTH = 300000;
 
-    var isValidText = function (text) {
-        return typeof text === 'string' && text.length <= MAX_TEXT_LENGTH;
+    var isValidText = function (text, type) {
+        return typeof text === 'string' && text.length <= (type === 'image' ? MAX_IMAGE_LENGTH : MAX_TEXT_LENGTH);
     };
 
     // Add an element (paragraph, ...) -> editor-frame inserts the source and answers with
@@ -182,7 +184,7 @@
         if (typeof payload.requestId !== 'string' || payload.requestId.length > 64 ||
             typeof payload.type !== 'string' || !ELEMENT_TYPE.test(payload.type) ||
             !Number.isInteger(payload.page) || payload.page < 0 || payload.page > 100000 ||
-            !isFiniteNumber(payload.x) || !isFiniteNumber(payload.y) || !isValidText(payload.text)) {
+            !isFiniteNumber(payload.x) || !isFiniteNumber(payload.y) || !isValidText(payload.text, payload.type)) {
             return;
         }
 
@@ -261,7 +263,7 @@
         try { size = JSON.stringify(payload.args || {}).length; } catch (e) { return; }
         if (typeof payload.requestId !== 'string' || payload.requestId.length > 64 ||
             typeof payload.action !== 'string' || !ACTION_NAME.test(payload.action) ||
-            !payload.args || typeof payload.args !== 'object' || size > MAX_ARGS_LENGTH) {
+            !payload.args || typeof payload.args !== 'object' || size > (payload.action === 'image.set' ? MAX_IMAGE_LENGTH : MAX_ARGS_LENGTH)) {
             return;
         }
 

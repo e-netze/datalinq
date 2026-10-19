@@ -10,10 +10,15 @@
  *   { kind: 'secureAgs', serviceType, serverKey, serviceName, parameters, usernameKey, passwordKey, htmlAttributes }
  *     -> @(await SECURITY.GetAgsImage(AgsServiceType.MapService, "serverKey", "serviceName", new { ... },
  *              new AgsTokenObject { UsernameKey = "...", PasswordKey = "..." }, new { ... }))
+ *   { kind: 'embedded', dataUrl, htmlAttributes }
+ *     -> <img src="data:image/(png|jpeg);base64,..." key="value" />   (uploaded image, max 200 KB, see
+ *        E.DataLinq.Web pdf-report/tools/image-embed.js). The data URI is checked against a strict pattern
+ *        (base64 cannot contain @ " < > or whitespace), src/srcset/on* attributes and unsafe styles are
+ *        rejected, attribute values are html encoded and @ is written as @@ (literal in Razor).
  *
  * Source actions (edit an existing image, double click / context menu in the preview):
- *   'image.get': { index, originalX, originalY } -> { data: settings } (first GetImage call in the draggable)
- *   'image.set': { index, originalX, originalY, settings } -> replaces the GetImage(...) arguments
+ *   'image.get': { index, originalX, originalY } -> { data: settings } (first GetImage call / embedded img in the draggable)
+ *   'image.set': { index, originalX, originalY, settings } -> replaces the @(await GetImage(...)) expression or img tag
  * Only string literals are editable; calls with expressions (variables, interpolation, ...) are rejected.
  * Depends on: pdf-editing/pdf-source.js
  */
@@ -22,6 +27,47 @@
 	var CALL = /\b(?:DLH|IH|DataLinqHelper|IntegratorHelper|SECURITY)\.(GetImage|GetAgsImage)\s*\(/g;
 	var SERVICE_TYPES = ['MapService', 'ImageService'];
 	var MAX_PAIRS = 50;
+
+	// embedded images: strict data URI (base64 contains no @ " < > or whitespace -> no Razor/HTML injection)
+	var DATA_URL = /^data:image\/(png|jpeg);base64,[A-Za-z0-9+\/]+={0,2}$/;
+	var MAX_EMBEDDED_BYTES = 200 * 1024;
+	var ATTRIBUTE_NAME = /^[A-Za-z][A-Za-z0-9-]*$/;
+	// asp-*: Razor tag helpers; style: no functions/escapes/comments (blocks url(), u\72l(), image-set(), ...)
+	var FORBIDDEN_ATTRIBUTE = /^(src|srcset|on.*|asp-.*)$/i;
+	var UNSAFE_STYLE = /[\\(]|\/\*|expression|javascript:/i;
+
+	var isValidDataUrl = function (value) {
+		if (typeof value !== 'string' || !DATA_URL.test(value)) return false;
+		var base64 = value.substring(value.indexOf(',') + 1);
+		if (base64.length % 4 !== 0) return false;
+		var padding = /==$/.test(base64) ? 2 : /=$/.test(base64) ? 1 : 0;
+		return base64.length / 4 * 3 - padding <= MAX_EMBEDDED_BYTES;
+	};
+
+	var isAllowedAttribute = function (key, value) {
+		if (typeof key !== 'string' || !ATTRIBUTE_NAME.test(key) || FORBIDDEN_ATTRIBUTE.test(key)) return false;
+		if (typeof value !== 'string') return false;
+		return !(key.toLowerCase() === 'style' && UNSAFE_STYLE.test(value));
+	};
+
+	// html attribute value -> safe inside "..." in Razor markup (@ -> @@ is emitted as a literal @)
+	var htmlEncode = function (value) {
+		return String(value)
+			.replace(/&/g, '&amp;')
+			.replace(/"/g, '&quot;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/@/g, '@@');
+	};
+
+	var htmlDecode = function (value) {
+		return value
+			.replace(/&quot;/g, '"')
+			.replace(/&#39;/g, "'")
+			.replace(/&lt;/g, '<')
+			.replace(/&gt;/g, '>')
+			.replace(/&amp;/g, '&');
+	};
 
 	// ---- build ----------------------------------------------------------------------------
 
@@ -70,6 +116,21 @@
 			});
 		};
 		var kind = raw.kind || 'image';
+
+		if (kind === 'embedded') {
+			if (!isValidDataUrl(raw.dataUrl)) return null;
+			var attributes = (Array.isArray(raw.htmlAttributes) ? raw.htmlAttributes : []).slice(0, MAX_PAIRS + 1);
+			if (attributes.length > MAX_PAIRS) return null;
+			for (var a = 0; a < attributes.length; a++) {
+				var p = attributes[a];
+				if (!p) return null;
+				var value = typeof p.value === 'number' ? String(p.value) : p.value;
+				if (!isAllowedAttribute(p.key, value)) return null;
+				attributes[a] = { key: p.key, value: value };
+			}
+			return { kind: 'embedded', dataUrl: raw.dataUrl, parameters: [], htmlAttributes: attributes };
+		}
+
 		var config = { kind: kind, parameters: pairs(raw.parameters), htmlAttributes: pairs(raw.htmlAttributes) };
 
 		if (kind === 'image') {
@@ -112,7 +173,74 @@
 		return (config.kind === 'secureAgs' ? 'SECURITY' : 'DLH') + '.GetAgsImage(' + args.join(', ') + ')';
 	};
 
+	// <img src="data:..." key="value" ... /> (config is validated by readConfig)
+	var buildEmbedded = function (config) {
+		var html = '<img src="' + config.dataUrl + '"';
+		config.htmlAttributes.forEach(function (p) {
+			html += ' ' + p.key + '="' + htmlEncode(p.value) + '"';
+		});
+		return html + ' />';
+	};
+
+	// complete source text for a config (embedded: markup, otherwise @(await call))
+	var buildSource = function (config) {
+		return config.kind === 'embedded' ? buildEmbedded(config) : '@(await ' + buildCall(config) + ')';
+	};
+
 	// ---- parse ----------------------------------------------------------------------------
+
+	// <img ...> tag starting at i: { end, attributes: [{key, value}] } | null if not a plain, double quoted tag.
+	// attribute values must be literal text: a single @ (Razor code) or a raw < rejects the tag.
+	var scanImgTag = function (text, i, limit) {
+		if (!/^<img\s/i.test(text.substr(i, 5))) return null;
+		var attributes = [], j = i + 4;
+		while (j < limit) {
+			while (j < limit && /\s/.test(text.charAt(j))) j++;
+			if (text.charAt(j) === '>') return { end: j + 1, attributes: attributes };
+			if (text.charAt(j) === '/' && text.charAt(j + 1) === '>') return { end: j + 2, attributes: attributes };
+			var name = /^[A-Za-z][A-Za-z0-9-]*/.exec(text.substring(j, Math.min(limit, j + 100)));
+			if (!name) return null;
+			j += name[0].length;
+			while (j < limit && /\s/.test(text.charAt(j))) j++;
+			if (text.charAt(j) !== '=') return null;
+			j++;
+			while (j < limit && /\s/.test(text.charAt(j))) j++;
+			if (text.charAt(j) !== '"') return null;
+			var close = text.indexOf('"', j + 1);
+			if (close < 0 || close >= limit) return null;
+			var raw = text.substring(j + 1, close);
+			if (/[<\r\n]/.test(raw) || /@/.test(raw.replace(/@@/g, ''))) return null;
+			attributes.push({ key: name[0], value: htmlDecode(raw.replace(/@@/g, '@')) });
+			j = close + 1;
+		}
+		return null;
+	};
+
+	// first <img src="data:..."> start inside [from, to) or -1
+	var findEmbeddedTag = function (source, from, to) {
+		var regex = /<img\s[^>]*?\bsrc\s*=\s*"data:/gi;
+		regex.lastIndex = from;
+		var m = regex.exec(source);
+		return m && m.index < to ? m.index : -1;
+	};
+
+	var parseEmbedded = function (tag) {
+		if (!tag) return null;
+		var dataUrl = null, htmlAttributes = [];
+		for (var i = 0; i < tag.attributes.length; i++) {
+			var p = tag.attributes[i];
+			if (p.key.toLowerCase() === 'src') {
+				if (dataUrl !== null) return null;
+				dataUrl = p.value;
+			} else if (isAllowedAttribute(p.key, p.value)) {
+				htmlAttributes.push(p);
+			} else {
+				return null;
+			}
+		}
+		if (!isValidDataUrl(dataUrl) || htmlAttributes.length > MAX_PAIRS) return null;
+		return { kind: 'embedded', dataUrl: dataUrl, parameters: [], htmlAttributes: htmlAttributes };
+	};
 
 	// index after a C# string literal starting at i ("..." or @"..."), -1 if none
 	var skipString = function (text, i) {
@@ -197,7 +325,9 @@
 		return result;
 	};
 
-	// first GetImage call inside the draggable: { argsStart, argsEnd } or { message }
+	// first image inside the draggable (GetImage/GetAgsImage call or embedded <img src="data:...">):
+	//   { method, start, end, [argsStart, argsEnd, wrapped] | [tag] } or { message }
+	//   start/end: span to replace (the whole @(await ...) expression if present, or the <img> tag)
 	var findImageCall = function (source, args) {
 		var element = pdfDraggableSource.findElement(source, args);
 		if (!element) {
@@ -207,8 +337,18 @@
 		var regex = new RegExp(CALL.source, 'g');
 		regex.lastIndex = element.start;
 		var m = regex.exec(source);
-		if (!m || m.index >= element.end) {
-			return { message: 'The draggable does not contain a GetImage(...) / GetAgsImage(...) call.' };
+		if (m && m.index >= element.end) m = null;
+
+		var tagStart = findEmbeddedTag(source, element.start, element.end);
+		if (tagStart >= 0 && (!m || tagStart < m.index)) {
+			var tag = scanImgTag(source, tagStart, element.end);
+			return tag
+				? { method: 'embedded', start: tagStart, end: tag.end, tag: tag }
+				: { message: 'The embedded image tag uses Razor code or unsupported markup and can only be edited in the source.' };
+		}
+
+		if (!m) {
+			return { message: 'The draggable does not contain a GetImage(...) / GetAgsImage(...) call or an embedded image.' };
 		}
 
 		var argsStart = m.index + m[0].length, depth = 1;
@@ -221,7 +361,15 @@
 			} else if (c === '(') {
 				depth++;
 			} else if (c === ')' && --depth === 0) {
-				return { callStart: m.index, method: m[1], argsStart: argsStart, argsEnd: i };
+				// enclosing @(await ...) -> replace the whole expression (needed to switch to/from embedded markup)
+				var before = /@\(\s*await\s+$/.exec(source.substring(element.start, m.index));
+				var after = /^\s*\)/.exec(source.substring(i + 1, element.end));
+				var wrapped = !!(before && after);
+				return {
+					method: m[1], argsStart: argsStart, argsEnd: i, wrapped: wrapped,
+					start: wrapped ? element.start + before.index : m.index,
+					end: wrapped ? i + 1 + after[0].length : i + 1
+				};
 			}
 		}
 		return { message: 'Could not parse the ' + m[1] + '(...) call.' };
@@ -297,7 +445,7 @@
 			if (!config) {
 				return '@* invalid image settings *@';
 			}
-			return '@(await ' + buildCall(config) + ')';
+			return buildSource(config);
 		},
 		// not text editable
 		textPattern: /(?!)/
@@ -307,7 +455,9 @@
 		var call = findImageCall(source, args);
 		if (call.message) return call;
 
-		var data = parseCall(call.method, source.substring(call.argsStart, call.argsEnd));
+		var data = call.method === 'embedded'
+			? parseEmbedded(call.tag)
+			: parseCall(call.method, source.substring(call.argsStart, call.argsEnd));
 		return data
 			? { data: data }
 			: { message: 'The image uses Razor code (variables, expressions, named arguments) and can only be edited in the source.' };
@@ -322,7 +472,13 @@
 		var call = findImageCall(source, args);
 		if (call.message) return call;
 
-		// replace the whole call: the image kind (helper / method) may have changed
-		return { start: call.callStart, end: call.argsEnd + 1, text: buildCall(config) };
+		// replace the whole call/tag: the image kind (helper / method / embedded) may have changed
+		if (call.method === 'embedded' || call.wrapped) {
+			return { start: call.start, end: call.end, text: buildSource(config) };
+		}
+		if (config.kind === 'embedded') {
+			return { message: 'The image call is not written as @(await ...) and can only be changed to an embedded image in the source.' };
+		}
+		return { start: call.start, end: call.end, text: buildCall(config) };
 	});
 })();

@@ -11,6 +11,8 @@ public class PageNumberOptions
     public int Position { get; set; } = 0;
     public int Type { get; set; } = 0;
     public int SkipPages { get; set; } = 0;
+    public int OffsetX { get; set; } = 0;
+    public int OffsetY { get; set; } = 0;
 
     public static implicit operator PageNumberOptions(Dictionary<string, object> d)
     {
@@ -21,6 +23,8 @@ public class PageNumberOptions
             Position = d.ContainsKey("Position") ? Convert.ToInt32(d["Position"]) : 0,
             Type = d.ContainsKey("Type") ? Convert.ToInt32(d["Type"]) : 0,
             SkipPages = d.ContainsKey("SkipPages") ? Convert.ToInt32(d["SkipPages"]) : 0,
+            OffsetX = d.ContainsKey("OffsetX") ? Convert.ToInt32(d["OffsetX"]) : 0,
+            OffsetY = d.ContainsKey("OffsetY") ? Convert.ToInt32(d["OffsetY"]) : 0,
         };
     }
 }
@@ -31,6 +35,8 @@ public class PageDateTimeOptions
     public int Position { get; set; } = 0;
     public string Format { get; set; } = "HH:mm dd.MM.yyyy";
     public int SkipPages { get; set; } = 0;
+    public int OffsetX { get; set; } = 0;
+    public int OffsetY { get; set; } = 0;
 
     public static implicit operator PageDateTimeOptions(Dictionary<string, object> d)
     {
@@ -41,6 +47,8 @@ public class PageDateTimeOptions
             Position = d.ContainsKey("Position") ? Convert.ToInt32(d["Position"]) : 0,
             Format = d.ContainsKey("Format") ? d["Format"].ToString() : "HH:mm dd.MM.yyyy",
             SkipPages = d.ContainsKey("SkipPages") ? Convert.ToInt32(d["SkipPages"]) : 0,
+            OffsetX = d.ContainsKey("OffsetX") ? Convert.ToInt32(d["OffsetX"]) : 0,
+            OffsetY = d.ContainsKey("OffsetY") ? Convert.ToInt32(d["OffsetY"]) : 0,
         };
     }
 }
