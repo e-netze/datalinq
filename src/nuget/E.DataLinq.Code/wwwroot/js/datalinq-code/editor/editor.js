@@ -494,6 +494,7 @@
                         pdfEditingCheckbox.addEventListener('change', function () {
                             if (pdfEditingCheckbox.checked) {
                                 delete pdfSplitViews[id];
+                                savePdfSplitViews();
                             }
                             relayoutEditor($editor);
                         });
@@ -583,8 +584,21 @@
     var previewPrefix = '_preview:';
     var previewUrls = {};
 
-    // PDF editing mode: views switched back to the 50/50 split (default is preview only)
-    var pdfSplitViews = {};
+    // PDF editing mode: views switched back to the 50/50 split (default is preview only), persisted across sessions
+    var pdfSplitViews = (function () {
+        try {
+            var stored = JSON.parse(localStorage.getItem('datalinq-pdf-split-views') || '{}');
+            return stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+        } catch (e) {
+            return {};
+        }
+    })();
+
+    function savePdfSplitViews() {
+        try {
+            localStorage.setItem('datalinq-pdf-split-views', JSON.stringify(pdfSplitViews));
+        } catch (e) { }
+    }
 
     function isPdfEditingFrame(frame) {
         try {
@@ -727,6 +741,8 @@
             .on('click', 'button', function (e) {
                 e.stopPropagation();
                 pdfSplitViews[pdfViewId] = !splitView;
+                if (!pdfSplitViews[pdfViewId]) delete pdfSplitViews[pdfViewId];
+                savePdfSplitViews();
                 relayoutEditor($editor);
             });
 

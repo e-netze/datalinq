@@ -126,20 +126,15 @@
     }
 
     .pdf-data-btn.remove:hover:not(:disabled) {
-        color: #c62828;
+        color: var(--pdf-ed-danger);
     }
 
     .pdf-data-btn.primary {
-        border-color: #1e6fd9;
-        color: #1e6fd9;
+        border-color: var(--pdf-ed-accent);
+        color: var(--pdf-ed-accent);
     }
 
-/* dialog */
-
-.pdf-edit-dialog:has(.pdf-data-pipeline),
-.pdf-edit-dialog:has(.pdf-data-preview) {
-    width: min(780px, calc(100vw - 32px));
-}
+/* dialog (width: edit-dialog.css) */
 
 .pdf-edit-dialog-custom {
     flex-direction: column;
@@ -160,9 +155,9 @@
 }
 
 .pdf-data-op {
-    border: 1px solid #d5d8dd;
+    border: 1px solid var(--pdf-ed-border);
     border-radius: 6px;
-    background: #fafbfc;
+    background: var(--pdf-ed-surface-2);
 }
 
 .pdf-data-op-header {
@@ -170,7 +165,7 @@
     align-items: center;
     gap: 2px;
     padding: 4px 6px;
-    border-bottom: 1px solid #e6e8eb;
+    border-bottom: 1px solid var(--pdf-ed-border);
 }
 
 .pdf-data-op-title {
@@ -189,7 +184,7 @@
 
 .pdf-data-group {
     flex: 1 1 100%;
-    border-left: 3px solid #1e6fd9;
+    border-left: 3px solid var(--pdf-ed-accent);
     padding-left: 6px;
     display: flex;
     flex-direction: column;
@@ -230,9 +225,10 @@
     font: inherit;
     font-size: 12px;
     padding: 3px 5px;
-    border: 1px solid #c4c8ce;
+    border: 1px solid var(--pdf-ed-border-strong);
     border-radius: 4px;
-    background: #fff;
+    background: var(--pdf-ed-surface);
+    color: var(--pdf-ed-text);
     min-width: 0;
 }
 
@@ -258,12 +254,12 @@
 
 .pdf-data-hint {
     font-size: 11px;
-    color: #777;
+    color: var(--pdf-ed-muted);
 }
 
 .pdf-data-empty {
     font-size: 11px;
-    color: #888;
+    color: var(--pdf-ed-muted);
     font-style: italic;
     padding: 2px 0;
 }
@@ -279,7 +275,7 @@
 }
 
 .pdf-data-preview-message:not(:empty) {
-    color: #c62828;
+    color: var(--pdf-ed-danger);
     margin-bottom: 6px;
 }
 

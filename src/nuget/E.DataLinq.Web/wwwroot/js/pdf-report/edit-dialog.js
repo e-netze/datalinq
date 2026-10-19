@@ -1,5 +1,6 @@
 /*
- * PDF report editing mode - reusable modal dialog (wizard with one or more steps).
+ * PDF report editing mode - reusable modal dialog. Several steps are shown at once as accordion sections
+ * (several may be open, the first one is open by default).
  *
  *   pdfEditDialog.open({
  *       title: 'New page',
@@ -25,7 +26,7 @@
  *       ]
  *   }).then(values => { if (values) ... });   // null if cancelled
  *
- * Field types: choice (radio cards), select, checkbox, number, text, color, heading (section title),
+ * Field types: choice (radio cards), select, checkbox, number, text, textarea (rows), color, heading (section title),
  * keyvalue (list of { key, value } rows, optional keyPattern),
  * custom ({ create: value => HTMLElement, read: element => value }; dispatch 'change' on the element when it changes).
  * Any field may define validate: (value, values) => errorMessage|null.
@@ -33,6 +34,17 @@
  */
 window.pdfEditDialog = (function () {
     let current = null;
+
+    // dark/light follows the DataLinq Code IDE (see css/datalinq/pdf-report/editor-theme.css)
+    if (window.parent !== window) {
+        const markEmbedded = () => document.body.classList.add('pdf-edit-embedded');
+        if (document.body) markEmbedded(); else document.addEventListener('DOMContentLoaded', markEmbedded);
+        // the IDE posts { theme: 'vs' | 'vs-dark' } to all iframes when the color scheme is toggled
+        window.addEventListener('message', e => {
+            if (e.source !== window.parent || !e.data || (e.data.theme !== 'vs' && e.data.theme !== 'vs-dark')) return;
+            document.body.classList.toggle('colorscheme-light', e.data.theme === 'vs');
+        });
+    }
 
     const normalizeOptions = options => (options || []).map(o => typeof o === 'object' ? o : { value: o, label: String(o) });
 
@@ -179,6 +191,16 @@ window.pdfEditDialog = (function () {
             return list;
         }
 
+        if (field.type === 'textarea') {
+            const area = document.createElement('textarea');
+            area.id = id;
+            area.rows = field.rows || 6;
+            area.value = field.value ?? '';
+            area.placeholder = field.placeholder || '';
+            area.spellcheck = false;
+            return area;
+        }
+
         const input = document.createElement('input');
         input.id = id;
         if (field.type === 'checkbox') {
@@ -221,9 +243,16 @@ window.pdfEditDialog = (function () {
         } else if (e.key === 'Enter' && typeof e.target.pdfEditOnEnter === 'function') {
             e.preventDefault();
             e.target.pdfEditOnEnter();
-        } else if (e.key === 'Enter' && !(e.target instanceof HTMLButtonElement) && !(e.target instanceof HTMLSelectElement)) {
+        } else if (e.key === 'Enter' && !(e.target instanceof HTMLButtonElement) && !(e.target instanceof HTMLSelectElement) && !(e.target instanceof HTMLTextAreaElement)) {
             e.preventDefault();
             current.next();
+        } else if (e.key === 'Tab') {
+            const focusable = Array.from(current.overlay.querySelectorAll('button, input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+                .filter(el => !el.disabled && el.offsetParent !== null);
+            if (focusable.length === 0) return;
+            const first = focusable[0], last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
         }
     };
 
@@ -254,11 +283,18 @@ window.pdfEditDialog = (function () {
             const header = document.createElement('div');
             header.className = 'pdf-edit-dialog-header';
             const title = document.createElement('h2');
+            title.id = 'pdf-edit-dialog-title';
             title.textContent = definition.title || '';
             header.appendChild(title);
-            const progress = document.createElement('span');
-            progress.className = 'pdf-edit-dialog-progress';
-            header.appendChild(progress);
+            dialog.setAttribute('aria-labelledby', title.id);
+            const closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'pdf-edit-dialog-close';
+            closeButton.title = 'Close';
+            closeButton.setAttribute('aria-label', 'Close');
+            closeButton.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 3.5l9 9m0-9l-9 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>';
+            closeButton.addEventListener('click', () => close(null));
+            header.appendChild(closeButton);
             dialog.appendChild(header);
 
             const body = document.createElement('div');
@@ -274,17 +310,15 @@ window.pdfEditDialog = (function () {
             const cancel = document.createElement('button');
             cancel.type = 'button';
             cancel.textContent = 'Cancel';
-            const back = document.createElement('button');
-            back.type = 'button';
-            back.textContent = 'Back';
             const next = document.createElement('button');
             next.type = 'button';
             next.className = 'primary';
-            footer.append(cancel, back, next);
+            next.textContent = definition.submitLabel || 'OK';
+            footer.append(cancel, next);
             dialog.appendChild(footer);
 
-            let stepIndex = 0;
-            let rows = [];   // { field, row, input }
+            let rows = [];   // { field, row, input, section }
+            let sections = [];   // { element, toggle, rows }
 
             const collect = function () {
                 rows.forEach(r => { if (r.input) values[r.field.name] = readValue(r.field, r.input); });
@@ -295,55 +329,58 @@ window.pdfEditDialog = (function () {
                 rows.forEach(r => {
                     r.row.hidden = typeof r.field.showIf === 'function' && !r.field.showIf(values);
                 });
+                sections.forEach(s => {
+                    const inputs = s.rows.filter(r => r.input);
+                    s.element.hidden = inputs.length > 0 && inputs.every(r => r.row.hidden);
+                });
+            };
+
+            const setExpanded = function (section, expanded) {
+                section.element.classList.toggle('is-open', expanded);
+                section.toggle.setAttribute('aria-expanded', String(expanded));
             };
 
             const validate = function () {
                 for (const r of rows) {
-                    if (r.row.hidden || !r.input) continue;
-                    const v = values[r.field.name];
-                    if (r.field.required && (v === '' || v === null || v === undefined)) return r.field.label + ' is required.';
-                    if (r.field.pattern && typeof v === 'string' && !r.field.pattern.test(v)) return r.field.label + ': invalid value.';
-                    if (typeof r.field.validate === 'function') {
-                        const message = r.field.validate(v, values);
-                        if (message) return message;
-                    }
-                    if (r.field.type === 'keyvalue' && Array.isArray(v)) {
-                        const bad = v.find(p => r.field.keyPattern ? !r.field.keyPattern.test(p.key) : p.key === '');
-                        if (bad) return r.field.label + ': invalid key "' + bad.key + '".';
-                    }
-                    if (r.field.type === 'number' && ((r.field.min !== undefined && v < r.field.min) || (r.field.max !== undefined && v > r.field.max))) {
-                        return r.field.label + ': out of range.';
-                    }
+                    const message = validateRow(r);
+                    if (message) return { message: message, row: r };
                 }
                 return null;
             };
 
-            const render = function () {
-                const step = steps[stepIndex];
-                body.textContent = '';
-                error.textContent = '';
-                rows = [];
-
-                if (step.title) {
-                    const h = document.createElement('h3');
-                    h.textContent = step.title;
-                    body.appendChild(h);
+            const validateRow = function (r) {
+                if (r.row.hidden || !r.input) return null;
+                const v = values[r.field.name];
+                if (r.field.required && (v === '' || v === null || v === undefined)) return r.field.label + ' is required.';
+                if (r.field.pattern && typeof v === 'string' && !r.field.pattern.test(v)) return r.field.label + ': invalid value.';
+                if (typeof r.field.validate === 'function') {
+                    const message = r.field.validate(v, values);
+                    if (message) return message;
                 }
-                if (step.description) {
-                    const p = document.createElement('p');
-                    p.className = 'pdf-edit-dialog-description';
-                    p.textContent = step.description;
-                    body.appendChild(p);
+                if (r.field.type === 'keyvalue' && Array.isArray(v)) {
+                    const bad = v.find(p => r.field.keyPattern ? !r.field.keyPattern.test(p.key) : p.key === '');
+                    if (bad) return r.field.label + ': invalid key "' + bad.key + '".';
                 }
+                if (r.field.type === 'number' && ((r.field.min !== undefined && v < r.field.min) || (r.field.max !== undefined && v > r.field.max))) {
+                    return r.field.label + ': out of range.';
+                }
+                return null;
+            };
 
+            const renderFields = function (container, step, stepIndex, section) {
                 (step.fields || []).forEach((field, i) => {
                     const row = document.createElement('div');
                     row.className = 'pdf-edit-dialog-row pdf-edit-dialog-' + field.type;
+                    if (field.wide || field.type === 'textarea' || field.type === 'keyvalue' || field.type === 'choice' || field.type === 'custom') {
+                        row.classList.add('pdf-edit-dialog-row-wide');
+                    }
 
                     if (field.type === 'heading') {
                         row.textContent = field.label;
-                        body.appendChild(row);
-                        rows.push({ field: field, row: row, input: null });
+                        container.appendChild(row);
+                        const entry = { field: field, row: row, input: null, section: section };
+                        rows.push(entry);
+                        if (section) section.rows.push(entry);
                         return;
                     }
 
@@ -358,44 +395,121 @@ window.pdfEditDialog = (function () {
                     } else {
                         row.append(label, input);
                     }
+                    if (field.help) {
+                        const help = document.createElement('small');
+                        help.className = 'pdf-edit-dialog-help';
+                        help.textContent = field.help;
+                        row.appendChild(help);
+                    }
                     input.addEventListener('input', updateVisibility);
                     input.addEventListener('change', updateVisibility);
+                    input.addEventListener('input', () => { row.classList.remove('has-error'); });
 
-                    body.appendChild(row);
-                    rows.push({ field: field, row: row, input: input });
+                    container.appendChild(row);
+                    const entry = { field: field, row: row, input: input, section: section };
+                    rows.push(entry);
+                    if (section) section.rows.push(entry);
                 });
+            };
 
-                progress.textContent = steps.length > 1 ? (stepIndex + 1) + ' / ' + steps.length : '';
-                back.hidden = stepIndex === 0;
-                next.textContent = stepIndex === steps.length - 1 ? (definition.submitLabel || 'OK') : 'Next';
+            const appendDescription = function (container, text) {
+                const p = document.createElement('p');
+                p.className = 'pdf-edit-dialog-description';
+                p.textContent = text;
+                container.appendChild(p);
+            };
+
+            const render = function () {
+                body.textContent = '';
+                error.textContent = '';
+                rows = [];
+                sections = [];
+
+                if (steps.length <= 1) {
+                    const step = steps[0] || { fields: [] };
+                    if (step.title) {
+                        const h = document.createElement('h3');
+                        h.textContent = step.title;
+                        body.appendChild(h);
+                    }
+                    if (step.description) appendDescription(body, step.description);
+                    const grid = document.createElement('div');
+                    grid.className = 'pdf-edit-dialog-grid';
+                    body.appendChild(grid);
+                    renderFields(grid, step, 0, null);
+                } else {
+                    // all steps at once, as accordion sections (several may be open, the first one is open)
+                    steps.forEach((step, stepIndex) => {
+                        const element = document.createElement('section');
+                        element.className = 'pdf-edit-dialog-section';
+                        const toggle = document.createElement('button');
+                        toggle.type = 'button';
+                        toggle.className = 'pdf-edit-dialog-section-toggle';
+                        toggle.id = 'pdf-edit-dialog-section-' + stepIndex;
+                        toggle.setAttribute('aria-controls', toggle.id + '-content');
+                        const badge = document.createElement('span');
+                        badge.className = 'pdf-edit-dialog-section-index';
+                        badge.textContent = String(stepIndex + 1);
+                        const label = document.createElement('span');
+                        label.className = 'pdf-edit-dialog-section-title';
+                        label.textContent = step.title || ('Section ' + (stepIndex + 1));
+                        const chevron = document.createElement('span');
+                        chevron.className = 'pdf-edit-dialog-section-chevron';
+                        chevron.setAttribute('aria-hidden', 'true');
+                        chevron.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
+                        toggle.append(badge, label, chevron);
+
+                        const content = document.createElement('div');
+                        content.className = 'pdf-edit-dialog-section-content';
+                        content.id = toggle.id + '-content';
+                        content.setAttribute('role', 'region');
+                        content.setAttribute('aria-labelledby', toggle.id);
+                        if (step.description) appendDescription(content, step.description);
+                        const grid = document.createElement('div');
+                        grid.className = 'pdf-edit-dialog-grid';
+                        content.appendChild(grid);
+
+                        element.append(toggle, content);
+                        body.appendChild(element);
+
+                        const section = { element: element, toggle: toggle, rows: [] };
+                        sections.push(section);
+                        toggle.addEventListener('click', () => setExpanded(section, !element.classList.contains('is-open')));
+                        setExpanded(section, stepIndex === 0);
+                        renderFields(grid, step, stepIndex, section);
+                    });
+                }
+
                 updateVisibility();
 
-                const first = body.querySelector('input:checked, input, select');
+                const first = body.querySelector('.pdf-edit-dialog-section.is-open input:checked, .pdf-edit-dialog-section.is-open input, .pdf-edit-dialog-section.is-open select, .pdf-edit-dialog-section.is-open textarea')
+                    || body.querySelector('input:checked, input, select, textarea');
                 if (first) first.focus();
+                else next.focus();
             };
 
             const goNext = function () {
                 collect();
-                const message = validate();
-                if (message) {
-                    error.textContent = message;
+                rows.forEach(r => r.row.classList.remove('has-error'));
+                const invalid = validate();
+                if (invalid) {
+                    error.textContent = invalid.message;
+                    invalid.row.row.classList.add('has-error');
+                    if (invalid.row.section) setExpanded(invalid.row.section, true);
+                    invalid.row.row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    const target = invalid.row.input.matches('input, select, textarea') ? invalid.row.input : invalid.row.input.querySelector('input, select, textarea');
+                    if (target) target.focus();
                     return;
                 }
-                if (stepIndex < steps.length - 1) {
-                    stepIndex++;
-                    render();
-                } else {
-                    const result = {};
-                    fields.forEach(f => {
-                        const visible = typeof f.showIf !== 'function' || f.showIf(values);
-                        if (visible) result[f.name] = values[f.name];
-                    });
-                    close(result);
-                }
+                const result = {};
+                fields.forEach(f => {
+                    const visible = typeof f.showIf !== 'function' || f.showIf(values);
+                    if (visible) result[f.name] = values[f.name];
+                });
+                close(result);
             };
 
             cancel.addEventListener('click', () => close(null));
-            back.addEventListener('click', () => { collect(); stepIndex--; render(); });
             next.addEventListener('click', goNext);
 
             current = { overlay: overlay, resolve: resolve, previousFocus: document.activeElement, next: goNext };

@@ -91,7 +91,10 @@
         if (data.type === 'bridge.hello') {
             var nonce = createNonce();
             sessions.set(event.source, { nonce: nonce, viewId: viewId });
-            post(event.source, 'bridge.init', { nonce: nonce });
+            post(event.source, 'bridge.init', {
+                nonce: nonce,
+                theme: document.querySelector('.datalinq-code-ide.colorscheme-light') ? 'vs' : 'vs-dark'
+            });
             return;
         }
 

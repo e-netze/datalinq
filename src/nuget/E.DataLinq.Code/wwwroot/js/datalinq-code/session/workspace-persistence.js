@@ -14,6 +14,11 @@
                 .filter(id => id !== '_start');
             localStorage.setItem('datalinq-open-tabs', JSON.stringify(tabIds));
 
+            // views with an open live preview (restored together with the tabs)
+            const previewIds = Array.from(document.querySelectorAll('.datalinq-code-tab.with-preview[data-id]'))
+                .map(tab => tab.getAttribute('data-id'));
+            localStorage.setItem('datalinq-open-previews', JSON.stringify(previewIds));
+
             // save the individual width of sidebar of user
             const sidebarWidth = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width').trim();
             if (sidebarWidth !== '300px') {

@@ -155,6 +155,7 @@ ______      _        _     _
 
 @if (Model.PDFReportEditing)
 {
+    <link href="@(ViewData["contentRootUrl"])/css/datalinq/pdf-report/editor-theme.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
     <link href="@(ViewData["contentRootUrl"])/css/datalinq/pdf-report/edit-dialog.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
     <link href="@(ViewData["contentRootUrl"])/css/datalinq/pdf-report/shape-editing.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />
     <link href="@(ViewData["contentRootUrl"])/css/datalinq/pdf-report/data-editing.css?@(DataLinqVersion.CssVersion)" rel="stylesheet" />

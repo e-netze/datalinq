@@ -97,10 +97,20 @@ window.pdfEditContextMenu = (function () {
         });
 
         document.body.appendChild(menu);
+        menu.setAttribute('role', 'menu');
+        menu.querySelectorAll('button').forEach(b => b.setAttribute('role', 'menuitem'));
+        menu.addEventListener('keydown', e => {
+            if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+            e.preventDefault();
+            const items = Array.from(menu.querySelectorAll('button'));
+            const i = items.indexOf(document.activeElement);
+            const n = e.key === 'ArrowDown' ? (i + 1) % items.length : (i - 1 + items.length) % items.length;
+            items[n].focus();
+        });
 
         const rect = menu.getBoundingClientRect();
-        menu.style.left = Math.min(clientX, window.innerWidth - rect.width - 4) + 'px';
-        menu.style.top = Math.min(clientY, window.innerHeight - rect.height - 4) + 'px';
+        menu.style.left = Math.max(4, Math.min(clientX, window.innerWidth - rect.width - 4)) + 'px';
+        menu.style.top = Math.max(4, Math.min(clientY, window.innerHeight - rect.height - 4)) + 'px';
         return true;
     };
 

@@ -208,13 +208,14 @@ table.pdf-table-dynamic {
 }
 
 .pdf-edit-variant-picker-title {
-    padding: 3px 8px 5px;
+    padding: 6px 10px 6px;
     font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #888;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 2px;
+    letter-spacing: 0.06em;
+    color: var(--pdf-ed-muted);
+    border-bottom: 1px solid var(--pdf-ed-border);
+    margin: 0 -4px 4px;
 }
 
 .pdf-edit-variant-picker button > * {
@@ -226,37 +227,62 @@ table.pdf-table-dynamic {
 
 .pdf-edit-variant-picker button:focus {
     outline: none;
-    background: #e8f2ff;
+    background: var(--pdf-ed-accent-soft);
 }
 
 .pdf-edit-context-menu {
     position: fixed;
     z-index: 10000;
-    min-width: 140px;
+    min-width: 200px;
+    max-width: 320px;
     padding: 4px;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    font: 13px sans-serif;
+    background: var(--pdf-ed-surface);
+    color: var(--pdf-ed-text);
+    border: 1px solid var(--pdf-ed-border);
+    border-radius: var(--pdf-ed-radius);
+    box-shadow: var(--pdf-ed-shadow-sm);
+    font: var(--pdf-ed-font);
+    animation: pdf-edit-menu-in 120ms ease-out;
 }
 
     .pdf-edit-context-menu button {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 10px;
         width: 100%;
-        padding: 5px 8px;
+        min-height: 32px;
+        padding: 6px 10px;
         border: none;
+        border-radius: var(--pdf-ed-radius-sm);
         background: none;
         text-align: left;
         cursor: pointer;
-        color: #333;
+        color: inherit;
+        font: inherit;
+        transition: background var(--pdf-ed-transition), color var(--pdf-ed-transition);
     }
 
-        .pdf-edit-context-menu button:hover {
-            background: #e8f2ff;
+        .pdf-edit-context-menu button > svg {
+            flex: 0 0 16px;
+            width: 16px;
+            height: 16px;
+            color: var(--pdf-ed-muted);
         }
+
+        .pdf-edit-context-menu button:hover,
+        .pdf-edit-context-menu button:focus-visible {
+            outline: none;
+            background: var(--pdf-ed-accent-soft);
+        }
+
+            .pdf-edit-context-menu button:hover > svg,
+            .pdf-edit-context-menu button:focus-visible > svg {
+                color: var(--pdf-ed-accent);
+            }
+
+@keyframes pdf-edit-menu-in {
+    from { opacity: 0; transform: translateY(-2px) scale(0.98); }
+}
 
 @media print {
     .pdf-edit-context-menu {
@@ -271,13 +297,13 @@ table.pdf-table-dynamic {
     display: flex;
     align-items: center;
     gap: 2px;
-    padding: 3px;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    padding: 4px;
+    background: var(--pdf-ed-surface, #fff);
+    border: 1px solid var(--pdf-ed-border, #ccc);
+    border-radius: var(--pdf-ed-radius-sm, 4px);
+    box-shadow: var(--pdf-ed-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.2));
     font: 13px sans-serif;
-    color: #333;
+    color: var(--pdf-ed-text, #333);
     white-space: nowrap;
 }
 
@@ -297,26 +323,29 @@ table.pdf-table-dynamic {
     }
 
         .pdf-edit-format-toolbar button:hover {
-            background: #e8f2ff;
+            background: var(--pdf-ed-accent-soft, #e8f2ff);
         }
 
         .pdf-edit-format-toolbar button.active {
-            background: #cfe4ff;
+            background: var(--pdf-ed-accent-soft, #cfe4ff);
+            color: var(--pdf-ed-accent, inherit);
+            box-shadow: inset 0 0 0 1px var(--pdf-ed-accent, transparent);
         }
 
     .pdf-edit-format-toolbar select {
         height: 24px;
         font: 12px sans-serif;
-        border: 1px solid #ccc;
+        border: 1px solid var(--pdf-ed-border-strong, #ccc);
         border-radius: 3px;
-        background: #fff;
+        background: var(--pdf-ed-surface, #fff);
+        color: var(--pdf-ed-text, inherit);
     }
 
 .pdf-edit-format-separator {
     width: 1px;
     height: 18px;
     margin: 0 3px;
-    background: #ddd;
+    background: var(--pdf-ed-border, #ddd);
 }
 
 .pdf-edit-format-color {
@@ -329,7 +358,7 @@ table.pdf-table-dynamic {
         width: 22px;
         height: 22px;
         padding: 0;
-        border: 1px solid #ccc;
+        border: 1px solid var(--pdf-ed-border-strong, #ccc);
         border-radius: 3px;
         background: none;
         cursor: pointer;

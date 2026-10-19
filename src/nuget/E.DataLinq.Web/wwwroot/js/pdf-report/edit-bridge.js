@@ -84,6 +84,9 @@ window.dataLinqEditBridge = (function () {
             if (typeof n !== 'string' || n.length < 16 || n.length > MAX_NONCE_LENGTH) return;
             parentOrigin = event.origin;
             nonce = n;
+            if (data.payload.theme === 'vs' || data.payload.theme === 'vs-dark') {
+                document.body.classList.toggle('colorscheme-light', data.payload.theme === 'vs');
+            }
             document.dispatchEvent(new CustomEvent('datalinq-edit:connected'));
             return;
         }

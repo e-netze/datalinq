@@ -1,0 +1,47 @@
+/*
+ * PDF report editing mode - design tokens (light / dark).
+ * Dark: report embedded in DataLinq.Code (body.pdf-edit-embedded) without body.colorscheme-light,
+ * the IDE toggles colorscheme-light on the iframe body when its scheme changes.
+ */
+
+:root {
+    --pdf-ed-font: 13px/1.45 "Segoe UI", system-ui, -apple-system, Verdana, sans-serif;
+    --pdf-ed-accent: #2f8ae8;
+    --pdf-ed-accent-hover: #1f76d0;
+    --pdf-ed-accent-soft: rgba(91, 173, 255, 0.14);
+    --pdf-ed-focus: 0 0 0 3px rgba(91, 173, 255, 0.35);
+    --pdf-ed-surface: #ffffff;
+    --pdf-ed-surface-2: #f6f7f9;
+    --pdf-ed-surface-3: #eceef1;
+    --pdf-ed-text: #1f2328;
+    --pdf-ed-muted: #6b7280;
+    --pdf-ed-border: #dcdfe4;
+    --pdf-ed-border-strong: #c3c8cf;
+    --pdf-ed-danger: #c62828;
+    --pdf-ed-danger-soft: #fdecec;
+    --pdf-ed-overlay: rgba(17, 20, 24, 0.45);
+    --pdf-ed-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.12);
+    --pdf-ed-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.28);
+    --pdf-ed-radius-sm: 6px;
+    --pdf-ed-radius: 10px;
+    --pdf-ed-transition: 150ms ease;
+}
+
+body.pdf-edit-embedded:not(.colorscheme-light) {
+    --pdf-ed-accent: #5badff;
+    --pdf-ed-accent-hover: #7cbdff;
+    --pdf-ed-accent-soft: rgba(91, 173, 255, 0.16);
+    --pdf-ed-focus: 0 0 0 3px rgba(91, 173, 255, 0.4);
+    --pdf-ed-surface: #252526;
+    --pdf-ed-surface-2: #1e1e1e;
+    --pdf-ed-surface-3: #2f2f31;
+    --pdf-ed-text: #e6e6e6;
+    --pdf-ed-muted: #9aa0a6;
+    --pdf-ed-border: #3a3a3c;
+    --pdf-ed-border-strong: #4a4a4d;
+    --pdf-ed-danger: #f47174;
+    --pdf-ed-danger-soft: rgba(244, 67, 54, 0.15);
+    --pdf-ed-overlay: rgba(0, 0, 0, 0.6);
+    --pdf-ed-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --pdf-ed-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+}

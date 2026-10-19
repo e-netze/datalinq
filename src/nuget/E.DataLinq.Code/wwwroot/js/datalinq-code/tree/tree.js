@@ -1057,6 +1057,14 @@ var attachFolderEventHandlers = function ($folder) {
                         }
                     }
                 });
+
+                // reopen the live previews (PDF editing mode / 50/50 layout are restored by the editor)
+                const savedPreviews = JSON.parse(localStorage.getItem('datalinq-open-previews') || '[]');
+                savedPreviews
+                    .filter(id => typeof id === 'string' && id.split('@').length === 3 && savedTabs.includes(id))
+                    .forEach(id => {
+                        dataLinqCode.events.fire('open-view-preview', { id: id, url: dataLinqCode.buildRunUrl(id) });
+                    });
             }
         );
     }

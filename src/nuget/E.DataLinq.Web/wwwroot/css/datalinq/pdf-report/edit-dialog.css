@@ -1,5 +1,6 @@
 /*
  * PDF report editing mode - modal dialog (see js/pdf-report/edit-dialog.js).
+ * Colors / spacing: css/datalinq/pdf-report/editor-theme.css
  */
 
 .pdf-edit-dialog-overlay {
@@ -9,122 +10,252 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(20, 22, 26, 0.45);
-    backdrop-filter: blur(2px);
-    animation: pdf-edit-dialog-fade 0.12s ease-out;
+    padding: 24px;
+    background: var(--pdf-ed-overlay);
+    backdrop-filter: blur(3px);
+    animation: pdf-edit-dialog-fade 0.15s ease-out;
 }
 
 .pdf-edit-dialog {
-    width: min(420px, calc(100vw - 32px));
-    max-height: calc(100vh - 48px);
+    width: min(860px, 92vw);
+    max-height: 85vh;
     display: flex;
     flex-direction: column;
-    background: #fff;
-    color: #222;
-    border-radius: 8px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-    font: 13px/1.4 Verdana, Tahoma, Arial, sans-serif;
-    animation: pdf-edit-dialog-pop 0.14s ease-out;
+    overflow: hidden;
+    background: var(--pdf-ed-surface);
+    color: var(--pdf-ed-text);
+    border: 1px solid var(--pdf-ed-border);
+    border-radius: var(--pdf-ed-radius);
+    box-shadow: var(--pdf-ed-shadow-lg);
+    font: var(--pdf-ed-font);
+    animation: pdf-edit-dialog-pop 0.18s ease-out;
 }
 
+    .pdf-edit-dialog *,
+    .pdf-edit-dialog *::before,
+    .pdf-edit-dialog *::after {
+        box-sizing: border-box;
+    }
+
+/* header / footer stay visible, the body scrolls */
 .pdf-edit-dialog-header {
+    flex: 0 0 auto;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
-    padding: 14px 18px 0;
+    gap: 16px;
+    padding: 16px 16px 14px 24px;
+    border-bottom: 1px solid var(--pdf-ed-border);
 }
 
     .pdf-edit-dialog-header h2 {
         margin: 0;
         font-size: 16px;
         font-weight: 600;
+        letter-spacing: -0.005em;
+        color: inherit;
     }
 
-.pdf-edit-dialog-progress {
-    font-size: 11px;
-    color: #888;
+.pdf-edit-dialog-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--pdf-ed-radius-sm);
+    background: transparent;
+    color: var(--pdf-ed-muted);
+    cursor: pointer;
+    transition: background var(--pdf-ed-transition), color var(--pdf-ed-transition);
 }
 
+    .pdf-edit-dialog-close:hover {
+        background: var(--pdf-ed-surface-3);
+        color: var(--pdf-ed-text);
+    }
+
+    .pdf-edit-dialog-close:focus-visible {
+        outline: none;
+        box-shadow: var(--pdf-ed-focus);
+    }
+
 .pdf-edit-dialog-body {
-    padding: 8px 18px 4px;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 20px 24px;
     overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
     .pdf-edit-dialog-body h3 {
-        margin: 4px 0 8px;
+        margin: 0 0 12px;
         font-size: 13px;
         font-weight: 600;
-        color: #555;
+        color: var(--pdf-ed-muted);
     }
 
 .pdf-edit-dialog-description {
-    margin: 0 0 10px;
-    color: #777;
+    margin: 0 0 16px;
+    color: var(--pdf-ed-muted);
 }
+
+/* fields: two column grid, long / complex fields span the full width */
+.pdf-edit-dialog-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+}
+
+    .pdf-edit-dialog-grid:empty {
+        display: none;
+    }
 
 .pdf-edit-dialog-row {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 6px 0;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    margin: 0;
 }
 
     .pdf-edit-dialog-row[hidden] {
         display: none;
     }
 
-    .pdf-edit-dialog-row input[type=text],
-    .pdf-edit-dialog-row input[type=number],
-    .pdf-edit-dialog-row select {
-        width: 180px;
-        padding: 4px 6px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font: inherit;
+    .pdf-edit-dialog-row > label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--pdf-ed-text);
     }
 
-        .pdf-edit-dialog-row input:focus,
-        .pdf-edit-dialog-row select:focus {
-            outline: none;
-            border-color: #5badff;
-            box-shadow: 0 0 0 2px rgba(91, 173, 255, 0.25);
-        }
+.pdf-edit-dialog-row-wide,
+.pdf-edit-dialog-row.pdf-edit-dialog-text,
+.pdf-edit-dialog-row.pdf-edit-dialog-heading {
+    grid-column: 1 / -1;
+}
 
-.pdf-edit-dialog-checkbox {
-    justify-content: flex-start;
-    gap: 8px;
+.pdf-edit-dialog-row input[type=text],
+.pdf-edit-dialog-row input[type=number],
+.pdf-edit-dialog-row select,
+.pdf-edit-dialog-row textarea {
+    width: 100%;
+    min-height: 36px;
+    padding: 7px 10px;
+    border: 1px solid var(--pdf-ed-border-strong);
+    border-radius: var(--pdf-ed-radius-sm);
+    background: var(--pdf-ed-surface);
+    color: var(--pdf-ed-text);
+    font: inherit;
+    transition: border-color var(--pdf-ed-transition), box-shadow var(--pdf-ed-transition);
+}
+
+.pdf-edit-dialog-row textarea {
+    min-height: 140px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.pdf-edit-dialog-row input::placeholder,
+.pdf-edit-dialog-row textarea::placeholder {
+    color: var(--pdf-ed-muted);
+    opacity: 0.8;
+}
+
+.pdf-edit-dialog-row input:hover,
+.pdf-edit-dialog-row select:hover,
+.pdf-edit-dialog-row textarea:hover {
+    border-color: var(--pdf-ed-muted);
+}
+
+.pdf-edit-dialog-row input:focus,
+.pdf-edit-dialog-row select:focus,
+.pdf-edit-dialog-row textarea:focus {
+    outline: none;
+    border-color: var(--pdf-ed-accent);
+    box-shadow: var(--pdf-ed-focus);
+}
+
+.pdf-edit-dialog-row input[type=color] {
+    width: 56px;
+    height: 36px;
+    padding: 3px;
+    border: 1px solid var(--pdf-ed-border-strong);
+    border-radius: var(--pdf-ed-radius-sm);
+    background: var(--pdf-ed-surface);
+    cursor: pointer;
+}
+
+.pdf-edit-dialog-row input[type=checkbox] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--pdf-ed-accent);
+    cursor: pointer;
+}
+
+.pdf-edit-dialog-row.pdf-edit-dialog-checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    align-self: end;
+    min-height: 36px;
+}
+
+    .pdf-edit-dialog-row.pdf-edit-dialog-checkbox > label {
+        font-weight: 400;
+        cursor: pointer;
+    }
+
+.pdf-edit-dialog-row.has-error input,
+.pdf-edit-dialog-row.has-error select,
+.pdf-edit-dialog-row.has-error textarea {
+    border-color: var(--pdf-ed-danger);
+}
+
+.pdf-edit-dialog-help {
+    color: var(--pdf-ed-muted);
+    font-size: 12px;
 }
 
 .pdf-edit-dialog-heading {
-    margin-top: 14px;
-    padding-bottom: 3px;
-    border-bottom: 1px solid #eee;
+    margin-top: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--pdf-ed-border);
     font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #888;
+    letter-spacing: 0.06em;
+    color: var(--pdf-ed-muted);
 }
 
-.pdf-edit-dialog-choice {
-    display: block;
-}
-
+/* choice (radio cards) */
 .pdf-edit-dialog-choices {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 8px;
     width: 100%;
 }
 
 .pdf-edit-dialog-choice {
-    flex: 1;
     position: relative;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--pdf-ed-border);
+    border-radius: var(--pdf-ed-radius-sm);
+    background: var(--pdf-ed-surface);
     cursor: pointer;
-    text-align: center;
+    text-align: left;
+    transition: border-color var(--pdf-ed-transition), background var(--pdf-ed-transition);
 }
+
+    .pdf-edit-dialog-choice:hover {
+        border-color: var(--pdf-ed-border-strong);
+        background: var(--pdf-ed-surface-2);
+    }
 
     .pdf-edit-dialog-choice input {
         position: absolute;
@@ -132,27 +263,32 @@
         pointer-events: none;
     }
 
+    .pdf-edit-dialog-choice > span {
+        font-weight: 600;
+    }
+
     .pdf-edit-dialog-choice:has(input:checked) {
-        border-color: #5badff;
-        background: #eef6ff;
-        box-shadow: 0 0 0 1px #5badff;
+        border-color: var(--pdf-ed-accent);
+        background: var(--pdf-ed-accent-soft);
+        box-shadow: inset 0 0 0 1px var(--pdf-ed-accent);
     }
 
     .pdf-edit-dialog-choice:has(input:focus-visible) {
-        outline: 2px solid rgba(91, 173, 255, 0.5);
+        box-shadow: var(--pdf-ed-focus);
     }
 
     .pdf-edit-dialog-choice small {
         display: block;
-        color: #888;
+        color: var(--pdf-ed-muted);
+        font-size: 12px;
     }
 
-.pdf-edit-dialog-choice > label,
 .pdf-edit-dialog-row.pdf-edit-dialog-choice > label {
     display: none;
 }
 
 .pdf-edit-dialog-choices-icons {
+    display: flex;
     flex-wrap: wrap;
 }
 
@@ -161,7 +297,6 @@
         width: 44px;
         height: 44px;
         padding: 0;
-        display: flex;
         align-items: center;
         justify-content: center;
     }
@@ -170,52 +305,158 @@
     display: inline-flex;
 }
 
+/* accordion sections (multi step definitions) */
+.pdf-edit-dialog-section {
+    border: 1px solid var(--pdf-ed-border);
+    border-radius: var(--pdf-ed-radius-sm);
+    background: var(--pdf-ed-surface);
+}
+
+    .pdf-edit-dialog-section + .pdf-edit-dialog-section {
+        margin-top: 10px;
+    }
+
+    .pdf-edit-dialog-section[hidden] {
+        display: none;
+    }
+
+.pdf-edit-dialog-section-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    border: none;
+    border-radius: inherit;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--pdf-ed-transition);
+}
+
+    .pdf-edit-dialog-section-toggle:hover {
+        background: var(--pdf-ed-surface-2);
+    }
+
+    .pdf-edit-dialog-section-toggle:focus-visible {
+        outline: none;
+        box-shadow: var(--pdf-ed-focus);
+    }
+
+.pdf-edit-dialog-section-index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--pdf-ed-surface-3);
+    color: var(--pdf-ed-muted);
+    font-size: 11px;
+    font-weight: 600;
+    transition: background var(--pdf-ed-transition), color var(--pdf-ed-transition);
+}
+
+.pdf-edit-dialog-section-title {
+    flex: 1 1 auto;
+    font-weight: 600;
+}
+
+.pdf-edit-dialog-section-chevron {
+    display: inline-flex;
+    color: var(--pdf-ed-muted);
+    transition: transform var(--pdf-ed-transition);
+}
+
+.pdf-edit-dialog-section-content {
+    display: none;
+    padding: 4px 16px 18px 48px;
+}
+
+.pdf-edit-dialog-section.is-open {
+    border-color: var(--pdf-ed-border-strong);
+}
+
+    .pdf-edit-dialog-section.is-open .pdf-edit-dialog-section-content {
+        display: block;
+    }
+
+    .pdf-edit-dialog-section.is-open .pdf-edit-dialog-section-chevron {
+        transform: rotate(180deg);
+    }
+
+    .pdf-edit-dialog-section.is-open .pdf-edit-dialog-section-index {
+        background: var(--pdf-ed-accent);
+        color: #fff;
+    }
+
+.pdf-edit-dialog-section:has(.has-error) .pdf-edit-dialog-section-index {
+    background: var(--pdf-ed-danger);
+    color: #fff;
+}
+
+/* error + footer */
 .pdf-edit-dialog-error {
-    min-height: 0;
-    padding: 0 18px;
-    color: #c62828;
+    flex: 0 0 auto;
+    padding: 0 24px;
+    color: var(--pdf-ed-danger);
 }
 
     .pdf-edit-dialog-error:not(:empty) {
-        padding-top: 6px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        background: var(--pdf-ed-danger-soft);
+        border-top: 1px solid var(--pdf-ed-border);
     }
 
 .pdf-edit-dialog-footer {
+    flex: 0 0 auto;
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    padding: 14px 18px;
+    padding: 14px 24px;
+    border-top: 1px solid var(--pdf-ed-border);
+    background: var(--pdf-ed-surface-2);
 }
 
     .pdf-edit-dialog-footer button {
-        padding: 5px 14px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        background: #fff;
+        min-width: 88px;
+        height: 34px;
+        padding: 0 16px;
+        border: 1px solid var(--pdf-ed-border-strong);
+        border-radius: var(--pdf-ed-radius-sm);
+        background: var(--pdf-ed-surface);
+        color: var(--pdf-ed-text);
         font: inherit;
+        font-weight: 500;
         cursor: pointer;
+        transition: background var(--pdf-ed-transition), border-color var(--pdf-ed-transition);
     }
 
         .pdf-edit-dialog-footer button:hover {
-            background: #f3f3f3;
+            background: var(--pdf-ed-surface-3);
+        }
+
+        .pdf-edit-dialog-footer button:focus-visible {
+            outline: none;
+            box-shadow: var(--pdf-ed-focus);
         }
 
         .pdf-edit-dialog-footer button.primary {
-            border-color: #3d8fe0;
-            background: #3d8fe0;
+            border-color: var(--pdf-ed-accent);
+            background: var(--pdf-ed-accent);
             color: #fff;
         }
 
             .pdf-edit-dialog-footer button.primary:hover {
-                background: #2f7bc6;
+                border-color: var(--pdf-ed-accent-hover);
+                background: var(--pdf-ed-accent-hover);
             }
 
         .pdf-edit-dialog-footer button[hidden] {
             display: none;
-        }
-
-        .pdf-edit-dialog-footer button:first-child {
-            margin-right: auto;
         }
 
 @keyframes pdf-edit-dialog-fade {
@@ -223,7 +464,34 @@
 }
 
 @keyframes pdf-edit-dialog-pop {
-    from { opacity: 0; transform: translateY(6px) scale(0.98); }
+    from { opacity: 0; transform: translateY(8px) scale(0.985); }
+}
+
+@media (max-width: 640px) {
+    .pdf-edit-dialog-overlay {
+        padding: 8px;
+    }
+
+    .pdf-edit-dialog {
+        width: 100%;
+        max-height: 94vh;
+    }
+
+    .pdf-edit-dialog-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pdf-edit-dialog-section-content {
+        padding-left: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pdf-edit-dialog-overlay,
+    .pdf-edit-dialog,
+    .pdf-edit-context-menu {
+        animation: none;
+    }
 }
 
 @media print {
@@ -232,32 +500,20 @@
     }
 }
 
-/* key/value list (keyvalue field): label above, full width list below */
-.pdf-edit-dialog-row.pdf-edit-dialog-keyvalue {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-    margin-top: 12px;
-}
-
-    .pdf-edit-dialog-row.pdf-edit-dialog-keyvalue > label {
-        font-weight: 600;
-        color: #555;
-    }
-
+/* key/value list (keyvalue field) */
 .pdf-edit-dialog-kv {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 6px;
-    border: 1px solid #e3e3e3;
-    border-radius: 6px;
-    background: #fafafa;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid var(--pdf-ed-border);
+    border-radius: var(--pdf-ed-radius-sm);
+    background: var(--pdf-ed-surface-2);
 }
 
 .pdf-edit-dialog-kv-empty {
-    padding: 2px 2px 4px;
-    color: #999;
+    padding: 4px 4px 6px;
+    color: var(--pdf-ed-muted);
     font-style: italic;
 }
 
@@ -267,51 +523,52 @@
 
 .pdf-edit-dialog-kv-row {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) 26px;
-    gap: 4px;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) 32px;
+    gap: 6px;
     align-items: center;
 }
 
     .pdf-edit-dialog-row .pdf-edit-dialog-kv-row input[type=text] {
         width: 100%;
-        box-sizing: border-box;
-        background: #fff;
     }
 
     .pdf-edit-dialog-kv-row .pdf-edit-dialog-kv-remove {
-        width: 26px;
-        height: 26px;
+        width: 32px;
+        height: 32px;
         padding: 0;
         border: 1px solid transparent;
-        border-radius: 4px;
+        border-radius: var(--pdf-ed-radius-sm);
         background: transparent;
-        color: #888;
-        font-size: 16px;
+        color: var(--pdf-ed-muted);
+        font-size: 18px;
         line-height: 1;
         cursor: pointer;
+        transition: background var(--pdf-ed-transition), color var(--pdf-ed-transition);
     }
 
         .pdf-edit-dialog-kv-row .pdf-edit-dialog-kv-remove:hover {
-            border-color: #f0c4c4;
-            background: #fdecec;
-            color: #c62828;
+            background: var(--pdf-ed-danger-soft);
+            color: var(--pdf-ed-danger);
         }
 
 .pdf-edit-dialog-kv-add {
     align-self: flex-start;
     margin-top: 2px;
-    padding: 3px 8px;
-    border: 1px dashed #9cc7f0;
-    border-radius: 4px;
-    background: #fff;
-    color: #2f7bc6;
+    padding: 6px 12px;
+    border: 1px dashed var(--pdf-ed-border-strong);
+    border-radius: var(--pdf-ed-radius-sm);
+    background: transparent;
+    color: var(--pdf-ed-accent);
     font: inherit;
+    font-weight: 500;
     cursor: pointer;
+    transition: background var(--pdf-ed-transition), border-color var(--pdf-ed-transition);
 }
 
     .pdf-edit-dialog-kv-add:hover {
         border-style: solid;
-        background: #eef6ff;
+        border-color: var(--pdf-ed-accent);
+        background: var(--pdf-ed-accent-soft);
     }
 
 /* image placeholder until the preview is refreshed (tools/image.js) */
