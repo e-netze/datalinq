@@ -350,6 +350,7 @@
 		if (!m) {
 			return { message: 'The draggable does not contain a GetImage(...) / GetAgsImage(...) call or an embedded image.' };
 		}
+		var method = m[1];
 
 		var argsStart = m.index + m[0].length, depth = 1;
 		for (var i = argsStart; i < element.end; i++) {
@@ -361,18 +362,18 @@
 			} else if (c === '(') {
 				depth++;
 			} else if (c === ')' && --depth === 0) {
-				// enclosing @(await ...) -> replace the whole expression (needed to switch to/from embedded markup)
+				// enclosing @(await ...) -> replace the whole expression (needed to switch to an embedded image)
 				var before = /@\(\s*await\s+$/.exec(source.substring(element.start, m.index));
-				var after = /^\s*\)/.exec(source.substring(i + 1, element.end));
-				var wrapped = !!(before && after);
+				var after = before ? /^\s*\)/.exec(source.substring(i + 1, element.end)) : null;
+				var wrapped = !!after;
 				return {
-					method: m[1], argsStart: argsStart, argsEnd: i, wrapped: wrapped,
+					method: method, argsStart: argsStart, argsEnd: i, wrapped: wrapped,
 					start: wrapped ? element.start + before.index : m.index,
-					end: wrapped ? i + 1 + after[0].length : i + 1
+					end: wrapped ? i + 1 + (after ? after[0].length : 0) : i + 1
 				};
 			}
 		}
-		return { message: 'Could not parse the ' + m[1] + '(...) call.' };
+		return { message: 'Could not parse the ' + method + '(...) call.' };
 	};
 
 	// "new AgsTokenObject { UsernameKey = "..", PasswordKey = ".." }" -> { usernameKey, passwordKey } | null
@@ -434,7 +435,7 @@
 
 	// ---- registration ---------------------------------------------------------------------
 
-	pdfDraggableSource.registerElementTemplate('image', {
+	var imageTemplate = {
 		content: function (text) {
 			var config;
 			try {
@@ -449,7 +450,21 @@
 		},
 		// not text editable
 		textPattern: /(?!)/
-	});
+	};
+
+	pdfDraggableSource.registerElementTemplate('image', imageTemplate);
+
+	// generic C# / attribute helpers, reused by tools/qr-code.js
+	window.pdfSourceCsUtils = {
+		csString: csString,
+		anonymousObject: anonymousObject,
+		parseString: parseString,
+		parseObject: parseObject,
+		splitTopLevel: splitTopLevel,
+		skipString: skipString,
+		isAllowedAttribute: isAllowedAttribute,
+		MAX_PAIRS: MAX_PAIRS
+	};
 
 	pdfDraggableSource.registerAction('image.get', function (source, args) {
 		var call = findImageCall(source, args);

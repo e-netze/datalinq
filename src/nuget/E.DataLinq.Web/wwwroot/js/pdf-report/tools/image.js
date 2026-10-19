@@ -36,7 +36,7 @@
 	const validateEmbeddedAttributes = function (pairs, values) {
 		if (!isEmbedded(values)) return null;
 		const bad = (pairs || []).find(p => FORBIDDEN_ATTRIBUTE.test(p.key) || (p.key.toLowerCase() === 'style' && UNSAFE_STYLE.test(p.value)));
-		return bad ? 'HTML attributes: "' + bad.key + '" is not allowed for embedded images.' : null;
+		return bad ? 'HTML attributes: "' + bad.key + '" is not allowed for this image type.' : null;
 	};
 
 	const openDialog = function (initial, submitLabel) {
@@ -105,6 +105,11 @@
 		if (busy || !isEditableImage(element)) return;
 		busy = true;
 		try {
+			// other tools rendering an <img> (e.g. tools/qr-code.js) may handle the element first
+			for (const handler of window.pdfImageEditHandlers || []) {
+				if (await handler(element)) return;
+			}
+
 			const current = await pdfEditActions.request('image.get', locate(element));
 			if (!current.success || !current.data) {
 				pdfEditActions.notify(current.message || 'The image settings could not be read.');
