@@ -809,16 +809,7 @@ var dataLinq = new function () {
             if ((type !== 'bar') || (type === 'bar' && data.length < 8)) {
                 var colors = [], colorsBorder = [], colorsBackground = [], colorsHoverBackground = [];
                 for (var c in data) {
-                    if (type === 'bar') {
-                        // Wenn die Anzahl der Farben nicht mit der Anzahl der Werte übereinstimmt => erste Farbe nehme. Falls diese nicht gesetzt => Standardfarbe
-                        var colorRGB_help = colorRGB[(data.length === colorRGB.length ? c : 0)];
-                        if (colorRGB_help.length === 0)
-                            colorRGB_help = undefined;
-                        colors = dataLinq.randomColorRGBA(colorRGB_help);
-                    }
-                    else
-                        colors = dataLinq.randomColorRGBA((colorRGB.length > 0 && data.length <= colorRGB.length) ? colorRGB[c] : undefined);
-
+                    colors = dataLinq.randomColorRGBA(dataLinq.chartColorAt(colorRGB, c));
                     colorsBorder.push(colors['border']);
                     colorsBackground.push(colors['background']);
                     colorsHoverBackground.push(colors['hoverbackground']);
@@ -848,11 +839,7 @@ var dataLinq = new function () {
             if (type === 'bar') {
                 var colors = [], colorsBorder = [], colorsBackground = [], colorsHoverBackground = [];
                 for (var c in data.categories) {
-                    // Wenn die Anzahl der Farben nicht mit der Anzahl der Kategorien übereinstimmt => erste Farbe nehme. Falls diese nicht gesetzt => Standardfarbe
-                    var colorRGB_help = colorRGB[(data.categories.length === colorRGB.length ? c : 0)];
-                    if (colorRGB_help.length === 0)
-                        colorRGB_help = undefined;
-                    colors = dataLinq.randomColorRGBA(colorRGB_help);
+                    colors = dataLinq.randomColorRGBA(dataLinq.chartColorAt(colorRGB, c));
                     datasets.push({
                         data: $.map(data.categories[c].data, function (e) { return e.value; }),
                         label: data.categories[c].category,
@@ -996,7 +983,7 @@ var dataLinq = new function () {
                 var colors = [], colorsBorder = [], colorsBackground = [], colorsHoverBackground = [];
                 var datasets = [];
                 for (var c in data.categories) {
-                    colors = dataLinq.randomColorRGBA((typeof (colorRGB[c]) !== 'undefined' && colorRGB[c].length > 0 && data.categories.length <= colorRGB.length) ? colorRGB[c] : undefined);
+                    colors = dataLinq.randomColorRGBA(dataLinq.chartColorAt(colorRGB, c));
 
                     var sparseData = [];
                     $.map(data.categories[c].data, function (e) {
@@ -1091,6 +1078,12 @@ var dataLinq = new function () {
             options: options
         });
         ctx.closest(".datalinq-chart").data("datalinq-chartobject", myChart);
+    };
+
+    // Farbe für Index i: angegebene Farben werden der Reihe nach (zyklisch) verwendet, ohne Farben => undefined (Zufallsfarbe)
+    this.chartColorAt = function (colorRGB, i) {
+        var list = (colorRGB || []).filter(function (c) { return c && c.length > 0; });
+        return list.length > 0 ? list[parseInt(i, 10) % list.length] : undefined;
     };
 
     this.randomColorRGBA = function (colorRGB) {

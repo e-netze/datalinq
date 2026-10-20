@@ -24,6 +24,17 @@
     max-height: 100%;
 }
 
+/* chart added in editing mode (tools/chart.js): label on top, the chart fills the remaining height */
+.pdf-chart {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+    .pdf-chart > .datalinq-chart-label {
+        flex: 0 0 auto;
+    }
+
 .element:hover {
     /*border: 2px dashed #5badff;*/
 }
