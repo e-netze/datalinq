@@ -31,6 +31,15 @@
                 }
             ];
 
+            if (features.Mcp) {
+                settingsItems.push({
+                    key: 'mcp-token',
+                    title: 'MCP Agent Token',
+                    description: 'Generate a token for AI agents to use the DataLinq MCP server.',
+                    action: function () { dataLinqCode.ui.mcpToken(); }
+                });
+            }
+
             if (features.Sandbox) {
                 settingsItems.push({
                     key: 'sandbox',
@@ -42,7 +51,7 @@
 
             $('body').dataLinq_code_modal({
                 title: 'Settings',
-                height: '440px',
+                height: '600px',
                 width: '480px',
                 id: modalId,
                 onload: function ($content) {

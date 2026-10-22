@@ -152,6 +152,216 @@
                 background-image: url(../../img/sandbox_32@1.png);
             }
 
+            .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-icon.mcp-token {
+                background-image: url(../../img/keyvalue_32@1.svg);
+            }
+
+.datalinq-code-mcp-token-content {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow: auto;
+    box-sizing: border-box;
+    height: 100%;
+    color: #ddd;
+}
+
+    .datalinq-code-mcp-token-content .mcp-desc {
+        font-size: 13px;
+        line-height: 1.45;
+        color: #aaa;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #9aa4ad;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1px solid #3a3f44;
+        border-radius: 6px;
+        background-color: rgb(73 73 73);
+    }
+
+    .datalinq-code-mcp-token-content .mcp-select {
+        padding: 5px 8px;
+        border-radius: 4px;
+        border: 1px solid #555;
+        background-color: #2b2b2b;
+        color: #ddd;
+        font-size: 13px;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-generate {
+        margin-left: auto;
+        background-color: #0e639c;
+        border-color: #0e639c;
+        color: #fff;
+    }
+
+        .datalinq-code-mcp-token-content .mcp-generate:hover:not(:disabled) {
+            background-color: #1177bb;
+        }
+
+        .datalinq-code-mcp-token-content .mcp-generate:disabled {
+            opacity: .6;
+            cursor: default;
+        }
+
+    .datalinq-code-mcp-token-content .mcp-result {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-meta {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 14px;
+        row-gap: 6px;
+        align-items: baseline;
+    }
+
+        .datalinq-code-mcp-token-content .mcp-meta .mcp-value {
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            word-break: break-all;
+        }
+
+    .datalinq-code-mcp-token-content .mcp-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-field-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-copy {
+        padding: 2px 12px;
+        font-size: 12px;
+    }
+
+        .datalinq-code-mcp-token-content .mcp-copy.copied {
+            border-color: #3fb950;
+            color: #3fb950;
+        }
+
+    .datalinq-code-mcp-token-content .mcp-code {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 10px;
+        border: 1px solid #3a3f44;
+        border-radius: 4px;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.4;
+        resize: vertical;
+        overflow: hidden;
+        flex-shrink: 0;
+        word-break: break-all;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-message {
+        padding: 10px 12px;
+        border-radius: 4px;
+        border-left: 3px solid;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-warning {
+        border-color: #d29922;
+        background-color: rgba(210, 153, 34, .12);
+        color: #e3b341;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-error {
+        border-color: #f85149;
+        background-color: rgba(248, 81, 73, .12);
+        color: #ff7b72;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-input {
+        flex: 1 1 auto;
+        min-width: 140px;
+        padding: 5px 8px;
+        border-radius: 4px;
+        border: 1px solid #555;
+        background-color: #2b2b2b;
+        color: #ddd;
+        font-size: 13px;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-list-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-top: 6px;
+        border-top: 1px solid #3a3f44;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-list-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border: 1px solid #3a3f44;
+        border-radius: 6px;
+        background-color: rgb(73 73 73);
+    }
+
+    .datalinq-code-mcp-token-content .mcp-list-info {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-list-name {
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-list-meta {
+        font-size: 11px;
+        color: #9aa4ad;
+        margin-top: 2px;
+    }
+
+    .datalinq-code-mcp-token-content .mcp-revoke {
+        padding: 2px 12px;
+        font-size: 12px;
+        border-color: #f85149;
+        color: #ff7b72;
+    }
+
+        .datalinq-code-mcp-token-content .mcp-revoke:hover {
+            background-color: rgba(248, 81, 73, .15);
+        }
+
+    .datalinq-code-mcp-token-content .mcp-empty {
+        font-size: 12px;
+        color: #888;
+    }
+
         .datalinq-code-settings-list .datalinq-code-settings-item .datalinq-code-settings-text .title {
             font-size: 14px;
             font-weight: 600;

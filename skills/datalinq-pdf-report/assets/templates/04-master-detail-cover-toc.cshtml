@@ -1,0 +1,64 @@
+@* Master-detail report: cover page, table of contents, one section per group.
+   Replace GROUP_COL / NAME / VALUE with real columns. *@
+@{
+    string V(IDictionary<string, object> rec, string key) =>
+        rec != null && rec.ContainsKey(key) && rec[key] != null && !(rec[key] is DBNull) ? rec[key].ToString() : "";
+    var groups = (Model.Records ?? new IDictionary<string, object>[0])
+                    .GroupBy(r => V(r, "GROUP_COL"))
+                    .OrderBy(g => g.Key)
+                    .ToList();
+}
+@PDF.BeginReport(
+    pageNumberOptions: new PageNumberOptions { UsePageNumbers = true, Position = 1, SkipPages = 1 },
+    fileName: "overview")
+
+    @* Cover page (not numbered: SkipPages = 1) *@
+    @PDF.NewPage()
+        <style>
+            .rpt-md { font-family: Arial, Helvetica, sans-serif; color: #222; font-size: 10pt; }
+            .rpt-md-cover { height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+            .rpt-md-cover h1 { font-size: 26pt; margin: 0 0 6mm 0; }
+            .rpt-md-section { margin: 15mm 18mm 0 20mm; }
+            .rpt-md-toc li { margin: 1.5mm 0; }
+            .rpt-md-table { border-collapse: collapse; width: calc(100% - 38mm); margin: 3mm 18mm 0 20mm; font-size: 9pt; }
+            .rpt-md-table th, .rpt-md-table td { text-align: left; padding: 1.5mm 2mm; border-bottom: 1px solid #ddd; }
+            .rpt-md p, .rpt-md td, .rpt-md th { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.35; }
+            .rpt-md .rpt-md-table td, .rpt-md .rpt-md-table th { font-size: 9pt; }
+        </style>
+        <div class="rpt-md rpt-md-cover">
+            <h1>Report title</h1>
+            <div>@DateTime.Now.ToString("dd.MM.yyyy")</div>
+        </div>
+    @PDF.EndPage()
+
+    @* Table of contents *@
+    @PDF.NewPage()
+        <div class="rpt-md rpt-md-section">
+            <h2>Contents</h2>
+            <ol class="rpt-md-toc">
+                @foreach (var g in groups)
+                {
+                    <li>@g.Key (@g.Count())</li>
+                }
+            </ol>
+        </div>
+    @PDF.EndPage()
+
+    @* One dynamic section per group *@
+    @foreach (var g in groups)
+    {
+        @PDF.NewPage(dynamicTableOptions: new DynamicTableOptions { Dynamic = true, DefaultMarginTop = 40, DefaultMarginBottom = 60 })
+            <h2 class="rpt-md rpt-md-section">@g.Key</h2>
+            <table class="rpt-md rpt-md-table">
+                <thead><tr><th>Name</th><th>Value</th></tr></thead>
+                <tbody>
+                    @foreach (var r in g)
+                    {
+                        <tr><td>@V(r, "NAME")</td><td>@V(r, "VALUE")</td></tr>
+                    }
+                </tbody>
+            </table>
+        @PDF.EndPage()
+    }
+
+@PDF.EndReport()

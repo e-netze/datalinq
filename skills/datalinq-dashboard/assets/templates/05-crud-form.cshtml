@@ -1,0 +1,25 @@
+@* CRUD form view (ep@item@formview), opened by OpenViewInDialog from 05-crud.cshtml.
+   The form (BeginForm) MUST be the top-level element - no wrapping div, otherwise the list is not reloaded after saving.
+   Query "item" returns exactly one row (empty for new):
+     SELECT t.* FROM (SELECT 1 AS x) d LEFT JOIN MyTable t ON 1 = 0
+     #if id
+     OR t.ID = @id
+     #endif
+   Query "save": insert when @ID is empty, else update. CheckboxFor posts "true"/"false". *@
+@{
+    var rec = Model.Records != null && Model.Records.Length > 0 ? Model.Records[0] : null;
+}
+@DLH.BeginForm("ep@save")
+    <style>
+        .dl-crud-form label { display: block; margin: 8px 0 2px; }
+    </style>
+    <div class="dl-crud-form">
+        @DLH.HiddenFor(rec, "ID")
+        <label>Name</label>
+        @DLH.TextFor(rec, "NAME", htmlAttributes: new { required = "required" })
+        <label>City</label>
+        @DLH.TextFor(rec, "CITY")
+        <label>Active</label>
+        @DLH.CheckboxFor(rec, "ACTIVE")
+    </div>
+@DLH.EndForm("Save", "Cancel")

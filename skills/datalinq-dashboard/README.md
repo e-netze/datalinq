@@ -1,0 +1,63 @@
+# DataLinq Dashboard skill
+
+Agent skill (GitHub Copilot, Claude Code and other Agent Skills compatible agents) that helps DataLinq administrators create and change **dashboards and web sites** (HTML views with Razor, CSS, JavaScript and `@DLH` helpers) and the queries they use - from a description, an image/mockup or an existing view.
+
+## Requirements
+
+- A DataLinq **Test or Development** instance (the MCP server is not available on Production)
+- A DataLinq user with DataLinq Code rights for the endpoints you want to edit (create-query right for new queries)
+- An MCP-capable agent with approval dialog (elicitation) support, ideally with a browser tool (e.g. Playwright MCP) so the agent can look at the rendered dashboard
+
+## Installation
+
+1. Copy (or symlink) the folders `datalinq-connect`, `datalinq-dashboard`, `datalinq-dashboard-data`, `datalinq-dashboard-query`, `datalinq-dashboard-author`, `datalinq-dashboard-from-image`, `datalinq-dashboard-edit` and `datalinq-dashboard-review` into the skills folder of your agent:
+
+   | Agent | Location |
+   |-------|----------|
+   | GitHub Copilot | `.github/skills/` in your repo or `~/.copilot/skills/` |
+   | Claude Code | `.claude/skills/` or `~/.claude/skills/` |
+   | Others | Any folder the agent loads `SKILL.md` skills from |
+
+2. Generate an agent token: in DataLinq Code on the Test/Development instance open *Settings* -> **MCP Agent Token**, enter a name (e.g. "VS Code laptop"), choose a lifetime (8 h - 7 days) and click **Generate token**. The token is shown only once; the dialog also shows a ready-to-copy client config.
+
+3. Add the DataLinq MCP server to your agent, e.g. `.vscode/mcp.json` (the token is asked for once and stored by VS Code, not in the file):
+
+   ```json
+   {
+	 "inputs": [
+	   { "type": "promptString", "id": "datalinq-token", "description": "DataLinq MCP agent token", "password": true }
+	 ],
+	 "servers": {
+	   "datalinq": {
+		 "type": "http",
+		 "url": "https://<datalinq-url>/datalinq-mcp",
+		 "headers": { "Authorization": "Bearer ${input:datalinq-token}" }
+	   }
+	 }
+   }
+   ```
+
+   Claude Code: `claude mcp add --transport http datalinq https://<datalinq-url>/datalinq-mcp --header "Authorization: Bearer $DATALINQ_MCP_TOKEN"`
+
+4. When the token expires or is revoked the agent gets a 401 and asks you to generate a new one. Never paste the token into the chat and never commit it.
+
+See `../datalinq-connect/references/datalinq-api.md` for details.
+
+## Usage
+
+Ask your agent, for example:
+
+- "Build a KPI dashboard for `sales@orders` with totals per month and a chart."
+- "Create a master-detail page: customers from `crm@customers`, their orders from `crm@orders` below."
+- "Here is a screenshot of our old overview page, rebuild it as a DataLinq view for `plant@inspections`."
+- "In `hr@staff@overview` add a search box and an export button."
+
+The agent samples your data, creates or changes queries only with your approval, drafts the view using `DLH` helpers, compiles it on the server, **asks before saving**, then opens the dashboard itself, runs checks and looks at desktop and narrow screenshots before handing it to you.
+
+## Security
+
+- MCP endpoints exist only on Test/Development instances.
+- Personal agent tokens generated in DataLinq Code; the agent acts with your DataLinq Code identity and roles. The server stores only a hash in an encrypted registry; tokens expire (max. 7 days by default) and can be revoked at any time in the same dialog.
+- All DataLinq Code permission checks apply; query runs, SQL previews and writes require approval in a server-side dialog; nothing is deleted.
+- Endpoint connection details and query access tokens are never exposed to the agent.
+- Preview links are single use, must be opened within ~2 minutes and are bound to a single view route.

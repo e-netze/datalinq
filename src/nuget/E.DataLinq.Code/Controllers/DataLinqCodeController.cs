@@ -269,6 +269,80 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
     #endregion
 
+    #region MCP
+
+    [HttpPost]
+    async public Task<IActionResult> CreateMcpAgentToken([FromBody] McpTokenRequest request)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            var (token, expires) = await _client.CreateMcpAgentToken(request?.LifetimeHours ?? 24, request?.Name);
+            var engineUrl = _dataLinqCode.DataLinqEngineUrl ?? "";
+            var mcpUrl = (engineUrl.EndsWith("/datalinq", StringComparison.OrdinalIgnoreCase)
+                ? engineUrl.Substring(0, engineUrl.Length - "/datalinq".Length)
+                : engineUrl.TrimEnd('/')) + "/datalinq-mcp";
+
+            return base.JsonObject(new { success = true, token, expires, mcpUrl, instanceName = _dataLinqCode.InstanceName });
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    async public Task<IActionResult> ListMcpAgentTokens()
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return Content(await _client.ListMcpAgentTokensJson(), "application/json");
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    [HttpPost]
+    async public Task<IActionResult> RevokeMcpAgentToken([FromBody] McpTokenRevokeRequest request)
+    {
+        try
+        {
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
+
+            return base.JsonObject(new SuccessModel(await _client.RevokeMcpAgentToken(request?.Id)));
+        }
+        catch (Exception ex)
+        {
+            return base.JsonObject(new SuccessModel(ex));
+        }
+    }
+
+    public class McpTokenRevokeRequest
+    {
+        public string Id { get; set; }
+    }
+
+    public class McpTokenRequest
+    {
+        public int LifetimeHours { get; set; } = 24;
+        public string Name { get; set; }
+    }
+
+    #endregion
+
     #region Edit 
 
     [HttpGet]

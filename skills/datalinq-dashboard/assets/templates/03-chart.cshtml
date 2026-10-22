@@ -1,0 +1,37 @@
+@* Chart: rows handed to JS with DLH.RecordsToJs, drawn with plain SVG (no external library). *@
+<style>
+    .dl-chart { font-family: Segoe UI, Arial, sans-serif; padding: 16px; }
+    .dl-chart svg { width: 100%; height: 300px; }
+    .dl-chart .bar { fill: #2f6fb3; }
+    .dl-chart text { font-size: 11px; fill: #333; }
+</style>
+<div class="dl-chart">
+    <h1>Title</h1>
+    <svg id="dl-chart-svg" role="img" aria-label="Chart"></svg>
+    <p id="dl-chart-empty" hidden>No data found.</p>
+</div>
+<script>
+    window.dlChartRender = function (rows) {
+        var svg = document.getElementById('dl-chart-svg');
+        if (!rows || !rows.length) { svg.style.display = 'none'; document.getElementById('dl-chart-empty').hidden = false; return; }
+        var labelKey = 'COL_LABEL', valueKey = 'COL_VALUE';
+        var w = svg.clientWidth || 600, h = 300, pad = 30;
+        var max = Math.max.apply(null, rows.map(function (r) { return Number(r[valueKey]) || 0; })) || 1;
+        var bw = (w - pad * 2) / rows.length;
+        var ns = 'http://www.w3.org/2000/svg';
+        rows.forEach(function (r, i) {
+            var v = Number(r[valueKey]) || 0, bh = (h - pad * 2) * v / max;
+            var rect = document.createElementNS(ns, 'rect');
+            rect.setAttribute('class', 'bar');
+            rect.setAttribute('x', pad + i * bw + 2); rect.setAttribute('y', h - pad - bh);
+            rect.setAttribute('width', Math.max(bw - 4, 1)); rect.setAttribute('height', bh);
+            svg.appendChild(rect);
+            var t = document.createElementNS(ns, 'text');
+            t.setAttribute('x', pad + i * bw + bw / 2); t.setAttribute('y', h - pad + 14);
+            t.setAttribute('text-anchor', 'middle');
+            t.textContent = r[labelKey] == null ? '' : String(r[labelKey]);
+            svg.appendChild(t);
+        });
+    };
+</script>
+@DLH.RecordsToJs(Model.Records, "dlChartRender")

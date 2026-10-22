@@ -1,0 +1,49 @@
+@* Tabular list over all records with automatic pagination and a summary.
+   Replace COL_A/COL_B/COL_C/AMOUNT with real column names. *@
+@{
+    string V(IDictionary<string, object> rec, string key) =>
+        rec != null && rec.ContainsKey(key) && rec[key] != null && !(rec[key] is DBNull) ? rec[key].ToString() : "";
+    decimal D(IDictionary<string, object> rec, string key) =>
+        decimal.TryParse(V(rec, key), out var d) ? d : 0m;
+    var records = Model.Records ?? new IDictionary<string, object>[0];
+}
+@PDF.BeginReport(
+    pageNumberOptions: new PageNumberOptions { UsePageNumbers = true, Position = 2 },
+    pageDateTimeOptions: new PageDateTimeOptions { UsePageDateTime = true, Position = 0, Format = "dd.MM.yyyy HH:mm" },
+    fileName: "list")
+
+    @PDF.NewPage(dynamicTableOptions: new DynamicTableOptions { Dynamic = true, DefaultMarginTop = 40, DefaultMarginBottom = 60 }, landscape: true)
+        <style>
+            .rpt-list { font-family: Arial, Helvetica, sans-serif; color: #222; }
+            .rpt-list-title { margin: 12mm 15mm 4mm 15mm; font-size: 16pt; }
+            .rpt-list-table { border-collapse: collapse; width: calc(100% - 30mm); margin: 0 15mm; font-size: 8.5pt; }
+            .rpt-list-table th, .rpt-list-table td, .rpt-list p { font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; line-height: 1.3; }
+            .rpt-list-table th { background: #e9eef4;
+            .rpt-list-table td { padding: 1.2mm 2mm; border-bottom: 1px solid #e3e3e3; }
+            .rpt-list-table tr:nth-child(even) td { background: #fafafa; }
+            .rpt-list-table .num { text-align: right; }
+            .rpt-list-sum { margin: 4mm 15mm; font-size: 10pt; }
+        </style>
+        <h1 class="rpt-list rpt-list-title">List title</h1>
+        <table class="rpt-list rpt-list-table">
+            <thead>
+                <tr><th>Column A</th><th>Column B</th><th>Column C</th><th class="num">Amount</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var r in records)
+                {
+                    <tr>
+                        <td>@V(r, "COL_A")</td>
+                        <td>@V(r, "COL_B")</td>
+                        <td>@V(r, "COL_C")</td>
+                        <td class="num">@D(r, "AMOUNT").ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="rpt-list rpt-list-sum">
+            <strong>@records.Length</strong> entries, total <strong>@records.Sum(r => D(r, "AMOUNT")).ToString("N2")</strong>
+        </div>
+    @PDF.EndPage()
+
+@PDF.EndReport()

@@ -929,6 +929,66 @@ public class CodeApiClient
         }
     }
 
+    async public Task<(string Token, DateTime Expires)> CreateMcpAgentToken(int lifetimeHours, string name = null)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/mcp/token"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            requestMessage.Content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("lifetimeHours", lifetimeHours.ToString()),
+                new KeyValuePair<string, string>("name", name ?? "")
+            });
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var result = JsonConvert.DeserializeAnonymousType(
+                    await GetAndCheckHttpResponseAsync(httpResponse),
+                    new { token = "", expires = DateTime.MinValue });
+
+                if (String.IsNullOrEmpty(result?.token))
+                {
+                    throw new Exception("No token returned");
+                }
+
+                return (result.token, result.expires);
+            }
+        }
+    }
+
+    async public Task<string> ListMcpAgentTokensJson()
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/mcp/tokens"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                return await GetAndCheckHttpResponseAsync(httpResponse);
+            }
+        }
+    }
+
+    async public Task<bool> RevokeMcpAgentToken(string id)
+    {
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/mcp/tokens/revoke"))
+        {
+            ModifyHttpRequest(requestMessage);
+
+            requestMessage.Content = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("id", id ?? "")
+            });
+
+            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
+            {
+                var result = JsonConvert.DeserializeObject<SuccessModel>(await GetAndCheckHttpResponseAsync(httpResponse, false));
+                return result?.Success == true;
+            }
+        }
+    }
+
     #region Helper
 
     private void ModifyHttpRequest(HttpRequestMessage requestMessage)

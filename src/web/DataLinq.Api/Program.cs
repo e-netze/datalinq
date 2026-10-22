@@ -4,6 +4,7 @@ using E.DataLinq.Core.Services.Crypto;
 using E.DataLinq.Core.Services.Persistance;
 using E.DataLinq.Web;
 using E.DataLinq.Web.Extensions.DependencyInjection;
+using E.DataLinq.Web.Mcp;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using E.DataLinq.Web.Services.TokenCache;
@@ -21,10 +22,12 @@ builder.Services.AddControllersWithViews();
 
 #region E.DataLinq.Web Services
 
+var dataLinqEnvironment = builder.Configuration.GetValue("DataLinq.Api:EnvironmentType", E.DataLinq.Core.DataLinqEnvironmentType.Development);
+
 builder.Services.AddDataLinqServices<FileSystemPersistanceService, CryptoService>(
     dataLinqOptions: options =>
     {
-        options.EnvironmentType = E.DataLinq.Core.DataLinqEnvironmentType.Development;
+        options.EnvironmentType = dataLinqEnvironment;
         options.EngineId = builder.Configuration["DataLinq.Api:Razor:Engine"]?.ToLowerInvariant() switch
         {
             "legacy" => RazorEngineIds.LegacyEngine,
@@ -102,6 +105,14 @@ if (builder.Configuration.GetSection("DataLinq.CodeApi").Exists())
 
 #endregion
 
+// MCP server for agents (PDF report authoring) - only registered in Test/Development
+builder.Services.AddDataLinqMcp(dataLinqEnvironment, options =>
+{
+    // default: <persistance storage path>/mcp-agent-tokens.blb (encrypted like the secrets)
+    options.AgentTokenRegistryPath = builder.Configuration["DataLinq.Api:Mcp:AgentTokenRegistryPath"];
+    options.MaxAgentTokenLifetimeHours = builder.Configuration.GetValue("DataLinq.Api:Mcp:MaxAgentTokenLifetimeHours", 24 * 7);
+});
+
 builder.Services.AddScoped<IRoutingEndPointReflectionProvider, RoutingEndPointReflectionService>();
 
 #if !DEBUG
@@ -144,10 +155,12 @@ app.UseRouting();
 
 app.UseAuthorization();
 app.UseDatalinqTokenAuthorization();
+app.UseDataLinqMcp();
 
 app.MapStaticAssets();
 
 app.AddDataLinqEndpoints();
+app.MapDataLinqMcp();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")

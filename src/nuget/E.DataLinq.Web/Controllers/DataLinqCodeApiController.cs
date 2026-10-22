@@ -232,6 +232,59 @@ public class DataLinqCodeApiController : ApiBaseController
         return base.JsonObject(_featuresService.GetFeatures());
     }
 
+    [HttpPost]
+    [Route("mcp/token")]
+    public IActionResult CreateMcpAgentToken([FromForm] int lifetimeHours = 24, [FromForm] string name = null)
+    {
+        var store = McpTokenStore();
+        if (store == null)
+            return base.JsonObject(new SuccessModel(false) { ErrorMessage = "MCP is not enabled on this DataLinq instance (Test/Development only)." });
+
+        var (token, info) = store.IssueAgentToken(_identity, lifetimeHours, name);
+
+        return base.JsonObject(new
+        {
+            success = true,
+            token,
+            id = info.Id,
+            name = info.Name,
+            expires = info.Expires,
+            maxLifetimeHours = store.MaxAgentTokenLifetimeHours
+        });
+    }
+
+    [HttpGet]
+    [Route("mcp/tokens")]
+    public IActionResult ListMcpAgentTokens()
+    {
+        var store = McpTokenStore();
+        if (store == null)
+            return base.JsonObject(new SuccessModel(false) { ErrorMessage = "MCP is not enabled on this DataLinq instance (Test/Development only)." });
+
+        return base.JsonObject(new { success = true, tokens = store.ListAgentTokens(_identity.Name) });
+    }
+
+    [HttpPost]
+    [Route("mcp/tokens/revoke")]
+    public IActionResult RevokeMcpAgentToken([FromForm] string id)
+    {
+        var store = McpTokenStore();
+        if (store == null)
+            return base.JsonObject(new SuccessModel(false) { ErrorMessage = "MCP is not enabled on this DataLinq instance (Test/Development only)." });
+
+        return base.JsonObject(new SuccessModel(store.RevokeAgentToken(_identity.Name, id)));
+    }
+
+    private E.DataLinq.Web.Mcp.DataLinqMcpTokenStore McpTokenStore()
+    {
+        if (!_identity.HasDataLinqCodeRole())
+            throw new Exception("Not authorized");
+
+        return E.DataLinq.Web.Mcp.DataLinqMcpExtensions.IsEnabled(HttpContext.RequestServices)
+            ? HttpContext.RequestServices.GetService(typeof(E.DataLinq.Web.Mcp.DataLinqMcpTokenStore)) as E.DataLinq.Web.Mcp.DataLinqMcpTokenStore
+            : null;
+    }
+
     [HttpGet]
     [Route("errorpage")]
     async public Task<string> GetErrorPage(string name = null)

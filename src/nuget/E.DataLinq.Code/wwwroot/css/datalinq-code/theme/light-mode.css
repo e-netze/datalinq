@@ -321,6 +321,50 @@ body.colorscheme-light .datalinq-code-editor-code-panel .datalinq-code-editor-co
     background-color: rgb(231 231 231);
 }
 
+/***** MCP Agent Token - Lightmode ********/
+.datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content {
+    color: #222;
+}
+
+    .datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content .mcp-desc,
+    .datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content .mcp-label {
+        color: #666;
+    }
+
+    .datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content .mcp-toolbar {
+        background-color: rgb(231 231 231);
+        border-color: #ccc;
+    }
+
+    .datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content .mcp-select,
+    .datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content .mcp-input,
+    .datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content .mcp-code {
+        background-color: #fff;
+        border-color: #ccc;
+        color: #222;
+    }
+
+    .datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content .mcp-list-item {
+        background-color: rgb(231 231 231);
+        border-color: #ccc;
+    }
+
+    .datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content .mcp-list-section {
+        border-color: #ccc;
+    }
+
+    .datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content .mcp-list-meta {
+        color: #666;
+    }
+
+    .datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content .mcp-warning {
+        color: #8a5a00;
+    }
+
+    .datalinq-code-modal.colorscheme-light .datalinq-code-mcp-token-content .mcp-error {
+        color: #c62828;
+    }
+
 /***** Secrets & Constants (Key/Value Store) - Lightmode ********/
 .datalinq-code-modal.colorscheme-light .datalinq-code-key-value-store-content {
     color: #222;

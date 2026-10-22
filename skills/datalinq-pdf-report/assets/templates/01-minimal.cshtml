@@ -1,0 +1,19 @@
+@* Minimal DataLinq PDF report skeleton *@
+@PDF.BeginReport(
+    pageNumberOptions: new PageNumberOptions { UsePageNumbers = true, Position = 2 },
+    fileName: "report")
+
+    @PDF.NewPage()
+        <style>
+            .rpt-min { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #222;
+                       box-sizing: border-box; padding: 20mm 18mm 22mm 20mm; height: 100%; }
+            .rpt-min h1 { font-size: 18pt; margin: 0 0 6mm 0; }
+            .rpt-min p, .rpt-min td, .rpt-min th { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.4; }
+        </style>
+        <div class="rpt-min">
+            <h1>Title</h1>
+            <p>Records: @Model.CountRecords</p>
+        </div>
+    @PDF.EndPage()
+
+@PDF.EndReport()

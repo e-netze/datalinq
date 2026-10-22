@@ -1,0 +1,22 @@
+@* Letterhead page template. Save as its own PDF view (e.g. reports@layout@letterhead)
+   and reference it from other reports:
+   @PDF.NewPage(pageTemplateOptions: new PageTemplateOptions { UsePageTemplate = true, TemplateId = "reports@layout@letterhead" })
+   Only the content of the FIRST page is used. Its query must run without URL parameters. *@
+@PDF.BeginReport()
+
+    @PDF.NewPage()
+        @PDF.NewDraggable(0, 0)
+            <div style="box-sizing:border-box;width:210mm;padding:8mm 18mm 0 20mm;font-family:Arial,Helvetica,sans-serif;font-size:8pt;color:#555;display:flex;justify-content:space-between;border-bottom:0.5mm solid #1f4e79">
+                <span><strong style="font-size:11pt;color:#1f4e79">COMPANY NAME</strong></span>
+                <span>Street 1 · 1234 City · www.example.com</span>
+            </div>
+        @PDF.EndDraggable()
+
+        @PDF.NewDraggable(0, 1060)
+            <div style="box-sizing:border-box;width:210mm;padding:2mm 18mm 0 20mm;font-family:Arial,Helvetica,sans-serif;font-size:7pt;color:#777;border-top:0.3mm solid #ccc">
+                Bank · IBAN AT00 0000 0000 0000 0000 · VAT ATU00000000
+            </div>
+        @PDF.EndDraggable()
+    @PDF.EndPage()
+
+@PDF.EndReport()

@@ -1,0 +1,45 @@
+@* Master/detail: Model.Records = master row(s), details loaded server-side. *@
+@{
+    string V(IDictionary<string, object> rec, string key) =>
+        rec != null && rec.ContainsKey(key) && rec[key] != null && !(rec[key] is DBNull) ? rec[key].ToString() : "";
+    var master = Model.Records?.FirstOrDefault();
+    var details = master == null ? null
+        : await DLH.GetRecordsAsync("endpoint@detail-query", filter: "MASTER_ID=" + V(master, "ID"), orderby: "POS");
+}
+<style>
+    .dl-md { font-family: Segoe UI, Arial, sans-serif; padding: 16px; }
+    .dl-md .head { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin-bottom: 16px; }
+    .dl-md .head dt { color: #555; }
+    .dl-md table { width: 100%; border-collapse: collapse; }
+    .dl-md th, .dl-md td { padding: 6px 8px; border-bottom: 1px solid #e3e6ea; text-align: left; }
+</style>
+<div class="dl-md">
+    @if (master == null)
+    {
+        <p>No data found.</p>
+    }
+    else
+    {
+        <h1>@V(master, "TITLE")</h1>
+        <dl class="head">
+            <dt>Number</dt><dd>@V(master, "ID")</dd>
+            <dt>Status</dt><dd>@V(master, "STATUS")</dd>
+        </dl>
+        @if (details == null || details.Length == 0)
+        {
+            <p>No details.</p>
+        }
+        else
+        {
+            <table>
+                <thead><tr><th>Pos</th><th>Text</th></tr></thead>
+                <tbody>
+                    @foreach (var d in details)
+                    {
+                        <tr><td>@V(d, "POS")</td><td>@V(d, "TEXT")</td></tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+</div>

@@ -1,0 +1,49 @@
+@* CRUD list view (ep@list@listview). Embed it in the page view with @DLH.IncludeView("ep@list@listview") - otherwise it is not reloaded after save/delete.
+   Query "list" needs: WHERE 1=1 + one #if block per FilterView parameter, and ORDER BY @_orderby for SortView.
+   Form view: 05-crud-form.cshtml. No apostrophes in button/dialog/confirm texts. Check signatures with get_dlh_reference. *@
+@{
+    string V(IDictionary<string, object> rec, string key) =>
+        rec != null && rec.ContainsKey(key) && rec[key] != null && !(rec[key] is DBNull) ? rec[key].ToString() : "";
+    var rows = Model.Records ?? new IDictionary<string, object>[0];
+}
+<style>
+    .dl-crud { font-family: Segoe UI, Arial, sans-serif; padding: 16px; }
+    .dl-crud .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: flex-start; }
+    .dl-crud .table-wrap { overflow-x: auto; }
+    .dl-crud table { width: 100%; border-collapse: collapse; }
+    .dl-crud th, .dl-crud td { padding: 6px 8px; border-bottom: 1px solid #e3e6ea; text-align: left; }
+    .dl-crud td.actions { white-space: nowrap; }
+</style>
+<div class="dl-crud">
+    <div class="toolbar">
+        @DLH.FilterView("Filter", new[] { "NAME", "CITY" })
+        @DLH.SortView("Sort", new[] { "NAME", "CITY" })
+        @DLH.OpenViewInDialog("ep@item@formview", new { }, buttonText: "New", dialogAttributes: new { dialogTitle = "New record" })
+    </div>
+    @if (rows.Length == 0)
+    {
+        <p>No data found.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Name</th><th>City</th><th>Active</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var r in rows)
+                    {
+                        <tr>
+                            <td>@V(r, "NAME")</td>
+                            <td>@V(r, "CITY")</td>
+                            <td>@V(r, "ACTIVE")</td>
+                            <td class="actions">
+                                @DLH.OpenViewInDialog("ep@item@formview", new { id = V(r, "ID") }, buttonText: "Edit", dialogAttributes: new { dialogTitle = "Edit record" })
+                                @DLH.ExecuteNonQuery("ep@delete", new { id = V(r, "ID") }, buttonText: "Delete", dialogAttributes: new { confirmText = "Delete this record?" })
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

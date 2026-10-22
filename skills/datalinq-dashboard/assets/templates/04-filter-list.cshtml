@@ -1,0 +1,34 @@
+@* Filterable/searchable list. Check exact helper signatures with get_dlh_reference (QuickSearch, SortView, FilterView). *@
+@{
+    string V(IDictionary<string, object> rec, string key) =>
+        rec != null && rec.ContainsKey(key) && rec[key] != null && !(rec[key] is DBNull) ? rec[key].ToString() : "";
+    var rows = Model.Records ?? new IDictionary<string, object>[0];
+}
+<style>
+    .dl-list { font-family: Segoe UI, Arial, sans-serif; padding: 16px; }
+    .dl-list .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .dl-list table { width: 100%; border-collapse: collapse; }
+    .dl-list th, .dl-list td { padding: 6px 8px; border-bottom: 1px solid #e3e6ea; text-align: left; }
+</style>
+<div class="dl-list">
+    <h1>Title</h1>
+    <div class="toolbar">
+        @DLH.QuickSearch(new[] { "COL_NAME", "COL_CITY" }, placeholder: "Search...", tableId: "dl-list-table")
+    </div>
+    @if (rows.Length == 0)
+    {
+        <p>No data found.</p>
+    }
+    else
+    {
+        <table id="dl-list-table">
+            <thead><tr><th>Name</th><th>City</th></tr></thead>
+            <tbody>
+                @foreach (var r in rows)
+                {
+                    <tr><td>@V(r, "COL_NAME")</td><td>@V(r, "COL_CITY")</td></tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

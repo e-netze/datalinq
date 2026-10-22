@@ -1,0 +1,47 @@
+@* KPI cards + table. Replace COL_* with data-sheet columns. *@
+@{
+    string V(IDictionary<string, object> rec, string key) =>
+        rec != null && rec.ContainsKey(key) && rec[key] != null && !(rec[key] is DBNull) ? rec[key].ToString() : "";
+    decimal D(IDictionary<string, object> rec, string key)
+    {
+        var s = V(rec, key);
+        decimal d;
+        return decimal.TryParse(s, out d) ? d : 0;
+    }
+    var rows = Model.Records ?? new IDictionary<string, object>[0];
+}
+<style>
+    .dl-dash { font-family: Segoe UI, Arial, sans-serif; padding: 16px; color: #222; }
+    .dl-dash h1 { font-size: 1.4rem; margin: 0 0 12px; }
+    .dl-dash .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .dl-dash .card { background: #f5f7fa; border-radius: 8px; padding: 12px 16px; }
+    .dl-dash .card .label { font-size: .85rem; color: #555; }
+    .dl-dash .card .value { font-size: 1.6rem; font-weight: 600; }
+    .dl-dash table { width: 100%; border-collapse: collapse; }
+    .dl-dash th, .dl-dash td { padding: 6px 8px; border-bottom: 1px solid #e3e6ea; text-align: left; }
+    .dl-dash td.num { text-align: right; }
+    @@media (max-width: 600px) { .dl-dash .card .value { font-size: 1.2rem; } }
+</style>
+<div class="dl-dash">
+    <h1>Title</h1>
+    <div class="cards">
+        <div class="card"><div class="label">Count</div><div class="value">@rows.Length</div></div>
+        <div class="card"><div class="label">Total</div><div class="value">@rows.Sum(r => D(r, "COL_AMOUNT")).ToString("#,##0.00")</div></div>
+    </div>
+    @if (rows.Length == 0)
+    {
+        <p>No data found.</p>
+    }
+    else
+    {
+        <table>
+            <thead><tr><th>Name</th><th>Amount</th></tr></thead>
+            <tbody>
+                @foreach (var r in rows)
+                {
+                    <tr><td>@V(r, "COL_NAME")</td><td class="num">@D(r, "COL_AMOUNT").ToString("#,##0.00")</td></tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
