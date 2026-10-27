@@ -10,13 +10,15 @@ Agent skill (GitHub Copilot, Claude Code and other Agent Skills compatible agent
 
 ## Installation
 
-1. Copy (or symlink) the folders `datalinq-connect`, `datalinq-dashboard`, `datalinq-dashboard-data`, `datalinq-dashboard-query`, `datalinq-dashboard-author`, `datalinq-dashboard-from-image`, `datalinq-dashboard-edit` and `datalinq-dashboard-review` into the skills folder of your agent:
+1. Copy (or symlink) the folders `datalinq-connect`, `datalinq-dashboard`, `datalinq-data`, `datalinq-query`, `datalinq-dashboard-author`, `datalinq-from-image`, `datalinq-view-edit` and `datalinq-view-review` as **sibling folders** into the skills folder of your agent (they reference each other with `../<skill>/...`):
 
    | Agent | Location |
    |-------|----------|
    | GitHub Copilot | `.github/skills/` in your repo or `~/.copilot/skills/` |
    | Claude Code | `.claude/skills/` or `~/.claude/skills/` |
    | Others | Any folder the agent loads `SKILL.md` skills from |
+
+   Upgrading from an older version: delete the old folders `datalinq-dashboard-data`, `datalinq-dashboard-query`, `datalinq-dashboard-edit`, `datalinq-dashboard-review` and `datalinq-dashboard-from-image` (replaced by the shared `datalinq-*` skills).
 
 2. Generate an agent token: in DataLinq Code on the Test/Development instance open *Settings* -> **MCP Agent Token**, enter a name (e.g. "VS Code laptop"), choose a lifetime (8 h - 7 days) and click **Generate token**. The token is shown only once; the dialog also shows a ready-to-copy client config.
 
@@ -52,7 +54,13 @@ Ask your agent, for example:
 - "Here is a screenshot of our old overview page, rebuild it as a DataLinq view for `plant@inspections`."
 - "In `hr@staff@overview` add a search box and an export button."
 
-The agent samples your data, creates or changes queries only with your approval, drafts the view using `DLH` helpers, compiles it on the server, **asks before saving**, then opens the dashboard itself, runs checks and looks at desktop and narrow screenshots before handing it to you.
+The agent samples your data, writes a short brief with an **acceptance checklist** for you to confirm, creates or changes queries only with your approval, drafts the view using `DLH` helpers, compiles it on the server, **asks before saving**, then opens the dashboard itself, runs checks and looks at desktop and narrow screenshots before handing it to you.
+
+Working files (brief, data sheet, layout, undo log, reviews) are kept in `.datalinq-work/<route>/` in your workspace - add `.datalinq-work/` to `.gitignore`. Details: `../datalinq-connect/references/workflow.md`.
+
+**Multi-agent mode (optional):** with the custom agents from `../../agents` the work is split into orchestrator, data analysts (parallel per query), query engineer, designer, view coder and independent visual/code reviewers. See `../../agents/README.md`.
+
+**Evaluating skill changes:** `../evals/README.md`.
 
 ## Security
 

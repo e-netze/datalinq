@@ -6,7 +6,7 @@ The DataLinq instance hosts an MCP server (streamable HTTP, **stateful sessions*
 <datalinq-url>/datalinq-mcp
 ```
 
-the endpoint, agent tokens and preview tokens do not exist.
+The server is registered only on **Test/Development** instances (`DataLinqEnvironmentType`). On Production the endpoint, agent tokens and preview tokens do not exist.
 
 Sessions are stateful because the server sends approval requests (MCP elicitation) back to the client. Behind a load balancer use sticky sessions.
 
@@ -78,7 +78,7 @@ Compile checks run **before** the dialog, so the user is only asked about change
 | `update_view` | route + optional properties, `css?`, `js?` | yes | |
 | `create_query` | `endpointId`, `queryId`, `statement`, `name?`, `description?`, `testParameters?`, `access?`, ... | yes | |
 | `update_query` | `endpointId`, `queryId`, optional properties | yes | dialog: SQL diff + dependent views; returns `previousStatement` |
-| rememberable | ~2 min to open, single use, route-bound |
+| `get_preview_link` | `endpointId`, `queryId`, `viewId`, `parameters?` | rememberable | ~2 min to open, single use, route-bound |
 | `get_query_reference` | `endpointType?` | - | statement syntax per endpoint type |
 | `get_pdf_reference` | `helper?` (`PDF`/`SECURITY`), `method?`, `search?` | - | XML docs |
 | `get_dlh_reference` | `helper?` (`DLH`/`RECORDS`), `method?`, `search?` | - | XML docs |

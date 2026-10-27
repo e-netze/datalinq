@@ -1,11 +1,13 @@
 ---
 name: datalinq-pdf-author
-description: Draft a NEW DataLinq PDF report template (Razor view with @PDF.* helper) from a text description or a built-in template. Sub-skill of datalinq-pdf-report; use after the data sheet from datalinq-pdf-data exists.
+description: Draft a NEW DataLinq PDF report template (Razor view with @PDF.* helper) from a text description, a layout.md from an image or a built-in template. Sub-skill of datalinq-pdf-report; use after brief.md and the data sheet exist.
+user-invocable: false
 ---
 
 # DataLinq PDF Author
 
-Prerequisites: connected (`datalinq-connect`), data sheet (`datalinq-pdf-data`).
+Prerequisites: connected (`datalinq-connect`), `brief.md` with acceptance checklist, `data-sheet.md` (`datalinq-data`), optionally `layout.md` (`datalinq-from-image`). Workflow: `../datalinq-connect/references/workflow.md`.
+Output: the saved view + entries in `changes.md`.
 
 Shared files (relative to this folder):
 - `../datalinq-pdf-report/references/pdf-helper-api.md` - read before writing code; the ONLY allowed `PDF.*` API.
@@ -15,7 +17,7 @@ Shared files (relative to this folder):
 
 ## Steps
 
-1. **Requirements.** Clarify only what is unclear: paper size/orientation, one page per record vs. list, header/footer/logo, page numbers, columns, grouping, totals, signature fields. Ask at most a few focused questions; otherwise use defaults (A4 portrait, page numbers `n/total` bottom-right) and state them.
+1. **Requirements.** Read `brief.md`, `data-sheet.md`, `layout.md`. Anything still unclear (paper size/orientation, one page per record vs. list, header/footer/logo, page numbers, columns, grouping, totals, signature fields): ask the orchestrator/user with at most a few focused questions; otherwise use defaults (A4 portrait, page numbers `n/total` bottom-right) and record them under "Decisions" in `brief.md`.
 2. **Pick a template.**
 
    | Need | Template |
@@ -26,9 +28,10 @@ Shared files (relative to this folder):
    | Cover + TOC + detail pages | `04-master-detail-cover-toc.cshtml` |
    | Shared letterhead | `05-letterhead-page-template.cshtml` |
 
-3. **Draft** by adapting the template. Only columns from the data sheet; guard missing values. Logos/images: placeholder box (see orchestrator hard rule).
-4. **Compile** with `verify_view` (new views: any not-yet-existing `viewId`). Fix and re-verify, max ~5 rounds, then show the error to the user.
-5. Hand back to the orchestrator for saving and the review loop.
+3. **Draft** by adapting the template (image source: follow the structure in `layout.md`). Only columns from the data sheet; guard missing values. Logos/images: placeholder box (see orchestrator hard rule).
+4. **Compile** with `verify_view` and **`pdfReportMode: true`** (default is false; new views: any not-yet-existing `viewId`). Fix and re-verify, max ~5 rounds, then show the error to the user.
+5. **Create** with `create_view` (`pdfReportMode: true`, user approves); note "created" in `changes.md`.
+6. Hand back to the orchestrator review loop. Do not review or approve your own result.
 
 ## Code rules
 

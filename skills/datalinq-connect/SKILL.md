@@ -41,6 +41,7 @@ Every tool that **runs a query** or **changes something** makes the server show 
 - **Refused** -> client has no approval support (section 1).
 - For repeated runs/saves/previews of the **same** route the dialog offers "Don't ask again for this target in this session". Mention it once at the start of a review loop. Creating items, changing queries and ad-hoc SQL are always asked individually.
 - There are **no delete tools**. Deleting is done by the user in DataLinq Code.
+- **Subagents** (multi-agent mode): the dialog is shown by the user's chat client for whichever agent made the call, so subagents get the same dialogs. Never run several approval-requiring calls in parallel - the user would get stacked dialogs without context. "Don't ask again" is remembered per MCP session; agents of the same chat normally share it, but a client may open its own session per subagent - then the user is asked again.
 
 ## 4. Tools
 
@@ -67,7 +68,7 @@ Every tool that **runs a query** or **changes something** makes the server show 
 | `get_view_assets` | - | Dashboards: separate view CSS/JS (numbered). |
 | `patch_view_asset` | yes (rememberable) | Dashboards: patch the separate view CSS or JS. |
 
-Details: `references/datalinq-api.md`. How endpoints, queries, views, `Model.Records` and `DLH.GetRecordsAsync` fit together: `references/datalinq-model.md`.
+Details: `references/datalinq-api.md`. How endpoints, queries, views, `Model.Records` and `DLH.GetRecordsAsync` fit together: `references/datalinq-model.md`. Loop, work folder (`.datalinq-work/`), handoff formats, roles and definition of done for all DataLinq skills and agents: `references/workflow.md`.
 
 ## Rules
 

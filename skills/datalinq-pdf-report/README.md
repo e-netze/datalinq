@@ -10,13 +10,15 @@ Agent skill (GitHub Copilot, Claude Code and other Agent Skills compatible agent
 
 ## Installation
 
-1. Copy (or symlink) the folders `datalinq-connect`, `datalinq-pdf-report`, `datalinq-pdf-data`, `datalinq-pdf-author`, `datalinq-pdf-from-image`, `datalinq-pdf-edit` and `datalinq-pdf-review` into the skills folder of your agent:
+1. Copy (or symlink) the folders `datalinq-connect`, `datalinq-pdf-report`, `datalinq-data`, `datalinq-query`, `datalinq-pdf-author`, `datalinq-from-image`, `datalinq-view-edit` and `datalinq-view-review` as **sibling folders** into the skills folder of your agent (they reference each other with `../<skill>/...`):
 
    | Agent | Location |
    |-------|----------|
-   | GitHub Copilot | `.github/skills/datalinq-pdf-report` in your repo or `~/.copilot/skills/` |
-   | Claude Code | `.claude/skills/datalinq-pdf-report` or `~/.claude/skills/` |
+   | GitHub Copilot | `.github/skills/` in your repo or `~/.copilot/skills/` |
+   | Claude Code | `.claude/skills/` or `~/.claude/skills/` |
    | Others | Any folder the agent loads `SKILL.md` skills from |
+
+   Upgrading from an older version: delete the old folders `datalinq-pdf-data`, `datalinq-pdf-edit`, `datalinq-pdf-review` and `datalinq-pdf-from-image` (replaced by the shared `datalinq-*` skills).
 
 2. Generate an agent token: in DataLinq Code on the Test/Development instance open *Settings* -> **MCP Agent Token**, enter a name (e.g. "VS Code laptop"), choose a lifetime (8 h - 7 days) and click **Generate token**. The token is shown only once; the dialog also shows a ready-to-copy client config.
 
@@ -51,7 +53,13 @@ Ask your agent, for example:
 - "Here is a screenshot of our old protocol form, rebuild it as a DataLinq PDF report for `plant@inspections`."
 - "In `hr@staff@list-pdf` add a column for the department and switch to landscape."
 
-The agent samples your data, drafts the template, compiles it on the server, **asks before saving**, then opens the report itself, checks for cut-off content/fonts/page count and looks at screenshots before handing it to you.
+The agent samples your data, writes a short brief with an **acceptance checklist** for you to confirm, drafts the template, compiles it on the server, **asks before saving**, then opens the report itself, checks for cut-off content/fonts/page count and looks at screenshots before handing it to you.
+
+Working files (brief, data sheet, layout, undo log, reviews) are kept in `.datalinq-work/<route>/` in your workspace - add `.datalinq-work/` to `.gitignore`. Details: `../datalinq-connect/references/workflow.md`.
+
+**Multi-agent mode (optional):** with the custom agents from `../../agents` the work is split into orchestrator, data analyst, query engineer, designer, view coder and independent visual/code reviewers. See `../../agents/README.md`.
+
+**Evaluating skill changes:** `../evals/README.md`.
 
 ## Security
 
