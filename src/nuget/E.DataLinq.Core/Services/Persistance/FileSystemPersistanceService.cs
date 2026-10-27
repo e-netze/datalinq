@@ -19,7 +19,6 @@ public class FileSystemPersistanceService : IPersistanceProviderService
     private readonly ICryptoService _crypto;
     private readonly PersistanceProviderServiceOptions _options;
     private readonly string _storagePath;
-    private readonly string _repoPath;
 
 
     public FileSystemPersistanceService(ICryptoService crypto,
@@ -29,7 +28,6 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         _crypto = crypto;
         _options = optionsMonitor.CurrentValue;
         _storagePath = _options.ConnectionString;
-        _repoPath = _options.RepoPath;
 
         this.CurrentCodeIdentity = _identitySerice?.CurrentIdentity();
     }
@@ -279,11 +277,6 @@ public class FileSystemPersistanceService : IPersistanceProviderService
                     continue;
                 }
 
-                if (endPointDir.Name.Equals(".git"))  // git folder
-                {
-                    continue;
-                }
-
                 string id = endPointDir.Name;
                 FileInfo fi = new FileInfo(EndPointBlobPath(endPointDir.Name));
 
@@ -466,111 +459,6 @@ public class FileSystemPersistanceService : IPersistanceProviderService
     public Task<bool> StoreErrorPage(string razorCode)
         => StoreErrorPage(DataLinqErrorPage.GlobalName, razorCode);
 
-    async public Task<bool> StoreCode(string id, string code)
-    {
-        FileInfo fi = new FileInfo(CodeBloblPath(id));
-
-        try
-        {
-            Directory.CreateDirectory(fi.DirectoryName!);
-            await File.WriteAllTextAsync(fi.FullName, code);
-            return true;  
-        }
-        catch (Exception)
-        {
-            return false;  
-        }
-    }
-
-    public async Task<bool> DeleteCode(string id)
-    {
-        var idParts = ParseAndValidateId(id);
-
-        try
-        {
-            string targetPath = GetDeletionTargetPath(idParts);
-
-            switch (idParts.Length)
-            {
-                case 1: 
-                    Directory.Delete(targetPath, recursive: true);
-                    break;
-
-                case 2: 
-                    File.Delete($"{targetPath}.sql");
-                    Directory.Delete($"{targetPath}-views", recursive: true);
-                    break;
-
-                case 3: 
-                    File.Delete(targetPath);
-                    break;
-
-                default:
-                    throw new InvalidOperationException($"Invalid DataLinq-Id format: {id}");
-            }
-
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
-
-    public async Task<bool> UpdateGitStatus(string id, bool upToDate)
-    {
-        var parts = id.Split('@');
-
-        try
-        {
-            switch (parts.Length)
-            {
-                case 2:
-                    var query = await GetEndPointQuery(parts[0], parts[1]);
-                    query.ChangedGit = upToDate ? query.Changed : null;
-                    await StoreEndPointQuery(query);
-                    break;
-
-                case 3:
-                    var view = await GetEndPointQueryView(parts[0], parts[1], parts[2]);
-                    view.ChangedGit = upToDate ? view.Changed : null;
-                    await StoreEndPointQueryView(view);
-                    break;
-
-                default:
-                    throw new ArgumentException("Invalid DataLinq-Id");
-            }
-
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
-
-    public async Task<bool> DeleteLocalGitFolder()
-    {
-        var gitFolderPath = _repoPath;
-
-        if (!Directory.Exists(gitFolderPath))
-            return false;
-
-        await Task.Run(() =>
-        {
-            foreach (var directory in Directory.GetDirectories(gitFolderPath))
-            {
-                var dirName = Path.GetFileName(directory);
-                if (!dirName.Equals(".git", StringComparison.OrdinalIgnoreCase))
-                {
-                    Directory.Delete(directory, true);
-                }
-            }        
-        });
-
-        return true;
-    }
-
     async public Task<bool> DeleteEndPoint(string endPointId)
     {
         await DeleteEndpointIndex(endPointId);
@@ -749,50 +637,6 @@ public class FileSystemPersistanceService : IPersistanceProviderService
         }
 
         return Path.Combine(ErrorPagesDirectoryPath(), $"_errorpage_{name}.blb");
-    }
-
-    private string CodeBloblPath(string id)
-    {
-        var ids = id.Split('@');
-        if (!ids[0].IsValidDataLinqRouteId())
-        {
-            throw new Exception($"Invalid endpoint id {id}");
-        }
-
-        if(ids.Length.Equals(2))
-            return Path.Combine(_repoPath, ids[0], "queries", $"{ids[1]}.sql");
-
-        if (ids.Length.Equals(3))
-            return Path.Combine(_repoPath, ids[0], "queries", $"{ids[1]}-views", $"{ids[2]}.razor");
-        else
-            throw new Exception($"Invalid DataLinq-Id {id}");
-    }
-
-    private string GetDeletionTargetPath(string[] idParts)
-    {
-        return idParts.Length switch
-        {
-            1 => Path.Combine(_repoPath, idParts[0]),
-            2 => Path.Combine(_repoPath, idParts[0], "queries", idParts[1]),
-            3 => Path.Combine(_repoPath, idParts[0], "queries", $"{idParts[1]}-views", $"{idParts[2]}.razor"),
-            _ => throw new InvalidOperationException($"Invalid DataLinq-Id with {idParts.Length} parts")
-        };
-    }
-
-    private string[] ParseAndValidateId(string id)
-    {
-        if (string.IsNullOrWhiteSpace(id))
-            throw new ArgumentException("ID cannot be null or empty", nameof(id));
-
-        var idParts = id.Split('@');
-
-        if (idParts.Length < 1 || idParts.Length > 3)
-            throw new ArgumentException($"Invalid DataLinq-Id format: {id}. Expected 1-3 parts separated by '@'", nameof(id));
-
-        if (!idParts[0].IsValidDataLinqRouteId())
-            throw new ArgumentException($"Invalid endpoint id: {idParts[0]}", nameof(id));
-
-        return idParts;
     }
 
     async private Task CreateEndpointIndex(string endPointId)

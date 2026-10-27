@@ -227,9 +227,37 @@ Features:
 - **IntelliSense** for `DLH`, `PDF`, `SECURITY` and `Model.Records`.
 - **Compile and verify** views, with error output.
 - **Live preview** of SELECT and REPORT results using the configured test parameters.
-- **Version control**: Git integration to track and compare changes.
+- **Version control**: Git integration (see below).
 - **Integrated help** and **Copilot** assistance.
 - Custom **error pages**, a **key-value store**, settings, and light and dark themes.
+
+### Version control (Git)
+
+The tree has a switch between the **Explorer** view and the **Git** view. The Git view shows the changed endpoints, queries, views, css/js, error pages and tree folders (added / modified / deleted / conflicted) and offers commit (selected items), push, pull, fetch, history, diff, discard and branches. Branches are always created from the main branch and merged back with **Merge into main**. Merge conflicts are resolved per item (keep mine / take theirs).
+
+The DataLinq storage is mirrored as readable files into a dedicated local working copy (one per DataLinq instance):
+
+```
+_folders.json                      _errorpages/{name}.razor
+{endpoint}/endpoint.json|.css|.js  {endpoint}/queries/{query}/query.json|.sql
+{endpoint}/queries/{query}/views/{view}/view.json|.razor|.css|.js
+```
+
+Configuration (`datalinq.api.json`, keep the token in user secrets / environment):
+
+```json
+"VersionControl": {
+  "UseVersionControl": true,
+  "LocalRepositoryPath": "C:\\datalinq\\repo",   // empty, dedicated folder - not the storage path
+  "RemoteUrl": "https://git.example.com/org/datalinq.git",
+  "MainBranch": "main",
+  "AccessToken": "<api token with repository read/write>",
+  "AccessTokenUserName": "datalinq",
+  "AuthorEmail": "datalinq@example.com"
+}
+```
+
+Authentication is done with the access token only. Connection strings are committed as configured in DataLinq – use secrets/constants stores for credentials.
 
 ---
 

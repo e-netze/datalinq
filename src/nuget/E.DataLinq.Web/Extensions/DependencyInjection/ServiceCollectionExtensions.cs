@@ -21,6 +21,7 @@ using E.DataLinq.Web.Services.Agents;
 using E.DataLinq.Web.Services.Cache;
 using E.DataLinq.Web.Services.Plugins;
 using E.DataLinq.Web.Services.TokenCache;
+using E.DataLinq.Web.Services.VersionControl;
 using E.DataLinq.Web.Services.Worker;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.Extensions.Configuration;
@@ -168,8 +169,7 @@ static public class ServiceCollectionExtensions
     {
         services.Configure(setupAction);
 
-        services.AddScoped<IGitService, GitService>();
-        services.AddHostedService<GitInitializer>();
+        services.AddScoped<DataLinqGitService>();
 
         return services;
     }

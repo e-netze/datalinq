@@ -370,30 +370,6 @@ public class CodeApiClient
         }
     }
 
-    async public Task<GitCommitChangesResult> CommitAndPushChanges(GitCommitChangesRequest details)
-    {
-        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/commitAndPushChanges"))
-        {
-            ModifyHttpRequest(requestMessage);
-
-            requestMessage.Content = new StringContent(
-                JsonConvert.SerializeObject(details),
-                Encoding.UTF8,
-                "application/json");
-
-            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
-            {
-                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
-
-                var result = JsonConvert.DeserializeObject<GitCommitChangesResult>(responseText);
-                if(result == null)
-                    return new GitCommitChangesResult() { Error = "GitCommitChangesResult is either empty or faulty" };
-
-                return result;
-            }
-        }
-    }
-
     async public Task<bool> StoreEndPoint(DataLinqEndPoint endPoint)
     {
         using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/post/endpoint"))
@@ -758,40 +734,28 @@ public class CodeApiClient
         }
     }
 
-    async public Task<GitCommitChangesResult> CheckGitStatus(string endPointId, string queryId, string viewId)
+    /// <summary>
+    /// Version control (git) operations. Returns the raw json result of the DataLinq api.
+    /// </summary>
+    async public Task<string> Git(string operation, string jsonRequest)
     {
-        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/checkGitStatus/{endPointId}/{queryId}/{viewId}"))
+        if (string.IsNullOrWhiteSpace(operation) || !System.Text.RegularExpressions.Regex.IsMatch(operation, "^[a-z-]+$"))
         {
-            ModifyHttpRequest(requestMessage);
-
-            using (var httpResponse = await _httpClient.SendAsync(requestMessage))
-            {
-                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
-
-                var result = JsonConvert.DeserializeObject<GitCommitChangesResult>(responseText);
-                if (result == null || result.Success.Equals(false))
-                    return new GitCommitChangesResult() { Error = "GitStatus is either empty or faulty" };
-
-                return result;
-            }
+            throw new ArgumentException($"Invalid git operation {operation}");
         }
-    }
 
-    async public Task<GitCommitChangesResult> InitializeGitRepository()
-    {
-        using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{_targetUrl}/{_apiPath}/initializeGitRepository"))
+        using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_targetUrl}/{_apiPath}/git/{operation}"))
         {
             ModifyHttpRequest(requestMessage);
 
+            requestMessage.Content = new StringContent(
+                string.IsNullOrWhiteSpace(jsonRequest) ? "{}" : jsonRequest,
+                Encoding.UTF8,
+                "application/json");
+
             using (var httpResponse = await _httpClient.SendAsync(requestMessage))
             {
-                var responseText = await GetAndCheckHttpResponseAsync(httpResponse);
-
-                var result = JsonConvert.DeserializeObject<GitCommitChangesResult>(responseText);
-                if (result == null)
-                    return new GitCommitChangesResult() { Error = "Git Repository initialization response is either empty or faulty" };
-
-                return result;
+                return await GetAndCheckHttpResponseAsync(httpResponse, false);
             }
         }
     }

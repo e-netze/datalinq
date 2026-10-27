@@ -35,7 +35,7 @@ body {
     top: 0;
     bottom: 0;
     width: 5px;
-    left: 300px; /* start at sidebar width */
+    left: 400px; /* start at sidebar width */
     cursor: ew-resize;
     background-color: rgba(0, 0, 0, 0.1);
     z-index: 10;
@@ -44,7 +44,7 @@ body {
 .resize-handle--x {
     position: absolute;
     top: var(--float-gap);
-    left: 300px; /* Initial sidebar width */
+    left: 400px; /* Initial sidebar width */
     margin-left: calc(var(--float-gap) + (var(--float-gap) - 5px) / 2);
     width: 5px;
     height: var(--toolbar-height); /* Only draggable in the toolbar area */
@@ -111,7 +111,7 @@ body {
 .datalinq-code-ide .datalinq-code-toolbar {
     position: absolute;
     top: var(--float-gap);
-    left: calc(var(--sidebar-width, 300px) + 2 * var(--float-gap));
+    left: calc(var(--sidebar-width, 400px) + 2 * var(--float-gap));
     right: var(--float-gap);
     height: var(--toolbar-height);
     border-radius: var(--float-radius);
@@ -124,7 +124,7 @@ body {
     top: var(--float-gap);
     bottom: var(--float-gap);
     left: var(--float-gap);
-    width: var(--sidebar-width, 300px);
+    width: var(--sidebar-width, 400px);
     border-radius: var(--float-radius);
     overflow: hidden;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -136,7 +136,7 @@ body {
     position: absolute;
     top: calc(var(--toolbar-height) + 2 * var(--float-gap));
     bottom: var(--float-gap);
-    left: calc(var(--sidebar-width, 300px) + 2 * var(--float-gap));
+    left: calc(var(--sidebar-width, 400px) + 2 * var(--float-gap));
     right: var(--float-gap);
     border-radius: var(--float-radius);
     overflow: hidden;

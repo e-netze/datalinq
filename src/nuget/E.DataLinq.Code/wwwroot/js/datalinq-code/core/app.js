@@ -61,8 +61,7 @@
         dataLinqCode.events.on('refresh-ui', function (channel, args) {
             var args = {
                 currentDoc: state.$editor.dataLinqCode_editor('currentDoc'),
-                dirtyDocs: state.$editor.dataLinqCode_editor('dirtyDocs'),
-                gitStatuses: state.gitStatuses
+                dirtyDocs: state.$editor.dataLinqCode_editor('dirtyDocs')
             };
 
             dataLinqCode.events.fire('refresh-ui-elements', args);

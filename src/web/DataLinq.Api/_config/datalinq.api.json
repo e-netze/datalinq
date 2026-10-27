@@ -72,16 +72,12 @@
     "CleanupIntervalMinutes": "24:00:00"
   },
   "VersionControl": {
-    "UseVersionControl": false,
+    "UseVersionControl": true,
     "LocalRepositoryPath": "C:\\temp\\datalinq\\repo",
     "RemoteUrl": "http://localhost:3000/admin/datalinq-repo.git",
-    "DefaultBranch": "main",
-    "CredentialType": "Token",
-    "Username": "",
-    "Password": "",
-    "PersonalAccessToken": "",
-    "DefaultAuthorName": "DataLinq Bot",
-    "DefaultAuthorEmail": "bot@datalinq.com",
-    "AutoCreateRepository": true
+    "MainBranch": "main",
+    "AccessToken": "",
+    "AccessTokenUserName": "datalinq",
+    "AuthorEmail": "datalinq@localhost"
   }
 }

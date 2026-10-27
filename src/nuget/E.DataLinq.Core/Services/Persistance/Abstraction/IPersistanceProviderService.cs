@@ -42,14 +42,7 @@ public interface IPersistanceProviderService
     Task<bool> StoreErrorPage(string name, string razorCode);
     Task<bool> StoreErrorPage(string razorCode);
 
-    Task<bool> StoreCode(string id, string code);
-    Task<bool> DeleteCode(string id);
-
-    Task<bool> UpdateGitStatus(string id, bool upToDate);
-
     Task<string> EndPointCreator(string endPointId);
-
-    Task<bool> DeleteLocalGitFolder();
 
     DataLinqCodeIdentity CurrentCodeIdentity { get; }
 }

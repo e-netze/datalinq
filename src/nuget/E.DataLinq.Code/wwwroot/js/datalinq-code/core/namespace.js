@@ -21,7 +21,6 @@
  * @property {jQuery} $tree              tree plugin element
  * @property {jQuery} $editor            editor plugin element
  * @property {jQuery} $toolbar           toolbar plugin element
- * @property {Object<string,string>} gitStatuses git status per document id
  */
 
 var dataLinqCode = new function ($) {
@@ -36,8 +35,7 @@ var dataLinqCode = new function ($) {
         editorTheme: 'vs-dark',
         $tree: null,
         $editor: null,
-        $toolbar: null,
-        gitStatuses: {}
+        $toolbar: null
     };
 
     /** @returns {string} DataLinq Code backend url */

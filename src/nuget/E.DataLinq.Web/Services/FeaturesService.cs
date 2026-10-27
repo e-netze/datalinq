@@ -1,6 +1,7 @@
 ﻿using E.DataLinq.Core.Models;
 using E.DataLinq.Core.Services.Persistance;
 using E.DataLinq.Web.Models;
+using E.DataLinq.Web.Services.VersionControl;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
@@ -33,7 +34,7 @@ public class FeaturesService
     {
         return new FeaturesResult
         {
-            VersionControl = _versionControlOptions.UseVersionControl,
+            VersionControl = _versionControlOptions.IsConfigured,
             Sandbox = _codeOptions.InitializeSandboxOnStartup,
             Copilot = !string.IsNullOrEmpty(_aiOptions.AzureOpenAi.Endpoint) || !string.IsNullOrEmpty(_aiOptions.OpenAi.ServiceUrl),
             Mcp = E.DataLinq.Web.Mcp.DataLinqMcpExtensions.IsEnabled(_serviceProvider)

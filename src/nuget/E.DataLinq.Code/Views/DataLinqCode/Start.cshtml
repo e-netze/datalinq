@@ -16,7 +16,6 @@
 }
 
 <script src="~/_content/E.DataLinq.Code/js/datalinq-code/compile/compiler.js?@(DataLinqVersion.JsVersion)"></script>
-<script src="~/_content/E.DataLinq.Code/js/datalinq-code/git/version-control-frame.js?@(DataLinqVersion.JsVersion)"></script>
 <script src="~/_content/E.DataLinq.Code/js/datalinq-code/ui/modal.js?@(DataLinqVersion.JsVersion)"></script>
 
 
@@ -61,21 +60,6 @@
         </div>
     </div>
 
-    @if (features.VersionControl)
-    {
-        <div class="datalinq-code-tile" >
-            <div onclick ="loadVersionControl();return false;">
-            <h1>DataLinq Version Control</h1>
-            <p>
-                Review your commits and push the changes to the repository.
-            </p>
-            <div id="changed-check-progress">
-            </div>
-            <button class="datalinq-code-button" onclick="initializeGit();return false;">Init Snapshot</button>
-            <button class="datalinq-code-button" onclick="checkGitStatus();return false;">Snapshot Status</button>
-        </div>
-    </div>
-    }
 
 </div>
 
@@ -111,17 +95,6 @@
             if (_isRunning) return;
             startRun(new datalinqEntityLoader($("#load_all_views_rewrite").is(":checked")), "#load-progress");
         };
-
-        function initializeGit()
-        {
-            parent.dataLinqCode.events.fire('initialize-git-push', {});
-        }
-
-        function checkGitStatus()
-        {
-            if (_isRunning) return;
-            startRun(new datalinqChangedDateChecker(), "#changed-check-progress");
-        }
 
         let _versionClicks=0;
         function onVersionClick() {

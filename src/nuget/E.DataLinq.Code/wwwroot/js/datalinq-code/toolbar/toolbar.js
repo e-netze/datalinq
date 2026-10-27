@@ -112,26 +112,6 @@
             })
             .appendTo($parent);
 
-        if (features.VersionControl) {
-            $("<div><div class='text'>Push Snapshot</div></div>")
-                .data('event', 'push-snapshot')
-                .addClass('datalinq-code-toolbutton push-snapshot disabled')
-                .data('base-image', '_content/E.DataLinq.Code/css/img/git_32')
-                .data('refresh-ui', function (args) {
-                    if (!args.currentDoc || args.currentDoc.indexOf('_') === 0 || ![2, 3].includes(args.currentDoc.split('@').length)) {
-                        return false;
-                    }
-
-                    if (args.gitStatuses && args.gitStatuses[args.currentDoc]) {
-                        var status = args.gitStatuses[args.currentDoc];
-                        return status === "up-to-date" || status === "outdated";
-                    }
-
-                    return false;
-                })
-                .appendTo($parent);
-        }
-
         $("<div><div class='text'>DataLinq Helper</div></div>")
             .data('event', 'toggle-help')
             .addClass('datalinq-code-toolbutton help')
@@ -184,20 +164,6 @@
                 var visibleFunc = $button.data('visible');
                 if (visibleFunc) {
                     $button.css('display', visibleFunc(args) ? '' : 'none');
-                }
-
-                var baseImage = $button.data('base-image');
-                if (baseImage && args.gitStatuses && args.currentDoc) {
-                    var status = args.gitStatuses[args.currentDoc];
-                    var imageSuffix = '@1'; 
-
-                    if (status === 'up-to-date') {
-                        imageSuffix = '@3'; 
-                    } else if (status === 'outdated') {
-                        imageSuffix = '@2'; 
-                    }
-
-                    $button.css('background-image', 'url(' + baseImage + imageSuffix + '.svg)');
                 }
             });
         });

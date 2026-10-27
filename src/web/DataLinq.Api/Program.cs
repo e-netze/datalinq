@@ -8,6 +8,7 @@ using E.DataLinq.Web.Mcp;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
 using E.DataLinq.Web.Services.TokenCache;
+using E.DataLinq.Web.Services.VersionControl;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Collections.Concurrent;
@@ -41,7 +42,6 @@ builder.Services.AddDataLinqServices<FileSystemPersistanceService, CryptoService
     persistanceOptions: options =>
     {
         options.ConnectionString = builder.Configuration["DataLinq.Api:StoragePath"];
-        options.RepoPath = builder.Configuration[$"{DataLinqVersionControlOptions.Key}:{nameof(DataLinqVersionControlOptions.LocalRepositoryPath)}"];
         if (
             Enum.TryParse<EncryptionLevel>(
                 builder.Configuration["DataLinq.Api:Crypto:SecureStringEncryptionLevel"],

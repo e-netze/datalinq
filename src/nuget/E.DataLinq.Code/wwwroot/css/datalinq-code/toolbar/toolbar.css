@@ -70,10 +70,6 @@
         background-image: url(../../img/triangle-right-down_32@1.png);
     }
 
-    .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.push-snapshot {
-        background-image: url(../../img/git_32@1.svg);  
-    }
-
     .datalinq-code-ide .datalinq-code-toolbar .datalinq-code-toolbutton.colorscheme {
         background-image: url(../../img/darkmode_32@1.png);
     }

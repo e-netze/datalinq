@@ -21,7 +21,7 @@
 
             // save the individual width of sidebar of user
             const sidebarWidth = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width').trim();
-            if (sidebarWidth !== '300px') {
+            if (sidebarWidth !== '400px') {
                 localStorage.setItem('sidebarWidth', sidebarWidth);
             } else {
                 localStorage.removeItem('sidebarWidth'); // Optional: clear if default

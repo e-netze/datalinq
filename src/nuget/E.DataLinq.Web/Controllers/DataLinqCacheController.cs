@@ -1,5 +1,4 @@
 ﻿using E.DataLinq.Web.Models.TokenCache;
-using E.DataLinq.Web.Services.Abstraction;
 using E.DataLinq.Web.Services.TokenCache;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,15 +14,11 @@ namespace E.DataLinq.Web.Controllers;
 public class DataLinqCacheController : ApiBaseController
 {
     private readonly IDataLinqCacheTokenService _tokenService;
-    private readonly IGitService _gitService;
 
     public DataLinqCacheController(
-        IDataLinqCacheTokenService tokenService,
-        IGitService gitService
-        )
+        IDataLinqCacheTokenService tokenService)
     {
         _tokenService = tokenService;
-        _gitService = gitService;
     }
 
     [HttpPost("create")]
@@ -39,14 +34,6 @@ public class DataLinqCacheController : ApiBaseController
     {
         var meta = await _tokenService.ResolveTokenAsync(token,true);
         return JsonObject(new { success = meta.Success });
-    }
-
-    [HttpGet("gittest")]
-    public async Task<IActionResult> GitTest()
-    {
-        //var clone = await _gitService.CloneAsync();
-        var pushush = await _gitService.PushAsync();
-        return JsonObject(pushush);
     }
 }
 

@@ -684,19 +684,23 @@ public class DataLinqCodeController : DataLinqCodeBaseController
     }
 
     [HttpPost]
-    async public Task<IActionResult> CommitAndPushChanges([FromBody] GitCommitChangesRequest details)
+    async public Task<IActionResult> Git(string op)
     {
         try
         {
-            var request = await _client.CommitAndPushChanges(details);
-            if (request == null)
-                return base.JsonObject(new GitCommitChangesResult() { Error = "GitCommitChangesResult is either empty or faulty" });
+            if (_client == null)
+            {
+                throw new Exception("datalinq endpoint no set");
+            }
 
-            return base.JsonObject(request);
+            using var reader = new System.IO.StreamReader(Request.Body);
+            var body = await reader.ReadToEndAsync();
+
+            return base.JsonResultStream(await _client.Git(op, body));
         }
         catch (Exception ex)
         {
-            return BadRequest(new { success = false, message = ex.Message });
+            return base.JsonObject(new { success = false, errorCode = "error", message = ex.Message });
         }
     }
 
@@ -865,38 +869,6 @@ public class DataLinqCodeController : DataLinqCodeBaseController
         catch (Exception ex)
         {
             return base.JsonObject(new SuccessModel(ex));
-        }
-    }
-
-    async public Task<IActionResult> CheckGitStatus(string endPoint, string query, string view)
-    {
-        try
-        {
-            var request = await _client.CheckGitStatus(endPoint, query, view);
-            if (request == null || request.Success.Equals(false))
-                return base.JsonObject(new GitCommitChangesResult() { Error = "GitStatus is either empty or faulty" });
-
-            return base.JsonObject(request);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { success = false, message = ex.Message });
-        }
-    }
-
-    async public Task<IActionResult> InitializeGitRepository()
-    {
-        try
-        {
-            var request = await _client.InitializeGitRepository();
-            if (request == null)
-                return base.JsonObject(new GitCommitChangesResult() { Error = "Git Repository initialization response is either empty or faulty" }); 
-
-            return base.JsonObject(request);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { success = false, message = ex.Message });
         }
     }
 

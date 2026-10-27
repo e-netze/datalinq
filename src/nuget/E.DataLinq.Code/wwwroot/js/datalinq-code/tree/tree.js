@@ -27,6 +27,11 @@
                 new initUI(this, settings);
             });
         },
+        refreshSilent: function () {
+            return this.each(function () {
+                refreshSilent($(this));
+            });
+        },
         refresh: function (options) {
             refresh($(this));
         }
@@ -540,6 +545,8 @@ var refrehTree = function ($parent, selection, folderSelection) {
                     addEndPointNode($tree, endPoint, collapsedRoutes);
                 }
             });
+
+            dataLinqCode.events.fire('tree-refreshed');
         });
     });
 };
