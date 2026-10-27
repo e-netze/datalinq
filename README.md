@@ -228,7 +228,7 @@ Features:
 - **Compile and verify** views, with error output.
 - **Live preview** of SELECT and REPORT results using the configured test parameters.
 - **Version control**: Git integration (see below).
-- **Integrated help** and **Copilot** assistance.
+- **Integrated help**.
 - Custom **error pages**, a **key-value store**, settings, and light and dark themes.
 
 ### Version control (Git)

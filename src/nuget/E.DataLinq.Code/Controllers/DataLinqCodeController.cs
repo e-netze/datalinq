@@ -105,22 +105,6 @@ public class DataLinqCodeController : DataLinqCodeBaseController
 
     #endregion
 
-    public IActionResult Copilot()
-    {
-        return View();
-    }
-
-    public async Task<IActionResult> AskDatalinqCopilot([FromForm] string[] questions)
-    {
-        if (_client == null)
-        {
-            return base.JsonObject(new { answer = "Service unavailable" });
-        }
-
-        var response = await _client.AskDataLinqCopilot(questions);
-        return base.JsonObject(new { answer = response });
-    }
-
     #region Api
 
     async public Task<IActionResult> GetEndPoints()

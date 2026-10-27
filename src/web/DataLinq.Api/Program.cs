@@ -61,18 +61,6 @@ builder.Services.AddDataLinqServices<FileSystemPersistanceService, CryptoService
     }
 );
 
-builder.Services.Configure<AiServiceOptions>(builder.Configuration.GetSection(AiServiceOptions.Key));
-builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection(AgentOptions.Key));
-
-var aiConfig = builder.Configuration.GetSection(AiServiceOptions.Key);
-var azureEndpoint = aiConfig.GetValue<string>("AzureOpenAi:Endpoint");
-var openAiUrl = aiConfig.GetValue<string>("OpenAi:ServiceUrl");
-
-if (!string.IsNullOrWhiteSpace(azureEndpoint) || !string.IsNullOrWhiteSpace(openAiUrl))
-{
-    builder.Services.AddDataLinqAIServices(aiOptions => aiConfig.Bind(aiOptions));
-}
-
 var tokenStoreConfigSection = builder.Configuration.GetSection(DataLinqTokenStoreOptions.Key);
 builder.Services.Configure<DataLinqTokenStoreOptions>(tokenStoreConfigSection);
 builder.Services.AddDataLinqCacheTokenStore(tokenStoreConfigSection);

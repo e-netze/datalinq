@@ -1,7 +1,7 @@
 /**
  * DataLinq Code - modal plugin
  *
- * jQuery plugin $.fn.dataLinq_code_modal. Standalone: also used by Start and Copilot frames.
+ * jQuery plugin $.fn.dataLinq_code_modal. Standalone: also used by the Start frame.
  * Depends on: jQuery
  */
 (function ($) {

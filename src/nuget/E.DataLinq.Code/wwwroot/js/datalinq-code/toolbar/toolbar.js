@@ -47,8 +47,6 @@
     var initUI = function (parent, options) {
         var $parent = $(parent);
 
-        var features = window.datalinqFeatures ?? {};
-
         $("<div><div class='text'>Check syntax</div></div>")
             .data('event', 'verify-current-document')
             .addClass('datalinq-code-toolbutton verify-current')
@@ -121,13 +119,6 @@
             .data('event', 'toggle-settings')
             .addClass('datalinq-code-toolbutton settings')
             .appendTo($parent);
-
-        if (features.Copilot) {
-            $("<div><div class='text'>DataLinq Copilot</div></div>")
-                .data('event', 'toggle-copilot')
-                .addClass('datalinq-code-toolbutton copilot')
-                .appendTo($parent);
-        }
 
         var $logout = $("<div>")
             .data('event', 'logout')

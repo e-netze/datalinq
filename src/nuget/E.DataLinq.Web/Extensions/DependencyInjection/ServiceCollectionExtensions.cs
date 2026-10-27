@@ -1,6 +1,5 @@
-﻿#nullable enable
+#nullable enable
 
-using Castle.Core.Configuration;
 using E.DataLinq.Core.Engines;
 using E.DataLinq.Core.Engines.Abstraction;
 using E.DataLinq.Core.Models;
@@ -17,16 +16,13 @@ using E.DataLinq.Web.Html.Abstractions;
 using E.DataLinq.Web.Razor;
 using E.DataLinq.Web.Services;
 using E.DataLinq.Web.Services.Abstraction;
-using E.DataLinq.Web.Services.Agents;
 using E.DataLinq.Web.Services.Cache;
-using E.DataLinq.Web.Services.Plugins;
 using E.DataLinq.Web.Services.TokenCache;
 using E.DataLinq.Web.Services.VersionControl;
 using E.DataLinq.Web.Services.Worker;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.SemanticKernel.Services;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -96,36 +92,6 @@ static public class ServiceCollectionExtensions
                        .AddSingletonIfNotExists<IDataLinqAccessProviderService, DataLinqAccessProviderService>()
                        .AddHostedService<TimedHostedBackgroundService>()
                        .AddTransient<FeaturesService>();
-
-
-        //.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
-        //.AddSingleton<DataLinqHelperFunctionsPlugin>()
-        //.AddSingleton<DataLinqQueryPlugin>()
-        //.AddSingleton<DataLinqEndpointPlugin>()
-        //.AddSingleton<DataLinqViewPlugin>()
-        //.AddSingleton<SemanticKernelService>()
-        //.AddSingleton<IAgent<string[], string>, UserHistorySummarizerAgent>()
-        //.AddSingleton<DataLinqAgentFactory>()
-        //.AddHostedService<CopilotReflectionInitializer>();
-    }
-
-    static public IServiceCollection AddDataLinqAIServices(this IServiceCollection services,
-                                                        Action<AiServiceOptions>? aiServiceOptions = null)
-    {
-        if (aiServiceOptions != null)
-        {
-        services.Configure(aiServiceOptions);
-        }
-
-        return services.AddSingleton<ISemanticKernelFactory, SemanticKernelFactory>()
-                       .AddSingleton<DataLinqHelperFunctionsPlugin>()
-                       .AddSingleton<DataLinqQueryPlugin>()
-                       .AddSingleton<DataLinqEndpointPlugin>()
-                       .AddSingleton<DataLinqViewPlugin>()
-                       .AddSingleton<SemanticKernelService>()
-                       .AddSingleton<IAgent<string[], string>, UserHistorySummarizerAgent>()
-                       .AddSingleton<DataLinqAgentFactory>()
-                       .AddHostedService<CopilotReflectionInitializer>();
     }
 
 

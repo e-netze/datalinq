@@ -39,7 +39,6 @@ public class DataLinqCodeApiController : ApiBaseController
     private readonly DataLinqEndpointTypeService _endpointTypes;
     private readonly JsLibrariesService _jsLibraries;
     private readonly IDataLinqApiNotificationService _notification;
-    private readonly SemanticKernelService _semanticKernelService;
     private readonly FeaturesService _featuresService;
     private readonly IKeyValueStoreService _keyValueStore;
     private readonly IDataLinqEnvironmentService _environmentService;
@@ -59,7 +58,6 @@ public class DataLinqCodeApiController : ApiBaseController
                                      IDataLinqEnvironmentService environmentService = null,
                                      DataLinqErrorPageService errorPage = null,
                                      DataLinqGitService git = null,
-                                     SemanticKernelService semanticKernelService = null,
                                      IHostAuthenticationService hostAuthentication = null,
                                      IDataLinqApiNotificationService notification = null)
     {
@@ -72,7 +70,6 @@ public class DataLinqCodeApiController : ApiBaseController
         _jsLibraries = jsLibraries;
         _hostAuthentication = hostAuthentication;
         _notification = notification;
-        _semanticKernelService = semanticKernelService;
         _featuresService = featuresService;
         _keyValueStore = keyValueStore;
         _environmentService = environmentService;
@@ -473,21 +470,6 @@ public class DataLinqCodeApiController : ApiBaseController
     #endregion
 
     #region Edit (Post)
-
-    [HttpPost]
-    [Route("askdatalinqcopilot")]
-    public async Task<string> AskDataLinqCopilot()
-    {
-        if (_semanticKernelService == null)
-        {
-            return "AI services are not configured";
-        }
-
-        var requestPayload = await Request.FromBody<AskDataLinqCopilotRequest>();
-
-        return await SecureMethodHandler(async () =>
-            await _semanticKernelService.ProcessAsync(requestPayload.Questions));
-    }
 
     [HttpPost]
     [Route("post/saveFolderStructure")]

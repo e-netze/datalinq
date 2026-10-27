@@ -14,19 +14,16 @@ public class FeaturesService
 {
     private readonly DataLinqVersionControlOptions _versionControlOptions;
     private readonly DataLinqCodeApiOptions _codeOptions;
-    private readonly AiServiceOptions _aiOptions;
     private readonly IServiceProvider _serviceProvider;
 
     public FeaturesService(
         IOptions<DataLinqVersionControlOptions> versionControlOptions,
         IOptions<DataLinqCodeApiOptions> codeOptions,
-        IOptions<AiServiceOptions> aiOptions,
         IServiceProvider serviceProvider
         )
     {
         _versionControlOptions = versionControlOptions.Value;
         _codeOptions = codeOptions.Value;
-        _aiOptions = aiOptions.Value;
         _serviceProvider = serviceProvider;
     }
 
@@ -36,7 +33,6 @@ public class FeaturesService
         {
             VersionControl = _versionControlOptions.IsConfigured,
             Sandbox = _codeOptions.InitializeSandboxOnStartup,
-            Copilot = !string.IsNullOrEmpty(_aiOptions.AzureOpenAi.Endpoint) || !string.IsNullOrEmpty(_aiOptions.OpenAi.ServiceUrl),
             Mcp = E.DataLinq.Web.Mcp.DataLinqMcpExtensions.IsEnabled(_serviceProvider)
         };
     }

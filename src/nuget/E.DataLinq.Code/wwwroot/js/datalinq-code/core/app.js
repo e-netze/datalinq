@@ -50,10 +50,6 @@
             dataLinqCode.ui.refreshTree();
         });
 
-        if (typeof window.CopilotInitializer === "function") {
-            window.CopilotInitializer(state.targetUrl);
-        }
-
         state.$editor.dataLinqCode_editor('addTab', { title: 'Start', id: '_start', className: 'start', hideCloseButton: true });
 
         this.bindDocumentEvents(window.document);
