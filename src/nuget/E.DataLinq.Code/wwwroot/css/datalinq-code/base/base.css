@@ -74,21 +74,21 @@ body {
 
     .datalinq-code-body .datalinq-code-help {
         position: absolute;
-        top: 0px;
+        top: var(--float-gap);
         width: 0px;
-        bottom: 0px;
+        bottom: var(--float-gap);
         right: 0px;
+        overflow: hidden;
     }
 
         .datalinq-code-body .datalinq-code-help > #help-frame {
             position: absolute;
             top: 0px;
-            width: 0px;
-            bottom: 0px;
             right: 0px;
             width: 100%;
             height: 100%;
             border: none;
+            background: transparent;
         }
 
     .datalinq-code-body.showhelp .datalinq-code-ide {
@@ -96,15 +96,21 @@ body {
         top: 0px;
         left: 0px;
         bottom: 0px;
-        right: 600px;
+        right: calc(var(--help-width, 600px) + var(--float-gap));
     }
 
+    /* floating like toolbar, sidebar and content */
     .datalinq-code-body.showhelp .datalinq-code-help {
-        position: absolute;
-        top: 0px;
-        width: 600px;
-        bottom: 0px;
-        right: 0px;
+        width: var(--help-width, 600px);
+        right: var(--float-gap);
+        border-radius: var(--float-radius);
+        background-color: #333;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .datalinq-code-body.showhelp .datalinq-code-ide.colorscheme-light ~ .datalinq-code-help {
+        background-color: #fafafa;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
     }
 
 
