@@ -60,7 +60,7 @@ static public class DataLinqMcpHelperReference
     }
 
     static public string Signature(string alias, ClassHelp.MethodHelp m)
-        => $"{TypeName(m.ReturnType)} {alias}.{m.Name}(" +
+        => $"{TypeName(m.ReturnType)} {m.Target ?? alias}.{m.Name}(" +
            String.Join(", ", m.Parameters.Select(p =>
                $"{TypeName(p.ParameterType)} {p.Name}" + (p.HasDefault ? $" = {DefaultText(p)}" : ""))) + ")";
 

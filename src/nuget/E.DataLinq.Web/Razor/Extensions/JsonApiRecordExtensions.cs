@@ -15,6 +15,9 @@ namespace System.Collections.Generic;
 /// de: "headers['content-type']" (Schlüssel mit Sonderzeichen).
 /// de: Beispiel: @Model.Records.JsonValue("items[0].owner.email")
 /// de: Der interne Marker-Datensatz der JSON-API (IsJsonApiResponse) wird bei allen Model.Records-Methoden automatisch übersprungen.
+/// de: JSON aus Datenbank-Spalten: JSON-Texte (z.B. nvarchar-Spalte "json") werden nicht automatisch ausgewertet.
+/// de: Mit record.JsonParse("json") wird der Text in ein Objekt umgewandelt, auf dem alle Json...-Methoden funktionieren.
+/// de: Beispiel: @foreach (var record in Model.Records) { var data = record.JsonParse("json"); @data.JsonValue("regelung.vorgabeDynamischeNetzstuetzung") }
 /// en: Extension methods to easily read nested JSON API responses inside Razor views.
 /// en: The methods can be used directly on Model.Records (all records) or on a single record
 /// en: (e.g. Model.Records.FirstOrDefault() or the loop variable of a foreach loop).
@@ -23,6 +26,9 @@ namespace System.Collections.Generic;
 /// en: "headers['content-type']" (keys containing special characters).
 /// en: Example: @Model.Records.JsonValue("items[0].owner.email")
 /// en: The internal JSON API marker record (IsJsonApiResponse) is skipped automatically by all Model.Records methods.
+/// en: JSON from database columns: JSON texts (e.g. nvarchar column "json") are not parsed automatically.
+/// en: Use record.JsonParse("json") to turn the text into an object on which all Json... methods work.
+/// en: Example: @foreach (var record in Model.Records) { var data = record.JsonParse("json"); @data.JsonValue("regelung.vorgabeDynamischeNetzstuetzung") }
 /// </summary>
 static public class JsonApiRecordExtensions
 {
@@ -225,6 +231,73 @@ static public class JsonApiRecordExtensions
     /// </param>
     static public bool JsonHas(this IDictionary<string, object> record, string path)
         => record is not null && JsonPathResolver.Select(record, path).Any(value => value is not null);
+
+    /// <summary>
+    /// de: Wandelt einen JSON-Text aus einer Datenbank-Spalte (z.B. nvarchar-Spalte "json") in ein Objekt um,
+    /// de: auf dem alle Json...-Methoden (JsonValue, JsonHas, JsonObject, JsonEntries, ...) verwendet werden können.
+    /// de: Liefert null, wenn der Wert fehlt, leer oder kein gültiges JSON-Objekt ist (z.B. Array oder Einzelwert) - es wird nie eine Exception geworfen.
+    /// de: Der Datensatz selbst wird nicht verändert. Ist der Wert bereits ein Objekt (JSON-API), wird er unverändert geliefert.
+    /// de: Schlüssel mit Sonderzeichen (z.B. $type) über die Klammer-Schreibweise ansprechen: @data.JsonValue("['$type']")
+    /// de: Beispiel: @{ var data = record.JsonParse("json"); } @data.JsonValue("regelung.vorgabeDynamischeNetzstuetzung")
+    /// de: Beispiel: @foreach (var entry in record.JsonParse("json").JsonEntries()) { @entry.Key: @entry.Value }
+    /// en: Parses a JSON text stored in a database column (e.g. nvarchar column "json") into an object
+    /// en: on which all Json... methods (JsonValue, JsonHas, JsonObject, JsonEntries, ...) can be used.
+    /// en: Returns null if the value is missing, empty or not a valid JSON object (e.g. an array or a scalar) - this never throws.
+    /// en: The record itself is not modified. If the value is already an object (JSON API), it is returned unchanged.
+    /// en: Use bracket syntax for keys containing special characters (e.g. $type): @data.JsonValue("['$type']")
+    /// en: Example: @{ var data = record.JsonParse("json"); } @data.JsonValue("regelung.vorgabeDynamischeNetzstuetzung")
+    /// en: Example: @foreach (var entry in record.JsonParse("json").JsonEntries()) { @entry.Key: @entry.Value }
+    /// </summary>
+    /// <param name="record">
+    /// de: Der Datensatz, z.B. die Laufvariable einer foreach-Schleife über Model.Records.
+    /// en: The record, e.g. the loop variable of a foreach loop over Model.Records.
+    /// </param>
+    /// <param name="path">
+    /// de: Der Spaltenname (z.B. json) oder ein JSONPath-ähnlicher Pfad zum Wert, der den JSON-Text enthält.
+    /// en: The column name (e.g. json) or a JSONPath-like path to the value containing the JSON text.
+    /// </param>
+    static public IDictionary<string, object> JsonParse(this IDictionary<string, object> record, string path)
+        => ParseJsonValue(record, path) as IDictionary<string, object>;
+
+    /// <summary>
+    /// de: Wandelt einen JSON-Text aus einer Datenbank-Spalte, der ein JSON-Array enthält, in eine Liste um.
+    /// de: Elemente, die Objekte sind, können mit allen Json...-Methoden weiterverarbeitet werden.
+    /// de: Liefert eine leere Liste, wenn der Wert fehlt, leer oder kein gültiges JSON-Array ist - es wird nie eine Exception geworfen.
+    /// de: Beispiel: @foreach (var item in record.JsonParseArray("positionen").OfType&lt;IDictionary&lt;string, object&gt;&gt;()) { @item.JsonValue("name") }
+    /// en: Parses a JSON text stored in a database column that contains a JSON array into a list.
+    /// en: Elements that are objects can be processed further with all Json... methods.
+    /// en: Returns an empty list if the value is missing, empty or not a valid JSON array - this never throws.
+    /// en: Example: @foreach (var item in record.JsonParseArray("positionen").OfType&lt;IDictionary&lt;string, object&gt;&gt;()) { @item.JsonValue("name") }
+    /// </summary>
+    /// <param name="record">
+    /// de: Der Datensatz, z.B. die Laufvariable einer foreach-Schleife über Model.Records.
+    /// en: The record, e.g. the loop variable of a foreach loop over Model.Records.
+    /// </param>
+    /// <param name="path">
+    /// de: Der Spaltenname (z.B. positionen) oder ein JSONPath-ähnlicher Pfad zum Wert, der den JSON-Text enthält.
+    /// en: The column name (e.g. positionen) or a JSONPath-like path to the value containing the JSON text.
+    /// </param>
+    static public IEnumerable<object> JsonParseArray(this IDictionary<string, object> record, string path)
+    {
+        var value = ParseJsonValue(record, path);
+
+        if (value is null || value is string || value is IDictionary<string, object>)
+        {
+            return Enumerable.Empty<object>();
+        }
+
+        if (value is IEnumerable<object> items)
+        {
+            return items;
+        }
+
+        if (value is System.Collections.IEnumerable enumerable)
+        {
+            return enumerable.Cast<object>().ToList();
+        }
+
+        return Enumerable.Empty<object>();
+    }
 
     #endregion
 
@@ -438,6 +511,56 @@ static public class JsonApiRecordExtensions
         => record.TryGetValue(JsonApiMarkerKey, out object value)
         && value is bool flag
         && flag;
+
+    static private readonly System.Text.Json.JsonDocumentOptions ParseOptions = new System.Text.Json.JsonDocumentOptions
+    {
+        AllowTrailingCommas = true,
+        CommentHandling = System.Text.Json.JsonCommentHandling.Skip
+    };
+
+    /// <summary>
+    /// Returns the value at path as plain clr structure (dictionary / list / scalar).
+    /// JSON strings are parsed, already structured values (json api) are only unwrapped.
+    /// Never throws; returns null for missing, empty or invalid values.
+    /// </summary>
+    static private object ParseJsonValue(IDictionary<string, object> record, string path)
+    {
+        if (record is null || String.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            var value = JsonPathResolver.SelectFirst(record, path);
+
+            if (value is null || value is DBNull)
+            {
+                return null;
+            }
+
+            if (value is string text)
+            {
+                text = text.Trim();
+
+                if (text.Length == 0)
+                {
+                    return null;
+                }
+
+                using (var document = System.Text.Json.JsonDocument.Parse(text, ParseOptions))
+                {
+                    return JsonPathResolver.Unwrap(document.RootElement);
+                }
+            }
+
+            return value;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
     static private IEnumerable<object> Flatten(object value)
     {

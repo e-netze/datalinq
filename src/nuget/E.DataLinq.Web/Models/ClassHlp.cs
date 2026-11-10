@@ -68,6 +68,11 @@ public class ClassHelp
     {
         public string Name { get; set; }
 
+        /// <summary>
+        /// Optional receiver shown in signatures instead of the class alias (e.g. "record" for single record extension methods).
+        /// </summary>
+        public string Target { get; set; }
+
         public string Description { get; set; }
 
         public MethodHelp()
@@ -547,6 +552,9 @@ public class ClassHelp
             var methodHelp = new ClassHelp.MethodHelp()
             {
                 Name = methodInfo.Name,
+                Target = recordsExtensionMethods && methodInfo.GetParameters()[0].ParameterType == typeof(IDictionary<string, object>)
+                    ? "record"
+                    : null,
                 ReturnType = methodInfo.ReturnType,
                 Description = methodSummary
             };
@@ -602,8 +610,22 @@ public class ClassHelp
 
         var thisParameterType = methodInfo.GetParameters()[0].ParameterType;
 
-        return thisParameterType.IsGenericType
-            && thisParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>);
+        if (thisParameterType.IsGenericType
+            && thisParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+        {
+            return true;
+        }
+
+        // single record methods (IDictionary<string, object>) are only listed,
+        // if there is no Model.Records (IEnumerable) overload with the same name, e.g. JsonParse
+        return thisParameterType == typeof(IDictionary<string, object>)
+            && !methodInfo.DeclaringType
+                          .GetMethods(BindingFlags.Static | BindingFlags.Public)
+                          .Any(m => m.Name == methodInfo.Name
+                                 && m.IsDefined(typeof(ExtensionAttribute), false)
+                                 && m.GetParameters().Length > 0
+                                 && m.GetParameters()[0].ParameterType.IsGenericType
+                                 && m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>));
     }
 
     private const string NotCommented = "Sorry, documentation missing!";
@@ -619,21 +641,33 @@ public class ClassHelp
     }
     private static string GetXmlDocumentation(XDocument xdoc, MethodInfo methodInfo, int count, string languageCode)
     {
-        var memberName = $"M:{methodInfo.DeclaringType.FullName}.{methodInfo.Name}";
-        var member = xdoc
-            .Descendants("member")
-            .Skip(count)
-            .FirstOrDefault(m => m.Attribute("name")?.Value.StartsWith(memberName) == true);
+        var member = FindMethodMember(xdoc, methodInfo);
+
+        if (member is null)
+        {
+            var memberName = $"M:{methodInfo.DeclaringType.FullName}.{methodInfo.Name}";
+            member = xdoc
+                .Descendants("member")
+                .Skip(count)
+                .FirstOrDefault(m => m.Attribute("name")?.Value.StartsWith(memberName) == true);
+        }
 
         return member?.Element("summary")?.Value.ExtractLanguage(languageCode);
     }
     private static string GetXmlDocumentation(XDocument xdoc, ParameterInfo parameterInfo, int count, string languageCode)
     {
-        var memberName = $"M:{parameterInfo.Member.DeclaringType.FullName}.{parameterInfo.Member.Name}";
-        var member = xdoc
-            .Descendants("member")
-            .Skip(1).Skip(count)
-            .FirstOrDefault(m => m.Attribute("name")?.Value.StartsWith(memberName) == true);
+        var member = parameterInfo.Member is MethodInfo methodInfo
+            ? FindMethodMember(xdoc, methodInfo)
+            : null;
+
+        if (member is null)
+        {
+            var memberName = $"M:{parameterInfo.Member.DeclaringType.FullName}.{parameterInfo.Member.Name}";
+            member = xdoc
+                .Descendants("member")
+                .Skip(1).Skip(count)
+                .FirstOrDefault(m => m.Attribute("name")?.Value.StartsWith(memberName) == true);
+        }
 
         var param = member?
             .Elements("param")
@@ -641,6 +675,92 @@ public class ClassHelp
 
         return param?.Value.Trim().ExtractLanguage(languageCode);
     }
+
+    #region Xml Documentation Ids
+
+    private static XElement FindMethodMember(XDocument xdoc, MethodInfo methodInfo)
+    {
+        string memberId;
+
+        try
+        {
+            memberId = XmlDocumentationId(methodInfo);
+        }
+        catch
+        {
+            return null;
+        }
+
+        return xdoc
+            .Descendants("member")
+            .FirstOrDefault(m => m.Attribute("name")?.Value == memberId);
+    }
+
+    private static string XmlDocumentationId(MethodInfo methodInfo)
+    {
+        var sb = new StringBuilder();
+
+        sb.Append("M:");
+        sb.Append(XmlDocumentationTypeName(methodInfo.DeclaringType));
+        sb.Append('.');
+        sb.Append(methodInfo.Name);
+
+        if (methodInfo.IsGenericMethod)
+        {
+            sb.Append("``");
+            sb.Append(methodInfo.GetGenericArguments().Length);
+        }
+
+        var parameters = methodInfo.GetParameters();
+        if (parameters.Length > 0)
+        {
+            sb.Append('(');
+            sb.Append(String.Join(",", parameters.Select(p => XmlDocumentationTypeName(p.ParameterType))));
+            sb.Append(')');
+        }
+
+        return sb.ToString();
+    }
+
+    private static string XmlDocumentationTypeName(Type type)
+    {
+        if (type.IsGenericParameter)
+        {
+            return (type.DeclaringMethod is not null ? "``" : "`") + type.GenericParameterPosition;
+        }
+
+        if (type.IsByRef)
+        {
+            return XmlDocumentationTypeName(type.GetElementType()) + "@";
+        }
+
+        if (type.IsArray)
+        {
+            return XmlDocumentationTypeName(type.GetElementType()) + "[" + new string(',', type.GetArrayRank() - 1) + "]";
+        }
+
+        var name = type.IsNested
+            ? XmlDocumentationTypeName(type.DeclaringType) + "." + type.Name
+            : (String.IsNullOrEmpty(type.Namespace) ? "" : type.Namespace + ".") + type.Name;
+
+        if (type.IsGenericType)
+        {
+            var tick = name.IndexOf('`');
+            if (tick > 0)
+            {
+                name = name.Substring(0, tick);
+            }
+
+            if (!type.IsGenericTypeDefinition)
+            {
+                name += "{" + String.Join(",", type.GetGenericArguments().Select(XmlDocumentationTypeName)) + "}";
+            }
+        }
+
+        return name;
+    }
+
+    #endregion
 
     private static string ExtractLanguageDocumentation(string xmlDoc, string languageCode)
     {
