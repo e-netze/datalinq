@@ -552,9 +552,13 @@ public class ClassHelp
             var methodHelp = new ClassHelp.MethodHelp()
             {
                 Name = methodInfo.Name,
-                Target = recordsExtensionMethods && methodInfo.GetParameters()[0].ParameterType == typeof(IDictionary<string, object>)
-                    ? "record"
-                    : null,
+                Target = !recordsExtensionMethods
+                    ? null
+                    : methodInfo.GetParameters()[0].ParameterType == typeof(IDictionary<string, object>)
+                        ? "record"
+                        : methodInfo.GetParameters()[0].ParameterType == typeof(KeyValuePair<string, object>)
+                            ? "entry"
+                            : null,
                 ReturnType = methodInfo.ReturnType,
                 Description = methodSummary
             };
@@ -612,6 +616,11 @@ public class ClassHelp
 
         if (thisParameterType.IsGenericType
             && thisParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+        {
+            return true;
+        }
+
+        if (thisParameterType == typeof(KeyValuePair<string, object>))
         {
             return true;
         }

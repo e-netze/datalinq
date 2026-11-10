@@ -17,7 +17,18 @@ internal static class JsonPathResolver
             return Enumerable.Empty<object>();
         }
 
-        var segments = JsonPathParser.Parse(path);
+        JsonPathSegment[] segments;
+
+        try
+        {
+            segments = JsonPathParser.Parse(path);
+        }
+        catch (ArgumentException ex)
+        {
+            // malformed paths must not break the whole view/report => no match
+            System.Diagnostics.Trace.WriteLine($"DataLinq Json*: {ex.Message}");
+            return Enumerable.Empty<object>();
+        }
 
         IEnumerable<object> current = new object[] { root };
 

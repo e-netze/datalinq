@@ -17,7 +17,10 @@ namespace System.Collections.Generic;
 /// de: Der interne Marker-Datensatz der JSON-API (IsJsonApiResponse) wird bei allen Model.Records-Methoden automatisch übersprungen.
 /// de: JSON aus Datenbank-Spalten: JSON-Texte (z.B. nvarchar-Spalte "json") werden nicht automatisch ausgewertet.
 /// de: Mit record.JsonParse("json") wird der Text in ein Objekt umgewandelt, auf dem alle Json...-Methoden funktionieren.
-/// de: Beispiel: @foreach (var record in Model.Records) { var data = record.JsonParse("json"); @data.JsonValue("regelung.vorgabeDynamischeNetzstuetzung") }
+/// de: Mit Model.Records.JsonParseColumn("json") erhält man Kopien aller Datensätze mit umgewandelter Spalte und allen anderen Spalten (z.B. id).
+/// de: Schlüssel, die mit $ beginnen (z.B. $type), können direkt angesprochen werden: data.JsonValue("$type").
+/// de: Für die Ausgabe in PDF-Reports wird JsonText empfohlen (formatiert Zahlen, Datum und Ja/Nein-Werte), für unbekannte Strukturen JsonFlatten.
+/// de: Beispiel: @foreach (var record in Model.Records) { var data = record.JsonParse("json"); @data.JsonText("vertragsleistungKw", "N0") }
 /// en: Extension methods to easily read nested JSON API responses inside Razor views.
 /// en: The methods can be used directly on Model.Records (all records) or on a single record
 /// en: (e.g. Model.Records.FirstOrDefault() or the loop variable of a foreach loop).
@@ -28,7 +31,10 @@ namespace System.Collections.Generic;
 /// en: The internal JSON API marker record (IsJsonApiResponse) is skipped automatically by all Model.Records methods.
 /// en: JSON from database columns: JSON texts (e.g. nvarchar column "json") are not parsed automatically.
 /// en: Use record.JsonParse("json") to turn the text into an object on which all Json... methods work.
-/// en: Example: @foreach (var record in Model.Records) { var data = record.JsonParse("json"); @data.JsonValue("regelung.vorgabeDynamischeNetzstuetzung") }
+/// en: Model.Records.JsonParseColumn("json") returns copies of all records with the parsed column and all other columns (e.g. id).
+/// en: Keys starting with $ (e.g. $type) can be addressed directly: data.JsonValue("$type").
+/// en: JsonText is the recommended way to print values in PDF reports (formats numbers, dates and booleans), JsonFlatten renders unknown structures.
+/// en: Example: @foreach (var record in Model.Records) { var data = record.JsonParse("json"); @data.JsonText("vertragsleistungKw", "N0") }
 /// </summary>
 static public class JsonApiRecordExtensions
 {
@@ -299,6 +305,210 @@ static public class JsonApiRecordExtensions
         return Enumerable.Empty<object>();
     }
 
+    /// <summary>
+    /// de: Liefert den Wert am angegebenen Pfad als fertig formatierten Text - die empfohlene Art, Werte in PDF-Reports und Dashboards auszugeben.
+    /// de: Zahlen ohne Format werden ohne überflüssige Nachkommastellen mit Tausender-Trennzeichen der Kultur ausgegeben (170.000 aus JSON wird zu 170).
+    /// de: Mit Format: Zahlen z.B. "N2", ISO-Datums-Texte z.B. "dd.MM.yyyy HH:mm", Ja/Nein-Werte z.B. "✓|–" (Text für true|false).
+    /// de: Ja/Nein-Werte ohne Format: "ja"/"nein" bei deutscher Kultur, sonst "true"/"false". Texte werden ohne Format unverändert geliefert.
+    /// de: Arrays aus Einzelwerten werden mit ", " verbunden. Fehlt der Wert, ist er null oder ein Objekt, wird defaultValue geliefert. Es wird nie eine Exception geworfen.
+    /// de: Beispiel: @data.JsonText("eigenverbrauchKw", "N0")
+    /// de: Beispiel: @data.JsonText("technik_sqlps_upd_dat", "dd.MM.yyyy HH:mm")
+    /// de: Beispiel: @data.JsonText("inselbetriebsfaehig") @data.JsonText("bemerkung_anl", defaultValue: "–")
+    /// en: Returns the value at the given path as a formatted display text - the recommended way to print values in PDF reports and dashboards.
+    /// en: Numbers without format are printed without superfluous decimals using the group separators of the culture (170.000 from JSON becomes 170).
+    /// en: With format: numbers e.g. "N2", ISO date strings e.g. "dd.MM.yyyy HH:mm", booleans e.g. "✓|–" (text for true|false).
+    /// en: Booleans without format: "ja"/"nein" for German cultures, otherwise "true"/"false". Strings without format are returned unchanged.
+    /// en: Arrays of scalar values are joined with ", ". If the value is missing, null or an object, defaultValue is returned. This never throws.
+    /// en: Example: @data.JsonText("eigenverbrauchKw", "N0")
+    /// en: Example: @data.JsonText("technik_sqlps_upd_dat", "dd.MM.yyyy HH:mm")
+    /// en: Example: @data.JsonText("inselbetriebsfaehig") @data.JsonText("bemerkung_anl", defaultValue: "–")
+    /// </summary>
+    /// <param name="record">
+    /// de: Der Datensatz, z.B. das Ergebnis von JsonParse oder die Laufvariable einer foreach-Schleife.
+    /// en: The record, e.g. the result of JsonParse or the loop variable of a foreach loop.
+    /// </param>
+    /// <param name="path">
+    /// de: Der JSONPath-ähnliche Pfad, z.B. regelung.vorgabeDynamischeNetzstuetzung.
+    /// en: The JSONPath-like path, e.g. regelung.vorgabeDynamischeNetzstuetzung.
+    /// </param>
+    /// <param name="format">
+    /// de: Optionales Format: .NET-Zahlenformat (N0, N2, #,##0.0), Datumsformat (dd.MM.yyyy) oder "TextTrue|TextFalse" für Ja/Nein-Werte.
+    /// en: Optional format: .NET number format (N0, N2, #,##0.0), date format (dd.MM.yyyy) or "TextTrue|TextFalse" for booleans.
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Text, der geliefert wird, wenn der Wert fehlt, null oder nicht als Text darstellbar ist (Objekt). Standard: leerer Text.
+    /// en: Text returned if the value is missing, null or cannot be displayed as text (object). Default: empty text.
+    /// </param>
+    /// <param name="culture">
+    /// de: Kultur für Zahlen- und Datumsformate, z.B. de-AT oder en-US. Ungültige Werte werden durch de-AT ersetzt.
+    /// en: Culture for number and date formats, e.g. de-AT or en-US. Invalid values fall back to de-AT.
+    /// </param>
+    static public string JsonText(this IDictionary<string, object> record, string path,
+                                  string format = null, string defaultValue = "", string culture = DefaultCulture)
+    {
+        if (record is null)
+        {
+            return defaultValue;
+        }
+
+        try
+        {
+            return FormatText(JsonPathResolver.SelectFirst(record, path), format, defaultValue, culture);
+        }
+        catch
+        {
+            return defaultValue;
+        }
+    }
+
+    /// <summary>
+    /// de: Liefert alle Einzelwerte eines (verschachtelten) Objekts als flache Liste von Schlüssel/Wert-Paaren - in der Reihenfolge der Daten.
+    /// de: Ideal, um unbekannte oder je Datensatz unterschiedliche JSON-Strukturen mit einer einzigen foreach-Schleife als Tabelle auszugeben.
+    /// de: Schlüssel sind die verbundenen Namen, z.B. regelung.regelungPuQu oder items[0].price. Leere Objekte/Arrays werden mit Wert null geliefert.
+    /// de: Achtung: Die Schlüssel sind Beschriftungen und nicht immer gültige Pfade (Namen können . oder $ enthalten) - zum Formatieren daher field.JsonText(...) verwenden.
+    /// de: Beispiel: @foreach (var field in data.JsonFlatten()) { &lt;tr&gt;&lt;th&gt;@field.Key&lt;/th&gt;&lt;td&gt;@field.JsonText("N2")&lt;/td&gt;&lt;/tr&gt; }
+    /// en: Returns all leaf values of a (nested) object as a flat list of key/value pairs - in source order.
+    /// en: Ideal to render unknown JSON structures, or structures that differ per record, as a table with a single foreach loop.
+    /// en: Keys are the joined names, e.g. regelung.regelungPuQu or items[0].price. Empty objects/arrays are returned with value null.
+    /// en: Note: keys are labels and not always valid paths (names may contain . or $) - use field.JsonText(...) to format the values.
+    /// en: Example: @foreach (var field in data.JsonFlatten()) { &lt;tr&gt;&lt;th&gt;@field.Key&lt;/th&gt;&lt;td&gt;@field.JsonText("N2")&lt;/td&gt;&lt;/tr&gt; }
+    /// </summary>
+    /// <param name="record">
+    /// de: Der Datensatz, z.B. das Ergebnis von JsonParse.
+    /// en: The record, e.g. the result of JsonParse.
+    /// </param>
+    /// <param name="path">
+    /// de: Optionaler JSONPath-ähnlicher Pfad zum Objekt/Array, das aufgelöst werden soll, z.B. json. Ohne Pfad wird der Datensatz selbst verwendet.
+    /// en: Optional JSONPath-like path to the object/array to flatten, e.g. json. Without a path the record itself is used.
+    /// </param>
+    /// <param name="separator">
+    /// de: Trennzeichen zwischen den Namen im Schlüssel. Standard: ".".
+    /// en: Separator between the names in the key. Default: ".".
+    /// </param>
+    static public IEnumerable<KeyValuePair<string, object>> JsonFlatten(this IDictionary<string, object> record,
+                                                                        string path = null, string separator = ".")
+    {
+        var result = new List<KeyValuePair<string, object>>();
+
+        if (record is null)
+        {
+            return result;
+        }
+
+        try
+        {
+            object start;
+
+            if (String.IsNullOrWhiteSpace(path))
+            {
+                start = record;
+            }
+            else
+            {
+                var matches = JsonPathResolver.Select(record, path).Take(1).ToArray();
+                if (matches.Length == 0)
+                {
+                    return result;
+                }
+
+                start = matches[0];
+            }
+
+            if (IsContainer(start))
+            {
+                FlattenContainer(start, null, separator ?? ".", result, new HashSet<object>(ReferenceComparer.Instance));
+            }
+            else
+            {
+                result.Add(new KeyValuePair<string, object>(path ?? String.Empty, start));
+            }
+        }
+        catch
+        {
+            // never throw - return what we have
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// de: Liefert den Typ des Werts am angegebenen Pfad als Text: "missing", "null", "object", "array", "string", "number" oder "bool".
+    /// de: "missing" bedeutet, der Pfad existiert nicht; "null" bedeutet, der Wert ist vorhanden, aber leer (JSON null).
+    /// de: Damit lassen sich gemischte Daten in Views unterscheiden, ohne C#-Typprüfungen zu schreiben.
+    /// de: Beispiel: @if (data.JsonType("regelung") == "object") { foreach (var e in data.JsonEntries("regelung")) { ... } }
+    /// en: Returns the type of the value at the given path as text: "missing", "null", "object", "array", "string", "number" or "bool".
+    /// en: "missing" means the path does not exist; "null" means the value is present but empty (JSON null).
+    /// en: Use this to handle mixed data in views without writing C# type checks.
+    /// en: Example: @if (data.JsonType("regelung") == "object") { foreach (var e in data.JsonEntries("regelung")) { ... } }
+    /// </summary>
+    /// <param name="record">
+    /// de: Der Datensatz, z.B. das Ergebnis von JsonParse.
+    /// en: The record, e.g. the result of JsonParse.
+    /// </param>
+    /// <param name="path">
+    /// de: Der JSONPath-ähnliche Pfad, z.B. regelung.regelungPuQu.
+    /// en: The JSONPath-like path, e.g. regelung.regelungPuQu.
+    /// </param>
+    static public string JsonType(this IDictionary<string, object> record, string path)
+    {
+        if (record is null)
+        {
+            return "missing";
+        }
+
+        try
+        {
+            var matches = JsonPathResolver.Select(record, path).Take(1).ToArray();
+
+            return matches.Length == 0
+                ? "missing"
+                : TypeName(matches[0]);
+        }
+        catch
+        {
+            return "missing";
+        }
+    }
+
+    #endregion
+
+    #region Entry (KeyValuePair, e.g. from JsonFlatten or JsonEntries)
+
+    /// <summary>
+    /// de: Formatiert den Wert eines Schlüssel/Wert-Paars (z.B. aus JsonFlatten oder JsonEntries) mit denselben Regeln wie record.JsonText(path, ...).
+    /// de: Beispiel: @foreach (var field in data.JsonFlatten()) { &lt;tr&gt;&lt;th&gt;@field.Key&lt;/th&gt;&lt;td&gt;@field.JsonText("N2", "–")&lt;/td&gt;&lt;/tr&gt; }
+    /// en: Formats the value of a key/value pair (e.g. from JsonFlatten or JsonEntries) with the same rules as record.JsonText(path, ...).
+    /// en: Example: @foreach (var field in data.JsonFlatten()) { &lt;tr&gt;&lt;th&gt;@field.Key&lt;/th&gt;&lt;td&gt;@field.JsonText("N2", "–")&lt;/td&gt;&lt;/tr&gt; }
+    /// </summary>
+    /// <param name="entry">
+    /// de: Das Schlüssel/Wert-Paar, z.B. die Laufvariable einer foreach-Schleife über JsonFlatten().
+    /// en: The key/value pair, e.g. the loop variable of a foreach loop over JsonFlatten().
+    /// </param>
+    /// <param name="format">
+    /// de: Optionales Format: .NET-Zahlenformat (N0, N2), Datumsformat (dd.MM.yyyy) oder "TextTrue|TextFalse" für Ja/Nein-Werte.
+    /// en: Optional format: .NET number format (N0, N2), date format (dd.MM.yyyy) or "TextTrue|TextFalse" for booleans.
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Text, der geliefert wird, wenn der Wert null oder nicht als Text darstellbar ist. Standard: leerer Text.
+    /// en: Text returned if the value is null or cannot be displayed as text. Default: empty text.
+    /// </param>
+    /// <param name="culture">
+    /// de: Kultur für Zahlen- und Datumsformate, z.B. de-AT oder en-US. Ungültige Werte werden durch de-AT ersetzt.
+    /// en: Culture for number and date formats, e.g. de-AT or en-US. Invalid values fall back to de-AT.
+    /// </param>
+    static public string JsonText(this KeyValuePair<string, object> entry,
+                                  string format = null, string defaultValue = "", string culture = DefaultCulture)
+    {
+        try
+        {
+            return FormatText(entry.Value, format, defaultValue, culture);
+        }
+        catch
+        {
+            return defaultValue;
+        }
+    }
+
     #endregion
 
     #region Records (Model.Records)
@@ -477,6 +687,86 @@ static public class JsonApiRecordExtensions
         => records.SkipMarker().Any(record => record.JsonHas(path));
 
     /// <summary>
+    /// de: Liefert den ersten Wert, der auf den angegebenen Pfad passt, als fertig formatierten Text (Regeln wie record.JsonText).
+    /// de: Der interne Marker-Datensatz des JSON-API wird dabei übersprungen. Es wird nie eine Exception geworfen.
+    /// de: Beispiel: @Model.Records.JsonText("paging.total", "N0", "–")
+    /// en: Returns the first value matching the given path as a formatted display text (same rules as record.JsonText).
+    /// en: The internal JSON API marker record is skipped. This never throws.
+    /// en: Example: @Model.Records.JsonText("paging.total", "N0", "–")
+    /// </summary>
+    /// <param name="records">
+    /// de: Die Datensätze, üblicherweise Model.Records.
+    /// en: The records, usually Model.Records.
+    /// </param>
+    /// <param name="path">
+    /// de: Der JSONPath-ähnliche Pfad, z.B. paging.total.
+    /// en: The JSONPath-like path, e.g. paging.total.
+    /// </param>
+    /// <param name="format">
+    /// de: Optionales Format: .NET-Zahlenformat (N0, N2), Datumsformat (dd.MM.yyyy) oder "TextTrue|TextFalse" für Ja/Nein-Werte.
+    /// en: Optional format: .NET number format (N0, N2), date format (dd.MM.yyyy) or "TextTrue|TextFalse" for booleans.
+    /// </param>
+    /// <param name="defaultValue">
+    /// de: Text, der geliefert wird, wenn der Wert fehlt, null oder nicht als Text darstellbar ist. Standard: leerer Text.
+    /// en: Text returned if the value is missing, null or cannot be displayed as text. Default: empty text.
+    /// </param>
+    /// <param name="culture">
+    /// de: Kultur für Zahlen- und Datumsformate, z.B. de-AT oder en-US. Ungültige Werte werden durch de-AT ersetzt.
+    /// en: Culture for number and date formats, e.g. de-AT or en-US. Invalid values fall back to de-AT.
+    /// </param>
+    static public string JsonText(this IEnumerable<IDictionary<string, object>> records, string path,
+                                  string format = null, string defaultValue = "", string culture = DefaultCulture)
+    {
+        var record = records.SkipMarker().FirstOrDefault();
+
+        return record is null
+            ? defaultValue
+            : record.JsonText(path, format, defaultValue, culture);
+    }
+
+    /// <summary>
+    /// de: Wandelt die JSON-Texte einer Spalte für alle Datensätze um und liefert Kopien der Datensätze, in denen die Spalte das umgewandelte Objekt enthält.
+    /// de: Alle anderen Spalten (z.B. id, bezeichnung) bleiben erhalten - ideal für Listen und PDF-Schleifen, die beides brauchen.
+    /// de: Model.Records selbst wird nicht verändert. Ungültiges oder leeres JSON ergibt null in der Spalte, der Datensatz bleibt erhalten.
+    /// de: Beispiel: @foreach (var r in Model.Records.JsonParseColumn("json")) { @r.JsonText("id") @r.JsonText("json.vertragsleistungKw", "N0") }
+    /// en: Parses the JSON texts of a column for all records and returns copies of the records in which the column contains the parsed object.
+    /// en: All other columns (e.g. id, bezeichnung) are kept - ideal for lists and PDF loops that need both.
+    /// en: Model.Records itself is not modified. Invalid or empty JSON results in null in the column, the record is kept.
+    /// en: Example: @foreach (var r in Model.Records.JsonParseColumn("json")) { @r.JsonText("id") @r.JsonText("json.vertragsleistungKw", "N0") }
+    /// </summary>
+    /// <param name="records">
+    /// de: Die Datensätze, üblicherweise Model.Records.
+    /// en: The records, usually Model.Records.
+    /// </param>
+    /// <param name="column">
+    /// de: Der Name der Spalte mit dem JSON-Text, z.B. json (Groß-/Kleinschreibung egal).
+    /// en: The name of the column containing the JSON text, e.g. json (case insensitive).
+    /// </param>
+    static public IEnumerable<IDictionary<string, object>> JsonParseColumn(this IEnumerable<IDictionary<string, object>> records, string column)
+    {
+        foreach (var record in records.SkipMarker())
+        {
+            var copy = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var kvp in record)
+            {
+                copy[kvp.Key] = kvp.Value;
+            }
+
+            if (!String.IsNullOrEmpty(column) && copy.TryGetValue(column, out object value))
+            {
+                var parsed = ParseJson(value);
+
+                copy[column] = parsed is IDictionary<string, object> || IsContainer(parsed)
+                    ? parsed
+                    : null;
+            }
+
+            yield return copy;
+        }
+    }
+
+    /// <summary>
     /// de: Liefert die Datensätze ohne den internen Marker-Datensatz des JSON-API.
     /// de: Immer dann verwenden, wenn direkt über Model.Records iteriert wird - sonst wird der Marker-Datensatz mit ausgegeben.
     /// de: Beispiel: @foreach (var record in Model.Records.JsonRecords()) { @record.JsonValue("name") }
@@ -496,6 +786,250 @@ static public class JsonApiRecordExtensions
     #region Helper
 
     private const string JsonApiMarkerKey = "IsJsonApiResponse";
+
+    private const string DefaultCulture = "de-AT";
+
+    static private bool IsContainer(object value)
+        => value is IDictionary<string, object>
+        || (value is System.Collections.IEnumerable && value is not string);
+
+    static private void FlattenContainer(object node, string prefix, string separator,
+                                         List<KeyValuePair<string, object>> result, HashSet<object> visited)
+    {
+        if (!visited.Add(node))
+        {
+            return;
+        }
+
+        bool empty = true;
+
+        if (node is IDictionary<string, object> dictionary)
+        {
+            foreach (var kvp in dictionary)
+            {
+                empty = false;
+                FlattenNode(JsonPathResolver.Unwrap(kvp.Value),
+                            prefix is null ? kvp.Key : prefix + separator + kvp.Key,
+                            separator, result, visited);
+            }
+        }
+        else if (node is System.Collections.IEnumerable enumerable)
+        {
+            int index = 0;
+            foreach (var item in enumerable)
+            {
+                empty = false;
+                FlattenNode(JsonPathResolver.Unwrap(item),
+                            (prefix ?? String.Empty) + "[" + index.ToString(CultureInfo.InvariantCulture) + "]",
+                            separator, result, visited);
+                index++;
+            }
+        }
+
+        if (empty && prefix is not null)
+        {
+            result.Add(new KeyValuePair<string, object>(prefix, null));
+        }
+
+        visited.Remove(node);
+    }
+
+    static private void FlattenNode(object value, string key, string separator,
+                                    List<KeyValuePair<string, object>> result, HashSet<object> visited)
+    {
+        if (IsContainer(value))
+        {
+            FlattenContainer(value, key, separator, result, visited);
+        }
+        else
+        {
+            result.Add(new KeyValuePair<string, object>(key, value is DBNull ? null : value));
+        }
+    }
+
+    static private string TypeName(object value)
+    {
+        value = JsonPathResolver.Unwrap(value);
+
+        return value switch
+        {
+            null => "null",
+            DBNull => "null",
+            bool => "bool",
+            string => "string",
+            IDictionary<string, object> => "object",
+            _ when IsNumber(value) => "number",
+            System.Collections.IEnumerable => "array",
+            _ => "string"
+        };
+    }
+
+    static private bool IsNumber(object value)
+        => value is byte || value is sbyte
+        || value is short || value is ushort
+        || value is int || value is uint
+        || value is long || value is ulong
+        || value is float || value is double
+        || value is decimal;
+
+    static private CultureInfo ResolveCulture(string culture)
+    {
+        if (!String.IsNullOrWhiteSpace(culture))
+        {
+            try
+            {
+                return CultureInfo.GetCultureInfo(culture.Trim());
+            }
+            catch { }
+        }
+
+        return CultureInfo.GetCultureInfo(DefaultCulture);
+    }
+
+    static private string FormatText(object value, string format, string defaultValue, string culture)
+    {
+        value = JsonPathResolver.Unwrap(value);
+
+        if (value is null || value is DBNull || value is IDictionary<string, object>)
+        {
+            return defaultValue;
+        }
+
+        var cultureInfo = ResolveCulture(culture);
+
+        if (value is System.Collections.IEnumerable enumerable && value is not string)
+        {
+            var items = new List<string>();
+
+            foreach (var item in enumerable)
+            {
+                var itemValue = JsonPathResolver.Unwrap(item);
+
+                if (IsContainer(itemValue))
+                {
+                    return defaultValue;
+                }
+
+                if (itemValue is null || itemValue is DBNull)
+                {
+                    continue;
+                }
+
+                items.Add(FormatScalar(itemValue, format, cultureInfo));
+            }
+
+            return items.Count == 0
+                ? defaultValue
+                : String.Join(", ", items);
+        }
+
+        return FormatScalar(value, format, cultureInfo);
+    }
+
+    static private string FormatScalar(object value, string format, CultureInfo culture)
+    {
+        bool hasFormat = !String.IsNullOrEmpty(format);
+
+        switch (value)
+        {
+            case bool flag:
+                if (hasFormat && format.Contains('|'))
+                {
+                    var texts = format.Split('|');
+                    return flag ? texts[0] : texts[1];
+                }
+
+                return culture.TwoLetterISOLanguageName == "de"
+                    ? (flag ? "ja" : "nein")
+                    : (flag ? "true" : "false");
+
+            case string text:
+                if (hasFormat)
+                {
+                    if (IsNumericFormat(format)
+                        && Decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal number)
+                        && TryFormat(number, format, culture, out string formattedNumber))
+                    {
+                        return formattedNumber;
+                    }
+
+                    if (DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime date)
+                        && TryFormat(date, format, culture, out string formattedDate))
+                    {
+                        return formattedDate;
+                    }
+                }
+
+                return text;
+
+            case DateTime dateTime:
+                return hasFormat && TryFormat(dateTime, format, culture, out string formattedDateTime)
+                    ? formattedDateTime
+                    : dateTime.ToString(culture);
+
+            case DateTimeOffset dateTimeOffset:
+                return hasFormat && TryFormat(dateTimeOffset, format, culture, out string formattedDateTimeOffset)
+                    ? formattedDateTimeOffset
+                    : dateTimeOffset.ToString(culture);
+        }
+
+        if (IsNumber(value))
+        {
+            if (hasFormat && TryFormat((IFormattable)value, format, culture, out string formatted))
+            {
+                return formatted;
+            }
+
+            // no (valid) format: remove trailing zeros (170.000m => 170), keep group separators of the culture
+            return value switch
+            {
+                double d => d.ToString("#,##0.###############", culture),
+                float f => f.ToString("#,##0.#######", culture),
+                _ => Convert.ToDecimal(value, CultureInfo.InvariantCulture).ToString("#,##0.############################", culture)
+            };
+        }
+
+        return Convert.ToString(value, culture);
+    }
+
+    static private bool IsNumericFormat(string format)
+    {
+        // standard numeric formats: N2, F0, C, P1, E3, G, D5, X, R
+        if (System.Text.RegularExpressions.Regex.IsMatch(format, @"^[CcDdEeFfGgNnPpRrXx]\d{0,2}$"))
+        {
+            return true;
+        }
+
+        // custom numeric formats: #,##0.00, 0.0 %, ... (no date/time letters)
+        return format.IndexOfAny(new[] { '0', '#' }) >= 0
+            && !format.Any(c => Char.IsLetter(c) && c != 'E' && c != 'e');
+    }
+
+    static private bool TryFormat(IFormattable value, string format, CultureInfo culture, out string result)
+    {
+        try
+        {
+            result = value.ToString(format, culture);
+            return true;
+        }
+        catch (FormatException)
+        {
+            result = null;
+            return false;
+        }
+    }
+
+    private sealed class ReferenceComparer : IEqualityComparer<object>
+    {
+        static public readonly ReferenceComparer Instance = new ReferenceComparer();
+
+        private ReferenceComparer() { }
+
+        new public bool Equals(object x, object y) => ReferenceEquals(x, y);
+
+        public int GetHashCode(object obj)
+            => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
+    }
 
     static private IEnumerable<IDictionary<string, object>> SkipMarker(this IEnumerable<IDictionary<string, object>> records)
     {
@@ -532,7 +1066,19 @@ static public class JsonApiRecordExtensions
 
         try
         {
-            var value = JsonPathResolver.SelectFirst(record, path);
+            return ParseJson(JsonPathResolver.SelectFirst(record, path));
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    static private object ParseJson(object value)
+    {
+        try
+        {
+            value = JsonPathResolver.Unwrap(value);
 
             if (value is null || value is DBNull)
             {

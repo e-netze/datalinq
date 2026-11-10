@@ -30,8 +30,8 @@ internal static class JsonPathParser
 
         int pos = 0;
 
-        // optional root prefix: $ or $.
-        if (path[pos] == '$')
+        // optional root prefix: $, $. or $[ - otherwise '$' is part of the property name (e.g. $type)
+        if (path[pos] == '$' && (path.Length == 1 || path[1] == '.' || path[1] == '['))
         {
             pos++;
         }
