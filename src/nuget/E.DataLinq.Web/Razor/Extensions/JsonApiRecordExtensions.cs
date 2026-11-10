@@ -50,6 +50,10 @@ static public class JsonApiRecordExtensions
     /// en: Example: @record.JsonValue("owner.email", "no email")
     /// en: Hint: use the generic overload JsonValue&lt;T&gt; to get a typed value.
     /// </summary>
+    /// <short>
+    /// de: Liefert den ersten Wert am angegebenen Pfad aus einem einzelnen Datensatz.
+    /// en: Returns the first value at the given path from a single record.
+    /// </short>
     /// <param name="record">
     /// de: Der JSON-API-Datensatz, z.B. Model.Records.FirstOrDefault() oder die Laufvariable einer foreach-Schleife.
     /// en: The JSON API record, e.g. Model.Records.FirstOrDefault() or the loop variable of a foreach loop.
@@ -82,6 +86,10 @@ static public class JsonApiRecordExtensions
     /// en: Example: @record.JsonValue&lt;int&gt;("order.count", 0)
     /// en: All simple types (int, double, bool, DateTime, ...) and enums are supported.
     /// </summary>
+    /// <short>
+    /// de: Liefert den ersten Wert am Pfad eines Datensatzes, konvertiert in den Typ T.
+    /// en: Returns the first value at the path of a single record, converted to type T.
+    /// </short>
     /// <param name="record">
     /// de: Der JSON-API-Datensatz.
     /// en: The JSON API record.
@@ -109,6 +117,10 @@ static public class JsonApiRecordExtensions
     /// en: If the path does not exist, an empty list is returned.
     /// en: Example: @foreach (var name in record.JsonValues("items[*].name")) { ... }
     /// </summary>
+    /// <short>
+    /// de: Liefert alle Werte am angegebenen Pfad aus einem einzelnen Datensatz.
+    /// en: Returns all values at the given path from a single record.
+    /// </short>
     /// <param name="record">
     /// de: Der JSON-API-Datensatz.
     /// en: The JSON API record.
@@ -135,6 +147,10 @@ static public class JsonApiRecordExtensions
     /// en: Values that cannot be converted are returned as the default value of the type.
     /// en: Example: @foreach (var price in record.JsonValues&lt;double&gt;("items[*].price")) { ... }
     /// </summary>
+    /// <short>
+    /// de: Liefert alle Werte am Pfad eines Datensatzes, konvertiert in den Typ T.
+    /// en: Returns all values at the path of a single record, converted to type T.
+    /// </short>
     /// <param name="record">
     /// de: Der JSON-API-Datensatz.
     /// en: The JSON API record.
@@ -156,6 +172,10 @@ static public class JsonApiRecordExtensions
     /// en: If the path does not exist, null is returned - check with JsonHas beforehand.
     /// en: Example: @{ var owner = record.JsonObject("items[0].owner"); } @owner.JsonValue("email")
     /// </summary>
+    /// <short>
+    /// de: Liefert das erste Unterobjekt am angegebenen Pfad eines einzelnen Datensatzes.
+    /// en: Returns the first sub object at the given path of a single record.
+    /// </short>
     /// <param name="record">
     /// de: Der JSON-API-Datensatz.
     /// en: The JSON API record.
@@ -175,6 +195,10 @@ static public class JsonApiRecordExtensions
     /// en: Arrays are flattened automatically, so "items" returns all elements of the array.
     /// en: Example: @foreach (var item in record.JsonObjects("items")) { @item.JsonValue("name") }
     /// </summary>
+    /// <short>
+    /// de: Liefert alle Unterobjekte am angegebenen Pfad eines einzelnen Datensatzes.
+    /// en: Returns all sub objects at the given path of a single record.
+    /// </short>
     /// <param name="record">
     /// de: Der JSON-API-Datensatz.
     /// en: The JSON API record.
@@ -196,6 +220,10 @@ static public class JsonApiRecordExtensions
     /// en: Use this to render unknown structures without knowing the field names.
     /// en: Example: @foreach (var entry in record.JsonEntries("headers")) { @entry.Key : @entry.Value }
     /// </summary>
+    /// <short>
+    /// de: Liefert die Schlüssel/Wert-Paare eines Objekts in einem einzelnen Datensatz.
+    /// en: Returns the key/value pairs of an object within a single record.
+    /// </short>
     /// <param name="record">
     /// de: Der JSON-API-Datensatz.
     /// en: The JSON API record.
@@ -227,6 +255,10 @@ static public class JsonApiRecordExtensions
     /// en: Ideal to render optional parts of a view only if the data is available.
     /// en: Example: @if (record.JsonHas("owner.email")) { @record.JsonValue("owner.email") }
     /// </summary>
+    /// <short>
+    /// de: Prüft, ob der angegebene Pfad in einem einzelnen Datensatz existiert.
+    /// en: Checks whether the given path exists in a single record.
+    /// </short>
     /// <param name="record">
     /// de: Der JSON-API-Datensatz.
     /// en: The JSON API record.
@@ -243,17 +275,23 @@ static public class JsonApiRecordExtensions
     /// de: auf dem alle Json...-Methoden (JsonValue, JsonHas, JsonObject, JsonEntries, ...) verwendet werden können.
     /// de: Liefert null, wenn der Wert fehlt, leer oder kein gültiges JSON-Objekt ist (z.B. Array oder Einzelwert) - es wird nie eine Exception geworfen.
     /// de: Der Datensatz selbst wird nicht verändert. Ist der Wert bereits ein Objekt (JSON-API), wird er unverändert geliefert.
-    /// de: Schlüssel mit Sonderzeichen (z.B. $type) über die Klammer-Schreibweise ansprechen: @data.JsonValue("['$type']")
+    /// de: Schlüssel mit Sonderzeichen (z.B. $type) über die Klammer-Schreibweise ansprechen:
+    /// de: Beispiel: @data.JsonValue("['$type']")
     /// de: Beispiel: @{ var data = record.JsonParse("json"); } @data.JsonValue("regelung.vorgabeDynamischeNetzstuetzung")
     /// de: Beispiel: @foreach (var entry in record.JsonParse("json").JsonEntries()) { @entry.Key: @entry.Value }
     /// en: Parses a JSON text stored in a database column (e.g. nvarchar column "json") into an object
     /// en: on which all Json... methods (JsonValue, JsonHas, JsonObject, JsonEntries, ...) can be used.
     /// en: Returns null if the value is missing, empty or not a valid JSON object (e.g. an array or a scalar) - this never throws.
     /// en: The record itself is not modified. If the value is already an object (JSON API), it is returned unchanged.
-    /// en: Use bracket syntax for keys containing special characters (e.g. $type): @data.JsonValue("['$type']")
+    /// en: Use bracket syntax for keys containing special characters (e.g. $type):
+    /// en: Example: @data.JsonValue("['$type']")
     /// en: Example: @{ var data = record.JsonParse("json"); } @data.JsonValue("regelung.vorgabeDynamischeNetzstuetzung")
     /// en: Example: @foreach (var entry in record.JsonParse("json").JsonEntries()) { @entry.Key: @entry.Value }
     /// </summary>
+    /// <short>
+    /// de: Wandelt einen JSON-Text aus einer Spalte in ein auswertbares Objekt um.
+    /// en: Parses a JSON text from a column into an object usable with Json... methods.
+    /// </short>
     /// <param name="record">
     /// de: Der Datensatz, z.B. die Laufvariable einer foreach-Schleife über Model.Records.
     /// en: The record, e.g. the loop variable of a foreach loop over Model.Records.
@@ -275,6 +313,10 @@ static public class JsonApiRecordExtensions
     /// en: Returns an empty list if the value is missing, empty or not a valid JSON array - this never throws.
     /// en: Example: @foreach (var item in record.JsonParseArray("positionen").OfType&lt;IDictionary&lt;string, object&gt;&gt;()) { @item.JsonValue("name") }
     /// </summary>
+    /// <short>
+    /// de: Wandelt einen JSON-Array-Text aus einer Spalte in eine Liste um.
+    /// en: Parses a JSON array text from a column into a list.
+    /// </short>
     /// <param name="record">
     /// de: Der Datensatz, z.B. die Laufvariable einer foreach-Schleife über Model.Records.
     /// en: The record, e.g. the loop variable of a foreach loop over Model.Records.
@@ -313,7 +355,8 @@ static public class JsonApiRecordExtensions
     /// de: Arrays aus Einzelwerten werden mit ", " verbunden. Fehlt der Wert, ist er null oder ein Objekt, wird defaultValue geliefert. Es wird nie eine Exception geworfen.
     /// de: Beispiel: @data.JsonText("eigenverbrauchKw", "N0")
     /// de: Beispiel: @data.JsonText("technik_sqlps_upd_dat", "dd.MM.yyyy HH:mm")
-    /// de: Beispiel: @data.JsonText("inselbetriebsfaehig") @data.JsonText("bemerkung_anl", defaultValue: "–")
+    /// de: Beispiel: @data.JsonText("inselbetriebsfaehig")
+    /// de: Beispiel: @data.JsonText("bemerkung_anl", defaultValue: "–")
     /// en: Returns the value at the given path as a formatted display text - the recommended way to print values in PDF reports and dashboards.
     /// en: Numbers without format are printed without superfluous decimals using the group separators of the culture (170.000 from JSON becomes 170).
     /// en: With format: numbers e.g. "N2", ISO date strings e.g. "dd.MM.yyyy HH:mm", booleans e.g. "✓|–" (text for true|false).
@@ -321,8 +364,13 @@ static public class JsonApiRecordExtensions
     /// en: Arrays of scalar values are joined with ", ". If the value is missing, null or an object, defaultValue is returned. This never throws.
     /// en: Example: @data.JsonText("eigenverbrauchKw", "N0")
     /// en: Example: @data.JsonText("technik_sqlps_upd_dat", "dd.MM.yyyy HH:mm")
-    /// en: Example: @data.JsonText("inselbetriebsfaehig") @data.JsonText("bemerkung_anl", defaultValue: "–")
+    /// en: Example: @data.JsonText("inselbetriebsfaehig")
+    /// en: Example: @data.JsonText("bemerkung_anl", defaultValue: "–")
     /// </summary>
+    /// <short>
+    /// de: Liefert den Wert am Pfad eines Datensatzes als formatierten Text.
+    /// en: Returns the value at the path of a single record as formatted text.
+    /// </short>
     /// <param name="record">
     /// de: Der Datensatz, z.B. das Ergebnis von JsonParse oder die Laufvariable einer foreach-Schleife.
     /// en: The record, e.g. the result of JsonParse or the loop variable of a foreach loop.
@@ -373,6 +421,10 @@ static public class JsonApiRecordExtensions
     /// en: Note: keys are labels and not always valid paths (names may contain . or $) - use field.JsonText(...) to format the values.
     /// en: Example: @foreach (var field in data.JsonFlatten()) { &lt;tr&gt;&lt;th&gt;@field.Key&lt;/th&gt;&lt;td&gt;@field.JsonText("N2")&lt;/td&gt;&lt;/tr&gt; }
     /// </summary>
+    /// <short>
+    /// de: Liefert alle Einzelwerte eines verschachtelten Objekts als flache Liste.
+    /// en: Returns all leaf values of a nested object as a flat key/value list.
+    /// </short>
     /// <param name="record">
     /// de: Der Datensatz, z.B. das Ergebnis von JsonParse.
     /// en: The record, e.g. the result of JsonParse.
@@ -441,6 +493,10 @@ static public class JsonApiRecordExtensions
     /// en: Use this to handle mixed data in views without writing C# type checks.
     /// en: Example: @if (data.JsonType("regelung") == "object") { foreach (var e in data.JsonEntries("regelung")) { ... } }
     /// </summary>
+    /// <short>
+    /// de: Liefert den JSON-Typ des Werts am angegebenen Pfad als Text.
+    /// en: Returns the JSON type of the value at the given path as text.
+    /// </short>
     /// <param name="record">
     /// de: Der Datensatz, z.B. das Ergebnis von JsonParse.
     /// en: The record, e.g. the result of JsonParse.
@@ -480,6 +536,10 @@ static public class JsonApiRecordExtensions
     /// en: Formats the value of a key/value pair (e.g. from JsonFlatten or JsonEntries) with the same rules as record.JsonText(path, ...).
     /// en: Example: @foreach (var field in data.JsonFlatten()) { &lt;tr&gt;&lt;th&gt;@field.Key&lt;/th&gt;&lt;td&gt;@field.JsonText("N2", "–")&lt;/td&gt;&lt;/tr&gt; }
     /// </summary>
+    /// <short>
+    /// de: Liefert den Wert eines Schlüssel/Wert-Eintrags als formatierten Text.
+    /// en: Returns the value of a key/value entry as formatted text.
+    /// </short>
     /// <param name="entry">
     /// de: Das Schlüssel/Wert-Paar, z.B. die Laufvariable einer foreach-Schleife über JsonFlatten().
     /// en: The key/value pair, e.g. the loop variable of a foreach loop over JsonFlatten().
@@ -523,6 +583,10 @@ static public class JsonApiRecordExtensions
     /// en: If the path does not exist, defaultValue is returned.
     /// en: Example: @Model.Records.JsonValue("items[0].owner.email", "no email")
     /// </summary>
+    /// <short>
+    /// de: Liefert den ersten Wert am angegebenen Pfad aus Model.Records.
+    /// en: Returns the first value at the given path from Model.Records.
+    /// </short>
     /// <param name="records">
     /// de: Die Datensätze, üblicherweise Model.Records.
     /// en: The records, usually Model.Records.
@@ -546,6 +610,10 @@ static public class JsonApiRecordExtensions
     /// en: If the conversion fails or the path does not exist, defaultValue is returned.
     /// en: Example: @Model.Records.JsonValue&lt;int&gt;("paging.total", 0)
     /// </summary>
+    /// <short>
+    /// de: Liefert den ersten Wert am Pfad aus Model.Records, konvertiert in den Typ T.
+    /// en: Returns the first value at the path from Model.Records, converted to type T.
+    /// </short>
     /// <param name="records">
     /// de: Die Datensätze, üblicherweise Model.Records.
     /// en: The records, usually Model.Records.
@@ -569,6 +637,10 @@ static public class JsonApiRecordExtensions
     /// en: With wildcards (items[*]) you can read whole columns of a JSON response.
     /// en: Example: @foreach (var name in Model.Records.JsonValues("items[*].name")) { &lt;li&gt;@name&lt;/li&gt; }
     /// </summary>
+    /// <short>
+    /// de: Liefert alle Werte am angegebenen Pfad aus allen Datensätzen von Model.Records.
+    /// en: Returns all values at the given path from all records of Model.Records.
+    /// </short>
     /// <param name="records">
     /// de: Die Datensätze, üblicherweise Model.Records.
     /// en: The records, usually Model.Records.
@@ -588,6 +660,10 @@ static public class JsonApiRecordExtensions
     /// en: Values that cannot be converted are returned as the default value of the type, so the number of values stays the same.
     /// en: Example: @Model.Records.JsonValues&lt;double&gt;("items[*].price").Sum()
     /// </summary>
+    /// <short>
+    /// de: Liefert alle Werte am Pfad aus Model.Records, konvertiert in den Typ T.
+    /// en: Returns all values at the path from Model.Records, converted to type T.
+    /// </short>
     /// <param name="records">
     /// de: Die Datensätze, üblicherweise Model.Records.
     /// en: The records, usually Model.Records.
@@ -609,6 +685,10 @@ static public class JsonApiRecordExtensions
     /// en: If the path does not exist, null is returned.
     /// en: Example: @{ var first = Model.Records.JsonObject("items[0]"); } @first.JsonValue("name")
     /// </summary>
+    /// <short>
+    /// de: Liefert das erste Unterobjekt am angegebenen Pfad aus Model.Records.
+    /// en: Returns the first sub object at the given path from Model.Records.
+    /// </short>
     /// <param name="records">
     /// de: Die Datensätze, üblicherweise Model.Records.
     /// en: The records, usually Model.Records.
@@ -630,6 +710,10 @@ static public class JsonApiRecordExtensions
     /// en: Example: @foreach (var item in Model.Records.JsonObjects("items")) { @item.JsonValue("name") }
     /// en: Hint: combined with DLH methods the result can also be rendered as a table.
     /// </summary>
+    /// <short>
+    /// de: Liefert alle Unterobjekte am angegebenen Pfad aus allen Datensätzen von Model.Records.
+    /// en: Returns all sub objects at the given path from all records of Model.Records.
+    /// </short>
     /// <param name="records">
     /// de: Die Datensätze, üblicherweise Model.Records.
     /// en: The records, usually Model.Records.
@@ -649,6 +733,10 @@ static public class JsonApiRecordExtensions
     /// en: Use this to render unknown structures without knowing the field names.
     /// en: Example: @foreach (var entry in Model.Records.JsonEntries("headers")) { @entry.Key : @entry.Value }
     /// </summary>
+    /// <short>
+    /// de: Liefert die Schlüssel/Wert-Paare eines Objekts aus Model.Records.
+    /// en: Returns the key/value pairs of an object from Model.Records.
+    /// </short>
     /// <param name="records">
     /// de: Die Datensätze, üblicherweise Model.Records.
     /// en: The records, usually Model.Records.
@@ -675,6 +763,10 @@ static public class JsonApiRecordExtensions
     /// en: Ideal to render optional parts of a view only if the data is available.
     /// en: Example: @if (Model.Records.JsonHas("error")) { @Model.Records.JsonValue("error.message") }
     /// </summary>
+    /// <short>
+    /// de: Prüft, ob der angegebene Pfad in einem der Datensätze von Model.Records existiert.
+    /// en: Checks whether the given path exists in any record of Model.Records.
+    /// </short>
     /// <param name="records">
     /// de: Die Datensätze, üblicherweise Model.Records.
     /// en: The records, usually Model.Records.
@@ -694,6 +786,10 @@ static public class JsonApiRecordExtensions
     /// en: The internal JSON API marker record is skipped. This never throws.
     /// en: Example: @Model.Records.JsonText("paging.total", "N0", "–")
     /// </summary>
+    /// <short>
+    /// de: Liefert den ersten Wert am Pfad aus Model.Records als formatierten Text.
+    /// en: Returns the first value at the path from Model.Records as formatted text.
+    /// </short>
     /// <param name="records">
     /// de: Die Datensätze, üblicherweise Model.Records.
     /// en: The records, usually Model.Records.
@@ -734,6 +830,10 @@ static public class JsonApiRecordExtensions
     /// en: Model.Records itself is not modified. Invalid or empty JSON results in null in the column, the record is kept.
     /// en: Example: @foreach (var r in Model.Records.JsonParseColumn("json")) { @r.JsonText("id") @r.JsonText("json.vertragsleistungKw", "N0") }
     /// </summary>
+    /// <short>
+    /// de: Wandelt die JSON-Spalte aller Datensätze von Model.Records in Objekte um.
+    /// en: Parses the JSON column of all records of Model.Records into objects.
+    /// </short>
     /// <param name="records">
     /// de: Die Datensätze, üblicherweise Model.Records.
     /// en: The records, usually Model.Records.
@@ -774,6 +874,10 @@ static public class JsonApiRecordExtensions
     /// en: Always use this when iterating over Model.Records directly, otherwise the marker record is rendered as well.
     /// en: Example: @foreach (var record in Model.Records.JsonRecords()) { @record.JsonValue("name") }
     /// </summary>
+    /// <short>
+    /// de: Liefert die Datensätze von Model.Records ohne den internen Marker-Datensatz.
+    /// en: Returns the records of Model.Records without the internal marker record.
+    /// </short>
     /// <param name="records">
     /// de: Die Datensätze, üblicherweise Model.Records.
     /// en: The records, usually Model.Records.

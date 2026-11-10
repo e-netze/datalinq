@@ -46,6 +46,10 @@ public class DataLinqSecurityHelper
     /// de: Der Username des aktuell angemeldeten Benutzers.
     /// en: The username of the currently logged-in user.
     /// </summary>
+    /// <short>
+    /// de: Liefert den Benutzernamen des aktuell angemeldeten Benutzers.
+    /// en: Returns the username of the currently logged-in user.
+    /// </short>
     /// <returns>
     /// de: Gibt den Username des aktuell angemeldeten Benutzers zurück, falls verfügbar, ansonsten einen leeren String.
     /// en: Returns the username of the currently logged-in user, if available, otherwise an empty string.
@@ -57,6 +61,10 @@ public class DataLinqSecurityHelper
     /// de: Prüft, ob der aktuelle User Mitglied in der angegeben Rolle ist.
     /// en: Checks if the current user is a member of the specified role.
     /// </summary>
+    /// <short>
+    /// de: Prüft, ob der aktuelle Benutzer Mitglied der angegebenen Rolle ist.
+    /// en: Checks whether the current user is a member of the given role.
+    /// </short>
     /// <param name="roleName">
     /// de: Der Name der Rolle, die geprüft werden soll.
     /// en: The name of the role to be checked.
@@ -75,11 +83,15 @@ public class DataLinqSecurityHelper
     /// de: Liefert den Wert eines Rollenparameters zurück, zB GKZ (Gemeindekennzahl). Rollenparameter werden nur in speziellen Authentication Umgebungen wie PVP unterstützt.
     /// en: Returns the value of a role parameter, e.g., GKZ (municipality code). Role parameters are only supported in specific authentication environments like PVP.
     /// </summary>
+        /// <short>
+        /// de: Liefert den Wert eines Rollenparameters (Claims) des aktuellen Benutzers.
+        /// en: Returns the value of a role parameter (claim) of the current user.
+        /// </short>
     /// <param name="claimName">
     /// de: Der Name des Claims, dessen Wert zurückgegeben werden soll.
     /// en: The name of the claim whose value is to be returned.
     /// </param>
-    /// /// <param name="caseSensitiv">
+    /// <param name="caseSensitiv">
     /// de: Gibt an, ob bei der Suche nach dem Claim auf Groß-/Kleinschreibung geachtet werden soll (true) oder nicht (false). Standardwert ist true.
     /// en: Indicates whether the search for the claim should be case-sensitive (true) or not (false). The default value is true.
     /// </param>
@@ -105,6 +117,10 @@ public class DataLinqSecurityHelper
     /// de: Gibt den Wert eines HTTP Request Headers zurück.
     /// en: Returns the value of an HTTP request header.
     /// </summary>
+    /// <short>
+    /// de: Liefert den Wert eines HTTP Request Headers.
+    /// en: Returns the value of an HTTP request header.
+    /// </short>
     /// <param name="header">
     /// de: Der Name des Headers, dessen Wert zurückgegeben werden soll.
     /// en: The name of the header whose value is to be returned.
@@ -120,6 +136,10 @@ public class DataLinqSecurityHelper
     /// de: Liest einen verschlüsselten Wert (Secret) aus dem globalen Secret-Store (secrets.blb) und gibt den entschlüsselten Wert zurück. Secrets können über die DataLinq Code Oberfläche verwaltet werden.
     /// en: Reads an encrypted value (secret) from the global secret store (secrets.blb) and returns the decrypted value. Secrets can be managed through the DataLinq Code UI.
     /// </summary>
+        /// <short>
+        /// de: Liefert den entschlüsselten Wert eines Secrets aus dem globalen Secret-Store.
+        /// en: Returns the decrypted value of a secret from the global secret store.
+        /// </short>
     /// <param name="key">
     /// de: Der Schlüssel (Name) des Secrets, dessen Wert zurückgegeben werden soll.
     /// en: The key (name) of the secret whose value should be returned.
@@ -135,6 +155,10 @@ public class DataLinqSecurityHelper
     /// de: Berechnet den HMAC-SHA256 einer Nachricht mit einem geheimen Schlüssel und gibt das Ergebnis als hexadezimalen String (Kleinbuchstaben) zurück.
     /// en: Computes the HMAC-SHA256 of a message using a secret key and returns the result as a lower-case hexadecimal string.
     /// </summary>
+        /// <short>
+        /// de: Berechnet den HMAC-SHA256 einer Nachricht als hexadezimalen String.
+        /// en: Computes the HMAC-SHA256 of a message as a hexadecimal string.
+        /// </short>
     /// <param name="message">
     /// de: Die Nachricht (der zu signierende Text), für die der HMAC-SHA256 berechnet werden soll.
     /// en: The message (the text to be signed) for which the HMAC-SHA256 should be computed.
@@ -161,6 +185,10 @@ public class DataLinqSecurityHelper
     /// de: Ruft ein ArcGIS Server Bild ab und gibt es als HTML img-Element mit der angegebenen Größe zurück. Der Diensttyp bestimmt, ob ein MapServer- oder ImageServer-Endpunkt aufgerufen wird. Falls ein Token-Objekt mit Anmeldedaten übergeben wird, wird zunächst ein Token angefordert und die Anfrage abgesichert.
     /// en: Retrieves an ArcGIS Server image and returns it as an HTML img element with the specified size. The service type determines whether a MapServer or ImageServer endpoint is called. If a token object with credentials is supplied, a token is requested first and the request is secured.
     /// </summary>
+        /// <short>
+        /// de: Rendert ein Bild eines ArcGIS Server Dienstes als HTML img-Element.
+        /// en: Renders an image of an ArcGIS Server service as an HTML img element.
+        /// </short>
     /// <param name="serviceType">
     /// de: Der Diensttyp, der bestimmt, ob ein MapServer- oder ImageServer-Endpunkt in der URL verwendet wird.
     /// en: The service type that determines whether a MapServer or ImageServer endpoint is used in the URL.

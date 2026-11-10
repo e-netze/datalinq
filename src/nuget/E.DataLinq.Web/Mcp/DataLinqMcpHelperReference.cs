@@ -40,6 +40,7 @@ static public class DataLinqMcpHelperReference
                     name = m.Name,
                     signature = Signature(help.Alias, m),
                     returns = TypeName(m.ReturnType),
+                    summary = ClassHelp.ShortText(m),
                     description = m.Description,
                     parameters = m.Parameters.Select(p => new
                     {
@@ -51,7 +52,7 @@ static public class DataLinqMcpHelperReference
                     })
                 }).ToArray()
                 : methods.GroupBy(m => m.Name)
-                         .Select(g => (object)new { name = g.Key, overloads = g.Count(), summary = FirstSentence(g.First().Description) })
+                         .Select(g => (object)new { name = g.Key, overloads = g.Count(), summary = ClassHelp.ShortText(g.First()) })
                          .ToArray(),
             note = full
                 ? "Use only these methods/parameters. Async methods (Task) must be called with @await."

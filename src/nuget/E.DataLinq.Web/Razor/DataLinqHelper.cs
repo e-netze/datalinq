@@ -69,6 +69,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Liefert den Wert eines Query-String-Parameters. Optional kann geprüft werden, ob der Parameter vorhanden ist und einem regulären Ausdruck entspricht.
     /// en: Returns the value of a query string parameter. Optionally checks whether the parameter is present and matches a regular expression.
     /// </summary>
+    /// <short>
+    /// de: Liefert den Wert eines Query-String-Parameters, optional geprüft per Regex.
+    /// en: Returns the value of a query string parameter, optionally validated by a regex.
+    /// </short>
     /// <param name="key">
     /// de: Der Name des Query-String-Parameters.
     /// en: The name of the query string parameter.
@@ -120,6 +124,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode holt Daten aus einer Datalinq-Query ab, verarbeitet die Daten und übergibt das Ergebnis an eine angegebene JavaScript-Funktion.
     /// en: The method retrieves data from a Datalinq query, processes the data, and passes the result to a specified JavaScript function.
     /// </summary>
+    /// <short>
+    /// de: Lädt Daten einer Query im Browser und übergibt sie an eine JavaScript-Funktion.
+    /// en: Fetches data of a query in the browser and passes it to a JavaScript function.
+    /// </short>
     /// <param name="id">
     /// de: Gibt die ID der Query an, die in der Form endpoint-id@query-id übergeben wird, um die richtigen Daten abzurufen.
     /// en: Specifies the query ID in the format endpoint-id@query-id to fetch the correct data.
@@ -167,6 +175,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode übergibt eine Sammlung von Datensätzen (Records) an eine JavaScript-Funktion, die diese dann verarbeitet.
     /// en: The method passes a collection of records to a JavaScript function for processing.
     /// </summary>
+    /// <short>
+    /// de: Übergibt serverseitig geladene Records an eine JavaScript-Funktion.
+    /// en: Passes server-side loaded records to a JavaScript function.
+    /// </short>
     /// <param name="records">
     /// de: Eine Sammlung von Records (Dictionary), die an die JavaScript-Funktion übergeben werden. Jeder Record ist ein Key-Value-Paar.
     /// en: A collection of records (Dictionaries) to be passed to the JavaScript function. Each record is a key-value pair.
@@ -229,6 +241,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: Creates a JSON editor for displaying and editing JSON data in the browser. 
     /// The method dynamically builds the required JavaScript scripts and renders a DIV element with a unique ID.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen JSON-Editor, der die übergebenen Records im Browser anzeigt.
+    /// en: Renders a JSON editor that displays the given records in the browser.
+    /// </short>
     /// <param name="records">
     /// de: Ein Array von Dictionaries, die die darzustellenden JSON-Daten repräsentieren.
     /// en: An array of dictionaries representing the JSON data to be displayed.
@@ -362,6 +378,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode lädt Records aus einer angegebenen Query (endpoint@query) und gibt diese als Sammlung von Dictionaries zurück. Die Abfrage erfolgt serverseitig während des Renderns der Seite.
     /// en: The method loads records from a specified query (endpoint@query) and returns them as a collection of dictionaries. The query is executed server-side during page rendering.
     /// </summary>
+    /// <short>
+    /// de: Lädt Records einer Query serverseitig, optional gefiltert und sortiert.
+    /// en: Loads records of a query on the server, optionally filtered and sorted.
+    /// </short>
     /// <param name="id">
     /// de: Gibt die ID der Query an, die im Format endpoint-id@query-id vorliegt. Diese wird zur Abfrage der entsprechenden Daten verwendet.
     /// en: Specifies the query ID in the format endpoint-id@query-id. This is used to query the corresponding data.
@@ -431,6 +451,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode bindet einen View ein und zeigt diesen sofort nach dem Aufbau des übergeordneten Views an.
     /// en: The method embeds a view and displays it immediately after the parent view is built.
     /// </summary>
+    /// <short>
+    /// de: Bindet einen View ein, der sofort mit dem übergeordneten View geladen wird.
+    /// en: Embeds a view that is loaded immediately with the parent view.
+    /// </short>
     /// <param name="id">
     /// de: Gibt die ID des Views an, die im Format endpoint-id@query-id@view-id vorliegt, um den richtigen View zu laden.
     /// en: Specifies the ID of the view in the format endpoint-id@query-id@view-id to load the correct view.
@@ -465,6 +489,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode bindet einen View ein und übergibt Filter- und Sortierungsparameter an den eingebundenen View. Dies ist nützlich, wenn der eingebundene View nach Werten filtern soll, die im übergeordneten View mitgegeben werden.
     /// en: The method embeds a view and passes filter and sorting parameters to the embedded view. This is useful when the embedded view needs to filter based on values provided in the parent view.
     /// </summary>
+    /// <short>
+    /// de: Bindet einen View sofort ein und übergibt Filter- und Sortierparameter.
+    /// en: Embeds a view immediately and passes filter and sorting parameters.
+    /// </short>
     /// <param name="id">
     /// de: Gibt die ID des Views an, die im Format endpoint-id@query-id@view-id vorliegt, um den richtigen View zu laden.
     /// en: Specifies the ID of the view in the format endpoint-id@query-id@view-id to load the correct view.
@@ -511,6 +539,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode bindet einen View ein, der nicht sofort nach dem Aufbau des übergeordneten Views geladen wird, sondern erst, wenn der Benutzer auf einen Button klickt, der den View anzeigt.
     /// en: The method embeds a view that is not loaded immediately after the parent view is built, but only when the user clicks a button to load the view.
     /// </summary>
+    /// <short>
+    /// de: Bindet einen View ein, der erst per Klick auf einen Button geladen wird.
+    /// en: Embeds a view that is only loaded when the user clicks a button.
+    /// </short>
     /// <param name="id">
     /// de: Gibt die ID des Views an, die im Format endpoint-id@query-id@view-id vorliegt, um den richtigen View zu laden.
     /// en: Specifies the ID of the view in the format endpoint-id@query-id@view-id to load the correct view.
@@ -551,6 +583,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode bindet einen View ein, der nicht sofort nach dem Aufbau des übergeordneten Views geladen wird, sondern erst, wenn der Benutzer auf eine Schaltfläche klickt. Dabei werden Filter- und Sortierungsparameter an den eingebundenen View übergeben.
     /// en: The method embeds a view that is not loaded immediately after the parent view is built, but only when the user clicks a button. Filter and sorting parameters are passed to the embedded view.
     /// </summary>
+    /// <short>
+    /// de: Bindet einen View per Klick ein und übergibt Filter- und Sortierparameter.
+    /// en: Embeds a view loaded on click and passes filter and sorting parameters.
+    /// </short>
     /// <param name="id">
     /// de: Gibt die ID des Views an, die im Format endpoint-id@query-id@view-id vorliegt, um den richtigen View zu laden.
     /// en: Specifies the ID of the view in the format endpoint-id@query-id@view-id to load the correct view.
@@ -602,6 +638,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode erzeugt einen Button, mit dem der Anwender den View durch Klick aktualisieren kann. Es wird dabei immer nur der View aktualisiert, in dem der Button mit dieser Methode eingefügt wurde.
     /// en: The method generates a button that allows the user to refresh the view by clicking. Only the view in which the button was added will be refreshed.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen Button, der den aktuellen View per Klick aktualisiert.
+    /// en: Renders a button that refreshes the current view on click.
+    /// </short>
     /// <param name="label">
     /// de: Der Text, der auf dem Button angezeigt wird. Standardmäßig ist der Text "Aktualisieren".
     /// en: The text displayed on the button. By default, the text is "Aktualisieren".
@@ -629,6 +669,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode erzeugt einen Button, über den ein View automatisch nach einer festgelegten Zeitspanne aktualisiert wird. Der Button ermöglicht es dem Benutzer, das automatische Aktualisieren durch ein Checkbox-Symbol zu aktivieren oder zu deaktivieren. Es wird nur der View aktualisiert, in dem sich der Button befindet.
     /// en: The method creates a button that automatically refreshes a view after a set period of time. The button allows the user to activate or deactivate the auto-refresh feature through a checkbox symbol. Only the view containing the button will be refreshed.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen Button, der den aktuellen View periodisch aktualisiert.
+    /// en: Renders a button that refreshes the current view periodically.
+    /// </short>
     /// <param name="label">
     /// de: Der Text, der auf dem Button angezeigt wird, um die automatische Aktualisierung zu steuern. Standardmäßig ist der Text "Wird aktualisiert in".
     /// en: The text displayed on the button to control the auto-refresh. By default, the text is "Wird aktualisiert in".
@@ -685,13 +729,17 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode erzeugt ein Steuerelement zum Sortieren eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Checkboxen bestimmen, nach welchen Eigenschaften sortiert wird bzw. ob auf- oder absteigend sortiert werden soll. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde, aktualisiert.
     /// en: The method generates a control for sorting a view. The element expands when a button is clicked. The user can then select which properties to sort by and whether the sorting should be ascending or descending. Once the options are confirmed, the view containing the control will be updated.
     /// </summary>
+    /// <short>
+    /// de: Rendert ein Sortier-Steuerelement für den View mit einer Liste von Feldern.
+    /// en: Renders a sorting control for the view using a list of field names.
+    /// </short>
     /// <param name="label">
-    /// de: Der Text für den Button, der das Sortier-Steuerelement aufklappen lässt (z.B.: "Sortierung")
-    /// en: The text for the button that expands the sorting control (e.g., "Sorting")
+    /// de: Der Text für den Button, der das Sortier-Steuerelement aufklappen lässt (z.B.: "Sortierung").
+    /// en: The text for the button that expands the sorting control (e.g., "Sorting").
     /// </param>
     /// <param name="orderFields">
-    /// de: Ein String-Array mit den Feldern, nach denen sortiert werden kann (z.B.: new string[]{ "ORT","STR" }). Die Felder entsprechen den Feldnamen, die auch innerhalb des Records vorkommen
-    /// en: A string array containing the fields that can be used for sorting (e.g., new string[]{ "CITY", "STREET" }). The fields match the field names as they appear within the record
+    /// de: Ein String-Array mit den Feldern, nach denen sortiert werden kann (z.B.: new string[]{ "ORT","STR" }). Die Felder entsprechen den Feldnamen, die auch innerhalb des Records vorkommen.
+    /// en: A string array containing the fields that can be used for sorting (e.g., new string[]{ "CITY", "STREET" }). The fields match the field names as they appear within the record.
     /// </param>
     /// <param name="htmlAttributes">
     /// de: Ein anonymes Objekt mit HTML-Attributen für den Button. ((z.B.: new { style="width:300px" @class="meine-klasse" }))
@@ -733,6 +781,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode erzeugt ein Steuerelement zum Sortieren eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Checkboxen bestimmen, nach welchen Eigenschaften sortiert wird bzw. ob auf- oder absteigend sortiert werden soll. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde, aktualisiert.
     /// en: The method generates a control for sorting a view. The element expands when a button is clicked. The user can then select which properties to sort by and whether the sorting should be ascending or descending. Once the options are confirmed, the view containing the control will be updated.
     /// </summary>
+    /// <short>
+    /// de: Rendert ein Sortier-Steuerelement mit Feldern samt Anzeigenamen (Dictionary).
+    /// en: Renders a sorting control using fields with display names (dictionary).
+    /// </short>
     /// <param name="label">
     /// de: Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes (z.B.: "Sortierung").
     /// en: The text for the button that expands the sorting control (e.g., "Sorting").
@@ -825,18 +877,22 @@ public class DataLinqHelper : IDataLinqHelper
     }
 
     /// <summary>
-    /// de: Erstellt eine Schnellsuchleiste zum durchsuchen einer DataLinq Tabelle.
+    /// de: Erstellt eine Schnellsuchleiste zum Durchsuchen einer DataLinq Tabelle.
     /// en: Creates a quick search bar for additional querying of a DataLinq table.
     /// </summary>
+    /// <short>
+    /// de: Rendert eine Schnellsuchleiste, die eine Tabelle im View clientseitig filtert.
+    /// en: Renders a quick search bar that filters a table in the view client-side.
+    /// </short>
     /// <param name="columns">
     /// de: Die zu durchsuchenden Spalten.
     /// en: The searchable columns.
     /// </param>
     /// <param name="placeholder">
-    /// de: Der platzhalter innerhalb der Suchleiste.
+    /// de: Der Platzhalter innerhalb der Suchleiste.
     /// en: The placeholder inside of the searchbar.
     /// </param>
-    /// /// <param name="tableId">
+    /// <param name="tableId">
     /// de: Die ID des Tables der durchsucht werden soll wenn ein bestimmter Table das Ziel ist anstelle des nächsten.
     /// en: The id of the table to be searched if a specific table should be targeted instead of just the next one.
     /// </param>
@@ -845,11 +901,11 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: An anonymous object containing HTML attributes for the button ((e.g., new { style="width:300px" @class="my-class" }))
     /// </param>
     /// <param name="isOpen">
-    /// de: Boolscher Wert, der angibt, ob der Fokus direkt auf das Suchfeld gerichtet sein soll..
+    /// de: Boolscher Wert, der angibt, ob der Fokus direkt auf das Suchfeld gerichtet sein soll.
     /// en: A boolean value indicating whether the input field should be focused directly.
     /// </param>
     /// <param name="afterFilter">
-    /// de: Boolscher Wert, der angibt, ob die Suchleiste erst nach auswahl eines Filters in FilterView angezeigt werden soll.
+    /// de: Boolscher Wert, der angibt, ob die Suchleiste erst nach Auswahl eines Filters in FilterView angezeigt werden soll.
     /// en: A boolean value indicating whether the input field should only be visible after a filter in FilterView has been set.
     /// </param>
     /// <returns>
@@ -906,15 +962,19 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode erzeugt ein Steuerelement zum Filtern eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Eingabefelder/Auswahllisten bestimmen, nach welchen Eigenschaften gefiltert wird. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde, aktualisiert.
     /// en: The method generates a control for filtering a view. The element expands when a button is clicked. The user can then select which properties to filter by using input fields or dropdown lists. Once the options are confirmed, the view containing the control will be updated.
     /// </summary>
+    /// <short>
+    /// de: Rendert ein Filter-Steuerelement für den View mit einer Liste von Parametern.
+    /// en: Renders a filter control for the view using a list of parameter names.
+    /// </short>
     /// <param name="label">
     /// de: Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes (z.B.: "Filter setzen").
     /// en: The text for the button that expands the filtering control (e.g., "Apply Filter").
     /// </param>
     /// <param name="filterParameters">
-    /// de: Ein String-Array mit Parametern, nach denen gefiltert werden kann ((z.B.: new string[]{ "ort","strasse" } )) 
+    /// de: Ein String-Array mit Parametern, nach denen gefiltert werden kann ((z.B.: new string[]{ "ort","strasse" } )). 
     /// Die Parameter entsprechen hier jenen Parameternamen, die an die entsprechende Abfrage für den View übergeben 
     /// werden können.
-    /// en: A string array with parameters that can be used for filtering ((e.g., new string[]{ "city","street" })) 
+    /// en: A string array with parameters that can be used for filtering ((e.g., new string[]{ "city","street" })). 
     /// The parameters correspond to the parameter names that can be passed to the 
     /// corresponding query for the view.
     /// </param>
@@ -957,6 +1017,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode erzeugt ein Steuerelement zum Filtern eines Views. Das Element klappt auf, wenn auf einen Button geklickt wird. Danach kann der Anwender über Eingabefelder/Auswahllisten bestimmen, nach welchen Eigenschaften gefiltert wird. Nach Bestätigung der Angaben wird der View, in dem das Steuerelement eingebaut wurde, aktualisiert.
     /// en: The method generates a control for filtering a view. The element expands when a button is clicked. The user can then select which properties to filter by using input fields or dropdown lists. Once the options are confirmed, the view containing the control will be updated.
     /// </summary>
+    /// <short>
+    /// de: Rendert ein Filter-Steuerelement mit konfigurierbaren Parametern (Dictionary).
+    /// en: Renders a filter control with configurable parameters (dictionary).
+    /// </short>
     /// <param name="label">
     /// de: Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes (z.B.: "Filter setzen").
     /// en: The text for the button that expands the filtering control (e.g., "Apply Filter").
@@ -965,7 +1029,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Hier wird anstelle von Strings ein Dictionary übergeben. Die Keys entsprechen den Parametern von oben. 
     /// Die Values geben ein anonymes Objekt an, mit dem beispielsweise die Anzeigenamen der Parameter bestimmt
     /// werden können oder auch, dass es ein Datumsfeld ist (siehe TextFor). Außerdem besteht die Möglichkeit, 
-    /// `diaplyName`, `source`, `valueField`, `nameField` und `prependEmpty` anzugeben. Damit wird eine Auswahlliste erzeugt. 
+    /// `displayName`, `source`, `valueField`, `nameField` und `prependEmpty` anzugeben. Damit wird eine Auswahlliste erzeugt. 
     /// (( 
     /// {
     ///   { "kg", new { 
@@ -985,15 +1049,18 @@ public class DataLinqHelper : IDataLinqHelper
     ///     } 
     ///   }
     /// } ))
-    /// Gibt man bei `source` einen Filter an, der auf auf mindesten ein anderes Feld verweist, wird dieses Feld
+    /// Gibt man bei `source` einen Filter an, der auf mindestens ein anderes Feld verweist, wird dieses Feld
     /// erst geladen, wenn der Filter für das andere Feld gesetzt wurde. Das bedeutet, dass die Abfrage erst
-    /// durchgeführt wird, wenn alle abhängigen Werte eingeben werden. So können Cascading Comboboxen erzeugt werden.
+    /// durchgeführt wird, wenn alle abhängigen Werte eingegeben werden. So können Cascading Comboboxen erzeugt werden.
     /// Um Auswahlmenüs (ComboBox) mit Mehrfach-Auswahl zu ermöglichen, kann das Attribut `multiple='multiple'` 
     /// mitgegeben werden.
+    /// Zusätzlich kann ein Filterparameter mit `required=true` als Pflichtfeld markiert werden.
+    /// Wird auf "Übernehmen" geklickt, ohne dass ein Pflichtfeld ausgefüllt ist, erscheint ein
+    /// kurzer Hinweis (Toast) und das Neuladen der Ansicht wird verhindert.
     /// en: Instead of strings, a dictionary is passed. The keys correspond to the filter parameters from above.
     /// The values represent an anonymous object that can define display names, data types (e.g., Date), 
     /// and additional options like 
-    /// `diaplayName`, `source`, `valueField`, `nameField`, and `prependEmpty`. This allows 
+    /// `displayName`, `source`, `valueField`, `nameField`, and `prependEmpty`. This allows 
     /// generating a dropdown list. 
     /// (( 
     /// {
@@ -1021,10 +1088,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// For multi-select dropdowns, the `multiple='multiple'` attribute 
     /// can be added.
     /// Additionally, a filter parameter can be marked as mandatory by setting `required=true`. 
-    /// de: Zusätzlich kann ein Filterparameter mit `required=true` als Pflichtfeld markiert werden. 
-    /// Wird auf "Übernehmen" geklickt, ohne dass ein Pflichtfeld ausgefüllt ist, erscheint ein 
-    /// kurzer Hinweis (Toast) und das Neuladen der Ansicht wird verhindert.
-    /// en: If a required field is empty when the user clicks "Apply", a short toast notification is 
+    /// If a required field is empty when the user clicks "Apply", a short toast notification is 
     /// shown and the view reload is prevented.
     /// </param>
     /// <param name="htmlAttributes">
@@ -1187,6 +1251,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Die Methode erzeugt ein Steuerelement zum Exportieren der Daten des Views in eine CSV-Datei. Dabei wird die aktuell eingestellte Filterung bzw. Sortierung angewendet. Der Export bezieht sich auf die Daten jenes Views, in dem die Schaltfläche eingebunden ist.
     /// en: The method generates a control to export the data of the view into a CSV file, applying the current filtering and sorting settings. The export relates to the data of the view in which the button is embedded.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen Button, der die Daten des Views als CSV-Datei exportiert.
+    /// en: Renders a button that exports the view data as a CSV file.
+    /// </short>
     /// <param name="label">
     /// de: Der Text für den Button zum Aufklappen des eigentlichen Steuerelementes (z.B.: "Export").
     /// en: The text for the button that expands the actual control (e.g., "Export").
@@ -1204,12 +1272,12 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: The filename of the to be exported CSV file.
     /// </param>
     /// <param name="exportAsString">
-    /// de: Boolscher Wert der angiebt ob die einzelnen Felder als String exportiert werden sollen (alles in hochkomma).  
-    /// en: Bool value that specifies weather the fields should be exported as string in quotation marks.
+    /// de: Boolscher Wert der angibt ob die einzelnen Felder als String exportiert werden sollen (alles in hochkomma).  
+    /// en: Bool value that specifies whether the fields should be exported as string in quotation marks.
     /// </param>
     /// <param name="exportWithBom">
-    /// de: Boolscher Wert der angiebt ob mit einem BOM exportiert wird.  
-    /// en: Bool value that specifies weather the fields should be exported with a BOM.
+    /// de: Boolscher Wert der angibt ob mit einem BOM exportiert wird.  
+    /// en: Bool value that specifies whether the fields should be exported with a BOM.
     /// </param>
     /// <returns>
     /// de: Gibt das generierte HTML für das Export-Steuerelement zurück.
@@ -1258,6 +1326,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Macht aus einem Text einen Link. Dieser aktualisiert einen Filter einer View, das kann auch ein Filter eines in der Seite eingebauten Include(Click)Views sein.
     /// en: Turns text into a link that updates a filter of a view, which can also be a filter of an included (Click)View embedded on the page.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen Link, der einen Filter eines Views auf einen Wert setzt.
+    /// en: Renders a link that sets a filter of a view to a given value.
+    /// </short>
     /// <param name="filterName">
     /// de: Name des Filters, der gesetzt werden soll.
     /// en: The name of the filter to be set.
@@ -1309,6 +1381,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt aus den übergebenen Records eine HTML-Tabelle.  
     /// en: Creates an HTML table from the given records.  
     /// </summary>
+    /// <short>
+    /// de: Rendert die übergebenen Records als HTML-Tabelle.
+    /// en: Renders the given records as an HTML table.
+    /// </short>
     /// <param name="records">  
     /// de: Die Records, für die die Tabelle erstellt werden soll.  
     /// en: The records for which the table should be created.  
@@ -1443,6 +1519,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt den Beginn eines HTML-Formulars zum Abschicken von Daten.  
     /// en: Creates the beginning of an HTML form for submitting data.  
     /// </summary>
+    /// <short>
+    /// de: Rendert den Beginn eines Formulars, das Daten an eine Query sendet.
+    /// en: Renders the start of a form that submits data to a query.
+    /// </short>
     /// <param name="id">  
     /// de: Die ID der Query, an die die Formulardaten gesendet werden sollen,  
     /// im Format (( endpoint-id@query-id ))
@@ -1480,6 +1560,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: Creates the end of an HTML form for submitting data,  
     /// optionally with buttons for submission and reset.  
     /// </summary>
+    /// <short>
+    /// de: Rendert das Ende eines Formulars, optional mit Senden- und Zurücksetzen-Button.
+    /// en: Renders the end of a form, optionally with submit and reset buttons.
+    /// </short>
     /// <param name="submitText">  
     /// de: Falls angegeben, wird eine Schaltfläche zum Abschicken des Formulars mit dem angegebenen Text erstellt.  
     /// en: If provided, a button for submitting the form is created with the given text.  
@@ -1555,8 +1639,12 @@ public class DataLinqHelper : IDataLinqHelper
 
     /// <summary>
     /// de: Erstellt eine Schaltfläche, die eine View in einem Dialogfeld auf der aktuellen Seite öffnet. Darin könnte sich etwa ein Formular zum Bearbeiten oder Erstellen von Datensatzes befinden.
-    /// en: "Creates a button that opens a view in a dialog on the current page. This could be a form for editing or creating a record.
+    /// en: Creates a button that opens a view in a dialog on the current page. This could be a form for editing or creating a record.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen Button, der einen View in einem Dialog öffnet.
+    /// en: Renders a button that opens a view in a dialog.
+    /// </short>
     /// <param name="id">
     /// de: Gibt die Id des Views in folgender Form an: endpoint-id@query-id@view-id
     /// en: Specifies the ID of the view in the following format: endpoint-id@query-id@view-id
@@ -1607,6 +1695,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt eine Schaltfläche, die eine Query mit den übergebenen Parametern ausführt. Damit kann bspw. ein Datensatz gelöscht oder ein Wert gesetzt werden.
     /// en: Creates a button that executes a query with the passed parameters. This can be used to delete a record or set a value.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen Button, der eine Query mit Parametern ausführt.
+    /// en: Renders a button that executes a query with parameters.
+    /// </short>
     /// <param name="id">
     /// de: Gibt die Id des Query in folgender Form an: endpoint-id@query-id
     /// en: Specifies the ID of the query in the following format: endpoint-id@query-id
@@ -1655,9 +1747,13 @@ public class DataLinqHelper : IDataLinqHelper
     }
 
     /// <summary>
-    /// de: Erstellt ein HTML-Auswahlliste (Select), deren Optionen aus einer Abfrage geladen werden
+    /// de: Erstellt eine HTML-Auswahlliste (Select), deren Optionen aus einer Abfrage geladen werden.
     /// en: Creates an HTML select dropdown whose options are loaded from a query.
     /// </summary>
+    /// <short>
+    /// de: Rendert eine Auswahlliste, deren Optionen aus einer Query geladen werden.
+    /// en: Renders a select list whose options are loaded from a query.
+    /// </short>
     /// <param name="id">
     /// de: Gibt die Id des Querys, der die Optionen bereithält, in folgender Form an: endpoint-id@query-id
     /// en: Specifies the ID of the query that provides the options in the following format: endpoint-id@query-id
@@ -1714,6 +1810,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt eine HTML-Auswahlliste (Select) für ein Formular, deren Optionen aus einer Abfrage ODER einer Liste geladen werden.
     /// en: Creates an HTML select dropdown for a form, with options loaded from a query OR a list.
     /// </summary>
+    /// <short>
+    /// de: Rendert eine Auswahlliste für ein Formularfeld aus einer Query oder Liste.
+    /// en: Renders a select list for a form field from a query or a list.
+    /// </short>
     /// <param name="record">
     /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
     /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
@@ -1760,6 +1860,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt HTML-Radiobuttons für ein Formular, deren Optionen aus einer Abfrage ODER einer Liste geladen werden.
     /// en: Creates HTML radio buttons for a form, with options loaded from a query OR a list.
     /// </summary>
+    /// <short>
+    /// de: Rendert Radiobuttons für ein Formularfeld aus einer Query oder Liste.
+    /// en: Renders radio buttons for a form field from a query or a list.
+    /// </short>
     /// <param name="record">
     /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
     /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
@@ -1894,6 +1998,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt ein HTML-Textfeld für ein Formular.
     /// en: Creates an HTML text field for a form.
     /// </summary>
+    /// <short>
+    /// de: Rendert ein Text- oder Datumsfeld für ein Formular.
+    /// en: Renders a text or date input field for a form.
+    /// </short>
     /// <param name="record">
     /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
     /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
@@ -1903,7 +2011,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: The name (attribute) of the form element.
     /// </param>
     /// <param name="htmlAttributes">
-    /// de: Ein anonymes Objekt mit HTML-Attributen für das Formular-Element; auch reguläre Ausdrücke zum Überprüfen sind möglich., bspw. ((new { style="width:300px" @class="meine-klasse",
+    /// de: Ein anonymes Objekt mit HTML-Attributen für das Formular-Element; auch reguläre Ausdrücke zum Überprüfen sind möglich, bspw. ((new { style="width:300px" @class="meine-klasse",
     /// required="required", pattern="[A-Za-z]{3}" }))
     /// en: An anonymous object with HTML attributes for the form element; regular expressions for validation are also possible, e.g., ((new { style="width:300px" @class="my-class",
     /// required="required", pattern="[A-Za-z]{3}" }))
@@ -1964,16 +2072,20 @@ public class DataLinqHelper : IDataLinqHelper
     }
 
     /// <summary>
-    /// de: Erstellt ein HTML-Checkbox für ein Formular.
+    /// de: Erstellt eine HTML-Checkbox für ein Formular.
     /// en: Creates an HTML checkbox for a form.
     /// </summary>
+    /// <short>
+    /// de: Rendert eine Checkbox für ein Formular.
+    /// en: Renders a checkbox for a form.
+    /// </short>
     /// <param name="record">
     /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
     /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
     /// </param>
     /// <param name="name">
-    /// de: Name (Attribut) des Formular-Elements."
-    /// en: The name (attribute) of the form element."
+    /// de: Name (Attribut) des Formular-Elements.
+    /// en: The name (attribute) of the form element.
     /// </param>
     /// <param name="htmlAttributes">
     /// de: Ein anonymes Objekt mit HTML-Attributen für das Formular-Element, bspw. ((new { style="width:300px" @class="meine-klasse" }))
@@ -1984,7 +2096,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: If no value exists in the record (null or empty string), a default value can be set for the pre-selection.
     /// </param>
     /// <returns>
-    /// de: Ein HTML-Checkbox für ein Formular.
+    /// de: Eine HTML-Checkbox für ein Formular.
     /// en: An HTML checkbox for a form.
     /// </returns>
     public object CheckboxFor(
@@ -2021,6 +2133,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt eine HTML-Textarea (Textfeld für mehrzeilige Eingaben) für ein Formular.
     /// en: Creates an HTML textarea (text field for multiline input) for a form.
     /// </summary>
+    /// <short>
+    /// de: Rendert ein mehrzeiliges Textfeld (Textarea) für ein Formular.
+    /// en: Renders a multiline text area for a form.
+    /// </short>
     /// <param name="record">
     /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
     /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
@@ -2064,6 +2180,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt ein verstecktes HTML-Feld für ein Formular.
     /// en: Creates a hidden HTML field for a form.
     /// </summary>
+    /// <short>
+    /// de: Rendert ein verstecktes Feld für ein Formular.
+    /// en: Renders a hidden field for a form.
+    /// </short>
     /// <param name="record">
     /// de: DataLinq-Datensatz, aus dem der vorausgewählte Wert geholt wird, falls der Datensatz leer (null) ist, wird keine Vorauswahl getroffen.
     /// en: DataLinq record from which the default selected value will be retrieved. If the record is null, no default selection will be made.
@@ -2108,6 +2228,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt ein Label für eine Formular-Eingabe-Element.
     /// en: Creates a label for a form input element.
     /// </summary>
+    /// <short>
+    /// de: Rendert ein Label für ein Formularfeld.
+    /// en: Renders a label for a form field.
+    /// </short>
     /// <param name="label">
     /// de: Label/Text, der angezeigt werden soll.
     /// en: The label/text to be displayed.
@@ -2168,12 +2292,16 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt ein HTML DIV-Element, das die Anzahl der Datensätze anzeigt.
     /// en: Creates an HTML DIV element that displays the number of records.
     /// </summary>
+    /// <short>
+    /// de: Rendert ein Element, das die Anzahl der Records anzeigt.
+    /// en: Renders an element that displays the number of records.
+    /// </short>
     /// <param name="records">
     /// de: DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.
-    /// en: DataLinq records to be counted. These may also be restricted by a C# LINQ condition."
+    /// en: DataLinq records to be counted. These may also be restricted by a C# LINQ condition.
     /// </param>
     /// <param name="label">
-    /// de: Der Text, der über der Zahl anzeigt werden soll, bspw. "Anzahl"
+    /// de: Der Text, der über der Zahl angezeigt werden soll, bspw. "Anzahl".
     /// en: The text to be displayed above the number, e.g., "Count".
     /// </param>
     /// <param name="htmlAttributes">
@@ -2213,6 +2341,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Gibt ein dynamisches Objekt in einer JavaScript-Variablen aus. Das Objekt wird zuvor in JSON serialisiert und als String in jQuery.parseJSON eingebettet, damit es direkt in JavaScript genutzt werden kann.
     /// en: Outputs a dynamic object into a JavaScript variable. The object is first serialized to JSON and embedded as a string inside jQuery.parseJSON so it can be used directly in JavaScript.
     /// </summary>
+    /// <short>
+    /// de: Gibt ein Objekt als JSON in einer JavaScript-Variable aus.
+    /// en: Outputs an object as JSON in a JavaScript variable.
+    /// </short>
     /// <param name="record">
     /// de: Das dynamische Objekt das in der JavaScript-Variable ausgegeben werden sollen. Kann z.B. eine Liste von ExpandoObjects oder anonymen Typen sein.
     /// en: The dynamic object to output in the JavaScript variable. Can be a list of ExpandoObjects or anonymous types.
@@ -2255,6 +2387,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Gruppiert Datensätze auf Basis eines Feldes und gibt dazugehörige Gruppengröße (d.h. Anzahl der Datensätze in der Gruppe) in einer JavaScript-Variablen im JSON-Format aus.
     /// en: Groups records based on a field and outputs the corresponding group size (i.e., number of records in the group) in a JavaScript variable in JSON format.
     /// </summary>
+    /// <short>
+    /// de: Gruppiert Records nach einem Feld und gibt die Anzahl je Gruppe als JS-Variable aus.
+    /// en: Groups records by a field and outputs the count per group as a JS variable.
+    /// </short>
     /// <param name="records">
     /// de: DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.
     /// en: DataLinq records to be counted. These may also be restricted by a C# LINQ condition.
@@ -2292,6 +2428,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Gruppiert Datensätze auf Basis eines Feldes und erzeugt eine JavaScript-Variable im JSON-Format für Diagramme.
     /// en: Groups records based on a field and generates a JavaScript variable in JSON format for charts.
     /// </summary>
+    /// <short>
+    /// de: Gruppiert Records und gibt abgeleitete Werte (Summe, Mittel …) als JS-Variable aus.
+    /// en: Groups records and outputs derived values (sum, mean, …) as a JS variable.
+    /// </short>
     /// <param name="records">
     /// de: DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.
     /// en: DataLinq records to be counted. These may also be restricted by a C# LINQ condition.
@@ -2313,12 +2453,12 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: Field name in the DataLinq object that contains the values.
     /// </param>
     /// <param name="statType">
-    /// de: Art, nach der das Wert-Feld abgeleitet werden soll. ((""StatType.Sum", "StatType.Min", "StatType.Max", "StatType.Mean",  "StatType.Count"))
+    /// de: Art, nach der das Wert-Feld abgeleitet werden soll. (("StatType.Sum", "StatType.Min", "StatType.Max", "StatType.Mean",  "StatType.Count"))
     /// en: The type by which the value field should be derived. (("StatType.Sum", "StatType.Min", "StatType.Max", "StatType.Mean",  "StatType.Count"))
     /// </param>
     /// <param name="orderField">
     /// de: Art, nach der das Objekt sortiert werden soll. Es kann auf- und absteigend nach dem Gruppennamen (("OrderField.NameAsc", "OrderField.NameDesc")) oder nach Gruppengröße (("OrderField.ValueAsc", "OrderField.ValueDesc")) sortiert werden.
-    /// en: The way in which the object should be sorted. It can be sorted ascending or descending by group name (("OrderField.NameAsc", "OrderField.NameDesc")) or by group size (("OrderField.ValueAsc", "OrderField.ValueDesc"))
+    /// en: The way in which the object should be sorted. It can be sorted ascending or descending by group name (("OrderField.NameAsc", "OrderField.NameDesc")) or by group size (("OrderField.ValueAsc", "OrderField.ValueDesc")).
     /// </param>
     /// <returns>
     /// de: Gibt eine JavaScript-Variable im JSON-Format zurück, die die gruppierten und abgeleiteten Werte enthält, geeignet für Diagramme.
@@ -2339,6 +2479,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Gruppiert Datensätze nach Zeitintervallen und gibt dazugehörige Gruppengröße (d.h. Anzahl der Datensätze in der Gruppe) in einer JavaScript Variable im JSON-Format aus. Zusätzlich kann nach einem weiteren Feld gruppiert werden.
     /// en: Groups records by time intervals and outputs the group size (i.e., the number of records in the group) in a JavaScript variable in JSON format. Additionally, grouping can be done by another field.
     /// </summary>
+    /// <short>
+    /// de: Gruppiert Records nach Zeitintervallen und gibt die Anzahl als JS-Variable aus.
+    /// en: Groups records by time intervals and outputs the counts as a JS variable.
+    /// </short>
     /// <param name="records">
     /// de: Datalinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.
     /// en: Datalinq records to be counted. These can also be restricted by a C# LINQ condition.
@@ -2365,7 +2509,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// </param>
     /// <param name="orderField">
     /// de: Art, nach der das Objekt sortiert werden soll. Es kann auf- und absteigend nach dem Gruppennamen (("OrderField.NameAsc", "OrderField.NameDesc")) oder nach Gruppengröße (("OrderField.ValueAsc", "OrderField.ValueDesc")) sortiert werden.
-    /// en: The type of sorting to be applied to the object. It can be sorted ascending or descending by group name (("OrderField.NameAsc", "OrderField.NameDesc")) or by group size (("OrderField.ValueAsc", "OrderField.ValueDesc"))
+    /// en: The type of sorting to be applied to the object. It can be sorted ascending or descending by group name (("OrderField.NameAsc", "OrderField.NameDesc")) or by group size (("OrderField.ValueAsc", "OrderField.ValueDesc")).
     /// </param>
     /// <returns>
     /// de: Gibt eine JavaScript-Variable im JSON-Format zurück, die die gruppierten Datensätze und ihre Anzahl enthält.
@@ -2542,6 +2686,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Gibt eine Zeitreihe in einer JavaScript Variable im JSON-Format aus. Zusätzlich kann nach einem weiteren Feld gruppiert werden.
     /// en: Outputs a time series in a JavaScript variable in JSON format. Additionally, it can be grouped by another field.
     /// </summary>
+    /// <short>
+    /// de: Gibt eine Zeitreihe aus den Records als JavaScript-Variable aus.
+    /// en: Outputs a time series from the records as a JavaScript variable.
+    /// </short>
     /// <param name="records">
     /// de: DataLinq-Datensätze, die gezählt werden sollen. Diese könnten auch durch eine C#-LINQ-Bedingung eingeschränkt sein.
     /// en: DataLinq records to be counted, which could also be filtered by a C# LINQ condition.
@@ -2551,7 +2699,7 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: Name of the JavaScript object to be output.
     /// </param>
     /// <param name="datetimeField">
-    /// de: Feldname im DataLinq-Objekt, dass den Zeitstempel enthält (DateTime).
+    /// de: Feldname im DataLinq-Objekt, das den Zeitstempel enthält (DateTime).
     /// en: Field name in the DataLinq object that contains the timestamp (DateTime).
     /// </param>
     /// <param name="valueField">
@@ -2741,9 +2889,13 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt ein Diagramm mit unterschiedlichen Typen, das auf einem JSON-Objekt im Javascript-Code basiert.
     /// en: Creates a chart with different types based on a JSON object in the JavaScript code.
     /// </summary>
+    /// <short>
+    /// de: Rendert ein Diagramm (Balken, Torte, Doughnut, Linie) aus einer JS-Variable.
+    /// en: Renders a chart (bar, pie, doughnut, line) from a JS variable.
+    /// </short>
     /// <param name="chartType">
-    /// de: Diagrammtyp als Enumeration, hier sind Balken-(Bar), Torten-(Pie), Doughnut oder Linien(Line) als Typ möglich, bspw. ChartType.Bar
-    /// en: Chart type as an enumeration, here bar (Bar), pie (Pie), doughnut, or line (Line) are possible types, e.g. ChartType.Bar
+    /// de: Diagrammtyp als Enumeration, hier sind Balken-(Bar), Torten-(Pie), Doughnut oder Linien(Line) als Typ möglich, bspw. ChartType.Bar.
+    /// en: Chart type as an enumeration, here bar (Bar), pie (Pie), doughnut, or line (Line) are possible types, e.g. ChartType.Bar.
     /// </param>
     /// <param name="jsValueVariable">
     /// de: Name der Javascript-Variable, die das JSON-Datenobjekt enthält. Das JSON-Objekt könnte bspw. von der Methode "StatisticsGroupBy" oder "StatisticsGroupByTime" stammen und muss folgende Struktur haben:
@@ -2760,14 +2912,14 @@ public class DataLinqHelper : IDataLinqHelper
     /// en: An anonymous object with HTML attributes for the button, e.g. ((new { style="width:300px" @class="my-class" } ))
     /// </param>
     /// <param name="chartColorRGB">
-    /// de: Farben, die im Diagramm verwendet werden sollen als R,G,B-String, bspw. ((new string[] {""0,155,20"", ""160,0,25""} ))
-    /// en: Colors to be used in the chart as R,G,B string, e.g. ((new string[] {""0,155,20"", ""160,0,25""} ))
+    /// de: Farben, die im Diagramm verwendet werden sollen als R,G,B-String, bspw. ((new string[] {"0,155,20", "160,0,25"} ))
+    /// en: Colors to be used in the chart as R,G,B string, e.g. ((new string[] {"0,155,20", "160,0,25"} ))
     /// </param>
     /// <param name="jsDatasetVariable">
     /// de: Name der Javascript-Variable, die als JSON-Objekt Einstellungen zur Darstellung der Datensätze enthält. Je nach Diagrammtyp sind unterschiedliche Einstellungen möglich, siehe dazu http://www.chartjs.org/docs/latest/charts/ => Charttypen => Dataset Properties.
     /// en: Name of the JavaScript variable containing JSON settings for dataset representation. Depending on the chart type, different settings are possible, see http://www.chartjs.org/docs/latest/charts/ => Chart types => Dataset Properties.
     /// </param>
-    /// /// <param name="locale">
+    /// <param name="locale">
     /// de: Legt das Zahlenformat für Achsen und Tooltips fest. Mögliche Werte: ChartLocale.None (keine Formatierung), ChartLocale.DE (deutsches Format mit Punkt als Tausendertrennzeichen), ChartLocale.US (US-Format mit Komma als Tausendertrennzeichen).
     /// en: Specifies number formatting for axes and tooltips. Possible values: ChartLocale.None (no formatting), ChartLocale.DE (German format using dot as thousands separator), ChartLocale.US (US format using comma as thousands separator).
     /// </param>
@@ -2809,17 +2961,21 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Bei Hover über einen Datensatz wird ein Symbol zum Kopieren angezeigt.
     /// en: A copy icon is displayed when hovering over a data entry.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen Wert mit einem Symbol zum Kopieren in die Zwischenablage.
+    /// en: Renders a value with an icon to copy it to the clipboard.
+    /// </short>
     /// <param name="copyValue">
     /// de: Wert, der kopiert werden soll.
     /// en: Value to be copied.
     /// </param>
     /// <param name="copyBaseText">
-    /// de: Text, zu sehen sein soll, kann auch Leerstring sein und damit nichts beinhalten. Wenn kein Wert übergeben wird, wird der Wert des CopyValues herangezogen.
+    /// de: Text, der zu sehen sein soll, kann auch Leerstring sein und damit nichts beinhalten. Wenn kein Wert übergeben wird, wird der Wert des CopyValues herangezogen.
     /// en: Text to be displayed, can also be an empty string and thus display nothing. If no value is passed, the value of copyValue is used.
     /// </param>
     /// <param name="htmlAttributes">
     /// de: Ein anonymes Objekt mit HTML-Attributen für diesen Button ((z.B.: new { style="width:300px" @class="meine-klasse" } ))
-    /// en: An anonymous object with HTML attributes for this button (e.g. new { style="width:300px" @class="my-class" } )
+    /// en: An anonymous object with HTML attributes for this button ((e.g. new { style="width:300px" @class="my-class" } ))
     /// </param>
     /// <returns>
     /// de: Gibt HTML-Code für einen Button zum Kopieren zurück.
@@ -2869,16 +3025,20 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Liefert einen Skalarwert einer Abfrage zurück und gibt das Ergebnis als Inhalt eines HTML-Elementes aus.
     /// en: Returns a scalar value from a query and outputs the result as the content of an HTML element.
     /// </summary>
+    /// <short>
+    /// de: Rendert ein HTML-Element mit einem Skalarwert aus einer Query.
+    /// en: Renders an HTML element containing a scalar value from a query.
+    /// </short>
     /// <param name="htmlAttributes">
     /// de: Ein anonymes Objekt mit HTML-Attributen für dieses Element (z.B.: new { style="width:300px" @class="meine-klasse" }).
     /// en: An anonymous object with HTML attributes for this element (e.g., new { style="width:300px" @class="my-class" }).
     /// </param>
     /// <param name="source">
-    /// de: Datenquelle der Abfrage, eine Abfrage-URL die einen Wert liefert bspw. (( new { source="endpoint-id@query-id?id=2", nameField="NAME" })
-    /// en: Data source for the query, a query URL that returns a value, e.g., (( new { source="endpoint-id@query-id?id=2", nameField="NAME" }) 
+    /// de: Datenquelle der Abfrage, eine Abfrage-URL die einen Wert liefert bspw. (( new { source="endpoint-id@query-id?id=2", nameField="NAME" } ))
+    /// en: Data source for the query, a query URL that returns a value, e.g., (( new { source="endpoint-id@query-id?id=2", nameField="NAME" } ))
     /// </param>
     /// <param name="htmlTag">
-    /// de: Art des HTML-Elements, dass erzeugt wird.
+    /// de: Art des HTML-Elements, das erzeugt wird.
     /// en: Type of the HTML element to be created.
     /// </param>
     /// <param name="defaultValue">
@@ -2956,6 +3116,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Kodiert die Werte eines Objektes, sodass sie URL-tauglich sind.
     /// en: Encodes the values of an object so that they are URL-safe.
     /// </summary>
+    /// <short>
+    /// de: Liefert die URL-kodierten Werte eines Objekts.
+    /// en: Returns the URL-encoded values of an object.
+    /// </short>
     /// <param name="parameter">
     /// de: Das Objekt, dessen Werte URL-kodiert werden sollen.
     /// en: The object whose values should be URL encoded.
@@ -2978,6 +3142,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Erstellt eine Schaltfläche, mit der alle DOM-Elemente mit der Klasse "responsive" sichtbar geschaltet werden.
     /// en: Creates a button that makes all DOM elements with the "responsive" class visible.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen Button, der Elemente mit der Klasse "responsive" einblendet.
+    /// en: Renders a button that shows all elements with the class "responsive".
+    /// </short>
     /// <returns>
     /// de: Gibt eine Schaltfläche zurück, die beim Klicken alle DOM-Elemente mit der Klasse "responsive" sichtbar schaltet.
     /// en: Returns a button that, when clicked, makes all DOM elements with the "responsive" class visible.
@@ -2998,6 +3166,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Ruft ein ArcGIS Server Bild ab und gibt es als HTML img-Element mit der angegebenen Größe zurück. Der Diensttyp bestimmt, ob ein MapServer- oder ImageServer-Endpunkt aufgerufen wird.
     /// en: Retrieves an ArcGIS Server image and returns it as an HTML img element with the specified size. The service type determines whether a MapServer or ImageServer endpoint is called. 
     /// </summary>
+    /// <short>
+    /// de: Lädt ein Bild von einem ArcGIS Server und rendert es als img-Element.
+    /// en: Loads an image from an ArcGIS Server and renders it as an img element.
+    /// </short>
     /// <param name="serviceType">
     /// de: Der Diensttyp, der bestimmt, ob ein MapServer- oder ImageServer-Endpunkt in der URL verwendet wird.
     /// en: The service type that determines whether a MapServer or ImageServer endpoint is used in the URL.
@@ -3034,6 +3206,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Ruft ein öffentlich zugängliches Bild von einem beliebigen Server ab und gibt es als HTML img-Element zurück. Die Basis-URL wird direkt übergeben und nicht aufgelöst. Um die URL nicht direkt anzugeben, kann sie im Razor-Code über GetSecret oder GetConstant aufgelöst werden. Es erfolgt keine Authentifizierung (nur für öffentliche Bilder). Antworten, die kein Bild sind, werden blockiert. Die Methode ist gegen SSRF abgesichert.
     /// en: Retrieves a publicly accessible image from an arbitrary server and returns it as an HTML img element. The base URL is passed directly and is not resolved. To avoid specifying the URL directly, resolve it in Razor code via GetSecret or GetConstant. No authentication is performed (public images only). Non-image responses are blocked. The method is hardened against SSRF.
     /// </summary>
+    /// <short>
+    /// de: Lädt ein öffentliches Bild von einem Server und rendert es als img-Element.
+    /// en: Loads a public image from a server and renders it as an img element.
+    /// </short>
     /// <param name="baseUrl">
     /// de: Die Basis-URL (Schema und Host) des Servers. Der Wert wird direkt verwendet. Um die URL nicht direkt anzugeben, kann sie über GetSecret oder GetConstant aufgelöst werden.
     /// en: The base URL (scheme and host) of the server. The value is used directly. To avoid specifying the URL directly, resolve it via GetSecret or GetConstant.
@@ -3078,6 +3254,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Liest einen Wert (Konstante) aus dem globalen Konstanten-Store (constants.blb) und gibt ihn zurück. Die Werte werden unverschlüsselt gespeichert und können über die DataLinq Code Oberfläche verwaltet werden.
     /// en: Reads a value (constant) from the global constants store (constants.blb) and returns it. The values are stored unencrypted and can be managed through the DataLinq Code UI.
     /// </summary>
+    /// <short>
+    /// de: Liefert den Wert einer Konstante aus dem globalen Konstanten-Store.
+    /// en: Returns the value of a constant from the global constants store.
+    /// </short>
     /// <param name="key">
     /// de: Der Schlüssel (Name) der Konstante, deren Wert zurückgegeben werden soll.
     /// en: The key (name) of the constant whose value should be returned.
@@ -3094,6 +3274,10 @@ public class DataLinqHelper : IDataLinqHelper
     /// de: Legt mehrere Bild-Elemente (img-Tags) deckungsgleich übereinander, sodass verschiedene PNGs/Bilder als Ebenen gestapelt werden können. Funktioniert auch mit den von GetImage und GetAgsImage (DLH/Security) erzeugten Bildern.
     /// en: Overlays multiple image elements (img tags) on top of each other so that different PNGs/images can be layered. Also works with the images produced by the GetImage and GetAgsImage (DLH/Security) methods.
     /// </summary>
+    /// <short>
+    /// de: Rendert mehrere Bilder deckungsgleich übereinander als Ebenen.
+    /// en: Renders multiple images stacked on top of each other as layers.
+    /// </short>
     /// <param name="images">
     /// de: Eine beliebige Anzahl von Bildern, die übereinander gelegt werden. Jedes Element kann ein von den DLH- oder Security-Bildmethoden zurückgegebenes img-Element oder ein beliebiger HTML/img-String sein. Das erste Bild bestimmt die Größe des Containers, alle weiteren werden deckungsgleich darüber positioniert.
     /// en: An arbitrary number of images to be stacked. Each element can be an img element returned by the DLH or Security image methods, or any HTML/img string. The first image determines the container size, all following images are positioned congruently on top of it.

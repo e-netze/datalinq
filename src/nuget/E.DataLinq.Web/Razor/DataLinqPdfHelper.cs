@@ -36,6 +36,10 @@ public class DataLinqPdfHelper
     /// de: Startet einen PDF-Bericht und gibt den öffnenden HTML-Container zurück.
     /// en: Starts a PDF report and returns the opening HTML container.
     /// </summary>
+    /// <short>
+    /// de: Startet einen PDF-Bericht und rendert den öffnenden Container.
+    /// en: Starts a PDF report and renders its opening container.
+    /// </short>
     /// <param name="pageNumberOptions">
     /// de: Optionen für die Seitennummerierung (z.B. Position, Typ, übersprungene Seiten). Standard ist null.
     /// en: Options for page numbering (e.g. position, type, skipped pages). Default is null.
@@ -129,6 +133,10 @@ public class DataLinqPdfHelper
     /// de: Beendet den PDF-Bericht und schließt den zugehörigen HTML-Container.
     /// en: Ends the PDF report and closes the associated HTML container.
     /// </summary>
+    /// <short>
+    /// de: Beendet den PDF-Bericht und rendert den schließenden Container.
+    /// en: Ends the PDF report and renders its closing container.
+    /// </short>
     /// <returns>
     /// de: Gibt ein rohes HTML-Objekt mit dem schließenden Container des PDF-Berichts zurück.
     /// en: Returns a raw HTML object with the closing container of the PDF report.
@@ -151,6 +159,10 @@ public class DataLinqPdfHelper
     /// de: Öffnet eine neue Seite im PDF-Bericht mit optionalen Vorlagen- und Tabellenoptionen.
     /// en: Opens a new page in the PDF report with optional template and table options.
     /// </summary>
+    /// <short>
+    /// de: Öffnet eine neue Seite im PDF-Bericht mit Format und Vorlagenoptionen.
+    /// en: Opens a new page in the PDF report with paper size and template options.
+    /// </short>
     /// <param name="pageTemplateOptions">
     /// de: Optionen für die Seitenvorlage (z.B. Vorlagen-ID). Standard ist null.
     /// en: Options for the page template (e.g. template ID). Default is null.
@@ -267,6 +279,10 @@ public class DataLinqPdfHelper
     /// de: Schließt die aktuelle Seite im PDF-Bericht.
     /// en: Closes the current page in the PDF report.
     /// </summary>
+    /// <short>
+    /// de: Schließt die aktuelle Seite im PDF-Bericht.
+    /// en: Closes the current page in the PDF report.
+    /// </short>
     /// <returns>
     /// de: Gibt ein rohes HTML-Objekt mit den schließenden Containern der aktuellen Seite zurück.
     /// en: Returns a raw HTML object with the closing containers of the current page.
@@ -290,12 +306,16 @@ public class DataLinqPdfHelper
     /// Der gesamte Inhalt unterhalb des Umbruchs wird auf eine neue Seite verschoben. Die neue Seite
     /// übernimmt die relevanten Metadaten der übergeordneten Seite (PageTemplateOptions,
     /// DynamicTableOptions, Papierformat und Querformat), damit dynamische Tabellen und die
-    /// automatische Seitenaufteilung weiterhin funktionieren. 
+    /// automatische Seitenaufteilung weiterhin funktionieren.
     /// en: Inserts a manual page break within a page (between NewPage and EndPage). All content below
     /// the break is moved onto a new page. The new page inherits the relevant metadata of the parent
     /// page (PageTemplateOptions, DynamicTableOptions, paper size and landscape orientation) so that
-    /// dynamic tables and automatic page splitting keep working. 
+    /// dynamic tables and automatic page splitting keep working.
     /// </summary>
+    /// <short>
+    /// de: Fügt innerhalb einer Seite einen manuellen Seitenumbruch ein.
+    /// en: Inserts a manual page break within a page.
+    /// </short>
     /// <returns>
     /// de: Gibt ein rohes HTML-Objekt mit dem Seitenumbruch-Marker zurück.
     /// en: Returns a raw HTML object with the page break marker.
@@ -316,6 +336,10 @@ public class DataLinqPdfHelper
     /// de: Rendert einen Button, der das stille Herunterladen eines PDF-Berichts auslöst.
     /// en: Renders a button that triggers the silent download of a PDF report.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen Button, der den PDF-Bericht still herunterlädt.
+    /// en: Renders a button that silently downloads the PDF report.
+    /// </short>
     /// <param name="id">
     /// de: Die ID des DataLinq-Endpunkts, dessen PDF heruntergeladen werden soll.
     /// en: The ID of the DataLinq endpoint whose PDF should be downloaded.
@@ -359,6 +383,10 @@ public class DataLinqPdfHelper
     /// de: Öffnet ein neues positionierbares PDF-Element innerhalb einer Seite.
     /// en: Opens a new positionable PDF element within a page.
     /// </summary>
+    /// <short>
+    /// de: Öffnet ein positionierbares Element innerhalb einer PDF-Seite.
+    /// en: Opens a positionable element within a PDF page.
+    /// </short>
     /// <param name="x">
     /// de: Die horizontale Verschiebung des Elements in Pixeln. Standard ist 0.
     /// en: The horizontal offset of the element in pixels. Default is 0.
@@ -414,6 +442,10 @@ public class DataLinqPdfHelper
     /// de: Schließt das aktuelle PDF-Element.
     /// en: Closes the current PDF element.
     /// </summary>
+    /// <short>
+    /// de: Schließt das aktuelle positionierbare PDF-Element.
+    /// en: Closes the current positionable PDF element.
+    /// </short>
     /// <returns>
     /// de: Gibt ein rohes HTML-Objekt mit dem schließenden Container des PDF-Elements zurück.
     /// en: Returns a raw HTML object with the closing container of the PDF element.
@@ -434,6 +466,10 @@ public class DataLinqPdfHelper
     /// de: Erzeugt einen QR-Code aus einer URL und gibt ihn als HTML-img-Tag mit eingebettetem Base64-Bild zurück.
     /// en: Generates a QR code from a URL and returns it as an HTML img tag with an embedded Base64 image.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen QR-Code für eine URL als img-Element.
+    /// en: Renders a QR code for a URL as an img element.
+    /// </short>
     /// <param name="url">
     /// de: Die URL, die im QR-Code kodiert werden soll.
     /// en: The URL to encode in the QR code.
@@ -455,6 +491,10 @@ public class DataLinqPdfHelper
     /// de: Erzeugt einen Mail-QR-Code und gibt ihn als HTML-img-Tag mit eingebettetem Base64-Bild zurück.
     /// en: Generates a mail QR code and returns it as an HTML img tag with an embedded Base64 image.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen QR-Code für eine E-Mail als img-Element.
+    /// en: Renders a QR code for an e-mail as an img element.
+    /// </short>
     /// <param name="mailDetails">
     /// de: Die Details für den Mail-QR-Code (Empfänger, Betreff, Text, Kodierung).
     /// en: The details for the mail QR code (receiver, subject, body, encoding).
@@ -478,6 +518,10 @@ public class DataLinqPdfHelper
     /// de: Erzeugt einen Geolocation-QR-Code und gibt ihn als HTML-img-Tag mit eingebettetem Base64-Bild zurück.
     /// en: Generates a geolocation QR code and returns it as an HTML img tag with an embedded Base64 image.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen QR-Code für eine Geoposition als img-Element.
+    /// en: Renders a QR code for a geolocation as an img element.
+    /// </short>
     /// <param name="geoLocationDetails">
     /// de: Die Details für den Geolocation-QR-Code (Breitengrad, Längengrad, Kodierung).
     /// en: The details for the geolocation QR code (latitude, longitude, encoding).
@@ -501,6 +545,10 @@ public class DataLinqPdfHelper
     /// de: Erzeugt einen Giro-QR-Code und gibt ihn als HTML-img-Tag mit eingebettetem Base64-Bild zurück.
     /// en: Generates a giro QR code and returns it as an HTML img tag with an embedded Base64 image.
     /// </summary>
+    /// <short>
+    /// de: Rendert einen Giro-QR-Code für eine Überweisung als img-Element.
+    /// en: Renders a giro QR code for a bank transfer as an img element.
+    /// </short>
     /// <param name="giroCodeDetails">
     /// de: Die Details für den Giro-QR-Code (IBAN, BIC, Name, Betrag, Verwendungszweck).
     /// en: The details for the giro QR code (IBAN, BIC, Name, Amount, Purpose).
