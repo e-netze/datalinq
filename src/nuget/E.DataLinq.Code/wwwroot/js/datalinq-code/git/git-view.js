@@ -65,12 +65,22 @@ dataLinqCode.features.register('git', function (state) {
         return status && status.changes ? status.changes.filter(function (c) { return c.status === 'conflicted'; }) : [];
     };
 
+    // merge sides: local = ours (checked out branch), incoming = theirs (merged branch / remote)
+    var mergeRefs = function () {
+        var info = (status && status.mergeInfo) || {};
+        return {
+            kind: info.kind || 'pull',
+            local: info.target || (status && status.branch) || 'local',
+            incoming: info.source || 'remote'
+        };
+    };
+
     var labels = function () {
-        var info = status && status.mergeInfo;
-        if (info && info.kind === 'merge-into-main') {
-            return { ours: "Keep '" + info.target + "' version", theirs: "Take '" + info.source + "' version" };
-        }
-        return { ours: 'Keep mine (local)', theirs: 'Take theirs (remote)' };
+        var r = mergeRefs();
+        return {
+            ours: "Keep local ('" + r.local + "')",
+            theirs: "Take incoming ('" + r.incoming + "')"
+        };
     };
 
     /****** toolbar ******/
@@ -366,7 +376,26 @@ dataLinqCode.features.register('git', function (state) {
         });
     };
 
+    var changeSides = function () {
+        if (status && status.merging) {
+            var r = mergeRefs();
+            return {
+                old: { title: 'Before merge', sub: r.local },
+                'new': { title: 'Merge result', sub: 'with ' + r.incoming }
+            };
+        }
+        return {
+            old: { title: 'Last commit', sub: status && status.branch },
+            'new': { title: 'DataLinq', sub: 'not committed' }
+        };
+    };
+
     var showDiff = function (change) {
+        if (change.status === 'conflicted') {
+            openConflicts(change.id);
+            return;
+        }
+
         api('diff', { id: change.id }, function (result) {
             if (!result.success) {
                 alertMessage('Version control', result.message);
@@ -374,20 +403,43 @@ dataLinqCode.features.register('git', function (state) {
             }
 
             var buttons = [];
-            if (change.status === 'conflicted') {
-                var l = labels();
-                buttons.push({ text: l.ours, cls: 'cancel', action: function () { resolve(change.id, 'ours'); } });
-                buttons.push({ text: l.theirs, action: function () { resolve(change.id, 'theirs'); } });
-            } else if (!status.merging) {
-                buttons.push({ text: 'Discard changes', cls: 'cancel', action: function () { discard([change.id]); } });
+            if (!status.merging) {
+                buttons.push({ text: 'Discard changes', cls: 'cancel', title: 'Restore the last committed version', action: function () { discard([change.id]); } });
             }
 
-            dataLinqCode.ui.git.diff('Changes: ' + change.id.replace(/^_file@/, ''), result.data, { buttons: buttons });
+            dataLinqCode.ui.git.diff('Changes \u00B7 ' + dataLinqCode.ui.git.prettyId(change.id), result.data, {
+                sides: changeSides(),
+                buttons: buttons
+            });
         });
     };
 
-    var resolve = function (id, side) {
-        run('resolve', { id: id, side: side }, 'Resolving...');
+    var openConflicts = function (startId) {
+        if (!status || !status.merging) {
+            return;
+        }
+        var r = mergeRefs();
+        dataLinqCode.ui.git.conflicts({
+            items: conflicts().map(function (c) { return { id: c.id, kind: c.kind }; }),
+            startId: startId,
+            kind: r.kind,
+            local: r.local,
+            incoming: r.incoming,
+            loadDiff: function (id, callback) {
+                api('diff', { id: id }, function (result) {
+                    callback(result.success ? result.data : null, result.message);
+                });
+            },
+            resolve: function (id, side, callback) {
+                resolve(id, side, callback);
+            },
+            complete: completeMerge,
+            abort: abortMerge
+        });
+    };
+
+    var resolve = function (id, side, onSuccess) {
+        run('resolve', { id: id, side: side }, side === 'ours' ? 'Keeping local version...' : 'Taking incoming version...', onSuccess);
     };
 
     var completeMerge = function () {
@@ -463,6 +515,7 @@ dataLinqCode.features.register('git', function (state) {
             '-',
             { text: 'Branches...', action: function () { dataLinqCode.ui.git.branches(status, branchActions); } },
             !status.isMainBranch && !status.merging ? { text: "Merge '" + status.branch + "' into '" + status.mainBranch + "'...", action: mergeIntoMain } : null,
+            status.merging && conflicts().length > 0 ? { text: 'Resolve conflicts...', action: function () { openConflicts(null); } } : null,
             { text: 'History...', action: function () { dataLinqCode.ui.git.history(null); } },
             '-',
             !status.merging && changeCount() > 0 ? { text: 'Discard all changes...', danger: true, action: function () { discard(status.changes.map(function (c) { return c.id; })); } } : null,
@@ -622,14 +675,28 @@ dataLinqCode.features.register('git', function (state) {
             return;
         }
 
-        var info = status.mergeInfo || {};
-        $("<div class='text'>").text(
-            (info.kind === 'merge-into-main' ? "Merging '" + info.source + "' into '" + info.target + "'" : 'Merging ' + (info.source || 'remote changes')) +
-            (conflictCount > 0 ? ' \u2022 ' + conflictCount + ' conflict(s): choose a version for each conflicting item.' : ' \u2022 all conflicts resolved.')
-        ).appendTo($mergeBanner);
+        var r = mergeRefs();
+        $mergeBanner.toggleClass('resolved', conflictCount === 0);
+
+        var $head = $("<div class='head'>").appendTo($mergeBanner);
+        $("<span class='title'>").text(r.kind === 'merge-into-main' ? 'Merging branches' : 'Merging remote changes').appendTo($head);
+        $("<span class='state'>")
+            .text(conflictCount > 0 ? conflictCount + ' conflict' + (conflictCount > 1 ? 's' : '') : '\u2713 resolved')
+            .appendTo($head);
+
+        dataLinqCode.ui.git.mergeFlow(r).appendTo($mergeBanner);
+        dataLinqCode.ui.git.mergeLegend(r).appendTo($mergeBanner);
+
+        $("<div class='text'>").text(conflictCount > 0
+            ? 'Choose the Local or Incoming version for each conflicting item, then complete the merge.'
+            : 'All conflicts are resolved. Complete the merge to commit the result.').appendTo($mergeBanner);
 
         var $buttons = $("<div class='buttons'>").appendTo($mergeBanner);
-        $("<button class='datalinq-code-button'>").text('Complete merge').prop('disabled', conflictCount > 0).appendTo($buttons).click(completeMerge);
+        if (conflictCount > 0) {
+            $("<button class='datalinq-code-button'>").text('Resolve conflicts...').appendTo($buttons).click(function () { openConflicts(null); });
+        } else {
+            $("<button class='datalinq-code-button'>").text('Complete merge').appendTo($buttons).click(completeMerge);
+        }
         $("<button class='datalinq-code-button cancel'>").text('Abort merge').appendTo($buttons).click(abortMerge);
     };
 
@@ -835,9 +902,9 @@ dataLinqCode.features.register('git', function (state) {
         if (change) {
             if (change.status === 'conflicted') {
                 var l = labels();
-                $("<span class='git-resolve ours'>").text('mine').attr('title', l.ours).appendTo($row)
+                $("<span class='git-resolve ours'>").text('local').attr('title', l.ours).appendTo($row)
                     .click(function (e) { e.stopPropagation(); resolve(change.id, 'ours'); });
-                $("<span class='git-resolve theirs'>").text('theirs').attr('title', l.theirs).appendTo($row)
+                $("<span class='git-resolve theirs'>").text('incoming').attr('title', l.theirs).appendTo($row)
                     .click(function (e) { e.stopPropagation(); resolve(change.id, 'theirs'); });
             }
             $("<span class='git-status-badge'>")
@@ -897,7 +964,7 @@ dataLinqCode.features.register('git', function (state) {
         var l = labels();
 
         dataLinqCode.ui.contextMenu(e, [
-            change ? { text: change.status === 'conflicted' ? 'Show conflict' : 'Show changes', action: function () { showDiff(change); } } : null,
+            change ? { text: change.status === 'conflicted' ? 'Resolve conflict...' : 'Show changes', action: function () { showDiff(change); } } : null,
             canOpen(node) ? { text: 'Open', action: function () { openDocument(node); } } : null,
             change && change.status === 'conflicted' ? '-' : null,
             change && change.status === 'conflicted' ? { text: l.ours, action: function () { resolve(change.id, 'ours'); } } : null,
