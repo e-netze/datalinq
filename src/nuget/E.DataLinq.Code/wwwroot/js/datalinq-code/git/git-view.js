@@ -544,7 +544,7 @@ dataLinqCode.features.register('git', function (state) {
             items.push({
                 text: "New branch from '" + status.mainBranch + "'...", action: function () {
                     dataLinqCode.ui.prompt('New branch', "The branch is created from '" + status.mainBranch + "' and checked out.", '', createBranch, {
-                        validate: function (value) { return /^[A-Za-z0-9._\/-]+$/.test(value) && value.indexOf('..') < 0 ? null : 'Use letters, digits, ".", "_", "-" and "/" only.'; }
+                        validate: dataLinqCode.ui.git.validateBranchName
                     });
                 }
             });

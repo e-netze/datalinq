@@ -1368,6 +1368,12 @@
 
     /****** Branches ******/
 
+    git.validateBranchName = function (value) {
+        return /^[A-Za-z0-9._\/-]+$/.test(value) && value.indexOf('..') < 0 && !/^[\/.]|[\/.]$/.test(value)
+            ? null
+            : 'Use letters, digits, ".", "_", "-" and "/" only.';
+    };
+
     /**
      * @param {Object} status current git status
      * @param {Object} actions { checkout(name), create(name), remove(name), mergeIntoMain() }
@@ -1375,79 +1381,126 @@
     git.branches = function (status, actions) {
         var dialogId = 'datalinq-code-git-branches';
         var close = function () { $('body').dataLinq_code_modal('close', { id: dialogId }); };
+        var run = function (action) { close(); action(); };
 
-        $('body').dataLinq_code_modal({
+        openDialog({
             title: 'Branches',
-            width: '640px',
-            height: '70%',
+            width: '760px',
+            height: '78%',
             id: dialogId,
             onload: function ($content) {
-                $content.addClass('datalinq-code-git-dialog');
+                var $root = $("<div class='git-branches'>").appendTo($content);
 
-                var $root = $("<div class='git-branches-dialog'>").appendTo($content);
+                /* new branch */
 
-                var $new = $("<div class='git-branch-new'>").appendTo($root);
-                $("<div class='hint'>").text("New branches are always created from '" + status.mainBranch + "'.").appendTo($new);
-                var $input = $("<input type='text' class='datalinq-code-prompt-input' placeholder='new branch name' />").appendTo($new);
-                $("<button class='datalinq-code-button'>").text("Create from " + status.mainBranch).appendTo($new).click(function () {
+                var $new = $("<div class='git-card git-branch-create'>").appendTo($root);
+                var $newHead = $("<div class='head'>").appendTo($new);
+                $("<span class='title'>").text('New branch').appendTo($newHead);
+                $("<span class='sub'>").text('created from').appendTo($newHead);
+                $("<span class='git-ref local'>").text(status.mainBranch).appendTo($newHead);
+                $("<span class='sub'>").text('and checked out').appendTo($newHead);
+
+                var $form = $("<div class='form'>").appendTo($new);
+                var $inputWrap = $("<div class='git-input-icon'>").appendTo($form);
+                $("<span class='git-branch-glyph'>").appendTo($inputWrap);
+                var $input = $("<input type='text' class='git-input' spellcheck='false' placeholder='feature/my-change' />").appendTo($inputWrap);
+                var $create = $("<button type='button' class='datalinq-code-button'>").text('Create branch').prop('disabled', true).appendTo($form);
+                var $error = $("<div class='git-field-error'>").appendTo($new);
+
+                var validate = function () {
                     var name = ($input.val() || '').trim();
-                    if (!name) {
-                        $input.focus();
-                        return;
-                    }
-                    close();
-                    actions.create(name);
+                    var error = name ? git.validateBranchName(name) : null;
+                    $error.text(error || '');
+                    $input.toggleClass('invalid', !!error);
+                    $create.prop('disabled', !name || !!error);
+                    return !name || error ? null : name;
+                };
+                $input.on('input', validate).on('keydown', function (e) {
+                    if (e.key === 'Enter') $create.trigger('click');
                 });
-                $input.on('keydown', function (e) {
-                    if (e.key === 'Enter') $new.find('button').trigger('click');
+                $create.click(function () {
+                    var name = validate();
+                    if (name) run(function () { actions.create(name); });
                 });
 
-                var $list = $("<div class='git-branch-list'>").text('Loading...').appendTo($root);
+                /* list */
+
+                var $card = $("<div class='git-card git-branch-card'>").appendTo($root);
+                var $listHead = $("<div class='git-cv-files-head'>").appendTo($card);
+                $("<span class='title'>").text('Branches').appendTo($listHead);
+                var $count = $("<span class='git-count-pill'>").text('\u2026').appendTo($listHead);
+                var $filter = $("<input type='search' class='git-input small' placeholder='Filter branches' />").appendTo($listHead);
+
+                var $list = $("<div class='git-branch-items'>").appendTo($card);
+                $list.append("<div class='git-loading'><span class='git-spinner'></span>Loading branches...</div>");
 
                 dataLinqCode.api.git('branches', {}, function (result) {
                     $list.empty();
                     if (!result.success) {
-                        $list.text(result.message);
+                        $("<div class='git-diff-info error'>").text(result.message).appendTo($list);
                         return;
                     }
 
-                    $.each(result.data || [], function (i, branch) {
-                        var $row = $("<div class='git-branch-row'>")
-                            .toggleClass('current', branch.isCurrent)
-                            .toggleClass('main', branch.isMain)
+                    var branches = (result.data || []).slice().sort(function (a, b) {
+                        var ra = a.isCurrent ? 0 : a.isMain ? 1 : 2, rb = b.isCurrent ? 0 : b.isMain ? 1 : 2;
+                        if (ra !== rb) return ra - rb;
+                        var ta = a.lastCommit ? new Date(a.lastCommit).getTime() : 0, tb = b.lastCommit ? new Date(b.lastCommit).getTime() : 0;
+                        return tb !== ta ? tb - ta : a.name.localeCompare(b.name);
+                    });
+                    $count.text(branches.length);
+
+                    $.each(branches, function (i, branch) {
+                        var $row = $("<div class='git-branch-item'>")
+                            .toggleClass('current', !!branch.isCurrent)
+                            .toggleClass('main', !!branch.isMain)
+                            .attr('data-search', branch.name.toLowerCase())
                             .appendTo($list);
 
-                        $("<span class='name'>").text(branch.name).appendTo($row);
+                        $("<span class='git-branch-glyph'>").appendTo($row);
 
-                        var info = [];
-                        if (branch.isCurrent) info.push('current');
-                        if (!branch.isLocal) info.push('remote only');
-                        if (branch.isLocal && !branch.isRemote) info.push('not published');
-                        if (branch.ahead) info.push('\u2191' + branch.ahead);
-                        if (branch.behind) info.push('\u2193' + branch.behind);
-                        $("<span class='info'>").text(info.join(' \u2022 ')).appendTo($row);
+                        var $text = $("<div class='text'>").appendTo($row);
+                        var $line = $("<div class='line'>").appendTo($text);
+                        $("<span class='name'>").text(branch.name).attr('title', branch.name).appendTo($line);
+                        if (branch.isCurrent) $("<span class='git-pill accent'>").text('current').appendTo($line);
+                        if (branch.isMain) $("<span class='git-pill'>").text('main').appendTo($line);
 
-                        var $buttons = $("<span class='buttons'>").appendTo($row);
+                        var $meta = $("<div class='meta'>").appendTo($text);
+                        var location = !branch.isLocal ? 'remote only' : !branch.isRemote ? 'local only, not published' : 'local & remote';
+                        $("<span>").text(location).appendTo($meta);
+                        if (branch.lastCommit) {
+                            $("<span class='dot'>").text('\u00B7').appendTo($meta);
+                            $("<span>").text('updated ' + relativeTime(branch.lastCommit)).attr('title', formatDate(branch.lastCommit)).appendTo($meta);
+                        }
+
+                        var $sync = $("<div class='git-sync-pills'>").appendTo($row);
+                        if (branch.ahead) $("<span class='git-pill ahead'>").text('\u2191 ' + branch.ahead).attr('title', branch.ahead + ' commit(s) to push').appendTo($sync);
+                        if (branch.behind) $("<span class='git-pill behind'>").text('\u2193 ' + branch.behind).attr('title', branch.behind + ' commit(s) to pull').appendTo($sync);
+
+                        var $buttons = $("<div class='actions'>").appendTo($row);
                         if (!branch.isCurrent) {
-                            $("<button class='datalinq-code-button'>").text('Switch').appendTo($buttons).click(function () {
-                                close();
-                                actions.checkout(branch.name);
-                            });
+                            $("<button type='button' class='git-tool-button primary'>").text('Switch').attr('title', "Check out '" + branch.name + "'")
+                                .appendTo($buttons).click(function () { run(function () { actions.checkout(branch.name); }); });
                         }
                         if (branch.isCurrent && !branch.isMain) {
-                            $("<button class='datalinq-code-button'>").text('Merge into ' + status.mainBranch).appendTo($buttons).click(function () {
-                                close();
-                                actions.mergeIntoMain();
-                            });
+                            $("<button type='button' class='git-tool-button primary'>").text('Merge into ' + status.mainBranch)
+                                .appendTo($buttons).click(function () { run(actions.mergeIntoMain); });
                         }
                         if (!branch.isCurrent && !branch.isMain) {
-                            $("<button class='datalinq-code-button cancel'>").text('Delete').appendTo($buttons).click(function () {
-                                close();
-                                actions.remove(branch.name);
-                            });
+                            $("<button type='button' class='git-tool-button icon danger'>").append("<span class='git-trash-icon'></span>").attr('title', "Delete '" + branch.name + "' locally and on the remote")
+                                .appendTo($buttons).click(function () { run(function () { actions.remove(branch.name); }); });
                         }
                     });
+
+                    $filter.on('input', function () {
+                        var term = ($filter.val() || '').toLowerCase().trim();
+                        $list.children('.git-branch-item').each(function () {
+                            $(this).toggle(!term || $(this).attr('data-search').indexOf(term) >= 0);
+                        });
+                    });
                 });
+
+                var $footer = $("<div class='git-dialog-footer'>").appendTo($root);
+                $("<button type='button' class='datalinq-code-button cancel'>").text('Close').appendTo($footer).click(close);
 
                 $input.focus();
             }
@@ -1458,24 +1511,31 @@
 
     git.connectChoice = function (status, onMode) {
         var dialogId = 'datalinq-code-git-connect';
-        $('body').dataLinq_code_modal({
+        var close = function () { $('body').dataLinq_code_modal('close', { id: dialogId }); };
+
+        openDialog({
             title: 'Connect repository',
             width: '680px',
-            height: '380px',
+            height: '440px',
             id: dialogId,
             onload: function ($content) {
-                $content.addClass('datalinq-code-messagebox-content datalinq-code-git-dialog');
+                var $root = $("<div class='git-small-dialog'>").appendTo($content);
 
-                $("<p>").text('The repository ' + status.remoteUrl + ' already contains content. How do you want to connect?').appendTo($content);
+                var $intro = $("<div class='git-card git-dialog-intro'>").appendTo($root);
+                $("<div class='title'>").text('The repository already contains content').appendTo($intro);
+                $("<div class='git-remote'>").text(status.remoteUrl || '').appendTo($intro);
+                $("<div class='hint'>").text('Choose how this DataLinq instance should be connected to it.').appendTo($intro);
 
+                var $options = $("<div class='git-options'>").appendTo($root);
                 var addOption = function (mode, title, text, danger) {
-                    var $option = $("<div class='git-connect-option'>").toggleClass('danger', !!danger).appendTo($content);
-                    $("<div class='title'>").text(title).appendTo($option);
-                    $("<div class='text'>").text(text).appendTo($option);
-                    $option.click(function () {
-                        $('body').dataLinq_code_modal('close', { id: dialogId });
-                        onMode(mode);
-                    });
+                    $("<button type='button' class='git-option'>").toggleClass('danger', !!danger)
+                        .append($("<span class='t'>").text(title))
+                        .append($("<span class='s'>").text(text))
+                        .appendTo($options)
+                        .click(function () {
+                            close();
+                            onMode(mode);
+                        });
                 };
 
                 addOption('merge-local', 'Merge local content on top',
@@ -1483,10 +1543,8 @@
                 addOption('import', 'Import repository into DataLinq',
                     'Replaces the DataLinq content with the repository content. Endpoints, queries and views that do not exist in the repository are deleted.', true);
 
-                var $buttonbar = $("<div>").addClass("button-bar").appendTo($content);
-                $("<button>").addClass("datalinq-code-button cancel").text("Cancel").appendTo($buttonbar).click(function () {
-                    $('body').dataLinq_code_modal('close', { id: dialogId });
-                });
+                var $footer = $("<div class='git-dialog-footer'>").appendTo($root);
+                $("<button type='button' class='datalinq-code-button cancel'>").text('Cancel').appendTo($footer).click(close);
             }
         });
     };
@@ -1495,32 +1553,48 @@
 
     git.mergeIntoMain = function (status, onConfirm) {
         var dialogId = 'datalinq-code-git-merge';
-        $('body').dataLinq_code_modal({
-            title: esc("Merge '" + status.branch + "' into '" + status.mainBranch + "'"),
+        var close = function () { $('body').dataLinq_code_modal('close', { id: dialogId }); };
+        var source = status.branch, target = status.mainBranch;
+
+        openDialog({
+            title: esc("Merge into '" + target + "'"),
             width: '640px',
-            height: '330px',
+            height: '470px',
             id: dialogId,
             onload: function ($content) {
-                $content.addClass('datalinq-code-messagebox-content datalinq-code-git-dialog');
+                var $root = $("<div class='git-small-dialog'>").appendTo($content);
 
-                git.mergeFlow({ incoming: status.branch, local: status.mainBranch }).addClass('large').appendTo($content);
+                var $flowCard = $("<div class='git-card git-merge-hero'>").appendTo($root);
+                git.mergeFlow({ incoming: source, local: target }).addClass('large').appendTo($flowCard);
+                $("<div class='hint'>").text("All commits of '" + source + "' are merged into '" + target + "'.").appendTo($flowCard);
 
-                $("<p>").text("All commits of '" + status.branch + "' are merged into '" + status.mainBranch + "' and pushed. " +
-                    "Afterwards '" + status.mainBranch + "' is checked out and its content is loaded into DataLinq.").appendTo($content);
-                $("<p class='git-hint'>").text("If both branches changed the same item, you choose for each conflict: Local = '" + status.mainBranch +
-                    "' version, Incoming = '" + status.branch + "' version.").appendTo($content);
-
-                var $label = $("<label class='git-checkbox-label'>").appendTo($content);
-                var $delete = $("<input type='checkbox' checked />").appendTo($label);
-                $("<span>").text(" delete branch '" + status.branch + "' after the merge").appendTo($label);
-
-                var $buttonbar = $("<div>").addClass("button-bar").appendTo($content);
-                $("<button>").addClass("datalinq-code-button cancel").text("Cancel").appendTo($buttonbar).click(function () {
-                    $('body').dataLinq_code_modal('close', { id: dialogId });
+                var $steps = $("<ol class='git-card git-steps'>").appendTo($root);
+                $.each([
+                    ["Merge '" + source + "' into '" + target + "'", 'a merge commit is created on ' + target],
+                    ["Push '" + target + "'", 'the result is sent to the remote repository'],
+                    ["Check out '" + target + "'", 'its content is loaded into DataLinq']
+                ], function (i, step) {
+                    $("<li>")
+                        .append($("<span class='n'>").text(i + 1))
+                        .append($("<span class='text'>").append($("<b>").text(step[0])).append($("<span>").text(step[1])))
+                        .appendTo($steps);
                 });
-                $("<button>").addClass("datalinq-code-button").text("Merge").appendTo($buttonbar).click(function () {
-                    $('body').dataLinq_code_modal('close', { id: dialogId });
-                    onConfirm($delete.is(':checked'));
+
+                var $conflicts = $("<div class='git-card git-merge-note'>").appendTo($root);
+                $("<div class='title'>").text('If both branches changed the same item').appendTo($conflicts);
+                git.mergeLegend({ kind: 'merge-into-main', local: target, incoming: source }).appendTo($conflicts);
+
+                var $label = $("<label class='git-switch'>").appendTo($root);
+                var $delete = $("<input type='checkbox' checked />").appendTo($label);
+                $("<span class='track'><span class='knob'></span></span>").appendTo($label);
+                $("<span class='text'>").text("Delete branch '" + source + "' after the merge").appendTo($label);
+
+                var $footer = $("<div class='git-dialog-footer'>").appendTo($root);
+                $("<button type='button' class='datalinq-code-button cancel'>").text('Cancel').appendTo($footer).click(close);
+                $("<button type='button' class='datalinq-code-button'>").text("Merge into '" + target + "'").appendTo($footer).click(function () {
+                    var deleteBranch = $delete.is(':checked');
+                    close();
+                    onConfirm(deleteBranch);
                 });
             }
         });

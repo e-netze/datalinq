@@ -504,7 +504,8 @@ var refrehTree = function ($parent, selection, folderSelection) {
         endPoints = $.grep(endPoints || [], isSelected);
 
         _foldersEnabled = true;
-        $('.tree-tool.new-folder').toggle(_foldersEnabled);
+        // no jQuery toggle(): while the tools are hidden by css (git mode) it would set an inline display:block
+        $('.tree-tool.new-folder').css('display', _foldersEnabled ? '' : 'none');
 
         dataLinqCode.api.getFolderStructure(function (folderStructure) {
             _folderStructure = parseFolderStructure(folderStructure);
